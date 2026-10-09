@@ -8,6 +8,11 @@ export const ERROR_MESSAGE_KEYS: Record<ErrorCode, MessageKey> = {
   duplicate: "errors.duplicate",
   io: "errors.io",
   internal: "errors.internal",
+  launchNotFound: "errors.launchNotFound",
+  launchDenied: "errors.launchDenied",
+  elevationRequired: "errors.elevationRequired",
+  elevationCancelled: "errors.elevationCancelled",
+  launchFailed: "errors.launchFailed",
 };
 
 /** Text shown to the user (the Rust `message` is for logs only). */

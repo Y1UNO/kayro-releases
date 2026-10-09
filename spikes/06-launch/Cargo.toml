@@ -1,0 +1,13 @@
+[package]
+name = "spike-06-launch"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Test program whose manifest demands administrator rights (spike (e), step 6).
+[[bin]]
+name = "adminprobe"
+path = "src/main.rs"
+
+[dependencies]
+windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_System_LibraryLoader", "Win32_UI_WindowsAndMessaging"] }

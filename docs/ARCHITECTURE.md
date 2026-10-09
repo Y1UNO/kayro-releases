@@ -117,7 +117,7 @@ Fichier JSON déclaratif, jamais de code :
 - Ne jamais embarquer d'art officiel de jeu : formes originales inspirées de l'ambiance, pas de logos ni d'illustrations.
 
 ## 8. Commandes IPC (esquisse)
-`apps_list/add/update/remove`, `app_launch`, `detect_scan`, `scenes_list/save/run/cancel`, `settings_get/set`, `perf_get/benchmark`, `art_get_palette`, `moods_list/save/import/export`. Événements : `app_state_changed`, `scene_progress`, `perf_state_changed`. Toutes typées et générées côté TypeScript.
+`apps_list/add/update/remove`, `app_launch`, `app_focus`, `apps_running`, `detect_scan`, `scenes_list/save/run/cancel`, `settings_get/set`, `perf_get/benchmark`, `art_get_palette`, `moods_list/save/import/export`. Événements : `app_state_changed` (changements seulement : `{id, running, foreground}`), `scene_progress`, `perf_state_changed`. Toutes typées et générées côté TypeScript.
 
 ## 9. Distribution (plus tard)
 Installeur Windows (NSIS via le bundler Tauri), WebView2 installé par l'installeur si absent. L'avertissement SmartScreen restera sans certificat de signature Windows (payant), à expliquer aux amis. Mises à jour automatiques : la clé de signature de l'updater Tauri est gratuite ; attention, un dépôt GitHub privé ne sert pas directement de source de mises à jour, prévoir un dépôt de releases public ou un autre hébergement le moment venu.

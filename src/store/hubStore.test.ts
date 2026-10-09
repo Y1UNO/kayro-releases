@@ -42,6 +42,9 @@ function fakeIpc(over: Partial<Ipc> = {}): Ipc {
     appsUpdate: async (e) => ok(e),
     appsRemove: async () => ok(null),
     appReady: async () => ok(null),
+    appLaunch: async () => ok({ kind: "started", pid: 1 }),
+    appFocus: async () => ok("focused"),
+    appsRunning: async () => ok([]),
     ...over,
   };
 }
@@ -53,6 +56,7 @@ function stripNulls(p: object): Partial<Settings> {
 const silentEvents: EventSource = {
   onSettingsChanged: async () => () => {},
   onAppsChanged: async () => () => {},
+  onAppStateChanged: async () => () => {},
 };
 
 async function ready(over: Partial<Ipc> = {}, events: EventSource = silentEvents) {
@@ -79,7 +83,7 @@ describe("init", () => {
     const store = await ready(
       {},
       {
-        onSettingsChanged: async () => () => {},
+        ...silentEvents,
         onAppsChanged: async (h) => {
           pushApps = h;
           return () => {};
@@ -152,7 +156,7 @@ describe("optimistic updates", () => {
     const store = await ready(
       { appsRemove: () => new Promise((r) => (release = r)) },
       {
-        onSettingsChanged: async () => () => {},
+        ...silentEvents,
         onAppsChanged: async (h) => {
           pushApps = h;
           return () => {};
@@ -172,6 +176,53 @@ describe("optimistic updates", () => {
     await store.getState().removeApp("one");
     store.getState().clearError();
     expect(store.getState().lastError).toBeNull();
+  });
+});
+
+describe("launching and run state", () => {
+  const state = (id: string, running: boolean, foreground = false) => ({ id, running, foreground });
+
+  it("starts with the run states known to the core", async () => {
+    const store = await ready({ appsRunning: async () => ok([state("one", true)]) });
+    expect(store.getState().running).toEqual({ one: state("one", true) });
+  });
+
+  it("still loads when the run states cannot be read", async () => {
+    const store = await ready({ appsRunning: async () => refused() });
+    expect(store.getState().status).toBe("ready");
+    expect(store.getState().running).toEqual({});
+  });
+
+  it("follows app-state-changed events", async () => {
+    let push: (s: ReturnType<typeof state>) => void = () => {};
+    const store = await ready(
+      {},
+      {
+        ...silentEvents,
+        onAppStateChanged: async (h) => {
+          push = h;
+          return () => {};
+        },
+      },
+    );
+    push(state("one", true, true));
+    push(state("two", true));
+    push(state("one", true));
+    expect(store.getState().running).toEqual({ one: state("one", true), two: state("two", true) });
+  });
+
+  it("returns the launch result and records a refusal as the last error", async () => {
+    const store = await ready();
+    expect(await store.getState().launchApp("one")).toEqual(ok({ kind: "started", pid: 1 }));
+    const failing = await ready({ appLaunch: async () => refused() });
+    const r = await failing.getState().launchApp("one");
+    expect(r.ok).toBe(false);
+    expect(failing.getState().lastError).toEqual(REFUSED);
+  });
+
+  it("focus goes through the core too", async () => {
+    const store = await ready({ appFocus: async () => ok("notRunning") });
+    expect(await store.getState().focusApp("one")).toEqual(ok("notRunning"));
   });
 });
 

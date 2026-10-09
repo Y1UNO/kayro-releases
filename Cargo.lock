@@ -1586,6 +1586,7 @@ dependencies = [
  "serde_json",
  "specta",
  "specta-typescript",
+ "sysinfo",
  "tauri",
  "tauri-build",
  "tauri-plugin-single-instance",
@@ -3534,6 +3535,13 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-autostart",
  "tauri-plugin-single-instance",
+]
+
+[[package]]
+name = "spike-06-launch"
+version = "0.0.0"
+dependencies = [
+ "windows",
 ]
 
 [[package]]

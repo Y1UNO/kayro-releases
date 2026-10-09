@@ -24,10 +24,23 @@ export const commands = {
 	detectScan: () => typedError<ScanReport, AppError>(__TAURI_INVOKE("detect_scan")),
 	/**  Stops the scan in progress, if any (the pending `detect_scan` then returns what it has). */
 	detectCancel: () => __TAURI_INVOKE<void>("detect_cancel"),
+	/**
+	 *  Starts an app, or brings it to the front when it is already open. Runs off the interface
+	 *  thread (an administrator prompt can wait for the user).
+	 */
+	appLaunch: (id: string) => typedError<LaunchResult, AppError>(__TAURI_INVOKE("app_launch", { id })),
+	/**  Brings an already running app to the front, without starting anything. */
+	appFocus: (id: string) => typedError<FocusResult, AppError>(__TAURI_INVOKE("app_focus", { id })),
+	/**
+	 *  State of every app that can be followed (an app without a way to recognise its process
+	 *  is simply absent).
+	 */
+	appsRunning: () => __TAURI_INVOKE<AppRunState[]>("apps_running"),
 };
 
 /** Events */
 export const events = {
+	appStateChanged: makeEvent<AppStateChanged>("app-state-changed"),
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
@@ -56,7 +69,17 @@ export type AppError = {
 	field: string | null,
 };
 
+export type AppRunState = {
+	id: string,
+	running: boolean,
+	/**  One of the app's processes owns the window in front. */
+	foreground: boolean,
+};
+
 export type AppSource = { kind: "manual" } | { kind: "steam"; appId: string } | { kind: "epic"; appName: string } | { kind: "startmenu" };
+
+/**  Emitted when an app starts, stops, or comes to / leaves the front (changes only). */
+export type AppStateChanged = AppRunState;
 
 /**  Emitted after every successful change of the app list. */
 export type AppsChanged = AppsFile;
@@ -103,7 +126,23 @@ export type ErrorCode =
 /**  The input was refused by validation (`field` tells which one when known). */
 "validation" | "notFound" | "duplicate" | 
 /**  Reading or writing user data failed. */
-"io" | "internal";
+"io" | "internal" | 
+/**  The program, shortcut or protocol handler to start does not exist or is not installed. */
+"launchNotFound" | 
+/**  Windows refused to start it (access denied). */
+"launchDenied" | 
+/**  It needs administrator rights and the app is not configured to run elevated. */
+"elevationRequired" | 
+/**  The user dismissed the administrator prompt. */
+"elevationCancelled" | 
+/**  Any other failure to start (`message` has the Win32 code). */
+"launchFailed";
+
+export type FocusResult = "focused" | 
+/**  No process of this app is known (or the app cannot be followed). */
+"notRunning" | 
+/**  Running, but no window could be brought forward (tray app, other privileges…). */
+"failed";
 
 /**  How to start an app. Exactly one of a closed set of kinds; each is validated on its own. */
 export type Launch = { kind: "exe"; path: string; args: string[]; cwd: string | null; elevated: boolean } | { kind: "lnk"; path: string } | 
@@ -111,6 +150,10 @@ export type Launch = { kind: "exe"; path: string; args: string[]; cwd: string | 
 { kind: "uri"; uri: string } | 
 /**  Packaged (UWP) app, by Application User Model ID. */
 { kind: "uwp"; aumid: string } | { kind: "url"; url: string };
+
+export type LaunchResult = { kind: "started"; pid: number | null } | 
+/**  The app was already open: its window was brought to the front instead. */
+{ kind: "focusedExisting" };
 
 /**  Which process to watch to know the app is running. */
 export type MatchRule = {
