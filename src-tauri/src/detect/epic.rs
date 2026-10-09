@@ -157,6 +157,7 @@ pub(crate) fn parse_item(v: &Value) -> Result<Option<DetectedApp>, String> {
         poster_path: None,
         hero_path: None,
         already_added: false,
+        suggested_category: String::new(),
     }))
 }
 

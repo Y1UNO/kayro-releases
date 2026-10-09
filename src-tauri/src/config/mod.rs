@@ -14,7 +14,7 @@ use std::time::Instant;
 
 use crate::error::{AppError, ErrorCode};
 use crate::paths::DataPaths;
-use apps::{AppEntry, AppSource, AppsFile, NewApp};
+use apps::{AddFailure, AddReport, AppEntry, AppSource, AppsFile, NewApp};
 use schema::{SceneFile, Settings, SettingsPatch, SlotsFile, ThemeFile};
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -56,6 +56,10 @@ impl ConfigState {
         }
     }
 
+    pub fn paths(&self) -> &DataPaths {
+        &self.paths
+    }
+
     pub fn settings(&self) -> Settings {
         lock(&self.settings).clone()
     }
@@ -75,32 +79,50 @@ impl ConfigState {
     }
 
     pub fn add_app(&self, new: NewApp) -> Result<AppEntry, AppError> {
-        validate::validate_new_app(&new)?;
         let mut guard = lock(&self.apps);
-        if guard.apps.len() >= validate::MAX_APPS {
-            return Err(AppError::new(ErrorCode::Validation, "too many apps"));
-        }
-        if !matches!(new.source, AppSource::Manual | AppSource::Startmenu)
-            && guard.apps.iter().any(|a| a.source == new.source)
-        {
-            return Err(AppError::new(
-                ErrorCode::Duplicate,
-                "this app is already in the list",
-            ));
-        }
-        let id = unique_id(&new.name, &guard);
-        let entry = new.with_id(id);
         let mut next = guard.clone();
-        next.apps.push(entry.clone());
+        let entry = push_app(&mut next, new)?;
         store::save(&self.paths.apps(), &next)?;
         *guard = next;
         Ok(entry)
+    }
+
+    /// Adds several apps with one write. An app that is refused (invalid, duplicate…) does not
+    /// stop the others: it is reported with its position in `news`.
+    pub fn add_apps(&self, news: Vec<NewApp>) -> Result<AddReport, AppError> {
+        let mut guard = lock(&self.apps);
+        let mut next = guard.clone();
+        let mut report = AddReport::default();
+        for (index, new) in news.into_iter().enumerate() {
+            match push_app(&mut next, new) {
+                Ok(entry) => report.added.push(entry),
+                Err(error) => report.failed.push(AddFailure {
+                    index: u32::try_from(index).unwrap_or(u32::MAX),
+                    error,
+                }),
+            }
+        }
+        if !report.added.is_empty() {
+            store::save(&self.paths.apps(), &next)?;
+            *guard = next;
+        }
+        Ok(report)
     }
 
     pub fn update_app(&self, app: AppEntry) -> Result<AppEntry, AppError> {
         validate::validate_app(&app)?;
         let mut guard = lock(&self.apps);
         let mut next = guard.clone();
+        if next
+            .apps
+            .iter()
+            .any(|a| a.id != app.id && a.launch.target_key() == app.launch.target_key())
+        {
+            return Err(AppError::new(
+                ErrorCode::Duplicate,
+                "another app already starts this target",
+            ));
+        }
         let slot = next
             .apps
             .iter_mut()
@@ -136,6 +158,27 @@ impl ConfigState {
     pub fn themes(&self) -> &[ThemeFile] {
         &self.themes
     }
+}
+
+/// Validates `new` and appends it to `file` (not saved here).
+fn push_app(file: &mut AppsFile, new: NewApp) -> Result<AppEntry, AppError> {
+    validate::validate_new_app(&new)?;
+    if file.apps.len() >= validate::MAX_APPS {
+        return Err(AppError::new(ErrorCode::Validation, "too many apps"));
+    }
+    let same_store_entry = !matches!(new.source, AppSource::Manual | AppSource::Startmenu)
+        && file.apps.iter().any(|a| a.source == new.source);
+    let key = new.launch.target_key();
+    if same_store_entry || file.apps.iter().any(|a| a.launch.target_key() == key) {
+        return Err(AppError::new(
+            ErrorCode::Duplicate,
+            "this app is already in the list",
+        ));
+    }
+    let id = unique_id(&new.name, file);
+    let entry = new.with_id(id);
+    file.apps.push(entry.clone());
+    Ok(entry)
 }
 
 fn deaccent(c: char) -> char {

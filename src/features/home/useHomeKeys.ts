@@ -9,6 +9,10 @@ export interface HomeKeyHandlers {
   onEnter: () => void;
   onEscape: () => void;
   onSearch: () => void;
+  /** F2: edit the selected app. */
+  onEdit: () => void;
+  /** Context-menu key or Shift+F10: menu of the selected app. */
+  onMenu: () => void;
 }
 
 /**
@@ -32,6 +36,13 @@ export function useHomeKeys(handlers: HomeKeyHandlers, enabled: boolean): void {
       if (document.getElementById("root")?.hasAttribute("inert")) return;
       const h = latest.current;
 
+      if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+        const inField = e.target instanceof Element && e.target.closest("input, textarea, select");
+        if (inField) return;
+        e.preventDefault();
+        h.onMenu();
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "k") {
         e.preventDefault();
         h.onSearch();
@@ -73,6 +84,9 @@ export function useHomeKeys(handlers: HomeKeyHandlers, enabled: boolean): void {
           break;
         case "Escape":
           h.onEscape();
+          break;
+        case "F2":
+          h.onEdit();
           break;
         default:
           return;

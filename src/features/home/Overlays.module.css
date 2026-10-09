@@ -1,0 +1,79 @@
+.menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 220px;
+  animation: menu-in 0.14s var(--ease) both;
+}
+
+.surface {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-14);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:hover,
+.item:focus-visible {
+  background: var(--fill-hover);
+  outline: none;
+}
+
+.item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent-light);
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+/* Card being dragged towards a tab. */
+.ghost {
+  position: fixed;
+  z-index: 70;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+}
+
+.notice {
+  position: fixed;
+  z-index: 50;
+  top: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--fs-14);
+  color: var(--text);
+  animation: notice-in var(--dur-panel) var(--ease) both;
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}

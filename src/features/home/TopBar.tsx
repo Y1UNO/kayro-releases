@@ -4,6 +4,7 @@ import {
   IconButton,
   MicIcon,
   Pill,
+  PlusIcon,
   SearchIcon,
   SegmentedControl,
   Surface,
@@ -13,6 +14,7 @@ import styles from "./TopBar.module.css";
 
 interface Props {
   onSearch: () => void;
+  onAdd: () => void;
 }
 
 const NOOP = () => {};
@@ -22,7 +24,7 @@ const NOOP = () => {};
  * Modes, voice and hands are in place but disabled: they arrive in steps 12, and in the voice and
  * hands extensions.
  */
-export function TopBar({ onSearch }: Props) {
+export function TopBar({ onSearch, onAdd }: Props) {
   return (
     <Surface as="header" radius="29px" className={styles.bar}>
       <div className={styles.brand}>{APP_NAME}</div>
@@ -38,6 +40,9 @@ export function TopBar({ onSearch }: Props) {
         <Pill tone="key">{t("home.search.shortcut")}</Pill>
       </button>
       <div className={styles.tools}>
+        <IconButton label={t("home.addApps.open")} size="sm" onClick={onAdd}>
+          <PlusIcon />
+        </IconButton>
         <SegmentedControl
           label={t("home.modes.label")}
           disabled

@@ -10,13 +10,22 @@ import styles from "./CategoryTabs.module.css";
 interface Props {
   category: CategoryId;
   view: HomeView;
+  /** Tab under a card being dragged (highlighted as a drop target). */
+  dropTarget?: CategoryId | null;
   panelId: string;
   onCategory: (id: CategoryId) => void;
   onView: (view: HomeView) => void;
 }
 
 /** Category tabs (arrows / Home / End move and select) and the carousel / grid switch. */
-export function CategoryTabs({ category, view, panelId, onCategory, onView }: Props) {
+export function CategoryTabs({
+  category,
+  view,
+  dropTarget = null,
+  panelId,
+  onCategory,
+  onView,
+}: Props) {
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
   function onKeyDown(e: KeyboardEvent, index: number) {
@@ -62,6 +71,8 @@ export function CategoryTabs({ category, view, panelId, onCategory, onView }: Pr
                   aria-controls={panelId}
                   tabIndex={selected ? 0 : -1}
                   className={styles.tab}
+                  data-drop-category={id}
+                  data-drop-over={dropTarget === id || undefined}
                   onClick={() => onCategory(id)}
                   onKeyDown={(e) => onKeyDown(e, i)}
                 >

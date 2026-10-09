@@ -27,6 +27,7 @@ scenes/<id>.json      # scènes
 themes/<id>.json      # thèmes de couleur (intégrés + importés)
 moods/<id>.hubmood    # ambiances de jeu
 cache/art/            # images redimensionnées (jamais exportées)
+cache/icons/          # icônes d'exe/lnk extraites par le Shell, PNG 128 px max (`<id>-<hash du chemin>.png`), reconstruites à la demande
 cache/palettes.json   # { "<hash image>": { dominant, accent, dark } }
 logs/
 ```

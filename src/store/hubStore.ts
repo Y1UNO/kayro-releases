@@ -1,5 +1,6 @@
 import { createStore, type StoreApi } from "zustand";
 import type {
+  AddReport,
   AppEntry,
   AppError,
   AppRunState,
@@ -25,6 +26,8 @@ export interface HubState {
 
   init: () => Promise<void>;
   addApp: (app: NewApp) => Promise<Outcome<AppEntry>>;
+  /** Not optimistic: the core decides which ones are accepted (duplicates, invalid…). */
+  addApps: (apps: NewApp[]) => Promise<Outcome<AddReport>>;
   updateApp: (entry: AppEntry) => Promise<Outcome<AppEntry>>;
   removeApp: (id: string) => Promise<Outcome<null>>;
   setSettings: (patch: SettingsPatch) => Promise<Outcome<Settings>>;
@@ -105,6 +108,15 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
             ? s.apps.map((a) => (a.id === tempId ? result.value : a))
             : s.apps.filter((a) => a.id !== tempId),
         }));
+        return result;
+      },
+
+      async addApps(apps) {
+        const result = await mutate(() => ipc.appsAddMany(apps));
+        if (result.ok && result.value.added.length > 0) {
+          const added = result.value.added;
+          set((s) => ({ apps: [...s.apps, ...added] }));
+        }
         return result;
       },
 

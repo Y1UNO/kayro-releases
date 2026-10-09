@@ -49,6 +49,13 @@
   color: var(--text-active);
 }
 
+/* A card is being dragged over this tab: dropping it here moves the app to this category. */
+.tab[data-drop-over],
+.tab[data-drop-over]:hover {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
 .group {
   position: relative;
 }

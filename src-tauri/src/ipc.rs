@@ -6,15 +6,17 @@ use specta::Type;
 use tauri::{AppHandle, Manager, Runtime, State};
 use tauri_specta::{collect_commands, collect_events, Builder, Event};
 
-use crate::config::apps::{AppEntry, AppsFile, NewApp};
+use crate::config::apps::{AddReport, AppEntry, AppsFile, NewApp};
 use crate::config::schema::{Settings, SettingsPatch};
 use crate::config::ConfigState;
 use crate::detect::default_sources;
 use crate::detect::scan::{run_scan, DetectProgress, DetectState, ScanReport};
 use crate::error::{AppError, ErrorCode};
+use crate::intake::{inspect, shortcut_target, InspectReport};
 use crate::launcher::system::SystemLauncher;
 use crate::launcher::{launch_app, LaunchResult};
 use crate::procwatch::{AppRunState, ProcWatch, RunningApps};
+use crate::{icons, platform};
 
 /// Emitted after every successful change of the settings (also to the window that made it).
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -112,8 +114,57 @@ pub fn apps_remove<R: Runtime>(
     id: String,
 ) -> Result<(), AppError> {
     state.remove_app(&id)?;
+    icons::forget(&state.paths().icons_dir(), &id);
     apps_changed(&app, &state);
     Ok(())
+}
+
+/// Adds several apps with a single write (the detected-apps tab, a multi-file drop). One app
+/// being refused never stops the others: see `AddReport::failed`.
+#[tauri::command]
+#[specta::specta]
+pub fn apps_add_many<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, ConfigState>,
+    new_apps: Vec<NewApp>,
+) -> Result<AddReport, AppError> {
+    let report = state.add_apps(new_apps)?;
+    if !report.added.is_empty() {
+        apps_changed(&app, &state);
+    }
+    Ok(report)
+}
+
+/// Looks at files and addresses that were dropped or pasted and proposes apps. Read-only:
+/// nothing is started and nothing is added.
+#[tauri::command]
+#[specta::specta]
+pub async fn apps_inspect(
+    config: State<'_, ConfigState>,
+    inputs: Vec<String>,
+) -> Result<InspectReport, AppError> {
+    let existing = config.apps().apps;
+    tauri::async_runtime::spawn_blocking(move || inspect(&inputs, &existing, &shortcut_target))
+        .await
+        .map_err(|e| AppError::new(ErrorCode::Internal, format!("inspect task failed: {e}")))
+}
+
+/// Icon of an app as a `data:` URL, or `None` when it has none (links, protocols, packaged apps,
+/// unreadable programs): the card then keeps its monogram.
+#[tauri::command]
+#[specta::specta]
+pub async fn app_icon(
+    config: State<'_, ConfigState>,
+    id: String,
+) -> Result<Option<String>, AppError> {
+    let entry = find_app(&config, &id)?;
+    let dir = config.paths().icons_dir();
+    tauri::async_runtime::spawn_blocking(move || {
+        icons::icon_png(&dir, &entry, &|path| platform::icon::shell_icon(path))
+            .map(|png| icons::png_data_url(&png))
+    })
+    .await
+    .map_err(|e| AppError::new(ErrorCode::Internal, format!("icon task failed: {e}")))
 }
 
 /// Looks for installed apps (Steam, Epic, Start Menu). Read-only: nothing is added. Starting a
@@ -232,6 +283,9 @@ pub fn builder() -> Builder<tauri::Wry> {
             apps_add::<tauri::Wry>,
             apps_update::<tauri::Wry>,
             apps_remove::<tauri::Wry>,
+            apps_add_many::<tauri::Wry>,
+            apps_inspect,
+            app_icon,
             detect_scan::<tauri::Wry>,
             detect_cancel,
             app_launch::<tauri::Wry>,

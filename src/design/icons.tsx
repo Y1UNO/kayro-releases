@@ -52,3 +52,22 @@ export const CloseIcon = (p: IconProps) => (
     <path d="M6 6l12 12M18 6 6 18" />
   </Icon>
 );
+
+export const UploadIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 16V4m0 0-4 4m4-4 4 4M5 20h14" />
+  </Icon>
+);
+
+export const EditIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" />
+    <path d="m13.5 6.5 4 4" />
+  </Icon>
+);
+
+export const PlusIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Icon>
+);

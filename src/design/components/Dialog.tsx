@@ -12,6 +12,8 @@ interface Props {
   title: string;
   /** Label of the close button. */
   closeLabel?: string;
+  /** `wide` = 760 px panel that fills the window height (forms and lists with their own scroll). */
+  size?: "md" | "wide";
   children: ReactNode;
 }
 
@@ -22,7 +24,14 @@ const FOCUSABLE =
  * Modal dialog: rendered in a portal, focus moves in and is trapped (Tab cycles), Escape closes,
  * the rest of the app is `inert`, and focus returns to the opener on close.
  */
-export function Dialog({ open, onClose, title, closeLabel = "Fermer", children }: Props) {
+export function Dialog({
+  open,
+  onClose,
+  title,
+  closeLabel = "Fermer",
+  size = "md",
+  children,
+}: Props) {
   const titleId = useId();
   const panel = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -89,7 +98,7 @@ export function Dialog({ open, onClose, title, closeLabel = "Fermer", children }
       <Surface
         as="section"
         radius="var(--radius-3xl)"
-        className={styles.panel}
+        className={size === "wide" ? `${styles.panel} ${styles.wide}` : styles.panel}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

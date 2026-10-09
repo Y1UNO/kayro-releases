@@ -1,7 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Minimal capability for the main window (app commands need no permission).",
-  "windows": ["main"],
-  "permissions": []
+  "description": "Main window: app commands need no permission; listening to events (apps changed, files dropped on the window) needs these two.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
+  ]
 }

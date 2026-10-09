@@ -143,6 +143,58 @@
   color: rgba(255, 255, 255, 0.94);
 }
 
+/* Program icon in place of the monogram (same corner, about the same weight). */
+.icon {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+}
+
+.cell .icon {
+  left: 14px;
+  top: 14px;
+  width: 54px;
+  height: 54px;
+}
+
+/* "Edit" button: only on the active card (carousel) or on hover / focus (grid). */
+.edit {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(8, 5, 12, 0.55);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-hover) var(--ease);
+}
+
+.slot[data-active] .edit,
+.cell:hover .edit,
+.cell:focus-within .edit {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.slot[data-hidden] .edit {
+  pointer-events: none;
+}
+
+.edit:hover {
+  background: rgba(8, 5, 12, 0.8);
+}
+
 .cell .letter {
   font-size: 56px;
 }

@@ -16,6 +16,31 @@
   animation: panel-in var(--dur-panel) var(--ease) both;
 }
 
+/* Wide: a fixed-height panel; the content (a tab strip, a list that scrolls, a footer) lays itself out. */
+.wide {
+  width: min(760px, 100%);
+  height: min(640px, 100%);
+}
+
+/* Dense content (lists, forms): nearly opaque, so the screen behind never competes with the text. */
+.panel.wide,
+.panel.wide[data-blur] {
+  --_bg: var(--glass-highlight), rgba(18, 13, 28, 0.92);
+}
+
+.wide .inner {
+  height: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+.wide .body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .inner {
   outline: none;
   display: flex;

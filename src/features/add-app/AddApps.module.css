@@ -1,0 +1,392 @@
+/* The dialog's content: tab strip, filters, list of rows, drop zone, form, footer. */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+  min-height: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+  min-height: 0;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  padding: 6px 12px;
+  font-size: var(--fs-13);
+  border-radius: var(--radius-sm);
+  background: var(--fill-soft);
+}
+
+.listBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--fs-13);
+  color: var(--text-2);
+}
+
+.link {
+  border: 0;
+  background: none;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  color: var(--accent-light);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link:hover {
+  background: var(--fill-soft);
+}
+
+/* ---- rows ---- */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  background: var(--field);
+  cursor: pointer;
+  color: var(--text);
+  /* Long lists: the browser skips the layout of rows that are out of view. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 52px;
+}
+
+.row[data-disabled] {
+  cursor: default;
+  opacity: 0.62;
+}
+
+.box {
+  appearance: none;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  box-sizing: border-box;
+  border-radius: 7px;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--track);
+  display: grid;
+  place-items: center;
+  cursor: inherit;
+}
+
+.box:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.box:checked::after {
+  content: "";
+  width: 11px;
+  height: 6px;
+  margin-top: -2px;
+  border-left: 3px solid var(--text-on-accent);
+  border-bottom: 3px solid var(--text-on-accent);
+  transform: rotate(-45deg);
+}
+
+.box:disabled {
+  opacity: 0.5;
+}
+
+.box:focus-visible,
+.input:focus-visible,
+.select:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.tile {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--card) 100%, white 12%),
+    color-mix(in srgb, var(--card) 35%, black)
+  );
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-16);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nameInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.source {
+  flex: none;
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.already {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--fill-soft);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+/* ---- fields ---- */
+
+.input,
+.select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: var(--field);
+  box-shadow: var(--field-inset);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-15);
+  color-scheme: dark;
+}
+
+.input::placeholder {
+  color: var(--text-3);
+  opacity: 0.7;
+}
+
+.input[aria-invalid="true"] {
+  border-color: #ff9d8a;
+}
+
+.input:disabled,
+.select:disabled {
+  opacity: 0.6;
+}
+
+.pill {
+  flex: none;
+  width: auto;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--fill-active);
+  box-shadow: none;
+  font-size: var(--fs-12);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+}
+
+/* The fields scroll; the buttons below them never do. */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 4px 2px 2px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.hint {
+  font-size: var(--fs-13);
+  color: var(--text-3);
+}
+
+.error {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: #ffb4a4;
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.twoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+/* ---- drop zone ---- */
+
+.zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 78px;
+  box-sizing: border-box;
+  border-radius: var(--radius-lg);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  font-size: var(--fs-14);
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: center;
+  padding: 0 var(--space-4);
+  transition:
+    border-color var(--dur-hover) var(--ease),
+    background-color var(--dur-hover) var(--ease);
+}
+
+/* Same zone under the detected list (mock-up): a drop anywhere on the window works. */
+.zoneSmall {
+  min-height: 56px;
+  flex: none;
+}
+
+.zone[data-hover] {
+  border-color: var(--accent);
+  background: var(--fill-soft);
+  color: var(--text);
+}
+
+.paste {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.refused {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-13);
+  color: var(--text-2);
+}
+
+.refused b {
+  color: var(--text);
+  word-break: break-all;
+}
+
+.reason::before {
+  content: "— ";
+}
+
+.centered {
+  margin: auto;
+  text-align: center;
+  color: var(--text-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ---- footer ---- */
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex: none;
+}
+
+.status {
+  font-size: var(--fs-14);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.status[data-tone="error"] {
+  color: #ffb4a4;
+}
+
+.status[data-tone="ok"] {
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}

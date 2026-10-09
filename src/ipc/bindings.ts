@@ -18,6 +18,21 @@ export const commands = {
 	appsUpdate: (entry: AppEntry) => typedError<AppEntry, AppError>(__TAURI_INVOKE("apps_update", { entry })),
 	appsRemove: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("apps_remove", { id })),
 	/**
+	 *  Adds several apps with a single write (the detected-apps tab, a multi-file drop). One app
+	 *  being refused never stops the others: see `AddReport::failed`.
+	 */
+	appsAddMany: (newApps: NewApp[]) => typedError<AddReport, AppError>(__TAURI_INVOKE("apps_add_many", { newApps })),
+	/**
+	 *  Looks at files and addresses that were dropped or pasted and proposes apps. Read-only:
+	 *  nothing is started and nothing is added.
+	 */
+	appsInspect: (inputs: string[]) => typedError<InspectReport, AppError>(__TAURI_INVOKE("apps_inspect", { inputs })),
+	/**
+	 *  Icon of an app as a `data:` URL, or `None` when it has none (links, protocols, packaged apps,
+	 *  unreadable programs): the card then keeps its monogram.
+	 */
+	appIcon: (id: string) => typedError<string | null, AppError>(__TAURI_INVOKE("app_icon", { id })),
+	/**
 	 *  Looks for installed apps (Steam, Epic, Start Menu). Read-only: nothing is added. Starting a
 	 *  scan cancels the one in progress; progress arrives as `DetectProgress` events.
 	 */
@@ -47,6 +62,18 @@ export const events = {
 };
 
 /* Types */
+/**  One app that was refused, by its position in the request. */
+export type AddFailure = {
+	index: number,
+	error: AppError,
+};
+
+/**  Outcome of adding several apps at once. */
+export type AddReport = {
+	added: AppEntry[],
+	failed: AddFailure[],
+};
+
 export type AppEntry = {
 	id: string,
 	name: string,
@@ -95,6 +122,18 @@ export type Art = {
 	hero: string | null,
 };
 
+/**  An app the user could add. */
+export type Candidate = {
+	/**  What the user gave (path or address), to tell candidates apart in the interface. */
+	input: string,
+	name: string,
+	launch: Launch,
+	match: MatchRule,
+	suggestedCategory: string,
+	/**  Already in the list: shown, but not added again. */
+	alreadyAdded: boolean,
+};
+
 /**  How much the colours of the selected game tint the interface (DESIGN.md). */
 export type ColorMode = "off" | "light" | "immersive";
 
@@ -120,6 +159,8 @@ export type DetectedApp = {
 	posterPath: string | null,
 	heroPath: string | null,
 	alreadyAdded: boolean,
+	/**  Category proposed for the app (see [`category::suggest_category`]); the user may change it. */
+	suggestedCategory: string,
 };
 
 export type ErrorCode = 
@@ -143,6 +184,11 @@ export type FocusResult = "focused" |
 "notRunning" | 
 /**  Running, but no window could be brought forward (tray app, other privileges…). */
 "failed";
+
+export type InspectReport = {
+	candidates: Candidate[],
+	refused: Refused[],
+};
 
 /**  How to start an app. Exactly one of a closed set of kinds; each is validated on its own. */
 export type Launch = { kind: "exe"; path: string; args: string[]; cwd: string | null; elevated: boolean } | { kind: "lnk"; path: string } | 
@@ -173,6 +219,23 @@ export type NewApp = {
 };
 
 export type Quality = "eco" | "balanced" | "high" | "ultra";
+
+export type Refused = {
+	input: string,
+	reason: RejectReason,
+};
+
+export type RejectReason = 
+/**  The file is not there (anymore). */
+"notFound" | 
+/**  A folder, a document, a protocol the hub does not start… */
+"notSupported" | 
+/**  Refused by the same validation as `apps_add` (too long, odd characters…). */
+"invalid" | 
+/**  Given twice in the same drop. */
+"repeated" | 
+/**  Beyond [`MAX_INPUTS`]. */
+"tooMany";
 
 export type ScanReport = {
 	sources: SourceReport[],

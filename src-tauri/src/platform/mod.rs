@@ -3,6 +3,7 @@
 //! replace with fakes (see `launcher::Launcher` and `procwatch::ProcessSource`).
 
 pub mod com;
+pub mod icon;
 pub mod shell;
 pub mod window;
 
