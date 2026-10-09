@@ -64,7 +64,7 @@ HUB/
 | Dépôt de fichiers | natif : `onDragDropEvent` (`dragDropEnabled: true`, valeur par défaut) | donne les vrais chemins des .exe, .lnk, .url | — | S3 |
 | Réordonner (scènes) | événements pointeur (`Reorder` de motion) | sous Windows, `dragDropEnabled` **désactive le drag-and-drop HTML5** [S3]. `Reorder` n'utilise pas HTML5 : à vérifier à l'étape 11 | couper `dragDropEnabled` (on perdrait le dépôt de fichiers) | S3 |
 | Boîtes de dialogue | `tauri-plugin-dialog` 2.8.1 | choisir un .exe, importer/exporter | — | S1 |
-| Types Rust↔TS | **`tauri-specta` =2.0.0-rc.25** + `specta` =2.0.0-rc.25 + `specta-typescript` 0.0.12, versions exactes épinglées | génère les commandes **et** les événements typés (`collect_commands!`, `collect_events!`, `#[derive(tauri_specta::Event)]`) ; dépôt actif (commit du 20/07/2026) | `ts-rs` 12.0.1 : stable, mais ne génère que les types ; les noms de commandes restent écrits à la main, donc peuvent diverger. C'est le **plan B** | S1 S6 S7 |
+| Types Rust↔TS | **`tauri-specta` =2.0.0-rc.25** (étape 4 : compile avec Tauri 2.12.2, features `derive` + `typescript`, `tempfile` 3 en dev-dependency) + `specta` =2.0.0-rc.25 + `specta-typescript` 0.0.12, versions exactes épinglées | génère les commandes **et** les événements typés (`collect_commands!`, `collect_events!`, `#[derive(tauri_specta::Event)]`) ; dépôt actif (commit du 20/07/2026) | `ts-rs` 12.0.1 : stable, mais ne génère que les types ; les noms de commandes restent écrits à la main, donc peuvent diverger. C'est le **plan B** | S1 S6 S7 |
 | API Windows | `windows` 0.62.2 (liste des features ci-dessous) | COM ergonomique (Shell, PDH) | `windows-sys` 0.61.2 (pas de COM ergonomique), `winapi` (n'est plus maintenu) | S1 S9 |
 | VDF Steam | `keyvalues-parser` 0.2.4 (VDF texte) + lecture tolérante maison | on ne lit que les champs utiles ; un fichier invalide est ignoré et journalisé | `steamlocate` 2.1.1 (structures figées, moins de contrôle sur les erreurs). Le VDF binaire est inutile : on parcourt les dossiers | S1 L |
 | Effets natifs | `windowEffects` de Tauri, qui s'appuie sur `window-vibrancy` 0.8.1 ; exige `transparent: true` | **Mica/Tabbed : Win11 seulement.** **Acrylic** : Win10/11, « bad performance when resizing/dragging » sur Win10 v1903+ et Win11 22000. **Blur** : Win10 et Win11 22H1, mêmes saccades sur Win11 22621+ | `backdrop-filter` CSS : ne floute que la page, jamais le bureau | S3 S5 |
@@ -96,7 +96,7 @@ HUB/
 | Build | Vite 8.3.4 + `@vitejs/plugin-react` 6.1.2 (exige vite ^8) | — | — | S2 |
 | Langage | **TypeScript 6.0.3** | `typescript-eslint` 8.71.1 exige `typescript >=4.8.4 <6.1.0` | TypeScript 7.0.2 (`latest`, version native) : incompatible avec le lint pour l'instant | S2 |
 | Animation | `motion` 14.0.0 (`motion/react`), compatible React 18/19 | ressorts, `Reorder`, `AnimatePresence` | — | S2 |
-| État | `zustand` 5.0.15 | léger | Redux | S2 |
+| État | `zustand` 5.0.15 (installé à l'étape 4, version exacte) | léger | Redux | S2 |
 | Polices | `@fontsource-variable/fraunces` 5.3.0, `@fontsource-variable/dm-sans` 5.3.0 | les maquettes utilisent l'axe `opsz` de Fraunces (9..144) ; fichier qui contient cet axe : à vérifier à l'étape 3 | `@fontsource/*` statiques | S2 |
 | Tests | `vitest` 5.0.3 (vite ^6.4 ‖ ^7 ‖ ^8 ; Node ^22.12 ‖ ^24) | fonctions pures (thèmes, contraste, delta time) | Jest | S2 |
 | Lint | `eslint` 10.12.0 + `typescript-eslint` 8.71.1 + `eslint-plugin-react-hooks` 7.1.1 | — | — | S2 |

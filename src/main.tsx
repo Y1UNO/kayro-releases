@@ -4,7 +4,8 @@ import { StrictMode, Suspense, lazy } from "react";
 import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { Backdrop, ThemeProvider } from "./design";
+import { Backdrop, ThemeProvider, applyQuality } from "./design";
+import { hubStore } from "./store";
 import "./index.css";
 
 const root = document.getElementById("root");
@@ -16,17 +17,40 @@ const Catalogue: ComponentType | null =
     ? lazy(() => import("./dev/Catalogue"))
     : null;
 
-createRoot(root).render(
-  <StrictMode>
-    {Catalogue ? (
+const appRoot = createRoot(root);
+
+if (Catalogue) {
+  appRoot.render(
+    <StrictMode>
       <Suspense fallback={null}>
         <Catalogue />
       </Suspense>
-    ) : (
-      <ThemeProvider>
-        <Backdrop />
-        <App />
-      </ThemeProvider>
-    )}
-  </StrictMode>,
-);
+    </StrictMode>,
+  );
+} else {
+  // Load the user's data first (a few ms, local): the first paint already has the right theme
+  // and quality level. A failed load still renders the app (defaults, error shown by <App />).
+  void hubStore
+    .getState()
+    .init()
+    .finally(() => {
+      const settings = hubStore.getState().settings;
+      if (settings) applyQuality(settings.quality);
+      hubStore.subscribe((s, prev) => {
+        if (s.settings && s.settings.quality !== prev.settings?.quality) {
+          applyQuality(s.settings.quality);
+        }
+      });
+      appRoot.render(
+        <StrictMode>
+          <ThemeProvider
+            initialThemeId={settings?.themeId}
+            onThemeChange={(themeId) => void hubStore.getState().setSettings({ themeId })}
+          >
+            <Backdrop />
+            <App />
+          </ThemeProvider>
+        </StrictMode>,
+      );
+    });
+}

@@ -10,3 +10,5 @@ package-lock.json
 spikes/**/captures
 spikes
 CLAUDE.md
+
+src/ipc/bindings.ts

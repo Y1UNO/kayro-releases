@@ -1,19 +1,21 @@
-import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { APP_NAME } from "./app/appName";
 import styles from "./App.module.css";
+import { t } from "./i18n";
+import { ipc } from "./ipc/commands";
+import { errorText } from "./ipc/errors";
+import { useHub } from "./store";
 
 export function App() {
-  const [pong, setPong] = useState<string>("…");
+  const status = useHub((s) => s.status);
+  const appCount = useHub((s) => s.apps.length);
+  const error = useHub((s) => s.lastError);
 
   useEffect(() => {
-    invoke<string>("ping")
-      .then(setPong)
-      .catch(() => setPong("indisponible"));
     // Show the (hidden) window only once the first frame is painted: no white flash.
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
-        void invoke("app_ready");
+        void ipc.appReady();
       }),
     );
   }, []);
@@ -21,7 +23,9 @@ export function App() {
   return (
     <main className={styles.main}>
       <h1>{APP_NAME}</h1>
-      <p>Squelette de l’étape 2 — IPC : {pong}</p>
+      {status === "ready" && <p>{t("app.appsCount", { count: appCount })}</p>}
+      {status === "failed" && <p>{error ? errorText(error) : t("app.loadFailed")}</p>}
+      {status !== "ready" && status !== "failed" && <p>{t("app.loading")}</p>}
     </main>
   );
 }
