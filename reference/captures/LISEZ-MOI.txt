@@ -1,0 +1,6 @@
+Mets ici tes captures PNG des maquettes (voir RESSOURCES.md du kit).
+Noms attendus :
+01-accueil-crepuscule.png   02-accueil-boreale.png   03-accueil-ocean.png
+04-apparence.png            05-jeu-generique.png      06-jeu-runes.png
+07-editeur.png              08-reglages-performance.png   09-ajout-apps.png
+10-widget-styles.png        11-widget-ouvert.png

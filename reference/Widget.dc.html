@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Hub Widget</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;family=Fraunces:opsz,wght@9..144,500&amp;family=DM+Sans:wght@500;600;700&amp;family=Geist:wght@500;600&amp;family=Geist+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="position:relative;overflow:hidden;width:1280px;height:560px;box-sizing:border-box;background:linear-gradient(135deg,#1a2342 0%,#3a2a55 55%,#5b3a4c 100%);color:#fff">
+  <div style="position:absolute;left:-80px;top:-120px;width:520px;height:420px;border-radius:50%;background:#4b8bff;opacity:0.28;filter:blur(110px)"></div>
+  <div style="position:absolute;right:-60px;bottom:-140px;width:560px;height:380px;border-radius:50%;background:#ff7a9a;opacity:0.25;filter:blur(120px)"></div>
+
+  <div style="position:relative;display:flex;flex-direction:column;gap:22px;box-sizing:border-box;padding:34px 48px;height:100%;justify-content:center">
+
+    <div style="display:flex;align-items:center;gap:24px">
+      <div style="width:150px;font-family:'Figtree',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;color:rgba(255,255,255,0.78)">A · AURORE</div>
+      <div style="display:flex;align-items:center;gap:6px;height:64px;box-sizing:border-box;padding:0 12px 0 20px;border-radius:32px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(30px);font-family:'Figtree',sans-serif;font-size:14px;font-weight:600">
+        <div style="width:22px;height:22px;border-radius:8px;background:linear-gradient(135deg,#a79bff,#4be0d3);margin-right:10px"></div>
+        <span style="padding:9px 14px;border-radius:20px;background:rgba(255,255,255,0.2)">Jeux</span>
+        <span style="padding:9px 14px;color:rgba(255,255,255,0.78)">Stream</span>
+        <span style="padding:9px 14px;color:rgba(255,255,255,0.78)">Créa</span>
+        <span style="padding:9px 14px;color:rgba(255,255,255,0.78)">Logiciels</span>
+        <span style="padding:9px 14px;color:rgba(255,255,255,0.78)">Autre</span>
+        <button aria-label="Rechercher" style="width:40px;height:40px;border-radius:20px;border:0;background:rgba(255,255,255,0.12);color:#fff;display:flex;align-items:center;justify-content:center;margin-left:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+        <button aria-label="Commande vocale" style="width:40px;height:40px;border-radius:20px;border:0;background:rgba(255,255,255,0.12);color:#fff;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <button style="border:0;border-radius:22px;padding:12px 20px;margin-left:4px;font-family:'Figtree',sans-serif;font-size:14px;font-weight:700;background:#9d92ff;color:#0a0b10">Soirée gaming</button>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:24px">
+      <div style="width:150px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.78)">B · SILLAGE</div>
+      <div style="display:flex;align-items:center;gap:4px;height:64px;box-sizing:border-box;padding:0 12px 0 18px;border-radius:18px;background:#14161a;border:1px solid #2a2e35;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700">
+        <div style="width:24px;height:24px;border-radius:8px;background:#3ddc97;margin-right:10px"></div>
+        <span style="padding:9px 14px;border-radius:12px;background:#1f3a2f;color:#3ddc97">Jeux</span>
+        <span style="padding:9px 14px;color:#b4bac4">Stream</span>
+        <span style="padding:9px 14px;color:#b4bac4">Créa</span>
+        <span style="padding:9px 14px;color:#b4bac4">Logiciels</span>
+        <span style="padding:9px 14px;color:#b4bac4">Autre</span>
+        <button aria-label="Rechercher" style="width:40px;height:40px;border-radius:12px;border:1px solid #2a2e35;background:#1b1e23;color:#eef0f3;display:flex;align-items:center;justify-content:center;margin-left:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+        <button aria-label="Commande vocale" style="width:40px;height:40px;border-radius:12px;border:1px solid #2a2e35;background:#1b1e23;color:#eef0f3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <button style="border:0;border-radius:12px;padding:12px 20px;margin-left:4px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:800;background:#3ddc97;color:#0b1a12">Soirée gaming</button>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:24px">
+      <div style="width:150px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;color:rgba(255,255,255,0.78)">C · BRUME</div>
+      <div style="display:flex;align-items:center;gap:6px;height:64px;box-sizing:border-box;padding:0 12px 0 22px;border-radius:32px;background:rgba(30,20,38,0.72);border:1px solid rgba(255,255,255,0.16);backdrop-filter:blur(28px);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600">
+        <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:500;margin-right:14px;color:#f6efe8">Hub</div>
+        <span style="padding:9px 14px;border-radius:20px;background:rgba(255,185,138,0.2);color:#ffd2b0">Jeux</span>
+        <span style="padding:9px 14px;color:rgba(246,239,232,0.78)">Stream</span>
+        <span style="padding:9px 14px;color:rgba(246,239,232,0.78)">Créa</span>
+        <span style="padding:9px 14px;color:rgba(246,239,232,0.78)">Logiciels</span>
+        <span style="padding:9px 14px;color:rgba(246,239,232,0.78)">Autre</span>
+        <button aria-label="Rechercher" style="width:40px;height:40px;border-radius:20px;border:0;background:rgba(255,255,255,0.1);color:#f6efe8;display:flex;align-items:center;justify-content:center;margin-left:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+        <button aria-label="Commande vocale" style="width:40px;height:40px;border-radius:20px;border:0;background:rgba(255,255,255,0.1);color:#f6efe8;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <button style="border:0;border-radius:24px;padding:12px 20px;margin-left:4px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;background:#ffb98a;color:#1a1020">Soirée gaming</button>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:24px">
+      <div style="width:150px;font-family:'Geist Mono',monospace;font-size:13px;font-weight:500;letter-spacing:0.08em;color:rgba(255,255,255,0.78)">D · ORBE</div>
+      <div style="display:flex;align-items:center;gap:6px;height:64px;box-sizing:border-box;padding:0 12px 0 22px;border-radius:32px;background:#07080b;border:1px solid rgba(255,255,255,0.18);font-family:'Geist',sans-serif;font-size:14px;font-weight:500">
+        <div style="width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff,#5a6cff 60%,#161a55);margin-right:12px"></div>
+        <span style="display:flex;align-items:center;gap:8px;padding:9px 14px;color:#fff"><span style="width:18px;height:2px;background:#8a98ff"></span>Jeux</span>
+        <span style="padding:9px 14px;color:rgba(242,244,248,0.7)">Stream</span>
+        <span style="padding:9px 14px;color:rgba(242,244,248,0.7)">Créa</span>
+        <span style="padding:9px 14px;color:rgba(242,244,248,0.7)">Logiciels</span>
+        <span style="padding:9px 14px;color:rgba(242,244,248,0.7)">Autre</span>
+        <button aria-label="Rechercher" style="width:40px;height:40px;border-radius:20px;border:1px solid rgba(255,255,255,0.16);background:transparent;color:#f2f4f8;display:flex;align-items:center;justify-content:center;margin-left:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+        <button aria-label="Commande vocale" style="width:40px;height:40px;border-radius:20px;border:1px solid rgba(255,255,255,0.16);background:transparent;color:#f2f4f8;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <button style="border:0;border-radius:24px;padding:12px 20px;margin-left:4px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;background:#f2f4f8;color:#07080b">Soirée gaming</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

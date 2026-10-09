@@ -1,0 +1,4 @@
+Un sous-dossier par jeu pour l'étape 17 : reference/briefs/<jeu>/
+  brief.md      (modèle dans RESSOURCES.md §6)
+  01.png … 05.png  (3 à 5 captures d'ambiance : menus, art-key, interface)
+Ces images servent d'INSPIRATION personnelle ; elles ne sont jamais copiées dans l'app ni l'installeur.

@@ -1,0 +1,29 @@
+# Dépendances et builds
+node_modules/
+dist/
+build/
+target/
+src-tauri/target/
+src-tauri/gen/
+
+# Kit de départ
+hub-kit.zip
+_tmp_unzip/
+
+# Journaux et fichiers locaux
+*.log
+npm-debug.log*
+.env
+.env.*
+*.local
+
+# Système / éditeurs
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Claude Code (réglages locaux)
+.claude/settings.local.json

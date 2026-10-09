@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Hub Apparence</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500&amp;family=DM+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+.lg{position:relative;background:linear-gradient(135deg,rgba(255,255,255,0.2),rgba(255,255,255,0.05) 55%,rgba(255,255,255,0.12));backdrop-filter:blur(20px) saturate(190%) brightness(1.06);-webkit-backdrop-filter:blur(20px) saturate(190%) brightness(1.06);border:1px solid rgba(255,255,255,0.22);box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.55),inset 0 -1.5px 0 rgba(255,255,255,0.12),inset 1.5px 0 0 rgba(255,255,255,0.18),inset -1.5px 0 0 rgba(255,255,255,0.08),0 18px 40px rgba(0,0,0,0.35),0 2px 6px rgba(0,0,0,0.25)}
+.lg::before{content:'';position:absolute;left:0;top:0;right:0;bottom:0;border-radius:inherit;background:radial-gradient(120% 95% at 18% 0%,rgba(255,255,255,0.3),rgba(255,255,255,0) 46%);pointer-events:none}
+@keyframes fogA{0%{transform:translate(0,0) scale(1)}50%{transform:translate(200px,-40px) scale(1.15)}100%{transform:translate(0,0) scale(1)}}
+.fogA{animation:fogA 26s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.fogA{animation:none}}
+</style>
+</helmet>
+<div style="position:relative;overflow:hidden;display:flex;width:1280px;height:760px;box-sizing:border-box;background:linear-gradient(180deg,#171021 0%,#0f0a16 55%,#09060d 100%);color:#f6efe8;font-family:'DM Sans',system-ui,sans-serif">
+  <div class="fogA" style="position:absolute;left:-240px;top:340px;width:1000px;height:420px;border-radius:50%;background:rgba(160,104,214,0.4);filter:blur(100px)"></div>
+  <div style="position:absolute;right:-260px;top:-80px;width:900px;height:420px;border-radius:50%;background:rgba(255,150,100,0.26);filter:blur(110px)"></div>
+  <svg width="1280" height="760" viewBox="0 0 1280 760" style="position:absolute;left:0;top:0;opacity:0.1;mix-blend-mode:overlay;pointer-events:none" aria-hidden="true">
+    <filter id="grainJ"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/></filter>
+    <rect width="1280" height="760" filter="url(#grainJ)"/>
+  </svg>
+
+  <div class="lg" style="position:relative;width:216px;flex-shrink:0;box-sizing:border-box;margin:28px 0 28px 28px;padding:22px 14px;border-radius:30px;display:flex;flex-direction:column;gap:4px">
+    <div style="padding:0 12px 18px;font-family:'Fraunces',serif;font-size:26px;font-weight:500">Réglages</div>
+    <div style="padding:11px 14px;border-radius:14px;font-size:15px;font-weight:600;color:rgba(246,239,232,0.78)">Général</div>
+    <div style="padding:11px 14px;border-radius:14px;font-size:15px;font-weight:700;background:rgba(255,255,255,0.18);color:#ffd2b0">Apparence</div>
+    <div style="padding:11px 14px;border-radius:14px;font-size:15px;font-weight:600;color:rgba(246,239,232,0.78)">Performance</div>
+    <div style="padding:11px 14px;border-radius:14px;font-size:15px;font-weight:600;color:rgba(246,239,232,0.78)">Voix</div>
+    <div style="padding:11px 14px;border-radius:14px;font-size:15px;font-weight:600;color:rgba(246,239,232,0.78)">Mains</div>
+    <div style="padding:11px 14px;border-radius:14px;font-size:15px;font-weight:600;color:rgba(246,239,232,0.78)">Raccourcis</div>
+    <div style="padding:11px 14px;border-radius:14px;font-size:15px;font-weight:600;color:rgba(246,239,232,0.78)">À propos</div>
+  </div>
+
+  <div style="position:relative;flex-grow:1;display:flex;flex-direction:column;gap:16px;box-sizing:border-box;padding:28px 40px 28px 32px;min-width:0">
+
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <h1 style="margin:0;font-family:'Fraunces',serif;font-size:48px;line-height:1;font-weight:300;letter-spacing:-0.02em">Apparence</h1>
+      <div style="font-size:15px;font-weight:500;color:rgba(246,239,232,0.78)">Choisis ton ambiance. Une seule teinte à l'écran, tout le reste s'accorde.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+      <sc-for list="{{themes}}" as="t" hint-placeholder-count="5">
+        <div class="lg" style="display:flex;flex-direction:column;gap:10px;box-sizing:border-box;height:214px;padding:12px;border-radius:24px;border:{{t.border}}">
+          <div style="position:relative;overflow:hidden;height:118px;border-radius:16px;background:{{t.bg}}">
+            <div style="position:absolute;left:34%;top:-30px;width:90px;height:150px;background:linear-gradient(180deg,{{t.beam}},rgba(0,0,0,0));filter:blur(14px)"></div>
+            <div style="position:absolute;left:-20px;bottom:-40px;width:230px;height:90px;border-radius:50%;background:{{t.fog}};filter:blur(26px)"></div>
+            <div style="position:absolute;left:0;right:0;top:18px;display:flex;justify-content:center;align-items:flex-start;gap:8px">
+              <div style="width:46px;height:68px;border-radius:10px;opacity:0.7;background:{{t.k1}}"></div>
+              <div style="width:58px;height:84px;border-radius:12px;background:{{t.k2}};box-shadow:0 8px 24px {{t.glow}}"></div>
+              <div style="width:46px;height:68px;border-radius:10px;opacity:0.7;background:{{t.k3}}"></div>
+            </div>
+            <div style="position:absolute;left:50%;bottom:9px;margin-left:-28px;width:56px;height:10px;border-radius:5px;background:{{t.accent}}"></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em">{{t.name}}</div>
+            <div style="width:22px;height:22px;border-radius:11px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:{{t.chk}};border:1.5px solid rgba(255,255,255,0.4);color:#1a1020">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" style="opacity:{{t.tick}}"><path d="m5 12 5 5 9-10"/></svg>
+            </div>
+          </div>
+          <div style="font-size:12px;font-weight:500;line-height:1.4;color:rgba(246,239,232,0.72)">{{t.desc}}</div>
+        </div>
+      </sc-for>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-sizing:border-box;height:214px;padding:12px;border-radius:24px;border:2px dashed rgba(255,255,255,0.28);text-align:center">
+        <div style="display:flex;gap:8px">
+          <span style="width:30px;height:30px;border-radius:15px;background:#ffb98a"></span>
+          <span style="width:30px;height:30px;border-radius:15px;background:#b86fd0"></span>
+          <span style="width:30px;height:30px;border-radius:15px;background:#3a2a52"></span>
+        </div>
+        <div style="font-size:16px;font-weight:700">Créer le mien</div>
+        <div style="font-size:12px;font-weight:500;line-height:1.4;color:rgba(246,239,232,0.72);max-width:220px">Choisis 3 couleurs. Un thème est un simple fichier, tu peux l'exporter pour le partager.</div>
+      </div>
+    </div>
+
+    <div class="lg" style="display:flex;gap:28px;align-items:center;box-sizing:border-box;padding:16px 24px;border-radius:26px">
+      <div style="display:flex;flex-direction:column;gap:10px;flex-grow:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <div style="font-size:15px;font-weight:600">Couleurs du jeu</div>
+            <div style="font-size:12px;font-weight:500;color:rgba(246,239,232,0.7)">La lumière prend les couleurs de l'affiche du jeu choisi.</div>
+          </div>
+          <div style="display:flex;padding:3px;border-radius:16px;background:rgba(0,0,0,0.3);font-size:12px;font-weight:700;flex-shrink:0"><span style="padding:6px 10px;border-radius:13px;color:rgba(246,239,232,0.75)">Désactivé</span><span style="padding:6px 10px;border-radius:13px;background:rgba(255,255,255,0.2)">Léger</span><span style="padding:6px 10px;border-radius:13px;color:rgba(246,239,232,0.75)">Immersif</span></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <div style="font-size:15px;font-weight:600">Suivre le soleil</div>
+            <div style="font-size:12px;font-weight:500;color:rgba(246,239,232,0.7)">La lumière suit l'heure de ta ville.</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:flex-start;flex-shrink:0;width:44px;height:26px;box-sizing:border-box;padding:3px;border-radius:13px;background:rgba(0,0,0,0.35)"><div style="width:20px;height:20px;border-radius:10px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.35)"></div></div>
+        </div>
+      </div>
+      <div style="width:1px;align-self:stretch;background:rgba(255,255,255,0.14)"></div>
+      <div style="display:flex;flex-direction:column;gap:12px;width:300px;flex-shrink:0">
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600"><span>Intensité de l'atmosphère</span><span style="color:rgba(246,239,232,0.8)">80 %</span></div>
+        <div style="position:relative;height:8px;border-radius:4px;background:rgba(0,0,0,0.3)">
+          <div style="width:80%;height:8px;border-radius:4px;background:#ffd2b0"></div>
+          <div style="position:absolute;left:80%;top:-6px;margin-left:-10px;width:20px;height:20px;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button style="flex:1;border:0;border-radius:18px;padding:9px 12px;font-size:13px;font-weight:600;background:rgba(255,255,255,0.14);color:#f6efe8">Importer un thème</button>
+          <button style="flex:1;border:0;border-radius:18px;padding:9px 12px;font-size:13px;font-weight:600;background:rgba(255,255,255,0.14);color:#f6efe8">Exporter le mien</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const g = (c, k) => 'linear-gradient(170deg,rgb(' + Math.round(c[0] * k) + ',' + Math.round(c[1] * k) + ',' + Math.round(c[2] * k) + '),rgb(' + Math.round(c[0] * 0.22) + ',' + Math.round(c[1] * 0.22) + ',' + Math.round(c[2] * 0.26) + '))';
+    const mk = (name, desc, sel, bg, accent, fog, beam, glow, card) => ({
+      name, desc, bg, accent, fog, beam, glow,
+      k1: g(card, 0.9), k2: g(card, 1.1), k3: g(card, 0.95),
+      border: sel ? '1.5px solid #ffb98a' : '1px solid rgba(255,255,255,0.22)',
+      chk: sel ? '#ffb98a' : 'rgba(0,0,0,0.25)', tick: sel ? 1 : 0
+    });
+    return {
+      themes: [
+        mk('Crépuscule', 'Violet doux et lumière ambrée. Le thème par défaut.', true, 'linear-gradient(180deg,#171021,#09060d)', '#ffb98a', 'rgba(160,104,214,0.55)', 'rgba(255,190,140,0.7)', 'rgba(255,170,120,0.4)', [190, 120, 170]),
+        mk('Aurore boréale', 'Vert d\'eau et turquoise, frais et calme.', false, 'linear-gradient(180deg,#0e1a1a,#060b0c)', '#8fe3b8', 'rgba(60,190,160,0.5)', 'rgba(140,235,200,0.7)', 'rgba(110,225,170,0.4)', [90, 190, 170]),
+        mk('Océan', 'Bleus profonds et lumière glacée.', false, 'linear-gradient(180deg,#0e1626,#060a12)', '#7fd0ff', 'rgba(60,120,220,0.5)', 'rgba(140,200,255,0.7)', 'rgba(100,180,255,0.4)', [90, 150, 225]),
+        mk('Rose poudré', 'Rose et corail, chaleureux et doux.', false, 'linear-gradient(180deg,#1f1020,#0b060d)', '#ff9ad0', 'rgba(220,90,170,0.5)', 'rgba(255,170,210,0.7)', 'rgba(255,130,200,0.4)', [225, 120, 175]),
+        mk('Graphite', 'Neutre et sobre, presque monochrome.', false, 'linear-gradient(180deg,#16161a,#08080a)', '#e8e4de', 'rgba(120,120,140,0.45)', 'rgba(220,220,235,0.6)', 'rgba(230,226,220,0.3)', [150, 150, 165])
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
