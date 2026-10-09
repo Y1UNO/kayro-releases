@@ -1,0 +1,70 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+  transition:
+    transform var(--dur-hover) var(--ease),
+    filter var(--dur-hover) var(--ease),
+    background-color var(--dur-hover) var(--ease);
+}
+
+/* Hit area >= 44 px even when the visible button is smaller. */
+.button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 100%;
+  min-height: var(--hit-min);
+  transform: translateY(-50%);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.md {
+  padding: 13px 26px;
+  border-radius: 28px;
+  font-size: var(--fs-15);
+}
+
+.sm {
+  padding: 9px 14px;
+  border-radius: 18px;
+  font-size: var(--fs-13);
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-weight: 700;
+  /* No background transition: the theme cross-fade already animates --accent. */
+  transition-property: transform, filter;
+}
+
+.primary:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+
+.soft {
+  background: var(--fill-soft);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.soft:hover:not(:disabled) {
+  background: var(--fill-hover);
+}

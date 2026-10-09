@@ -1,0 +1,44 @@
+.toggle {
+  position: relative;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 44px;
+  height: 26px;
+  padding: 3px;
+  border: 0;
+  border-radius: 13px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.35);
+  transition: transform var(--dur-hover) var(--ease);
+}
+
+/* 44 px hit area */
+.toggle::after {
+  content: "";
+  position: absolute;
+  inset: -9px -2px;
+}
+
+.thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: transform var(--dur-panel) var(--ease);
+}
+
+/* Fill follows --accent directly (no background transition: the theme fade animates it). */
+.on {
+  background: var(--accent);
+}
+
+.on .thumb {
+  transform: translateX(18px);
+}
+
+.toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

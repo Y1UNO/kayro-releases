@@ -1,0 +1,211 @@
+/* Design tokens. Values come from docs/DESIGN.md and reference/*.dc.html. */
+
+/*
+ * Theme colours are registered custom properties: the browser can then interpolate them,
+ * which gives the 0.9 s cross-fade when the theme changes (see `transition` on :root below).
+ * Initial values = Crépuscule (the default theme), so first paint needs no JS.
+ */
+@property --bg-top {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #171021;
+}
+@property --bg-mid {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0f0a16;
+}
+@property --bg-bottom {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #09060d;
+}
+@property --accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffb98a;
+}
+@property --glow {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 170, 120, 0.35);
+}
+@property --fog-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(160, 104, 214, 0.42);
+}
+@property --fog-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 150, 100, 0.3);
+}
+@property --fog-c {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 205, 170, 0.14);
+}
+@property --card {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgb(190, 120, 170);
+}
+@property --beam {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgb(255, 190, 140);
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Theme (overwritten by ThemeProvider; same defaults as the @property block). */
+  --bg-top: #171021;
+  --bg-mid: #0f0a16;
+  --bg-bottom: #09060d;
+  --accent: #ffb98a;
+  --glow: rgba(255, 170, 120, 0.35);
+  --fog-a: rgba(160, 104, 214, 0.42);
+  --fog-b: rgba(255, 150, 100, 0.3);
+  --fog-c: rgba(255, 205, 170, 0.14);
+  --card: rgb(190, 120, 170);
+  --beam: rgb(255, 190, 140);
+
+  /* Derived from the accent (the mock-ups use a lighter tint for fills and active labels). */
+  --accent-light: color-mix(in srgb, var(--accent) 60%, white);
+  --text-on-accent: #1a1020;
+
+  /* Text */
+  --text: #f6efe8;
+  /* DESIGN.md says .75 / .70; raised to .88 / .84 so secondary text reaches 4.5:1 on glass (contrast.test.ts). */
+  --text-2: rgba(246, 239, 232, 0.88);
+  --text-3: rgba(246, 239, 232, 0.84);
+  --text-active: #ffffff;
+
+  /* Neutral fills (white/black veils, independent of the theme) */
+  /* Mock-ups: .14 / .22 / .22 / .24. Lowered (.10 / .18 / .16 / .16) for the same 4.5:1 reason. */
+  --fill-soft: rgba(255, 255, 255, 0.1);
+  --fill-hover: rgba(255, 255, 255, 0.18);
+  --fill-active: rgba(255, 255, 255, 0.16);
+  --fill-tab-active: rgba(255, 255, 255, 0.16);
+  --nav-active: rgba(
+    0,
+    0,
+    0,
+    0.22
+  ); /* accent-tinted label on a dark well (peach on white veil was 2.5:1) */
+  --field: rgba(0, 0, 0, 0.22);
+  --field-inset: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  --track: rgba(0, 0, 0, 0.3);
+  --separator: rgba(255, 255, 255, 0.22);
+
+  /* Liquid glass (.lg recipe) */
+  /* Smoked tint under the white gradient (not in the mock-ups): keeps text >= 4.5:1 on bright fog. */
+  --glass-tint: rgba(12, 8, 20, 0.3);
+  --glass-bg:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0.05) 55%,
+      rgba(255, 255, 255, 0.12)
+    ),
+    linear-gradient(var(--glass-tint), var(--glass-tint));
+  --glass-bg-eco: rgba(30, 22, 40, 0.82);
+  --glass-filter: blur(20px) saturate(190%) brightness(1.06);
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --glass-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.55), inset 0 -1.5px 0 rgba(255, 255, 255, 0.12),
+    inset 1.5px 0 0 rgba(255, 255, 255, 0.18), inset -1.5px 0 0 rgba(255, 255, 255, 0.08),
+    0 18px 40px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --glass-highlight: radial-gradient(
+    120% 95% at 18% 0%,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0) 46%
+  );
+
+  /* Radii */
+  --radius-xs: 10px;
+  --radius-sm: 14px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 22px;
+  --radius-2xl: 26px;
+  --radius-3xl: 30px;
+  --radius-4xl: 36px;
+  --radius-pill: 999px;
+
+  /* Spacing (screen margins are 24–56) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-14: 56px;
+  --hit-min: 44px;
+
+  /* Typography */
+  --font-title: "Fraunces Variable", Georgia, serif;
+  --font-ui: "DM Sans Variable", system-ui, sans-serif;
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-17: 17px;
+  --fs-title-md: 26px;
+  --fs-title-lg: 48px;
+  --fs-title-xl: 92px;
+  --tracking-label: 0.16em;
+  --tracking-title: -0.03em;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-card: 0.6s;
+  --dur-beam: 0.8s;
+  --dur-color: 0.9s;
+  --dur-theme: 0.9s;
+  --dur-hover: 0.4s;
+  --dur-panel: 0.35s;
+
+  /* Focus */
+  --focus-ring: 2px solid var(--accent-light);
+  --focus-offset: 2px;
+
+  font-family: var(--font-ui);
+  color: var(--text);
+  background: var(--bg-mid);
+
+  /* Cross-fade of the theme: every registered colour interpolates on :root, children inherit the animated value. */
+  transition:
+    --bg-top var(--dur-theme) var(--ease),
+    --bg-mid var(--dur-theme) var(--ease),
+    --bg-bottom var(--dur-theme) var(--ease),
+    --accent var(--dur-theme) var(--ease),
+    --glow var(--dur-theme) var(--ease),
+    --fog-a var(--dur-theme) var(--ease),
+    --fog-b var(--dur-theme) var(--ease),
+    --fog-c var(--dur-theme) var(--ease),
+    --card var(--dur-theme) var(--ease),
+    --beam var(--dur-theme) var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-card: 0.15s;
+    --dur-beam: 0.15s;
+    --dur-color: 0.15s;
+    --dur-theme: 0.15s;
+    --dur-hover: 0.15s;
+    --dur-panel: 0.15s;
+  }
+}
+
+/* One visible focus style everywhere (keyboard only). */
+:where(button, [role="radio"], [role="switch"], input, a, [tabindex]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

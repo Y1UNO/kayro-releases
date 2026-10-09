@@ -1,0 +1,58 @@
+/* Scrim: plain veil, no backdrop-filter (the panel is the one blurred surface). */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: rgba(4, 2, 8, 0.55);
+  animation: scrim-in var(--dur-panel) var(--ease) both;
+}
+
+.panel {
+  width: min(480px, 100%);
+  animation: panel-in var(--dur-panel) var(--ease) both;
+}
+
+.inner {
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-title-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.body {
+  color: var(--text-2);
+  font-size: var(--fs-15);
+  line-height: 1.5;
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+}

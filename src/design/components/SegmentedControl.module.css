@@ -1,0 +1,58 @@
+.group {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 3px;
+  background: var(--field);
+}
+
+.md {
+  border-radius: 19px;
+  font-size: var(--fs-13);
+  font-weight: 600;
+}
+
+.sm {
+  border-radius: 16px;
+  background: var(--track);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.segment {
+  position: relative;
+  border: 0;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-2);
+  transition:
+    background-color var(--dur-hover) var(--ease),
+    color var(--dur-hover) var(--ease);
+  font: inherit;
+}
+
+.md .segment {
+  padding: 7px 14px;
+  border-radius: 16px;
+}
+
+.sm .segment {
+  padding: 6px 10px;
+  border-radius: 13px;
+}
+
+/* Vertical hit area reaches 44 px. */
+.segment::after {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+}
+
+.segment:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.selected,
+.selected:hover {
+  background: var(--fill-active);
+  color: var(--text-active);
+}

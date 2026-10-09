@@ -1,0 +1,41 @@
+/*
+ * Flat look by default (= Eco look, no backdrop-filter). `data-blur` (set by Surface.tsx when it gets
+ * one of the 6 backdrop-filter slots) switches to the full liquid-glass recipe; Eco quality undoes it.
+ */
+.glass {
+  --_bg: var(--glass-highlight), var(--glass-bg-eco);
+  --_filter: none;
+  --_highlight: none;
+  position: relative;
+  isolation: isolate; /* the highlight sits behind the content, above the glass */
+  box-sizing: border-box;
+  border-radius: var(--radius-2xl);
+  background: var(--_bg);
+  backdrop-filter: var(--_filter);
+  -webkit-backdrop-filter: var(--_filter);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass[data-blur] {
+  --_bg: var(--glass-bg);
+  --_filter: var(--glass-filter);
+  --_highlight: block;
+}
+
+:global(:root[data-quality="eco"]) .glass[data-blur] {
+  --_bg: var(--glass-highlight), var(--glass-bg-eco);
+  --_filter: none;
+  --_highlight: none;
+}
+
+.glass::before {
+  content: "";
+  display: var(--_highlight);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--glass-highlight);
+  pointer-events: none;
+}

@@ -1,0 +1,31 @@
+.chip {
+  position: relative;
+  border: 0;
+  cursor: pointer;
+  padding: 10px 22px;
+  border-radius: var(--radius-xl);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  transition:
+    background-color var(--dur-hover) var(--ease),
+    color var(--dur-hover) var(--ease);
+}
+
+/* 44 px hit area */
+.chip::after {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
+
+.chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.selected,
+.selected:hover {
+  background: var(--fill-tab-active);
+  color: var(--text-active);
+}

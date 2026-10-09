@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "graphite",
+  "name": "Graphite",
+  "author": "Hub",
+  "description": "Neutre et sobre, presque monochrome.",
+  "bg": ["#16161a", "#0f0f12", "#08080a"],
+  "accent": "#e8e4de",
+  "glow": "rgba(230,226,220,.25)",
+  "fog": ["rgba(120,120,140,.35)", "rgba(160,150,140,.22)", "rgba(255,255,255,.08)"],
+  "card": [150, 150, 165],
+  "beam": [220, 220, 235]
+}
