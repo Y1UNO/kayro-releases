@@ -22,10 +22,12 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 interface Props {
   initialThemeId?: string;
+  /** Called when the theme is changed by the user (to persist the choice). */
+  onThemeChange?: (id: string) => void;
   children: ReactNode;
 }
 
-export function ThemeProvider({ initialThemeId, children }: Props) {
+export function ThemeProvider({ initialThemeId, onThemeChange, children }: Props) {
   const themes = BUILTIN_THEMES;
   const [theme, setTheme] = useState<Theme>(
     () => themes.find((t) => t.id === initialThemeId) ?? DEFAULT_THEME,
@@ -41,9 +43,11 @@ export function ThemeProvider({ initialThemeId, children }: Props) {
   const setThemeId = useCallback(
     (id: string) => {
       const next = themes.find((t) => t.id === id);
-      if (next) setTheme(next);
+      if (!next) return;
+      setTheme(next);
+      onThemeChange?.(next.id);
     },
-    [themes],
+    [themes, onThemeChange],
   );
 
   const value = useMemo(() => ({ theme, themes, setThemeId }), [theme, themes, setThemeId]);

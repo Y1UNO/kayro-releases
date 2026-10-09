@@ -1,0 +1,14 @@
+{
+  "app": {
+    "loading": "Chargement de vos données…",
+    "appsCount": "Applications : {count}",
+    "loadFailed": "Vos données n’ont pas pu être chargées."
+  },
+  "errors": {
+    "validation": "Ces informations ne sont pas valides.",
+    "notFound": "Élément introuvable.",
+    "duplicate": "Cette application est déjà dans la liste.",
+    "io": "Impossible d’enregistrer vos données.",
+    "internal": "Une erreur inattendue est survenue."
+  }
+}

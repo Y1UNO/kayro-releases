@@ -1,19 +1,22 @@
-mod error;
+pub mod config;
+pub mod error;
+pub mod ipc;
 mod logging;
-mod paths;
+pub mod paths;
 
+use config::ConfigState;
 use error::AppError;
 use tauri::{AppHandle, Manager, WebviewWindow};
 
 const MAIN_WINDOW: &str = "main";
-const SILENT_FLAG: &str = "--silent";
+pub(crate) const SILENT_FLAG: &str = "--silent";
 
 fn main_window(app: &AppHandle) -> Result<WebviewWindow, AppError> {
     app.get_webview_window(MAIN_WINDOW)
-        .ok_or_else(|| AppError::WindowNotFound(MAIN_WINDOW.into()))
+        .ok_or_else(|| AppError::not_found(format!("window «{MAIN_WINDOW}»")))
 }
 
-fn show_and_focus(app: &AppHandle) -> Result<(), AppError> {
+pub(crate) fn show_and_focus(app: &AppHandle) -> Result<(), AppError> {
     let window = main_window(app)?;
     window.show()?;
     window.unminimize()?;
@@ -21,25 +24,19 @@ fn show_and_focus(app: &AppHandle) -> Result<(), AppError> {
     Ok(())
 }
 
-#[tauri::command]
-fn ping() -> &'static str {
-    "pong"
-}
-
-/// Called by the UI after its first paint: the window stays hidden until then (no white
-/// flash), and stays hidden for good when started with `--silent`.
-#[tauri::command]
-fn app_ready(app: AppHandle) -> Result<(), AppError> {
-    if std::env::args().any(|a| a == SILENT_FLAG) {
-        tracing::info!("silent start: window stays hidden");
-        return Ok(());
-    }
-    show_and_focus(&app)
-}
-
 pub fn run() {
     let _log_guard = logging::init();
     tracing::info!(version = env!("CARGO_PKG_VERSION"), "starting");
+
+    let ipc = ipc::builder();
+    // Keeps the committed TypeScript bindings in step while developing.
+    #[cfg(debug_assertions)]
+    if let Err(e) = ipc.export(
+        specta_typescript::Typescript::default(),
+        concat!(env!("CARGO_MANIFEST_DIR"), "/../src/ipc/bindings.ts"),
+    ) {
+        tracing::warn!(error = %e, "could not export the TypeScript bindings");
+    }
 
     tauri::Builder::default()
         // Must be the first plugin registered.
@@ -49,11 +46,13 @@ pub fn run() {
                 tracing::warn!(error = %e, "could not show the window");
             }
         }))
-        .setup(|app| {
+        .invoke_handler(ipc.invoke_handler())
+        .setup(move |app| {
             tracing::info!(app_name = %app.package_info().name, "setup done");
+            ipc.mount_events(app);
+            app.manage(ConfigState::load(paths::DataPaths::default_location()));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![ping, app_ready])
         .run(tauri::generate_context!())
         .expect("error while running the application");
 }
@@ -62,6 +61,6 @@ pub fn run() {
 mod tests {
     #[test]
     fn ping_answers_pong() {
-        assert_eq!(super::ping(), "pong");
+        assert_eq!(super::ipc::ping(), "pong");
     }
 }

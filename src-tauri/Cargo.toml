@@ -3,6 +3,7 @@ name = "hub"
 version = "0.2.0"
 description = "Hub — application launcher"
 edition = "2021"
+default-run = "hub"
 rust-version = "1.90"
 
 [lib]
@@ -21,3 +22,9 @@ thiserror = "2.0.21"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
 tracing-appender = "0.2.5"
+tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
+specta = { version = "=2.0.0-rc.25", features = ["derive"] }
+specta-typescript = "0.0.12"
+
+[dev-dependencies]
+tempfile = "3"

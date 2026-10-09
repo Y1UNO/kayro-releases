@@ -1,16 +1,58 @@
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize};
+use specta::Type;
 
-/// Error type returned by IPC commands (serialised as a plain message).
-#[derive(Debug, thiserror::Error)]
-pub enum AppError {
-    #[error("window not found: {0}")]
-    WindowNotFound(String),
-    #[error(transparent)]
-    Tauri(#[from] tauri::Error),
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum ErrorCode {
+    /// The input was refused by validation (`field` tells which one when known).
+    Validation,
+    NotFound,
+    Duplicate,
+    /// Reading or writing user data failed.
+    Io,
+    Internal,
 }
 
-impl Serialize for AppError {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&self.to_string())
+/// Error returned by IPC commands. `message` is for logs and developers; the UI shows its own
+/// translated text chosen from `code`.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, thiserror::Error)]
+#[error("{message}")]
+pub struct AppError {
+    pub code: ErrorCode,
+    pub message: String,
+    pub field: Option<String>,
+}
+
+impl AppError {
+    pub fn new(code: ErrorCode, message: impl Into<String>) -> Self {
+        Self {
+            code,
+            message: message.into(),
+            field: None,
+        }
+    }
+
+    pub fn validation(field: &str, message: impl Into<String>) -> Self {
+        Self {
+            code: ErrorCode::Validation,
+            message: message.into(),
+            field: Some(field.into()),
+        }
+    }
+
+    pub fn not_found(what: impl Into<String>) -> Self {
+        Self::new(ErrorCode::NotFound, format!("not found: {}", what.into()))
+    }
+}
+
+impl From<tauri::Error> for AppError {
+    fn from(e: tauri::Error) -> Self {
+        Self::new(ErrorCode::Internal, e.to_string())
+    }
+}
+
+impl From<std::io::Error> for AppError {
+    fn from(e: std::io::Error) -> Self {
+        Self::new(ErrorCode::Io, e.to_string())
     }
 }
