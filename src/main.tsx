@@ -17,13 +17,20 @@ const Catalogue: ComponentType | null =
     ? lazy(() => import("./dev/Catalogue"))
     : null;
 
-const appRoot = createRoot(root);
+// Launcher test bench (step 6): development builds only, like the catalogue.
+const LauncherBench: ComponentType | null =
+  import.meta.env.DEV && location.pathname === "/dev/launcher"
+    ? lazy(() => import("./dev/Launcher"))
+    : null;
 
-if (Catalogue) {
+const appRoot = createRoot(root);
+const DevPage = Catalogue ?? LauncherBench;
+
+if (DevPage) {
   appRoot.render(
     <StrictMode>
       <Suspense fallback={null}>
-        <Catalogue />
+        <DevPage />
       </Suspense>
     </StrictMode>,
   );

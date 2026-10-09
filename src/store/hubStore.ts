@@ -1,5 +1,14 @@
 import { createStore, type StoreApi } from "zustand";
-import type { AppEntry, AppError, NewApp, Settings, SettingsPatch } from "../ipc/bindings";
+import type {
+  AppEntry,
+  AppError,
+  AppRunState,
+  FocusResult,
+  LaunchResult,
+  NewApp,
+  Settings,
+  SettingsPatch,
+} from "../ipc/bindings";
 import { ipc as realIpc, type Ipc, type Outcome } from "../ipc/commands";
 import { tauriEvents, type EventSource } from "../ipc/events";
 
@@ -9,6 +18,8 @@ export interface HubState {
   status: LoadStatus;
   settings: Settings | null;
   apps: AppEntry[];
+  /** Run state by app id; apps whose process cannot be followed have no entry. */
+  running: Record<string, AppRunState>;
   /** Last refused or failed operation (the optimistic change has already been rolled back). */
   lastError: AppError | null;
 
@@ -17,6 +28,8 @@ export interface HubState {
   updateApp: (entry: AppEntry) => Promise<Outcome<AppEntry>>;
   removeApp: (id: string) => Promise<Outcome<null>>;
   setSettings: (patch: SettingsPatch) => Promise<Outcome<Settings>>;
+  launchApp: (id: string) => Promise<Outcome<LaunchResult>>;
+  focusApp: (id: string) => Promise<Outcome<FocusResult>>;
   clearError: () => void;
 }
 
@@ -48,16 +61,27 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
       status: "idle",
       settings: null,
       apps: [],
+      running: {},
       lastError: null,
 
       async init() {
         if (get().status === "loading" || get().status === "ready") return;
         set({ status: "loading", lastError: null });
-        const [settings, apps] = await Promise.all([ipc.settingsGet(), ipc.appsList()]);
+        const [settings, apps, running] = await Promise.all([
+          ipc.settingsGet(),
+          ipc.appsList(),
+          ipc.appsRunning(),
+        ]);
         const fail = (error: AppError) => set({ status: "failed", lastError: error });
         if (!settings.ok) return fail(settings.error);
         if (!apps.ok) return fail(apps.error);
-        set({ status: "ready", settings: settings.value, apps: apps.value });
+        // Run states are a convenience: failing to read them must not block the app.
+        set({
+          status: "ready",
+          settings: settings.value,
+          apps: apps.value,
+          running: running.ok ? byId(running.value) : {},
+        });
         // Subscriptions live as long as the app.
         await Promise.all([
           events.onSettingsChanged((s) => {
@@ -65,6 +89,9 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
           }),
           events.onAppsChanged((list) => {
             if (inFlight === 0) set({ apps: list });
+          }),
+          events.onAppStateChanged((state) => {
+            set((s) => ({ running: { ...s.running, [state.id]: state } }));
           }),
         ]);
       },
@@ -120,11 +147,27 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
         return result;
       },
 
+      async launchApp(id) {
+        const result = await ipc.appLaunch(id);
+        if (!result.ok) set({ lastError: result.error });
+        return result;
+      },
+
+      async focusApp(id) {
+        const result = await ipc.appFocus(id);
+        if (!result.ok) set({ lastError: result.error });
+        return result;
+      },
+
       clearError() {
         set({ lastError: null });
       },
     };
   });
+}
+
+function byId(states: AppRunState[]): Record<string, AppRunState> {
+  return Object.fromEntries(states.map((s) => [s.id, s]));
 }
 
 function definedOnly(patch: SettingsPatch): Partial<Settings> {

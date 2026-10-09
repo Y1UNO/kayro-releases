@@ -2,8 +2,11 @@ pub mod config;
 pub mod detect;
 pub mod error;
 pub mod ipc;
+pub mod launcher;
 mod logging;
 pub mod paths;
+pub mod platform;
+pub mod procwatch;
 
 use config::ConfigState;
 use error::AppError;
@@ -53,6 +56,15 @@ pub fn run() {
             ipc.mount_events(app);
             app.manage(ConfigState::load(paths::DataPaths::default_location()));
             app.manage(detect::scan::DetectState::default());
+            let for_apps = app.handle().clone();
+            let for_events = app.handle().clone();
+            app.manage(procwatch::ProcWatch::start_system(
+                move || for_apps.state::<ConfigState>().apps().apps,
+                move |state| {
+                    use tauri_specta::Event;
+                    ipc::notify(ipc::AppStateChanged(state).emit(&for_events));
+                },
+            ));
             Ok(())
         })
         .run(tauri::generate_context!())

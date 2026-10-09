@@ -11,6 +11,16 @@ pub enum ErrorCode {
     /// Reading or writing user data failed.
     Io,
     Internal,
+    /// The program, shortcut or protocol handler to start does not exist or is not installed.
+    LaunchNotFound,
+    /// Windows refused to start it (access denied).
+    LaunchDenied,
+    /// It needs administrator rights and the app is not configured to run elevated.
+    ElevationRequired,
+    /// The user dismissed the administrator prompt.
+    ElevationCancelled,
+    /// Any other failure to start (`message` has the Win32 code).
+    LaunchFailed,
 }
 
 /// Error returned by IPC commands. `message` is for logs and developers; the UI shows its own

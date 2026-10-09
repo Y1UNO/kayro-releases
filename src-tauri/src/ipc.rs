@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use tauri::{AppHandle, Runtime, State};
+use tauri::{AppHandle, Manager, Runtime, State};
 use tauri_specta::{collect_commands, collect_events, Builder, Event};
 
 use crate::config::apps::{AppEntry, AppsFile, NewApp};
@@ -12,6 +12,9 @@ use crate::config::ConfigState;
 use crate::detect::default_sources;
 use crate::detect::scan::{run_scan, DetectProgress, DetectState, ScanReport};
 use crate::error::{AppError, ErrorCode};
+use crate::launcher::system::SystemLauncher;
+use crate::launcher::{launch_app, LaunchResult};
+use crate::procwatch::{AppRunState, ProcWatch, RunningApps};
 
 /// Emitted after every successful change of the settings (also to the window that made it).
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -20,6 +23,20 @@ pub struct SettingsChanged(pub Settings);
 /// Emitted after every successful change of the app list.
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
 pub struct AppsChanged(pub AppsFile);
+
+/// Emitted when an app starts, stops, or comes to / leaves the front (changes only).
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+pub struct AppStateChanged(pub AppRunState);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum FocusResult {
+    Focused,
+    /// No process of this app is known (or the app cannot be followed).
+    NotRunning,
+    /// Running, but no window could be brought forward (tray app, other privileges…).
+    Failed,
+}
 
 #[tauri::command]
 #[specta::specta]
@@ -71,7 +88,7 @@ pub fn apps_add<R: Runtime>(
     new_app: NewApp,
 ) -> Result<AppEntry, AppError> {
     let entry = state.add_app(new_app)?;
-    notify(AppsChanged(state.apps()).emit(&app));
+    apps_changed(&app, &state);
     Ok(entry)
 }
 
@@ -83,7 +100,7 @@ pub fn apps_update<R: Runtime>(
     entry: AppEntry,
 ) -> Result<AppEntry, AppError> {
     let entry = state.update_app(entry)?;
-    notify(AppsChanged(state.apps()).emit(&app));
+    apps_changed(&app, &state);
     Ok(entry)
 }
 
@@ -95,7 +112,7 @@ pub fn apps_remove<R: Runtime>(
     id: String,
 ) -> Result<(), AppError> {
     state.remove_app(&id)?;
-    notify(AppsChanged(state.apps()).emit(&app));
+    apps_changed(&app, &state);
     Ok(())
 }
 
@@ -129,8 +146,76 @@ pub fn detect_cancel(detect: State<'_, DetectState>) {
     detect.cancel();
 }
 
+/// Tells the interface the list changed, and the process watcher to look at the new list.
+fn apps_changed<R: Runtime>(app: &AppHandle<R>, state: &ConfigState) {
+    notify(AppsChanged(state.apps()).emit(app));
+    if let Some(watch) = app.try_state::<ProcWatch>() {
+        watch.refresh();
+    }
+}
+
+/// Starts an app, or brings it to the front when it is already open. Runs off the interface
+/// thread (an administrator prompt can wait for the user).
+#[tauri::command]
+#[specta::specta]
+pub async fn app_launch<R: Runtime>(
+    app: AppHandle<R>,
+    config: State<'_, ConfigState>,
+    id: String,
+) -> Result<LaunchResult, AppError> {
+    let entry = find_app(&config, &id)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let watch = app.state::<ProcWatch>();
+        launch_app(&SystemLauncher, &*watch, &entry)
+    })
+    .await
+    .map_err(|e| AppError::new(ErrorCode::Internal, format!("launch task failed: {e}")))?
+    .map_err(AppError::from)
+}
+
+/// Brings an already running app to the front, without starting anything.
+#[tauri::command]
+#[specta::specta]
+pub async fn app_focus<R: Runtime>(
+    app: AppHandle<R>,
+    config: State<'_, ConfigState>,
+    id: String,
+) -> Result<FocusResult, AppError> {
+    find_app(&config, &id)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let watch = app.state::<ProcWatch>();
+        let pids = watch.pids_of(&id);
+        if pids.is_empty() {
+            FocusResult::NotRunning
+        } else if watch.bring_to_front(&pids) {
+            FocusResult::Focused
+        } else {
+            FocusResult::Failed
+        }
+    })
+    .await
+    .map_err(|e| AppError::new(ErrorCode::Internal, format!("focus task failed: {e}")))
+}
+
+/// State of every app that can be followed (an app without a way to recognise its process
+/// is simply absent).
+#[tauri::command]
+#[specta::specta]
+pub fn apps_running(watch: State<'_, ProcWatch>) -> Vec<AppRunState> {
+    watch.apps_running()
+}
+
+fn find_app(config: &ConfigState, id: &str) -> Result<crate::config::apps::AppEntry, AppError> {
+    config
+        .apps()
+        .apps
+        .into_iter()
+        .find(|a| a.id == id)
+        .ok_or_else(|| AppError::not_found(format!("app «{id}»")))
+}
+
 /// A failed notification never fails the command: the change is already saved.
-fn notify(result: tauri::Result<()>) {
+pub(crate) fn notify(result: tauri::Result<()>) {
     if let Err(e) = result {
         tracing::warn!(error = %e, "could not emit an event");
     }
@@ -149,11 +234,15 @@ pub fn builder() -> Builder<tauri::Wry> {
             apps_remove::<tauri::Wry>,
             detect_scan::<tauri::Wry>,
             detect_cancel,
+            app_launch::<tauri::Wry>,
+            app_focus::<tauri::Wry>,
+            apps_running,
         ])
         .events(collect_events![
             SettingsChanged,
             AppsChanged,
-            DetectProgress
+            DetectProgress,
+            AppStateChanged
         ])
 }
 

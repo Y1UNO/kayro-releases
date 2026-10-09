@@ -13,7 +13,8 @@
     "test": "vitest run && cargo test -p hub",
     "typecheck": "tsc --noEmit",
     "gen:types": "cargo run -q -p hub --bin gen_types",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "dev:launcher": "tauri dev -c src-tauri/tauri.launcher-bench.conf.json"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "5.3.0",

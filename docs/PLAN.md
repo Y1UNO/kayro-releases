@@ -165,6 +165,11 @@ HUB/
   - UWP : `IApplicationActivationManager::ActivateApplication(AUMID)`, qui renvoie `processId` [S8].
   - App de test avec manifeste `requireAdministrator` : UAC, puis `PostMessageW(WM_CLOSE)` et `SetForegroundWindow` depuis le hub non élevé.
 - **Réussite** : les 5 types lancés, PID ou correspondance d'exe obtenu ; comportement admin documenté.
+- ✅ **Verdict partiel (étape 6, `spikes/06-launch` + `src-tauri/examples/spike_launch.rs`, build debug, ce PC)** :
+  - exe par `CreateProcessW` : PID, 8 ms ; chemin inexistant → erreur 2/3 (`NotFound`).
+  - UWP (`ActivateApplication`, Calculatrice) : PID, 711 ms. `steam://open/main` : PID, 85 ms. Lien `https://` : PID du navigateur, 187 ms. `.lnk` (Audacity) : PID, 250 ms. **`ShellExecuteExW` renvoie donc un PID pour les 5 types** ; ce PID est celui du processus lancé par le shell, pas toujours celui de l'app (lanceur Steam, navigateur déjà ouvert) → la correspondance reste `match.exe`.
+  - Exe dont le manifeste exige l'admin lancé par `CreateProcessW` : **erreur 740 immédiate (110 ms), aucun UAC** → `ElevationRequired`, comme voulu (pas d'élévation automatique).
+  - Protocole non installé (`nonexistent-proto://`) : `ShellExecuteExW` avec `SEE_MASK_FLAG_NO_UI` répond **succès sans PID** (pas d'erreur 1155) : on ne peut pas détecter un lanceur absent. Sans effet pour la config (seuls `steam` et `com.epicgames.launcher` sont autorisés).
 - **Plan B** :
   - URI sans PID → correspondance par `match.exe`.
   - App élevée : l'isolation des privilèges Windows (UIPI) bloque les messages d'un processus moins privilégié → bouton « Fermer » désactivé, avec explication. Jamais de fermeture forcée.

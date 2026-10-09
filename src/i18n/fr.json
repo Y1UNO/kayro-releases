@@ -9,6 +9,11 @@
     "notFound": "Élément introuvable.",
     "duplicate": "Cette application est déjà dans la liste.",
     "io": "Impossible d’enregistrer vos données.",
-    "internal": "Une erreur inattendue est survenue."
+    "internal": "Une erreur inattendue est survenue.",
+    "launchNotFound": "Ce programme est introuvable : il a peut-être été déplacé ou désinstallé.",
+    "launchDenied": "Windows a refusé de lancer cette application.",
+    "elevationRequired": "Cette application demande les droits administrateur. Marquez-la « exécuter en administrateur » pour la lancer.",
+    "elevationCancelled": "Lancement annulé : la demande d’autorisation administrateur a été refusée.",
+    "launchFailed": "Cette application n’a pas pu être lancée."
   }
 }

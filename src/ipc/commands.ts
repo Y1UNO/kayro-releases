@@ -1,7 +1,13 @@
 // Thin layer over the GENERATED bindings (`bindings.ts`, never edited by hand): every command
 // answers with an `Outcome` instead of throwing, so callers handle failure explicitly.
 import { commands, type AppEntry, type AppError, type NewApp, type Settings } from "./bindings";
-import type { ScanReport, SettingsPatch } from "./bindings";
+import type {
+  AppRunState,
+  FocusResult,
+  LaunchResult,
+  ScanReport,
+  SettingsPatch,
+} from "./bindings";
 
 export type Outcome<T> = { ok: true; value: T } | { ok: false; error: AppError };
 
@@ -39,6 +45,11 @@ export const ipc = {
   appsUpdate: (entry: AppEntry): Promise<Outcome<AppEntry>> => checked(commands.appsUpdate(entry)),
   appsRemove: (id: string): Promise<Outcome<null>> => checked(commands.appsRemove(id)),
   appReady: (): Promise<Outcome<null>> => checked(commands.appReady()),
+  /** The one way to start an app: an app already open is brought to the front instead. */
+  appLaunch: (id: string): Promise<Outcome<LaunchResult>> => checked(commands.appLaunch(id)),
+  appFocus: (id: string): Promise<Outcome<FocusResult>> => checked(commands.appFocus(id)),
+  /** Apps whose process can be followed; the others are simply absent. */
+  appsRunning: (): Promise<Outcome<AppRunState[]>> => plain(commands.appsRunning()),
 };
 
 /** Shape of the client, so the store can be tested with a fake. */
