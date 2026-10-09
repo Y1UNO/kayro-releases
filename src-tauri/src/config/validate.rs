@@ -5,7 +5,7 @@
 use std::path::{Component, Path};
 
 use super::apps::{AppEntry, Launch, NewApp};
-use super::schema::Settings;
+use super::schema::{Settings, ATMOSPHERE_MAX, ATMOSPHERE_MIN};
 use crate::error::AppError;
 
 pub const MAX_APPS: usize = 2000;
@@ -226,6 +226,10 @@ pub fn validate_settings(s: &Settings) -> Check {
     hotkey(&s.hotkey)?;
     if s.language != "fr" {
         return err("language", "unsupported language");
+    }
+    let a = s.atmosphere_intensity;
+    if !(ATMOSPHERE_MIN..=ATMOSPHERE_MAX).contains(&a) {
+        return err("atmosphereIntensity", "must be between 0.3 and 1");
     }
     Ok(())
 }

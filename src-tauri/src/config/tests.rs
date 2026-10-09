@@ -184,3 +184,42 @@ fn hand_corrupted_files_never_stop_the_start() {
         1
     );
 }
+
+#[test]
+fn atmosphere_intensity_defaults_and_out_of_range_values() {
+    let dir = tempfile::tempdir().unwrap();
+    // A settings file written before the field existed: full intensity.
+    fs::write(
+        dir.path().join("settings.json"),
+        r#"{"schemaVersion":1,"quality":"high"}"#,
+    )
+    .unwrap();
+    let s = ConfigState::load(DataPaths::new(dir.path()));
+    assert_eq!(s.settings().atmosphere_intensity, 1.0);
+    assert_eq!(s.settings().quality, Quality::High);
+
+    // Out of range in the file: the default replaces it, the rest is kept.
+    fs::write(
+        dir.path().join("settings.json"),
+        r#"{"schemaVersion":1,"quality":"eco","atmosphereIntensity":7}"#,
+    )
+    .unwrap();
+    let s = ConfigState::load(DataPaths::new(dir.path()));
+    assert_eq!(s.settings().atmosphere_intensity, 1.0);
+    assert_eq!(s.settings().quality, Quality::Eco);
+
+    let out = s
+        .set_settings(SettingsPatch {
+            atmosphere_intensity: Some(0.5),
+            ..Default::default()
+        })
+        .unwrap();
+    assert_eq!(out.atmosphere_intensity, 0.5);
+    let e = s
+        .set_settings(SettingsPatch {
+            atmosphere_intensity: Some(0.1),
+            ..Default::default()
+        })
+        .unwrap_err();
+    assert_eq!(e.field.as_deref(), Some("atmosphereIntensity"));
+}

@@ -1,9 +1,10 @@
 import { useId, useLayoutEffect, useRef } from "react";
 import type { WheelEvent } from "react";
 import type { AppEntry, AppRunState } from "../../ipc/bindings";
+import { useFxTarget } from "../../fx";
 import { t } from "../../i18n";
 import { AppCard } from "./AppCard";
-import { mountedRange } from "./carouselGeometry";
+import { SLOT, mountedRange } from "./carouselGeometry";
 import styles from "./Carousel.module.css";
 
 interface Props {
@@ -36,6 +37,16 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
   const fast = useRef({ last: 0, timer: 0 });
   const listId = useId();
   const active = apps[focus];
+
+  // The active card always sits at the centre of the stage: the light stays there while the
+  // cards slide under it (measured from the stage, not the moving card).
+  useFxTarget(() => {
+    const el = stage.current;
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const top = r.top + (r.height - SLOT.h) / 2;
+    return { x: r.left + r.width / 2, top, bottom: top + SLOT.h };
+  }, []);
 
   // Fast scrolling: while the selection changes faster than the eye can follow, the dimming, the
   // glow and the name plate switch instantly (`data-fast`, see AppCard.module.css) and only the

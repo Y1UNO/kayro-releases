@@ -11,6 +11,7 @@ const SETTINGS: Settings = {
   colorMode: "light",
   hotkey: "Ctrl+Alt+H",
   language: "fr",
+  atmosphereIntensity: 1,
 };
 
 function entry(id: string, over: Partial<AppEntry> = {}): AppEntry {
