@@ -7,8 +7,8 @@ Sert à fixer les budgets de performance (étapes 1, 8, 13) et à choisir les pr
 | Windows (version + build, via `winver`) | Windows 11 Famille 25H2, build 26200 |
 | Processeur (modèle) | AMD Ryzen 5 5600G with Radeon Graphics (6 cœurs / 12 threads) |
 | Mémoire vive | 32 Go (31,9 Go détectés) |
-| Carte graphique (modèle + pilote) | NVIDIA GeForce RTX 5070, pilote 32.0.16.1714 (VRAM : à compléter via dxdiag). Aussi : Meta Virtual Monitor (affichage virtuel casque VR) |
-| Écran(s) : résolution · fréquence · mise à l'échelle | écran 1 : 2560×1440 · 279 Hz · échelle à compléter  écran 2 : 2560×1440 · fréquence à compléter · échelle à compléter |
+| Carte graphique (modèle + pilote) | NVIDIA GeForce RTX 5070, pilote 32.0.16.1714, VRAM 12 Go (11,9 Go lus dans le registre, `HardwareInformation.qwMemorySize`). Aussi : Meta Virtual Monitor (affichage virtuel casque VR) et un « Microsoft Basic Display Adapter » (probablement l'iGPU du 5600G sans pilote AMD, à confirmer) |
+| Écran(s) : résolution · fréquence · mise à l'échelle | écran 1 (principal, `DISPLAY1`) : 2560×1440 · 279 Hz (l'API Windows renvoie 280, valeur arrondie) · échelle 100 %  écran 2 (`DISPLAY2`, à gauche) : 2560×1440 · 144 Hz · échelle 100 % — mesuré le 2026-10-09 (`GetDpiForMonitor`, `EnumDisplaySettings`) |
 | Disque du projet (SSD / HDD) | SSD (Samsung 980 500 Go, C:) ; un HDD Toshiba 1 To est aussi présent |
 | Steam installé dans | C:\Program Files (x86)\Steam |
 | Autres lanceurs (Epic, GOG, Battle.net…) | Epic Games détecté (C:\Program Files\Epic Games) ; GOG non détecté ; autres : à compléter |
