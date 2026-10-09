@@ -1,7 +1,7 @@
 // Thin layer over the GENERATED bindings (`bindings.ts`, never edited by hand): every command
 // answers with an `Outcome` instead of throwing, so callers handle failure explicitly.
 import { commands, type AppEntry, type AppError, type NewApp, type Settings } from "./bindings";
-import type { SettingsPatch } from "./bindings";
+import type { ScanReport, SettingsPatch } from "./bindings";
 
 export type Outcome<T> = { ok: true; value: T } | { ok: false; error: AppError };
 
@@ -43,3 +43,10 @@ export const ipc = {
 
 /** Shape of the client, so the store can be tested with a fake. */
 export type Ipc = typeof ipc;
+
+/** App detection (Steam, Epic, Start Menu). Read-only: it proposes apps, `appsAdd` adds them. */
+export const detect = {
+  /** Resolves with what was found; a newer scan cancels this one. */
+  scan: (): Promise<Outcome<ScanReport>> => checked(commands.detectScan()),
+  cancel: (): Promise<Outcome<void>> => plain(commands.detectCancel()),
+};

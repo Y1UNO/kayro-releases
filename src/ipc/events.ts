@@ -1,5 +1,5 @@
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import { events, type AppEntry, type Settings } from "./bindings";
+import { events, type AppEntry, type DetectProgress, type Settings } from "./bindings";
 
 export type Unlisten = () => void;
 
@@ -27,3 +27,14 @@ export const tauriEvents: EventSource = {
     }
   },
 };
+
+/** Progress of a running scan: one event per source and state change. */
+export async function onDetectProgress(
+  handler: (progress: DetectProgress) => void,
+): Promise<Unlisten> {
+  try {
+    return await events.detectProgress.listen((e) => handler(e.payload));
+  } catch {
+    return noop;
+  }
+}

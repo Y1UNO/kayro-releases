@@ -17,11 +17,19 @@ export const commands = {
 	appsAdd: (newApp: NewApp) => typedError<AppEntry, AppError>(__TAURI_INVOKE("apps_add", { newApp })),
 	appsUpdate: (entry: AppEntry) => typedError<AppEntry, AppError>(__TAURI_INVOKE("apps_update", { entry })),
 	appsRemove: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("apps_remove", { id })),
+	/**
+	 *  Looks for installed apps (Steam, Epic, Start Menu). Read-only: nothing is added. Starting a
+	 *  scan cancels the one in progress; progress arrives as `DetectProgress` events.
+	 */
+	detectScan: () => typedError<ScanReport, AppError>(__TAURI_INVOKE("detect_scan")),
+	/**  Stops the scan in progress, if any (the pending `detect_scan` then returns what it has). */
+	detectCancel: () => __TAURI_INVOKE<void>("detect_cancel"),
 };
 
 /** Events */
 export const events = {
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
+	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
 };
 
@@ -67,6 +75,30 @@ export type Art = {
 /**  How much the colours of the selected game tint the interface (DESIGN.md). */
 export type ColorMode = "off" | "light" | "immersive";
 
+/**  Emitted while a scan runs, once per source and state change. */
+export type DetectProgress = {
+	source: SourceKind,
+	state: ScanState,
+	/**  Apps found so far by this source (0 until it is done). */
+	count: number,
+};
+
+export type DetectedApp = {
+	/**  Stable between scans, valid as an app id (`steam-<appid>`, `epic-<name>`, `menu-<hash>`). */
+	id: string,
+	name: string,
+	source: AppSource,
+	launch: Launch,
+	match: MatchRule,
+	/**
+	 *  Absolute path of an image found in the launcher's own cache. Never copied here: the
+	 *  resized image cache belongs to a later step.
+	 */
+	posterPath: string | null,
+	heroPath: string | null,
+	alreadyAdded: boolean,
+};
+
 export type ErrorCode = 
 /**  The input was refused by validation (`field` tells which one when known). */
 "validation" | "notFound" | "duplicate" | 
@@ -99,6 +131,14 @@ export type NewApp = {
 
 export type Quality = "eco" | "balanced" | "high" | "ultra";
 
+export type ScanReport = {
+	sources: SourceReport[],
+	totalMs: number,
+	cancelled: boolean,
+};
+
+export type ScanState = "started" | "done" | "failed" | "cancelled";
+
 export type Settings = {
 	schemaVersion: number,
 	themeId: string,
@@ -118,6 +158,18 @@ export type SettingsPatch = {
 	colorMode?: ColorMode | null,
 	hotkey?: string | null,
 	language?: string | null,
+};
+
+/**  Where a detected app comes from (also the identity of a [`DetectSource`]). */
+export type SourceKind = "steam" | "epic" | "startmenu";
+
+export type SourceReport = {
+	source: SourceKind,
+	apps: DetectedApp[],
+	/**  Entries looked at and left out (tools, uninstallers, unreadable files…). */
+	skipped: number,
+	error: string | null,
+	ms: number,
 };
 
 /* Tauri Specta runtime */

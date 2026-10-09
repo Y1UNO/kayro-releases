@@ -1,4 +1,5 @@
 pub mod config;
+pub mod detect;
 pub mod error;
 pub mod ipc;
 mod logging;
@@ -51,6 +52,7 @@ pub fn run() {
             tracing::info!(app_name = %app.package_info().name, "setup done");
             ipc.mount_events(app);
             app.manage(ConfigState::load(paths::DataPaths::default_location()));
+            app.manage(detect::scan::DetectState::default());
             Ok(())
         })
         .run(tauri::generate_context!())

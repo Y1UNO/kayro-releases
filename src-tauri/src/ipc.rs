@@ -9,7 +9,9 @@ use tauri_specta::{collect_commands, collect_events, Builder, Event};
 use crate::config::apps::{AppEntry, AppsFile, NewApp};
 use crate::config::schema::{Settings, SettingsPatch};
 use crate::config::ConfigState;
-use crate::error::AppError;
+use crate::detect::default_sources;
+use crate::detect::scan::{run_scan, DetectProgress, DetectState, ScanReport};
+use crate::error::{AppError, ErrorCode};
 
 /// Emitted after every successful change of the settings (also to the window that made it).
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -97,6 +99,36 @@ pub fn apps_remove<R: Runtime>(
     Ok(())
 }
 
+/// Looks for installed apps (Steam, Epic, Start Menu). Read-only: nothing is added. Starting a
+/// scan cancels the one in progress; progress arrives as `DetectProgress` events.
+#[tauri::command]
+#[specta::specta]
+pub async fn detect_scan<R: Runtime>(
+    app: AppHandle<R>,
+    config: State<'_, ConfigState>,
+    detect: State<'_, DetectState>,
+) -> Result<ScanReport, AppError> {
+    let existing = config.apps().apps;
+    let token = detect.begin();
+    let scan_token = token.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let sources = default_sources();
+        run_scan(&sources, &existing, &scan_token, &|progress| {
+            notify(progress.emit(&app));
+        })
+    })
+    .await;
+    detect.finish(&token);
+    result.map_err(|e| AppError::new(ErrorCode::Internal, format!("scan task failed: {e}")))
+}
+
+/// Stops the scan in progress, if any (the pending `detect_scan` then returns what it has).
+#[tauri::command]
+#[specta::specta]
+pub fn detect_cancel(detect: State<'_, DetectState>) {
+    detect.cancel();
+}
+
 /// A failed notification never fails the command: the change is already saved.
 fn notify(result: tauri::Result<()>) {
     if let Err(e) = result {
@@ -115,8 +147,14 @@ pub fn builder() -> Builder<tauri::Wry> {
             apps_add::<tauri::Wry>,
             apps_update::<tauri::Wry>,
             apps_remove::<tauri::Wry>,
+            detect_scan::<tauri::Wry>,
+            detect_cancel,
         ])
-        .events(collect_events![SettingsChanged, AppsChanged])
+        .events(collect_events![
+            SettingsChanged,
+            AppsChanged,
+            DetectProgress
+        ])
 }
 
 #[cfg(test)]
