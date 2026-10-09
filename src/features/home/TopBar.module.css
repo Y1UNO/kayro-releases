@@ -1,0 +1,63 @@
+/* reference/Liquide.dc.html: 58 px high, radius 29, padding 0 12 0 26, search field 400x38. */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  width: 100%;
+  height: 58px;
+  padding: 0 12px 0 26px;
+  flex-shrink: 0;
+}
+
+.brand {
+  font-family: var(--font-title);
+  font-size: var(--fs-title-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 400px;
+  max-width: 40%;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 19px;
+  background: var(--field);
+  box-shadow: var(--field-inset);
+  color: var(--text-2);
+  font-size: var(--fs-14);
+  font-weight: 500;
+  text-align: left;
+  cursor: text;
+  position: relative;
+}
+
+/* 44 px hit area around the 38 px field. */
+.search::after {
+  content: "";
+  position: absolute;
+  inset: -3px 0;
+}
+
+.search:hover {
+  color: var(--text);
+}
+
+.placeholder {
+  flex-grow: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}

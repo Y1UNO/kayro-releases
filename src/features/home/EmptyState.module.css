@@ -1,0 +1,31 @@
+/* Same height as the carousel stage, so switching to an empty category moves nothing. */
+.wrap {
+  height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 460px;
+  padding: var(--space-8) var(--space-10);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-title-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.text {
+  margin: 0 0 var(--space-3);
+  font-size: var(--fs-16);
+  line-height: 1.45;
+  color: var(--text-2);
+}

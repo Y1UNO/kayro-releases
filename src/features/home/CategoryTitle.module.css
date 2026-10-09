@@ -1,0 +1,49 @@
+/* Mock-up: label 13/600 tracking .22em in the accent colour, title 92/300 with a soft glow. */
+.block {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.label {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Fixed box: titles are stacked in it while they cross-fade, so nothing around moves. */
+.box {
+  position: relative;
+  width: 100%;
+  height: calc(var(--fs-title-xl) * 1.05);
+  transition: height var(--dur-card) var(--ease);
+}
+
+.title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: var(--fs-title-xl);
+  line-height: 1.05;
+  font-weight: 300;
+  letter-spacing: var(--tracking-title);
+  text-shadow: 0 0 70px var(--glow);
+  white-space: nowrap;
+  transition: font-size var(--dur-card) var(--ease);
+}
+
+.block[data-compact] .box {
+  height: calc(var(--fs-title-lg) * 1.05);
+}
+
+.block[data-compact] .title {
+  font-size: var(--fs-title-lg);
+}

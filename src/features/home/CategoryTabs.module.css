@@ -1,0 +1,65 @@
+/* Mock-up: glass pill, padding 6, radius 28; tabs padding 10x22, 15/600. */
+.row {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.tabs {
+  padding: 6px;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tab {
+  position: relative;
+  border: 0;
+  cursor: pointer;
+  padding: 10px 22px;
+  border-radius: var(--radius-xl);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  transition:
+    background-color var(--dur-hover) var(--ease),
+    color var(--dur-hover) var(--ease);
+}
+
+/* 44 px hit area */
+.tab::after {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tab[aria-selected="true"],
+.tab[aria-selected="true"]:hover {
+  background: var(--fill-tab-active);
+  color: var(--text-active);
+}
+
+.group {
+  position: relative;
+}
+
+.viewToggle {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.viewToggle:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.94);
+}
