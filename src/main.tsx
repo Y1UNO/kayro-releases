@@ -4,7 +4,8 @@ import { StrictMode, Suspense, lazy } from "react";
 import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { Backdrop, ThemeProvider, applyQuality } from "./design";
+import { ThemeProvider, applyQuality } from "./design";
+import { Atmosphere } from "./fx";
 import { hubStore } from "./store";
 import "./index.css";
 
@@ -61,7 +62,7 @@ if (DevPage) {
             initialThemeId={settings?.themeId}
             onThemeChange={(themeId) => void hubStore.getState().setSettings({ themeId })}
           >
-            <Backdrop />
+            <Atmosphere />
             <App />
           </ThemeProvider>
         </StrictMode>,

@@ -39,7 +39,13 @@ pub struct Settings {
     pub color_mode: ColorMode,
     pub hotkey: String,
     pub language: String,
+    /// Strength of the animated atmosphere (fog, light, dust), 0.3–1 (DESIGN.md « intensité »).
+    pub atmosphere_intensity: f32,
 }
+
+/// Bounds of [`Settings::atmosphere_intensity`].
+pub const ATMOSPHERE_MIN: f32 = 0.3;
+pub const ATMOSPHERE_MAX: f32 = 1.0;
 
 impl Default for Settings {
     fn default() -> Self {
@@ -50,6 +56,7 @@ impl Default for Settings {
             color_mode: ColorMode::default(),
             hotkey: "Ctrl+Alt+H".into(),
             language: "fr".into(),
+            atmosphere_intensity: ATMOSPHERE_MAX,
         }
     }
 }
@@ -63,6 +70,7 @@ pub struct SettingsPatch {
     pub color_mode: Option<ColorMode>,
     pub hotkey: Option<String>,
     pub language: Option<String>,
+    pub atmosphere_intensity: Option<f32>,
 }
 
 impl Settings {
@@ -81,6 +89,9 @@ impl Settings {
         }
         if let Some(v) = patch.language {
             self.language = v;
+        }
+        if let Some(v) = patch.atmosphere_intensity {
+            self.atmosphere_intensity = v;
         }
     }
 }

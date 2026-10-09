@@ -189,6 +189,8 @@ export type Settings = {
 	colorMode: ColorMode,
 	hotkey: string,
 	language: string,
+	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1 (DESIGN.md « intensité »). */
+	atmosphereIntensity: number | null,
 };
 
 /**  Emitted after every successful change of the settings (also to the window that made it). */
@@ -201,6 +203,7 @@ export type SettingsPatch = {
 	colorMode?: ColorMode | null,
 	hotkey?: string | null,
 	language?: string | null,
+	atmosphereIntensity?: number | null,
 };
 
 /**  Where a detected app comes from (also the identity of a [`DetectSource`]). */

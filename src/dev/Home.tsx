@@ -1,9 +1,14 @@
 // Development page for the home screen (step 7): `/dev/home`, dev builds only (see main.tsx).
 // It fills the store with fake apps, so the screen can be checked in a plain browser:
 //   ?theme=crepuscule|boreale|ocean|rose|graphite   ?apps=60 (all in "jeux")   ?empty=1
-//   ?view=grid   ?bench=1 (frame-time measurement while scrolling fast)
+//   ?view=grid   ?bench=1 (frame-time measurement while scrolling fast)   ?bench=idle (no input)
+//   ?fx=eco|balanced|high|ultra (quality, default high)   ?intensity=0.3…1   ?nodust=1 (CSS layer only)
+//   ?fps=N (cadence of the continuous layers, instead of the budget's)
 import { useEffect, useState } from "react";
-import { Backdrop, ThemeProvider } from "../design";
+import { QUALITIES, ThemeProvider, applyQuality } from "../design";
+import { Atmosphere } from "../fx";
+import { DustLayer } from "../fx/canvas/dust";
+import { CssFxLayer } from "../fx/css/cssFx";
 import { HomeScreen } from "../features/home/HomeScreen";
 import type { AppEntry } from "../ipc/bindings";
 import { ipc } from "../ipc/commands";
@@ -45,10 +50,12 @@ interface BenchResult {
   p99: number;
   max: number;
   over25ms: number;
+  /** Frames longer than 1.5× the median frame (a frame missed at this refresh rate). */
+  dropped: number;
   hz: number;
 }
 
-/** Sends ArrowRight / ArrowLeft at `keyHz` keys per second (30 = a held key) for `ms`, and records every frame time. */
+/** Sends ArrowRight / ArrowLeft at `keyHz` keys per second (30 = a held key, 0 = none) for `ms`, and records every frame time. */
 function runBench(ms: number, keyHz = 30): Promise<BenchResult> {
   return new Promise((resolve) => {
     const deltas: number[] = [];
@@ -79,12 +86,22 @@ function runBench(ms: number, keyHz = 30): Promise<BenchResult> {
           p99: q(0.99),
           max: sorted[sorted.length - 1] ?? 0,
           over25ms: sorted.filter((d) => d > 25).length,
+          dropped: sorted.filter((d) => d > 1.5 * q(0.5)).length,
           hz: Math.round(1000 / (q(0.5) || 16.7)),
         });
       }
     };
     requestAnimationFrame(loop);
   });
+}
+
+/** Bench variants of the atmosphere layers (undefined = the normal ones). */
+function benchLayers(params: URLSearchParams) {
+  const fps = Number(params.get("fps")) || undefined;
+  const noDust = params.has("nodust");
+  if (!fps && !noDust) return undefined;
+  return () =>
+    noDust ? [new CssFxLayer({ fps })] : [new CssFxLayer({ fps }), new DustLayer({ fps })];
 }
 
 (window as unknown as { __runBench: typeof runBench }).__runBench = runBench;
@@ -100,10 +117,11 @@ export default function HomeDev() {
       settings: {
         schemaVersion: 1,
         themeId: params.get("theme") ?? "crepuscule",
-        quality: "high",
+        quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
         colorMode: "light",
         hotkey: "Ctrl+Alt+H",
         language: "fr",
+        atmosphereIntensity: Number(params.get("intensity")) || 1,
       },
       // Fake launch: the app just shows as "open".
       launchApp: (id: string) => {
@@ -116,6 +134,7 @@ export default function HomeDev() {
         });
       },
     });
+    applyQuality(hubStore.getState().settings?.quality ?? "high");
     if (params.has("running")) {
       const first = apps[2];
       if (first)
@@ -136,7 +155,7 @@ export default function HomeDev() {
     const id = window.setTimeout(() => {
       if (params.get("view") === "grid")
         window.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
-      void runBench(10_000).then((r) => {
+      void runBench(10_000, params.get("bench") === "idle" ? 0 : 30).then((r) => {
         (window as unknown as { __bench: BenchResult }).__bench = r;
         setBench(r);
       });
@@ -149,7 +168,7 @@ export default function HomeDev() {
   const themeId = params.get("theme") ?? "crepuscule";
   return (
     <ThemeProvider initialThemeId={themeId}>
-      <Backdrop />
+      <Atmosphere layers={benchLayers(params)} />
       <HomeScreen key={params.get("view")} />
       {bench && (
         <pre

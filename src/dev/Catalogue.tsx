@@ -1,7 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import {
-  Backdrop,
   Button,
   Chip,
   Dialog,
@@ -20,6 +19,7 @@ import {
   applyQuality,
   useTheme,
 } from "../design";
+import { Atmosphere } from "../fx";
 import type { Quality } from "../design";
 import { worstContrast } from "../design/contrast";
 import {
@@ -318,7 +318,7 @@ function Page() {
   }, [quality]);
   return (
     <>
-      <Backdrop />
+      <Atmosphere quality={quality} />
       <main className={styles.page}>
         <Toolbar quality={quality} onQuality={setQuality} />
         <Buttons />

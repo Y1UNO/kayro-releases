@@ -1,0 +1,181 @@
+/*
+ * CSS layer of the atmosphere (reference/Liquide.dc.html, DESIGN.md « maquette → production »).
+ * No filter: blur() anywhere: soft edges come from the gradients themselves. Only `transform` and
+ * `opacity` ever change; colours change through registered properties (0.9 s fade).
+ */
+
+@property --fx-beam {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgb(255, 190, 140);
+}
+@property --fx-fog-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(160, 104, 214, 0.42);
+}
+@property --fx-fog-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 150, 100, 0.3);
+}
+@property --fx-fog-c {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 205, 170, 0.14);
+}
+
+/* Container of every layer (createFx): fade on pause / resume. */
+.host {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease);
+}
+.host[data-fx="paused"] {
+  opacity: 0;
+}
+
+/* --atmosphere: intensity setting, 0.3–1 (the mock-up dims its whole atmosphere layer). */
+.root {
+  position: absolute;
+  inset: 0;
+  opacity: var(--atmosphere, 1);
+  transition:
+    --fx-beam var(--dur-color) var(--ease),
+    --fx-fog-a var(--dur-color) var(--ease),
+    --fx-fog-b var(--dur-color) var(--ease),
+    --fx-fog-c var(--dur-color) var(--ease);
+}
+
+/* ---- Fog: three soft ovals (mock-up: solid ovals + blur(90–110px)). ---- */
+.oval {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.a {
+  left: -19%;
+  top: 40%;
+  width: 78%;
+  height: 55%;
+  background: radial-gradient(
+    closest-side,
+    var(--fx-fog-a) 38%,
+    color-mix(in srgb, var(--fx-fog-a) 50%, transparent) 70%,
+    transparent
+  );
+}
+
+.b {
+  right: -20%;
+  top: 45%;
+  width: 78%;
+  height: 52%;
+  background: radial-gradient(
+    closest-side,
+    var(--fx-fog-b) 38%,
+    color-mix(in srgb, var(--fx-fog-b) 50%, transparent) 70%,
+    transparent
+  );
+}
+
+.c {
+  left: 17%;
+  top: 14%;
+  width: 60%;
+  height: 42%;
+  background: radial-gradient(
+    closest-side,
+    var(--fx-fog-c) 38%,
+    color-mix(in srgb, var(--fx-fog-c) 50%, transparent) 70%,
+    transparent
+  );
+}
+
+/* Drift (mock-up fogA/B/C, 26/32/38 s): transform written by the frame loop (drift.ts). */
+
+/* Low glow along the bottom edge (mock-up: purple band + blur(14px), here the fog A colour). */
+.floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 29%;
+  background: linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--fx-fog-a) 70%, transparent),
+    transparent
+  );
+}
+
+/* ---- Light on the selected card: beam (High+) and halo. Both glide in 0.8 s. ---- */
+/*
+ * Screen blending as in the mock-up, on the group (beam + halo = one blended layer; with the grain,
+ * two in all). Plain alpha pulled the fog's hue towards beige under the beam.
+ */
+.light {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  transition: opacity var(--dur-color) var(--ease);
+}
+.root[data-target="none"] .light {
+  opacity: 0;
+}
+
+/* Wrappers carry the position (transition), children the continuous motion (frame loop). */
+.mover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: transform var(--dur-beam) var(--ease);
+}
+
+/*
+ * Mock-up: 300 px band, rgba(beam, .55) → transparent at 74 %, blur(40px), screen blending.
+ * Production: wider band whose sides fade through a horizontal mask (blending: see .light).
+ * Its height reaches the card's bottom whatever the screen: from 300 px above the top edge to
+ * 440 px below the bottom one (mock-up: 1200 px for a 760 px frame).
+ */
+.beam {
+  position: absolute;
+  left: -190px;
+  top: -300px;
+  width: 380px;
+  height: calc(100vh + 440px);
+  transform-origin: 50% 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--fx-beam) 55%, transparent),
+    transparent 74%
+  );
+  mask-image: linear-gradient(90deg, transparent, #000 32%, #000 68%, transparent);
+}
+
+.root:not([data-beam]) .beamMover {
+  display: none;
+}
+
+/* Sway ±3° over 12 s: transform written by the frame loop (drift.ts). */
+
+/* Mock-up: 420×170 oval, radial rgba(beam, .6) → transparent 70 %, blur(34px). */
+.halo {
+  position: absolute;
+  left: -250px;
+  top: -120px;
+  width: 500px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--fx-beam) 55%, transparent),
+    color-mix(in srgb, var(--fx-beam) 24%, transparent) 50%,
+    transparent
+  );
+}
+
+.root:not([data-halo]) .haloMover {
+  display: none;
+}
