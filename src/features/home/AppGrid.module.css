@@ -1,0 +1,28 @@
+.scroller {
+  position: absolute;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Room for the hover lift and the focus ring, which an overflow container would otherwise clip. */
+  padding: 14px 20px 40px;
+  margin: 0 -20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: var(--space-5);
+  outline: none;
+}
+
+.grid:focus-visible [data-active] > button {
+  outline: var(--focus-ring);
+  outline-offset: 4px;
+}
+
+/* Same specificity as the global focus ring (tokens.css): this one wins, the ring moves to the card. */
+.grid:focus-visible {
+  outline: none;
+}

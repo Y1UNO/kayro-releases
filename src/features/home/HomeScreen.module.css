@@ -1,0 +1,29 @@
+/* reference/Liquide.dc.html: column, centred, padding 24 56. */
+.screen {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  height: 100%;
+  padding: 24px var(--space-14);
+  overflow: hidden;
+}
+
+/*
+ * Space between the title and the tabs. Carousel: its 340 px stage sits at the top, the rest is
+ * the mock-up's spacer. Grid: the grid fills it. Layers cross-fade on top of each other.
+ */
+.area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+}

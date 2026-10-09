@@ -23,8 +23,15 @@ const LauncherBench: ComponentType | null =
     ? lazy(() => import("./dev/Launcher"))
     : null;
 
+// Home screen with fake data and a frame-time bench (step 7): development builds, and the
+// `vite build --mode bench` build used to measure with production React (never in a normal build).
+const HomeDev: ComponentType | null =
+  (import.meta.env.DEV || import.meta.env.MODE === "bench") && location.pathname === "/dev/home"
+    ? lazy(() => import("./dev/Home"))
+    : null;
+
 const appRoot = createRoot(root);
-const DevPage = Catalogue ?? LauncherBench;
+const DevPage = Catalogue ?? LauncherBench ?? HomeDev;
 
 if (DevPage) {
   appRoot.render(

@@ -56,3 +56,13 @@
   background: var(--fill-active);
   color: var(--text-active);
 }
+
+.segment:disabled {
+  cursor: not-allowed;
+}
+
+/* No hover feedback on a control that does nothing yet. */
+.group[aria-disabled="true"] {
+  opacity: 0.55;
+  pointer-events: none;
+}

@@ -4,6 +4,69 @@
     "appsCount": "Applications : {count}",
     "loadFailed": "Vos données n’ont pas pu être chargées."
   },
+  "home": {
+    "search": {
+      "placeholder": "Rechercher une app ou une scène",
+      "shortcut": "Ctrl K",
+      "open": "Rechercher (Ctrl K)"
+    },
+    "categoryLabel": "Catégorie",
+    "categoriesNav": "Catégories",
+    "categories": {
+      "jeux": "Jeux",
+      "stream": "Stream",
+      "creativite": "Créativité",
+      "logiciels": "Logiciels",
+      "autres": "Autre"
+    },
+    "modes": {
+      "label": "Mode d’affichage",
+      "immersive": "Immersif",
+      "window": "Fenêtre",
+      "widget": "Widget"
+    },
+    "voice": "Commande vocale",
+    "hands": "Contrôle par les mains",
+    "view": {
+      "toGrid": "Afficher en grille",
+      "toCarousel": "Afficher en carrousel"
+    },
+    "apps": "Applications",
+    "running": "ouvert",
+    "empty": {
+      "noApps": {
+        "title": "Votre Hub est vide",
+        "text": "Ajoutez vos jeux et vos logiciels pour les lancer d’ici."
+      },
+      "noAppsInCategory": {
+        "title": "Rien dans cette catégorie",
+        "text": "Aucune application n’est classée ici pour l’instant."
+      },
+      "add": "Ajouter des apps"
+    },
+    "dock": {
+      "label": "Scènes",
+      "sample1": "Soirée gaming",
+      "sample2": "Stream",
+      "sample3": "Créa"
+    },
+    "palette": {
+      "title": "Recherche rapide",
+      "placeholder": "Une app ou une catégorie…",
+      "results": "Résultats",
+      "noResults": "Aucun résultat pour cette recherche.",
+      "kindCategory": "Catégorie",
+      "hint": "Entrée pour ouvrir · Échap pour fermer"
+    },
+    "error": {
+      "close": "Fermer le message"
+    },
+    "addApps": {
+      "title": "Ajouter des applications",
+      "soon": "Cette fenêtre arrive à la prochaine étape.",
+      "close": "Fermer"
+    }
+  },
   "errors": {
     "validation": "Ces informations ne sont pas valides.",
     "notFound": "Élément introuvable.",

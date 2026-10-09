@@ -3,7 +3,7 @@ import type { CSSProperties, HTMLAttributes } from "react";
 import { acquireBackdrop, releaseBackdrop } from "./backdropBudget";
 import styles from "./Surface.module.css";
 
-type Tag = "div" | "section" | "nav" | "header" | "footer" | "aside";
+type Tag = "div" | "span" | "section" | "nav" | "header" | "footer" | "aside";
 
 interface Props extends HTMLAttributes<HTMLElement> {
   as?: Tag;

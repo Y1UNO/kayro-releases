@@ -11,8 +11,9 @@
   box-sizing: border-box;
   border-radius: var(--radius-2xl);
   background: var(--_bg);
+  /* Unprefixed only: WebView2 is Chromium. With both forms, the production CSS minifier merged the two
+     identical declarations into the `-webkit-` one, which Chromium ignores (no blur in release builds). */
   backdrop-filter: var(--_filter);
-  -webkit-backdrop-filter: var(--_filter);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }

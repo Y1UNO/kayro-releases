@@ -14,6 +14,8 @@ interface Props<T extends string> {
   /** Accessible name of the group. */
   label: string;
   size?: "md" | "sm";
+  /** Shown but not usable (a feature that arrives in a later step). */
+  disabled?: boolean;
   className?: string;
 }
 
@@ -24,6 +26,7 @@ export function SegmentedControl<T extends string>({
   onChange,
   label,
   size = "md",
+  disabled = false,
   className,
 }: Props<T>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -60,6 +63,7 @@ export function SegmentedControl<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
+      aria-disabled={disabled || undefined}
       className={[styles.group, styles[size], className].filter(Boolean).join(" ")}
     >
       {options.map((opt, i) => {
@@ -74,6 +78,7 @@ export function SegmentedControl<T extends string>({
             role="radio"
             aria-checked={selected}
             tabIndex={selected ? 0 : -1}
+            disabled={disabled}
             className={[styles.segment, selected ? styles.selected : ""].filter(Boolean).join(" ")}
             onClick={() => onChange(opt.value)}
             onKeyDown={(e) => onKeyDown(e, i)}
