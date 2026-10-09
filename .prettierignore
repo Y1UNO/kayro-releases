@@ -1,0 +1,12 @@
+dist
+node_modules
+src-tauri/target
+src-tauri/gen
+target
+reference
+_kit
+docs
+package-lock.json
+spikes/**/captures
+spikes
+CLAUDE.md

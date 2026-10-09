@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Spike 04</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #171021; color: #f1e9f7; font-family: system-ui, sans-serif; overflow: hidden; }
+      main { padding: 40px; font-size: 28px; }
+      #log { font: 14px Consolas, monospace; white-space: pre; opacity: .7; }
+    </style>
+  </head>
+  <body>
+    <main><h1>Spike 04 — immersif</h1><div id="log"></div></main>
+    <script>
+      const { invoke } = window.__TAURI__.core;
+      const rec = (o) => invoke('report', { json: JSON.stringify(o) });
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const raf = () => new Promise((r) => requestAnimationFrame(r));
+      const q = (a, p) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.ceil(p * s.length) - 1)]; };
+      const log = (m) => { document.getElementById('log').textContent += m + '\n'; };
+
+      async function hz(label, ms) {
+        const d = []; let last = await raf(); const end = performance.now() + ms;
+        while (performance.now() < end) { const t = await raf(); d.push(t - last); last = t; }
+        const med = q(d, .5);
+        const o = { kind: 'hz', label, hz_est: +(1000 / med).toFixed(1), p50: med, p95: q(d, .95), max: Math.max(...d), inner: `${innerWidth}x${innerHeight}`, dpr: devicePixelRatio };
+        log(JSON.stringify(o)); await rec(o);
+      }
+
+      (async () => {
+        await raf(); await raf();
+        const first = await invoke('since_start_ms');
+        await rec({ kind: 'startup_to_2nd_frame_ms', ms: first });
+        const mons = await invoke('monitors'); await rec({ kind: 'monitors', mons }); log(mons.join('\n'));
+        await wait(800);
+        await hz('immersive (start monitor)', 2000);
+        await invoke('stage', { name: 'immersive' });
+        await wait(1200);
+
+        // Which monitor are we on? Move to the other one(s) and re-measure the refresh rate.
+        const here = await invoke('monitors');
+        for (let idx = 0; idx < here.length; idx++) {
+          const t0 = performance.now();
+          const rustMs = await invoke('move_to', { idx });
+          await raf(); await raf();
+          await rec({ kind: 'move', idx, rust_ms: rustMs, until_2_frames_ms: performance.now() - t0 });
+          await wait(700);
+          await hz(`after move to monitor ${idx}`, 2000);
+          await invoke('stage', { name: 'moved' + idx });
+          await wait(1200);
+        }
+
+        // Windows "fullscreen" (borderless fullscreen, not exclusive) for comparison.
+        const t1 = performance.now();
+        const fsMs = await invoke('set_fs', { on: true }); await raf(); await raf();
+        await rec({ kind: 'fullscreen_on', rust_ms: fsMs, until_2_frames_ms: performance.now() - t1 });
+        await wait(700); await invoke('stage', { name: 'fullscreen' }); await wait(1200);
+        await invoke('set_fs', { on: false }); await wait(500);
+        await invoke('stage', { name: 'after_fullscreen' }); await wait(800);
+        await rec({ kind: 'done' }); await invoke('finish');
+      })();
+    </script>
+  </body>
+</html>

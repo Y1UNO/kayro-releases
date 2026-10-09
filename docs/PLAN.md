@@ -123,6 +123,7 @@ HUB/
   - 20 essais avec la fenêtre cachée depuis 5 s, 5 essais cachée depuis 10 min : WebView2 suspend parfois une vue invisible, et `backgroundThrottling` n'est pas pris en charge sous Windows [S3].
 - **Réussite** : p95 < 150 ms, aucun flash blanc (`backgroundColor` = #171021), focus clavier 20/20.
 - **Plan B** : ne pas cacher la fenêtre mais la « cloaker » (`DwmSetWindowAttribute(DWMWA_CLOAK)`), avec arrêt des animations par la veille douce.
+- ✅ **Verdict (étape 2, `spikes/01-affichage`)** : p50 28 ms, p95 31 ms, max 44 ms (20 essais à 5 s) ; 30 ms après 3 min caché (3 min, pas 10 : décision du 09/10) ; focus 20/20, flash blanc 0/20. Plan B inutile. **Constats** : WebView2 ne suspend pas la fenêtre cachée (`visibilitychange` ne se déclenche jamais, rAF continue à 280/s même après 3 min) → la veille douce doit être pilotée par un événement Rust. `Ctrl+Alt+Espace` est déjà pris sur ce PC (`register` échoue) → **remplacé par Ctrl+Alt+H**, voir §6.2.
 
 ### (b) Widget transparent sans bordure sur Windows 10 et 11 — étape 2
 - **Question** : `transparent` + `decorations:false` + `shadow:false` + `skipTaskbar` + `alwaysOnTop` donnent-ils une pilule propre (pas de bord ni d'ombre carrée) ? Le flou natif est-il utilisable ?
@@ -133,6 +134,7 @@ HUB/
   - Win10 : machine virtuelle ou PC d'ami, sinon noter « non testé ».
 - **Réussite** : aucun artefact de bord ; déplacement sans image perdue (variante 1) ; dépliage en ≤ 1 image de décalage ; les zones transparentes ne bloquent pas les clics hors de la pilule (fenêtre ajustée au contenu).
 - **Plan B** : variante 1 (sans flou du bureau, aspect « Brume ») par défaut ; acrylique en option expérimentale Win11 ; panneau déplié dans une fenêtre rectangulaire.
+- ✅ **Verdict (étape 2, `spikes/02-widget`)** : variante 1 (CSS) propre (pas d'ombre ni de bord carré) ; acrylic et mica montrent un **rectangle** autour de la pilule → plan B confirmé. Dépliage ≈ 14 ms jusqu'à 2 images ; déplacement : p95 3,7 ms, ≤ 1 accroc. Les coins transparents (≈ 2,5 % de la surface) captent les clics → `SetWindowRgn` si gênant. **Non testé : Windows 10, échelles 125/150 %, Alt+Tab du widget → étapes 12-13.**
 
 ### (c) Détection d'un jeu en plein écran — étape 6
 - **Question** : peut-on distinguer jeu exclusif, jeu « fenêtré sans bordure », vidéo plein écran et bureau ?
@@ -182,12 +184,17 @@ HUB/
   - Refaire à 60 Hz.
 - **Réussite** : avec 6 surfaces, p95 ≤ 5,4 ms à 279 Hz, 0 image perdue en 10 s, GPU < 15 %.
 - **Plan B** : 3 surfaces maximum en Élevé, flou réduit (12 px), rien d'animé sous un `backdrop-filter`, canvas plafonné à 144 Hz.
+- ⚠️ **Verdict (étape 2, `spikes/03-verre`)** : 6 surfaces + 3 brumes animées + canvas à 278 Hz : p95 3,7 ms ✅, GPU 9 % ✅ ; 0 image perdue dans 5 passages sur 7 (jusqu'à 13 dans un passage) ⚠️ ; **CPU 7,5–8,8 % de la machine > budget 4 %** ❌ (brumes seules : 3,9 %). Plan B de flou ou de surfaces inutile ; budget CPU à rediscuter (voir §5). **60 Hz non testé → étape 13.**
 
 ### (h) Extraction d'icônes d'exécutables — étape 9
 - **Question** : peut-on obtenir une icône nette en 256 px (transparence correcte) pour .exe, .lnk, .url et UWP, hors thread UI ?
 - **Protocole** : thread dédié avec `CoInitializeEx(COINIT_APARTMENTTHREADED)` → `SHCreateItemFromParsingName` → `GetImage(256, SIIGBF_ICONONLY | SIIGBF_BIGGERSIZEOK)` → `GetDIBits` en 32 bpp → PNG. Essai sur 20 apps variées (Steam, Discord, jeux, Calculatrice UWP).
 - **Réussite** : 18/20 icônes nettes, < 30 ms par icône, nombre d'objets GDI stable sur 200 extractions (pas de fuite).
 - **Plan B** : `SHGetImageList(SHIL_JUMBO)` ; à défaut, tuile lettre comme dans les maquettes.
+
+### Spikes d'étape 2 hors de la liste des 8
+- ✅ **Immersif (`spikes/04-immersif`)** : sans bordure, `shadow(false)`, rectangle exact du moniteur (avec l'ombre par défaut la fenêtre déborde de 16×9 px sur l'écran voisin). Barre des tâches recouverte tant que la fenêtre est au premier plan ; avec `alwaysOnTop` (seulement pendant l'immersif, retiré dès la perte du focus) elle le reste d'un écran à l'autre ; **pas de `set_fullscreen`** (la barre des tâches réapparaît au retour). Éligible à Alt+Tab (`WS_EX_APPWINDOW`). **rAF mesuré à 278 Hz sur l'écran à 144 Hz** : la fréquence doit venir de Rust (`EnumDisplaySettings`), pas de rAF. Non testé : échelles différentes, Windows 10.
+- ✅ **Zone de notification + instance unique + `--silent` (`spikes/05-tray-instance`)** : fenêtre créée dans `setup` après l'icône → icône à 41–47 ms et première image à 0,8 s après `CreateProcess` ; lancement par ShellExecute : +0,65 s (exe non signé, cause non isolée). 2e instance : fin en ≈ 200 ms, fenêtre affichée 12–22 ms après. Autostart : valeur `Run` nommée d'après `productName` = `"<exe> --silent"`, supprimée par `disable` (vérifié, ainsi que `StartupApproved\Run`).
 
 **Risques suivis sans spike dédié** :
 - tauri-specta est en RC, et la doc de rc.25 ne s'est pas construite sur docs.rs → essai de 15 min à l'étape 4, plan B ts-rs.
@@ -258,6 +265,7 @@ L'ordre est **conservé**.
 
 **12 · Modes, widget, raccourci, zone de notification**
 - [ ] Immersif / fenêtre / widget (d'après les spikes de l'étape 2) ; position et écran mémorisés par mode
+- [ ] **À faire hérité de l'étape 2** : tester Windows 10, échelles 125/150 % (widget, immersif sur 2 écrans à échelles différentes), Alt+Tab du widget, raccourci par défaut Ctrl+Alt+H (§6.2, gérer l'échec d'enregistrement), fenêtre créée après l'icône, `alwaysOnTop` limité à l'immersif
 - [ ] Raccourci configurable, menu de la zone de notification, démarrage avec Windows `--silent`
 - [ ] Widget replié/déplié (recherche, scènes, en cours, récents) ; style en réglage (C · Brume par défaut) ; « Mode économe »
 
@@ -265,6 +273,7 @@ L'ordre est **conservé**.
 - [ ] États Actif/Atténué/Veille (masqué, sans focus, plein écran, écran verrouillé = `QUNS_NOT_PRESENT`) ; zéro boucle en veille
 - [ ] 4 niveaux + qualité adaptative (p95 sur 2 s, remontée après 30 s) ; benchmark de 3 s
 - [ ] Réglages · Performance (jauges, courbe) ; spike (f) GPU ; mode sans échec (Maj, 2 plantages)
+- [ ] **À faire hérité de l'étape 2** : refaire le spike du verre à 60 Hz et à 144 Hz plafonné ; fréquence d'écran lue côté Rust ; veille douce pilotée par événement Rust (WebView2 ne suspend pas) ; remesurer le budget CPU visible (4 % / 8 %, §5)
 - [ ] Mesure de tout le §5
 
 **14 · Couleurs du jeu**
@@ -301,7 +310,7 @@ L'ordre est **conservé**.
 | Démarrage → icône dans la zone de notification | < 1,0 s ; fenêtre peinte < 1,5 s | `Instant` dans `main()` → événements ; 5 essais |
 | Mode économe : réouverture | < 400 ms | comme le spike (a) |
 | CPU au repos (masqué ou en Veille) | < 1 % de la machine sur 60 s ; aucun réveil périodique > 1/s | sysinfo sur l'arbre ; Process Explorer (changements de contexte) |
-| CPU visible, niveau Élevé, sans interaction | < 4 % | idem, sur 60 s |
+| CPU visible, sans interaction | **Équilibré < 4 % ; Élevé et Ultra < 8 %** (hub visible seulement ; décision du 09/10, à remesurer à l'étape 8 avec les effets plafonnés à 144 Hz) | idem, sur 60 s |
 | GPU hub masqué | 0,0 % sur 30 s | PDH (spike f) sur l'arbre |
 | GPU visible, niveau Élevé, 1440p à 279 Hz | < 15 % | PDH + Gestionnaire des tâches |
 | RAM | hub.exe < 60 Mo ; arbre complet < 250 Mo visible ; mode économe masqué < 60 Mo | sysinfo (mémoire privée) |
@@ -314,11 +323,12 @@ L'ordre est **conservé**.
 
 - **Niveau visé ici** : Élevé (à confirmer par le benchmark).
 - **Éco** : approché avec 60 Hz + bridage CPU ×4 dans DevTools + `backdrop-filter` coupé. C'est une approximation : « non testé sur vrai matériel » tant qu'aucun PC modeste n'est disponible.
-- **Deux fréquences d'écran** (279 et 144 Hz) : le budget par image suit l'écran où se trouve la fenêtre ; tester un passage d'un écran à l'autre (étape 2).
+- **Deux fréquences d'écran** (279 et 144 Hz) : **mesuré à l'étape 2, rAF reste à 278 Hz sur l'écran à 144 Hz** ; le budget par image se déduit de la fréquence lue côté Rust, pas de rAF (spike 04).
+- **Budget CPU « visible » — ✅ tranché le 09/10** : 7,5–8,8 % mesuré à 279 Hz avec la scène la plus chargée (spike 03) → **< 4 % en Équilibré, < 8 % en Élevé et Ultra**. À remesurer à l'étape 8 avec les effets plafonnés à 144 Hz.
 
 ## 6. Questions bloquantes — toutes tranchées le 2026-10-09
 1. **Widget** — ✅ *Tranché* : surface « Brume » semi-opaque, sans flou du bureau ; style **C · Brume** par défaut, le style reste un **réglage**. Acrylique en option expérimentale Win11 seulement.
-2. **Raccourci global** — ✅ *Tranché* : **Ctrl+Alt+Espace** par défaut, configurable (Ctrl+Espace écarté : pris à VS Code et aux claviers asiatiques).
+2. **Raccourci global** — ✅ *Retranché le 09/10 (étape 2)* : **Ctrl+Alt+H** par défaut, configurable à l'étape 12. Ctrl+Alt+Espace est déjà pris sur ce PC (`RegisterHotKey` : erreur Win32 1409) ; disponibilité testée sur ce PC : **Ctrl+Alt+H libre**, Ctrl+Alt+J libre, Ctrl+Alt+F9 libre (le premier libre est retenu). Ctrl+Espace reste écarté (VS Code, claviers asiatiques). L'échec d'enregistrement sur un autre PC doit être géré dans l'interface (message + choix d'un autre raccourci).
 3. **Mise à l'échelle** — ✅ *Mesuré* : échelle Windows **100 %** sur les deux écrans (MACHINE.md). Hypothèse conservée : px CSS à l'échelle Windows ; en immersif, la composition 1280×760 est agrandie selon la hauteur de l'écran (1440/760 ≈ 1,9, plafonné à ×1,5), à ajuster à l'œil à l'étape 7.
 4. **Cadence** — ✅ *Tranché* : canvas FxLayer limité à **144 Hz** (« Auto » = min(Hz, 144)) ; transitions et animations CSS de l'interface à la fréquence native de l'écran.
 5. **Windows 10** — ✅ *Tranché* : pris en charge « au mieux », **sans Mica** ; Win11 reste la cible.
