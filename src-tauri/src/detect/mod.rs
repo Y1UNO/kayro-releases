@@ -4,6 +4,7 @@
 //! One module per source behind the [`DetectSource`] trait. Every source is tolerant: an entry
 //! that cannot be understood is skipped and logged, never an error for the whole scan.
 
+pub mod category;
 pub mod epic;
 pub mod filters;
 pub mod scan;
@@ -53,6 +54,8 @@ pub struct DetectedApp {
     pub poster_path: Option<String>,
     pub hero_path: Option<String>,
     pub already_added: bool,
+    /// Category proposed for the app (see [`category::suggest_category`]); the user may change it.
+    pub suggested_category: String,
 }
 
 impl DetectedApp {
@@ -75,11 +78,7 @@ impl DetectedApp {
         match (&self.source, &entry.source) {
             (AppSource::Steam { app_id: a }, AppSource::Steam { app_id: b }) => a == b,
             (AppSource::Epic { app_name: a }, AppSource::Epic { app_name: b }) => a == b,
-            _ => match (&self.launch, &entry.launch) {
-                (Launch::Lnk { path: a }, Launch::Lnk { path: b }) => a.eq_ignore_ascii_case(b),
-                (Launch::Uri { uri: a }, Launch::Uri { uri: b }) => a == b,
-                _ => false,
-            },
+            _ => self.launch.target_key() == entry.launch.target_key(),
         }
     }
 }

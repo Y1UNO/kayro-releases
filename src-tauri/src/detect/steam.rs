@@ -218,6 +218,7 @@ fn scan_library(library: &Path, steam_root: &Path, ctx: &ScanCtx) -> Vec<Detecte
             poster_path: poster.map(|p| p.to_string_lossy().into_owned()),
             hero_path: hero.map(|p| p.to_string_lossy().into_owned()),
             already_added: false,
+            suggested_category: String::new(),
         };
         apps.extend(ctx.accept(SourceKind::Steam, app));
     }

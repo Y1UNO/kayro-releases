@@ -50,6 +50,36 @@ pub enum Launch {
     },
 }
 
+impl Launch {
+    /// Normalised identity of what this launches: two entries with the same key are the same
+    /// app (paths and addresses compared without case; arguments count for programs).
+    pub fn target_key(&self) -> String {
+        match self {
+            Launch::Exe { path, args, .. } => {
+                format!(
+                    "file:{}|{}",
+                    path.replace('/', "\\").to_lowercase(),
+                    args.join(" ")
+                )
+            }
+            Launch::Lnk { path } => format!("file:{}", path.replace('/', "\\").to_lowercase()),
+            Launch::Uri { uri } => format!("uri:{uri}"),
+            Launch::Uwp { aumid } => format!("uwp:{}", aumid.to_lowercase()),
+            Launch::Url { url } => format!("url:{}", url.trim_end_matches('/').to_lowercase()),
+        }
+    }
+
+    /// The program file, shortcut or address this launches (what the user would recognise).
+    pub fn target(&self) -> &str {
+        match self {
+            Launch::Exe { path, .. } | Launch::Lnk { path } => path,
+            Launch::Uri { uri } => uri,
+            Launch::Uwp { aumid } => aumid,
+            Launch::Url { url } => url,
+        }
+    }
+}
+
 /// Which process to watch to know the app is running.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, Type)]
 pub struct MatchRule {
@@ -127,6 +157,22 @@ impl NewApp {
             favorite: self.favorite,
         }
     }
+}
+
+/// Outcome of adding several apps at once.
+#[derive(Debug, Clone, Default, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AddReport {
+    pub added: Vec<AppEntry>,
+    pub failed: Vec<AddFailure>,
+}
+
+/// One app that was refused, by its position in the request.
+#[derive(Debug, Clone, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AddFailure {
+    pub index: u32,
+    pub error: crate::error::AppError,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]

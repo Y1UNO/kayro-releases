@@ -63,8 +63,18 @@
     },
     "addApps": {
       "title": "Ajouter des applications",
-      "soon": "Cette fenêtre arrive à la prochaine étape.",
+      "open": "Ajouter des applications",
       "close": "Fermer"
+    },
+    "menu": {
+      "label": "Actions pour {name}",
+      "edit": "Modifier…",
+      "favorite": "Mettre en favori",
+      "unfavorite": "Retirer des favoris",
+      "remove": "Retirer de Hub…",
+      "editButton": "Modifier {name}",
+      "moved": "« {name} » est maintenant dans {category}.",
+      "dragging": "Dépose sur un onglet pour changer de catégorie"
     }
   },
   "errors": {
@@ -78,5 +88,117 @@
     "elevationRequired": "Cette application demande les droits administrateur. Marquez-la « exécuter en administrateur » pour la lancer.",
     "elevationCancelled": "Lancement annulé : la demande d’autorisation administrateur a été refusée.",
     "launchFailed": "Cette application n’a pas pu être lancée."
+  },
+  "addApps": {
+    "tabsLabel": "Façon d’ajouter",
+    "tabs": {
+      "detected": "Détectées",
+      "drop": "Glisser-déposer",
+      "manual": "Manuel"
+    },
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "add": "Ajouter",
+    "addAll": "Tout ajouter · {count}",
+    "selectAll": "Tout sélectionner",
+    "selectNone": "Tout désélectionner",
+    "selectedNone": "Aucune sélection",
+    "selectedOne": "1 sélectionnée",
+    "selectedMany": "{count} sélectionnées",
+    "addedOne": "1 application ajoutée.",
+    "addedMany": "{count} applications ajoutées.",
+    "addedPartial": "{added} ajoutées, {failed} refusées (déjà dans la liste ou invalides).",
+    "detected": {
+      "scanning": "Recherche de vos applications…",
+      "failed": "La recherche n’a pas abouti.",
+      "retry": "Relancer la recherche",
+      "empty": "Aucune application trouvée pour ce filtre.",
+      "already": "Déjà ajoutée",
+      "filterLabel": "Filtrer par source",
+      "listLabel": "Applications détectées",
+      "all": "Tout · {count}",
+      "steam": "Steam · {count}",
+      "epic": "Epic · {count}",
+      "startmenu": "Menu Démarrer · {count}",
+      "sourceSteam": "Steam",
+      "sourceEpic": "Epic",
+      "sourceStartmenu": "Menu Démarrer",
+      "sourceManual": "Manuel"
+    },
+    "row": {
+      "pick": "Choisir {name}",
+      "category": "Catégorie de {name}",
+      "name": "Nom de {name}"
+    },
+    "drop": {
+      "zone": "Glisse ici un .exe, un raccourci ou un lien",
+      "zoneActive": "Relâche pour les ajouter à la liste",
+      "browserOnly": "Le glisser-déposer de fichiers ne fonctionne que dans l’application Hub. Tu peux coller un chemin ou un lien ci-dessous.",
+      "pasteLabel": "Ou colle un lien ou un chemin",
+      "pastePlaceholder": "https://… ou C:\\…\\MonJeu.exe",
+      "pasteButton": "Analyser",
+      "listLabel": "Éléments à ajouter",
+      "refusedTitle": "Non ajoutés",
+      "reasons": {
+        "notFound": "Fichier introuvable",
+        "notSupported": "Utilise un .exe, un raccourci .lnk ou un lien http(s)",
+        "invalid": "Informations invalides",
+        "repeated": "Déjà présent dans cette liste",
+        "tooMany": "Trop d’éléments à la fois (50 au maximum)"
+      }
+    },
+    "manual": {
+      "name": "Nom",
+      "kind": "Type",
+      "kinds": {
+        "exe": "Programme (.exe)",
+        "lnk": "Raccourci (.lnk)",
+        "url": "Lien web",
+        "uri": "Protocole"
+      },
+      "target": "Cible",
+      "placeholders": {
+        "exe": "C:\\Jeux\\MonJeu\\MonJeu.exe",
+        "lnk": "C:\\Users\\moi\\Bureau\\MonJeu.lnk",
+        "url": "https://exemple.fr",
+        "uri": "steam://rungameid/12345"
+      },
+      "args": "Arguments",
+      "argsHint": "Séparés par des espaces ; entre guillemets s’ils contiennent des espaces.",
+      "category": "Catégorie",
+      "favorite": "Favori",
+      "elevated": "Exiger les droits administrateur",
+      "elevatedHint": "Windows demandera une confirmation à chaque lancement.",
+      "elevatedOnlyExe": "Réservé aux programmes (.exe).",
+      "submit": "Ajouter l’application",
+      "added": "« {name} » a été ajoutée.",
+      "locked": "Cette cible est gérée par le lanceur d’origine (Steam, Epic…) et ne se modifie pas ici."
+    },
+    "errors": {
+      "nameRequired": "Donne un nom à l’application.",
+      "nameTooLong": "Le nom est trop long (80 caractères au maximum).",
+      "nameInvalid": "Le nom contient un caractère non autorisé.",
+      "targetRequired": "Indique ce qu’il faut lancer.",
+      "targetTooLong": "Cette cible est trop longue.",
+      "pathNotAbsolute": "Indique le chemin complet, par exemple C:\\Jeux\\MonJeu.exe.",
+      "pathParent": "Le chemin ne doit pas contenir « .. ».",
+      "needExe": "Le chemin doit se terminer par .exe.",
+      "needLnk": "Le chemin doit se terminer par .lnk.",
+      "urlInvalid": "Le lien doit commencer par http:// ou https://.",
+      "uriInvalid": "Seuls les liens steam:// et com.epicgames.launcher:// sont acceptés.",
+      "argsQuote": "Un guillemet n’est pas refermé.",
+      "argsTooMany": "32 arguments au maximum.",
+      "argsTooLong": "Un argument est trop long.",
+      "targetInvalid": "Cette cible n’est pas valide."
+    },
+    "edit": {
+      "title": "Modifier l’application",
+      "save": "Enregistrer",
+      "delete": "Retirer de Hub…",
+      "deleteConfirm": "Retirer « {name} » de Hub ?",
+      "deleteExplain": "Le programme lui-même reste sur votre ordinateur.",
+      "deleteYes": "Retirer",
+      "deleteNo": "Garder"
+    }
   }
 }

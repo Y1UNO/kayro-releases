@@ -1582,6 +1582,7 @@ name = "hub"
 version = "0.2.0"
 dependencies = [
  "keyvalues-parser",
+ "png 0.18.1",
  "serde",
  "serde_json",
  "specta",

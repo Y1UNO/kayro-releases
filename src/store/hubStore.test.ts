@@ -40,6 +40,10 @@ function fakeIpc(over: Partial<Ipc> = {}): Ipc {
     settingsSet: async (p) => ok({ ...SETTINGS, ...stripNulls(p) }),
     appsList: async () => ok([entry("one"), entry("two")]),
     appsAdd: async (a: NewApp) => ok({ ...a, id: "added" }),
+    appsAddMany: async (list: NewApp[]) =>
+      ok({ added: list.map((a, i) => ({ ...a, id: `added-${i}` })), failed: [] }),
+    appsInspect: async () => ok({ candidates: [], refused: [] }),
+    appIcon: async () => ok(null),
     appsUpdate: async (e) => ok(e),
     appsRemove: async () => ok(null),
     appReady: async () => ok(null),
@@ -93,6 +97,27 @@ describe("init", () => {
     );
     pushApps([entry("pushed")]);
     expect(store.getState().apps.map((a) => a.id)).toEqual(["pushed"]);
+  });
+});
+
+describe("adding several apps", () => {
+  it("shows only what the core accepted, once, at the end of the list", async () => {
+    const accepted = entry("new-1");
+    const store = await ready({
+      appsAddMany: async () =>
+        ok({ added: [accepted], failed: [{ index: 1, error: { ...REFUSED, code: "duplicate" } }] }),
+    });
+    const r = await store.getState().addApps([{} as NewApp, {} as NewApp]);
+    expect(r.ok && r.value.failed.length).toBe(1);
+    expect(store.getState().apps.map((a) => a.id)).toEqual(["one", "two", "new-1"]);
+  });
+
+  it("changes nothing when the whole call fails, and records the error", async () => {
+    const store = await ready({ appsAddMany: async () => refused() });
+    const r = await store.getState().addApps([{} as NewApp]);
+    expect(r.ok).toBe(false);
+    expect(store.getState().apps.map((a) => a.id)).toEqual(["one", "two"]);
+    expect(store.getState().lastError).toEqual(REFUSED);
   });
 });
 

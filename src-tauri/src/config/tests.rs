@@ -6,13 +6,16 @@ use super::apps::{AppSource, Art, Launch, MatchRule, NewApp};
 use super::schema::{ColorMode, Quality, SettingsPatch};
 use super::*;
 
+/// Each call gets its own program path: the same target cannot be added twice.
 fn new_app(name: &str) -> NewApp {
+    static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+    let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     NewApp {
         name: name.into(),
         category: "jeux".into(),
         source: AppSource::Manual,
         launch: Launch::Exe {
-            path: "C:\\Games\\a.exe".into(),
+            path: format!("C:\\Games\\a{n}.exe"),
             args: vec![],
             cwd: None,
             elevated: false,
@@ -222,4 +225,75 @@ fn atmosphere_intensity_defaults_and_out_of_range_values() {
         })
         .unwrap_err();
     assert_eq!(e.field.as_deref(), Some("atmosphereIntensity"));
+}
+
+#[test]
+fn the_same_program_cannot_be_added_twice_even_from_another_source_or_letter_case() {
+    let (_d, s) = state();
+    let first = new_app("One");
+    s.add_app(first.clone()).unwrap();
+    let mut again = first;
+    again.name = "Other name".into();
+    if let Launch::Exe { path, .. } = &mut again.launch {
+        *path = path.to_uppercase().replace('\\', "/");
+    }
+    assert_eq!(s.add_app(again).unwrap_err().code, ErrorCode::Duplicate);
+}
+
+#[test]
+fn the_same_program_with_other_arguments_is_another_app() {
+    let (_d, s) = state();
+    let plain = new_app("Game");
+    let mut modded = plain.clone();
+    modded.name = "Game modded".into();
+    if let Launch::Exe { args, .. } = &mut modded.launch {
+        *args = vec!["-mod".into()];
+    }
+    s.add_app(plain).unwrap();
+    s.add_app(modded).unwrap();
+}
+
+#[test]
+fn add_apps_keeps_the_good_ones_reports_the_bad_ones_and_writes_once() {
+    let (dir, s) = state();
+    let good = new_app("Good");
+    let mut invalid = new_app("Invalid");
+    invalid.name = String::new();
+    let twice = good.clone();
+    let report = s
+        .add_apps(vec![good, invalid, twice, new_app("Also good")])
+        .unwrap();
+    assert_eq!(report.added.len(), 2);
+    let failures: Vec<_> = report
+        .failed
+        .iter()
+        .map(|f| (f.index, f.error.code))
+        .collect();
+    assert_eq!(
+        failures,
+        [(1, ErrorCode::Validation), (2, ErrorCode::Duplicate)]
+    );
+    let reloaded = ConfigState::load(DataPaths::new(dir.path()));
+    assert_eq!(reloaded.apps().apps, report.added);
+}
+
+#[test]
+fn add_apps_with_nothing_valid_writes_nothing() {
+    let (dir, s) = state();
+    let mut bad = new_app("Bad");
+    bad.category = String::new();
+    let report = s.add_apps(vec![bad]).unwrap();
+    assert!(report.added.is_empty() && report.failed.len() == 1);
+    assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 0);
+}
+
+#[test]
+fn editing_an_app_onto_another_apps_target_is_refused() {
+    let (_d, s) = state();
+    let a = s.add_app(new_app("A")).unwrap();
+    let mut b = s.add_app(new_app("B")).unwrap();
+    b.launch = a.launch.clone();
+    assert_eq!(s.update_app(b).unwrap_err().code, ErrorCode::Duplicate);
+    // Saving an app unchanged is not a duplicate of itself.
+    s.update_app(a).unwrap();
 }

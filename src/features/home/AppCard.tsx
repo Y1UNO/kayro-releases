@@ -1,11 +1,13 @@
 import type { Ref } from "react";
 import type { AppEntry } from "../../ipc/bindings";
 import { t } from "../../i18n";
+import { EditIcon } from "../../design";
 import { posterUrl } from "./art";
 import { monogram, shadeOf } from "./cardLook";
 import { isVisible, slotOffset } from "./carouselGeometry";
 import { cssVars } from "./cssVars";
 import { Shine } from "./Shine";
+import { useAppIcon } from "./useAppIcon";
 import styles from "./AppCard.module.css";
 
 interface Props {
@@ -29,6 +31,7 @@ interface Props {
  */
 export function AppCard({ app, mode, d = 0, active, running, domId, onClick, buttonRef }: Props) {
   const poster = posterUrl(app);
+  const icon = useAppIcon(app);
   const stage = mode === "stage";
   const hidden = stage && !isVisible(d);
   const vars = cssVars({
@@ -40,6 +43,7 @@ export function AppCard({ app, mode, d = 0, active, running, domId, onClick, but
     <div
       className={stage ? styles.slot : styles.cell}
       style={vars}
+      data-app-id={app.id}
       data-active={active || undefined}
       data-hidden={hidden ? "" : undefined}
     >
@@ -69,7 +73,11 @@ export function AppCard({ app, mode, d = 0, active, running, domId, onClick, but
           </>
         ) : null}
         {stage && <span className={styles.veil} aria-hidden="true" />}
-        {!poster && (
+        {!poster && icon && (
+          // Decorative like the poster: the button's label names the app.
+          <img className={styles.icon} src={icon} alt={""} draggable={false} decoding="async" />
+        )}
+        {!poster && !icon && (
           <span className={styles.letter} aria-hidden="true">
             {monogram(app.name)}
           </span>
@@ -77,6 +85,16 @@ export function AppCard({ app, mode, d = 0, active, running, domId, onClick, but
         {active && stage && <Shine />}
         {running && <span className={styles.running} aria-hidden="true" />}
         <span className={styles.plate}>{app.name}</span>
+      </button>
+      {/* Mouse shortcut; the keyboard has F2 and the context-menu key (see HomeScreen). */}
+      <button
+        type="button"
+        className={styles.edit}
+        data-edit-app={app.id}
+        tabIndex={-1}
+        aria-label={t("home.menu.editButton", { name: app.name })}
+      >
+        <EditIcon size={16} />
       </button>
     </div>
   );

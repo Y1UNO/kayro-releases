@@ -1,6 +1,8 @@
 pub mod config;
 pub mod detect;
 pub mod error;
+pub mod icons;
+pub mod intake;
 pub mod ipc;
 pub mod launcher;
 mod logging;

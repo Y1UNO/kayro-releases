@@ -3,6 +3,7 @@
 //   ?theme=crepuscule|boreale|ocean|rose|graphite   ?apps=60 (all in "jeux")   ?empty=1
 //   ?view=grid   ?bench=1 (frame-time measurement while scrolling fast)   ?bench=idle (no input)
 //   ?fx=eco|balanced|high|ultra (quality, default high)   ?intensity=0.3…1   ?nodust=1 (CSS layer only)
+//   ?addmock=1 (fake core for the add / edit dialogs: detected apps, drop, add, edit, remove)
 //   ?fps=N (cadence of the continuous layers, instead of the budget's)
 import { useEffect, useState } from "react";
 import { QUALITIES, ThemeProvider, applyQuality } from "../design";
@@ -13,6 +14,7 @@ import { HomeScreen } from "../features/home/HomeScreen";
 import type { AppEntry } from "../ipc/bindings";
 import { ipc } from "../ipc/commands";
 import { hubStore } from "../store";
+import { installAddAppsMock } from "./addAppsMock";
 
 const MOCK: Record<string, string[]> = {
   jeux: ["Riot Client", "Minecraft", "Steam", "Epic Games", "Battle.net"],
@@ -134,6 +136,7 @@ export default function HomeDev() {
         });
       },
     });
+    if (params.has("addmock")) installAddAppsMock(() => hubStore.getState().apps);
     applyQuality(hubStore.getState().settings?.quality ?? "high");
     if (params.has("running")) {
       const first = apps[2];

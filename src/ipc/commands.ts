@@ -2,7 +2,9 @@
 // answers with an `Outcome` instead of throwing, so callers handle failure explicitly.
 import { commands, type AppEntry, type AppError, type NewApp, type Settings } from "./bindings";
 import type {
+  AddReport,
   AppRunState,
+  InspectReport,
   FocusResult,
   LaunchResult,
   ScanReport,
@@ -44,6 +46,13 @@ export const ipc = {
   appsAdd: (app: NewApp): Promise<Outcome<AppEntry>> => checked(commands.appsAdd(app)),
   appsUpdate: (entry: AppEntry): Promise<Outcome<AppEntry>> => checked(commands.appsUpdate(entry)),
   appsRemove: (id: string): Promise<Outcome<null>> => checked(commands.appsRemove(id)),
+  /** Adds several apps with one write; the refused ones are listed in `failed`. */
+  appsAddMany: (apps: NewApp[]): Promise<Outcome<AddReport>> => checked(commands.appsAddMany(apps)),
+  /** Proposes apps for dropped / pasted files and addresses. Read-only. */
+  appsInspect: (inputs: string[]): Promise<Outcome<InspectReport>> =>
+    checked(commands.appsInspect(inputs)),
+  /** The app's icon as a `data:` URL, or null when it has none. */
+  appIcon: (id: string): Promise<Outcome<string | null>> => checked(commands.appIcon(id)),
   appReady: (): Promise<Outcome<null>> => checked(commands.appReady()),
   /** The one way to start an app: an app already open is brought to the front instead. */
   appLaunch: (id: string): Promise<Outcome<LaunchResult>> => checked(commands.appLaunch(id)),

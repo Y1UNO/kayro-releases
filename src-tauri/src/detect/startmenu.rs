@@ -199,6 +199,7 @@ impl DetectSource for StartMenuSource {
                 poster_path: None,
                 hero_path: None,
                 already_added: false,
+                suggested_category: String::new(),
             };
             apps.extend(ctx.accept(SourceKind::Startmenu, app));
         }

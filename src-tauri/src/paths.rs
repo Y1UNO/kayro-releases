@@ -55,6 +55,11 @@ impl DataPaths {
     pub fn themes_dir(&self) -> PathBuf {
         self.root.join("themes")
     }
+
+    /// Icons extracted from programs and shortcuts (`cache/icons/`), rebuilt on demand.
+    pub fn icons_dir(&self) -> PathBuf {
+        self.root.join("cache").join("icons")
+    }
 }
 
 #[cfg(test)]

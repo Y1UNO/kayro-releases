@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri_specta::Event;
 
+use super::category::suggest_category;
 use super::{CancelToken, DetectSource, DetectedApp, ScanCtx, SourceKind};
 use crate::config::apps::AppEntry;
 
@@ -73,6 +74,8 @@ fn run_one(
         Ok(mut apps) => {
             for app in &mut apps {
                 app.already_added = existing.iter().any(|e| app.matches_entry(e));
+                app.suggested_category =
+                    suggest_category(&app.name, app.match_rule.exe.as_deref(), Some(kind)).into();
             }
             (apps, None)
         }
