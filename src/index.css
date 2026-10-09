@@ -1,18 +1,26 @@
-:root {
-  color-scheme: dark;
-  background: #171021;
-  color: #f1e9f7;
-  font-family: "DM Sans Variable", system-ui, sans-serif;
-}
+@import "./design/tokens.css";
 
 html,
 body,
 #root {
   height: 100%;
   margin: 0;
-  background: #171021;
 }
 
-h1 {
-  font-family: "Fraunces Variable", Georgia, serif;
+body {
+  background: var(--bg-mid);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-15);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-title);
 }

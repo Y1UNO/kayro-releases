@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "crepuscule",
+  "name": "Crépuscule",
+  "author": "Hub",
+  "description": "Violet doux et lumière ambrée. Le thème par défaut.",
+  "bg": ["#171021", "#0f0a16", "#09060d"],
+  "accent": "#ffb98a",
+  "glow": "rgba(255,170,120,.35)",
+  "fog": ["rgba(160,104,214,.42)", "rgba(255,150,100,.3)", "rgba(255,205,170,.14)"],
+  "card": [190, 120, 170],
+  "beam": [255, 190, 140]
+}

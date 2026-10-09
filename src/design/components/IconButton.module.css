@@ -1,0 +1,47 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text);
+  background: var(--fill-soft);
+  transition:
+    transform var(--dur-hover) var(--ease),
+    background-color var(--dur-hover) var(--ease);
+}
+
+.md {
+  width: 46px;
+  height: 46px;
+  border-radius: 23px;
+}
+
+/* Visible 38 px (top bar); the clickable area is extended to 44 px. */
+.sm {
+  width: 38px;
+  height: 38px;
+  border-radius: 19px;
+}
+
+.sm::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--fill-hover);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

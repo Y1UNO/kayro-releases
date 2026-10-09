@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "boreale",
+  "name": "Aurore boréale",
+  "author": "Hub",
+  "description": "Vert d'eau et turquoise, frais et calme.",
+  "bg": ["#0e1a1a", "#0a1214", "#060b0c"],
+  "accent": "#8fe3b8",
+  "glow": "rgba(110,225,170,.35)",
+  "fog": ["rgba(60,190,160,.4)", "rgba(90,150,230,.28)", "rgba(190,255,225,.12)"],
+  "card": [90, 190, 170],
+  "beam": [140, 235, 200]
+}

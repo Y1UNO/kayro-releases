@@ -1,0 +1,299 @@
+.page {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  box-sizing: border-box;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-6) var(--space-14);
+}
+
+.toolbar {
+  position: sticky;
+  top: var(--space-3);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+}
+
+.toolbarRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-title-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* Plain panels: only the demos below use real glass, to stay under the 6-surface budget. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-2xl);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.chipOnPanel {
+  background-color: var(--fill-soft);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+.settingLabel {
+  font-size: var(--fs-15);
+  font-weight: 600;
+}
+
+.settingHint {
+  color: var(--text-3);
+  font-size: var(--fs-12);
+  font-weight: 500;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+/* Home preview (values from reference/Liquide.dc.html) */
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 58px;
+  padding: 0 12px 0 26px;
+}
+
+.logo {
+  font-family: var(--font-title);
+  font-size: var(--fs-title-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 0 1 400px;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  border-radius: 19px;
+  background: var(--field);
+  box-shadow: var(--field-inset);
+  color: var(--text-2);
+  font-size: var(--fs-14);
+  font-weight: 500;
+}
+
+.searchText {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cards {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  height: 340px;
+  max-width: 100%;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 1;
+  width: 172px;
+  height: 246px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-2xl);
+  text-align: left;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0.62;
+  background:
+    radial-gradient(120% 70% at 18% 0%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 52%),
+    linear-gradient(170deg, var(--card), color-mix(in srgb, var(--card) 22%, black));
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    inset 1px 0 0 rgba(255, 255, 255, 0.18),
+    0 12px 30px rgba(0, 0, 0, 0.3);
+  transition:
+    width var(--dur-card) var(--ease),
+    height var(--dur-card) var(--ease),
+    opacity var(--dur-card) ease,
+    box-shadow var(--dur-card) ease;
+}
+
+.cardFocus {
+  width: 232px;
+  height: 324px;
+  opacity: 1;
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    inset 1px 0 0 rgba(255, 255, 255, 0.18),
+    0 30px 80px color-mix(in srgb, var(--card) 40%, transparent);
+}
+
+/* Reflet qui traverse la carte active toutes les 6 s (transform seulement). */
+.cardFocus::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: -60%;
+  width: 40%;
+  height: 140%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0)
+  );
+  transform: translateX(-100%) skewX(-14deg);
+  animation: shine 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shine {
+  0%,
+  55% {
+    transform: translateX(0) skewX(-14deg);
+  }
+  100% {
+    transform: translateX(560%) skewX(-14deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardFocus::after {
+    animation: none;
+    display: none;
+  }
+}
+
+.letter {
+  position: relative;
+  font-family: var(--font-title);
+  font-size: 64px;
+  font-weight: 300;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.94);
+  transition: font-size var(--dur-card) var(--ease);
+}
+
+.cardFocus .letter {
+  font-size: 100px;
+}
+
+.plate {
+  padding: 10px 14px;
+  font-size: var(--fs-16);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px;
+}
+
+.dock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.sep {
+  width: 1px;
+  height: 26px;
+  margin: 0 var(--space-1);
+  background: var(--separator);
+}
