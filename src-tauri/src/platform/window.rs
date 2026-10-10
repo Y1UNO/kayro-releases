@@ -86,7 +86,7 @@ pub fn bring_to_front(pids: &[u32]) -> bool {
 }
 
 /// Asks the main window of one of `pids` to close (WM_CLOSE: the app decides, nothing is forced).
-/// Used by the spike now, by the scene engine's `close` step later.
+/// Used by the scene engine's `close` step.
 pub fn post_close(pids: &[u32]) -> bool {
     let Some(hwnd) = main_window(pids) else {
         return false;

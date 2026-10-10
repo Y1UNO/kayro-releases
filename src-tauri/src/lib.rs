@@ -4,11 +4,13 @@ pub mod error;
 pub mod icons;
 pub mod intake;
 pub mod ipc;
+pub mod ipc_scenes;
 pub mod launcher;
 mod logging;
 pub mod paths;
 pub mod platform;
 pub mod procwatch;
+pub mod scenes;
 
 use config::ConfigState;
 use error::AppError;
@@ -58,6 +60,7 @@ pub fn run() {
             ipc.mount_events(app);
             app.manage(ConfigState::load(paths::DataPaths::default_location()));
             app.manage(detect::scan::DetectState::default());
+            app.manage(scenes::SceneRunner::default());
             let for_apps = app.handle().clone();
             let for_events = app.handle().clone();
             app.manage(procwatch::ProcWatch::start_system(

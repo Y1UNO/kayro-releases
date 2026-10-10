@@ -29,6 +29,15 @@ pub trait RunningApps: Send + Sync {
     fn bring_to_front(&self, pids: &[u32]) -> bool;
     /// An app was just started: look more often for a while.
     fn note_launch(&self);
+    /// Whether the app can be followed at all (it has a way to recognise its process). An app
+    /// that cannot be followed is never reported as running, so waiting for it is pointless.
+    fn is_followed(&self, _id: &str) -> bool {
+        true
+    }
+    /// Asks the main window of one of `pids` to close, never forcing anything.
+    fn close_softly(&self, _pids: &[u32]) -> bool {
+        false
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -142,6 +151,14 @@ impl RunningApps for ProcWatch {
 
     fn note_launch(&self) {
         let _ = self.tx.send(Msg::Boost);
+    }
+
+    fn is_followed(&self, id: &str) -> bool {
+        self.shared.lock().unwrap().states.contains_key(id)
+    }
+
+    fn close_softly(&self, pids: &[u32]) -> bool {
+        window::post_close(pids)
     }
 }
 

@@ -51,6 +51,22 @@ export const commands = {
 	 *  is simply absent).
 	 */
 	appsRunning: () => __TAURI_INVOKE<AppRunState[]>("apps_running"),
+	scenesList: () => __TAURI_INVOKE<SceneFile_Serialize[]>("scenes_list"),
+	scenesSave: (scene: SceneFile_Deserialize) => typedError<SceneFile_Serialize, AppError>(__TAURI_INVOKE("scenes_save", { scene })),
+	slotsGet: () => __TAURI_INVOKE<SlotsFile>("slots_get"),
+	/**  Replaces all slots (slot name → app id). */
+	slotsSet: (slots: { [key in string]: string }) => typedError<SlotsFile, AppError>(__TAURI_INVOKE("slots_set", { slots })),
+	/**
+	 *  Starts a scene and returns its run id at once; progress arrives as `SceneProgress` events.
+	 *  `close_confirmed` must be true only after the interface showed the user which apps `close`
+	 *  steps will ask to close. One scene at a time (`busy` otherwise).
+	 */
+	sceneRun: (id: string, closeConfirmed: boolean) => typedError<number, AppError>(__TAURI_INVOKE("scene_run", { id, closeConfirmed })),
+	/**
+	 *  Cancels the scene being played (false when none is). Takes effect within milliseconds,
+	 *  except while Windows is showing an administrator prompt for a `launch`.
+	 */
+	sceneCancel: () => __TAURI_INVOKE<boolean>("scene_cancel"),
 };
 
 /** Events */
@@ -58,6 +74,7 @@ export const events = {
 	appStateChanged: makeEvent<AppStateChanged>("app-state-changed"),
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
+	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
 };
 
@@ -168,6 +185,8 @@ export type ErrorCode =
 "validation" | "notFound" | "duplicate" | 
 /**  Reading or writing user data failed. */
 "io" | "internal" | 
+/**  Something of the same kind is already running (a scene is already being played). */
+"busy" | 
 /**  The program, shortcut or protocol handler to start does not exist or is not installed. */
 "launchNotFound" | 
 /**  Windows refused to start it (access denied). */
@@ -218,7 +237,29 @@ export type NewApp = {
 	favorite: boolean,
 };
 
+/**  Payload of the `scene_progress` event. */
+export type ProgressEvent = {
+	runId: number,
+	sceneId: string,
+	update: ProgressUpdate,
+};
+
+export type ProgressUpdate = { kind: "started"; total: number } | { kind: "step"; index: number; state: StepState; reason: Reason | null } | { kind: "finished"; status: RunStatus };
+
 export type Quality = "eco" | "balanced" | "high" | "ultra";
+
+/**  Why a step failed or was skipped (the interface picks its own wording). */
+export type Reason = 
+/**  The slot is not linked to an app (or the app was removed). */
+"slotUnlinked" | 
+/**  The app has no way to recognise its process, so it can be started but not followed. */
+"notFollowable" | "notRunning" | "timeout" | 
+/**  A `close` step reached the engine without the user's confirmation. */
+"confirmationRequired" | 
+/**  The scene was cancelled. */
+"cancelled" | 
+/**  An earlier `required` step failed. */
+"aborted" | "launchNotFound" | "launchDenied" | "elevationRequired" | "elevationCancelled" | "launchFailed" | "focusFailed" | "closeFailed";
 
 export type Refused = {
 	input: string,
@@ -237,6 +278,12 @@ export type RejectReason =
 /**  Beyond [`MAX_INPUTS`]. */
 "tooMany";
 
+export type RunStatus = 
+/**  Every step ran or was skipped without a `required` failure. */
+"completed" | 
+/**  A `required` step failed: the rest was not run. */
+"failed" | "cancelled";
+
 export type ScanReport = {
 	sources: SourceReport[],
 	totalMs: number,
@@ -244,6 +291,32 @@ export type ScanReport = {
 };
 
 export type ScanState = "started" | "done" | "failed" | "cancelled";
+
+/**  `scenes/<id>.json` */
+export type SceneFile = SceneFile_Serialize | SceneFile_Deserialize;
+
+/**  `scenes/<id>.json` */
+export type SceneFile_Deserialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	/**  Accepted and kept; binding it to a global shortcut comes with the scene editor. */
+	hotkey?: string | null,
+	steps: Step[],
+};
+
+/**  `scenes/<id>.json` */
+export type SceneFile_Serialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	/**  Accepted and kept; binding it to a global shortcut comes with the scene editor. */
+	hotkey?: string | null,
+	steps: Step[],
+};
+
+/**  Progress of the scene being played: one event per step change, plus its start and end. */
+export type SceneProgress = ProgressEvent;
 
 export type Settings = {
 	schemaVersion: number,
@@ -269,6 +342,12 @@ export type SettingsPatch = {
 	atmosphereIntensity?: number | null,
 };
 
+/**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */
+export type SlotsFile = {
+	schemaVersion: number,
+	slots: { [key in string]: string },
+};
+
 /**  Where a detected app comes from (also the identity of a [`DetectSource`]). */
 export type SourceKind = "steam" | "epic" | "startmenu";
 
@@ -280,6 +359,15 @@ export type SourceReport = {
 	error: string | null,
 	ms: number,
 };
+
+/**  One step. `required`: if it fails, the rest of the scene is not run. */
+export type Step = { type: "launch"; slot: string; required?: boolean } | { type: "wait"; ms: number; required?: boolean } | { type: "waitReady"; slot: string; timeoutMs: number; required?: boolean } | { type: "focus"; slot: string; required?: boolean } | 
+/**  Soft close only (a close message to the window); the interface confirms first. */
+{ type: "close"; slot: string; required?: boolean };
+
+export type StepState = "pending" | "running" | "ok" | "failed" | 
+/**  Not run: unlinked slot, nothing to follow, scene cancelled or aborted… */
+"skipped";
 
 /* Tauri Specta runtime */
 async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; data: T } | { status: "error"; error: E }> {
