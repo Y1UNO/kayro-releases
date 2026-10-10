@@ -28,6 +28,7 @@ Chaque étape = une session Claude Code **courte et ciblée**. Tu colles le prom
 | 10 | Moteur de scènes (Rust) | Sonnet 5.5 | Élevé | Oui | ●● |
 | 11 | Éditeur de scènes + dock + partage | Sonnet 5.5 | Moyen | Non | ●● |
 | 12 | Modes d'affichage, widget, raccourci, tray | Sonnet 5.5 | Élevé | Oui | ●● |
+| 12b | Atelier de DA (DA officielle v1), itératif | Opus 5.5 (nouvelle direction) / Sonnet 5.5 (ajustements) | Moyen | Oui / Non | ●●●● à ●●●●● au total |
 | 13 | Performance : veille, qualité adaptative, benchmark | **Opus 5.5** | **Extra** | Oui | ●●●● |
 | 14 | Couleurs du jeu (palette automatique) | Opus 5.5 | Élevé | Oui | ●●● |
 | 15 | Apparence et thèmes (interface) | Sonnet 5.5 | Moyen | Non | ● |
@@ -35,6 +36,7 @@ Chaque étape = une session Claude Code **courte et ciblée**. Tu colles le prom
 | 17 | Ambiance sur mesure (1 jeu à la fois) | **Opus 5.5** | **Extra** | Non (brief) | ●●●● / jeu |
 | 18 | Audit final (perf, sécurité, accessibilité) | Opus 5.5 | Extra | Oui | ●●● |
 | 19 | Installeur et partage aux amis | Sonnet 5.5 | Moyen | Non | ●● |
+| — | Passe de finition (avant l'étape 19) | Sonnet 5.5 | Moyen | Non | ●● |
 
 Jalons : **A** (1–6) « ça lance mes apps » · **B** (7–9) « ça ressemble à la maquette » · **C** (10–12) « scènes et modes » · **D** (13) « c'est fluide » · **E** (14–17) « personnalisation signature » · **F** (18–19) « prêt pour les amis ».
 
@@ -275,6 +277,43 @@ Mesure : temps raccourci→visible sur 20 essais (médiane + pire cas), cible < 
 
 ---
 
+## ÉTAPE 12b — Atelier de direction artistique (DA officielle v1)
+**Modèle** Opus 5.5 · Moyen pour proposer une nouvelle direction ou un nouveau concept (**Plan** Oui) ; Sonnet 5.5 · Moyen pour ajuster une direction déjà choisie (**Plan** Non) · **Quota** ●●●● à ●●●●● au total, réparti sur plusieurs sessions (lancer après un renouvellement de quota) · **À fournir** mes références visuelles (captures de jeux, d'apps, de sites, une phrase par image : « j'aime la profondeur de ça », « je veux cette brume »), `docs/RETOUCHES.md`, les captures 01 à 11 des maquettes, et mes retours à chaque tour (captures de l'app, retouches en une ligne chacune).
+
+> **NATURE DE L'ÉTAPE — à lire en premier.** C'est la partie la plus importante et la plus longue du projet. L'interface actuelle n'est qu'un croquis. Le but est de trouver LE design que j'aime vraiment, par itérations successives, autant que nécessaire. Le nombre de sessions n'est pas fixé : l'étape ne se termine que quand je dis explicitement **« je fige la DA »** (jamais avant). Les allers-retours sont normaux et attendus, y compris les retours en arrière complets. Rien n'est « mauvais » parce qu'on l'a rejeté : on explore.
+
+**Ce qui peut changer** : tout ce qui est visuel, y compris ce qui existe déjà. Des éléments peuvent être modifiés, supprimés (poussière, calques de brume, faisceau, halo…) ou remplacés, et de nouveaux éléments peuvent être ajoutés (nouveaux types de particules, de lumières, de formes, de textures, de bordures, d'animations d'interface, nouvelle typographie, nouvelle structure de carte ou de barre). Le moteur FxLayer, les couches CSS et le canvas sont modifiables ; la logique métier, les données et la sécurité ne le sont pas.
+
+**Principe technique : piloté par des données, pas codé en dur.** Le contenu de la DA n'est pas figé d'avance. Chaque élément visuel est déclaré dans un **catalogue** (nom, rôle, paramètres avec min/max/valeur par défaut, coût de performance estimé, activé ou non). L'atelier génère ses réglages à partir de ce catalogue. Ajouter, retirer ou désactiver un élément ne demande de toucher qu'à ce catalogue et à un module d'effet isolé derrière FxLayer. Un élément retiré disparaît proprement (code, tokens, réglages, textes) : aucun code mort, aucune charge inutile.
+
+**Outils d'itération (à construire en premier : ils permettent d'itérer sans brûler le quota)**
+- Page dev `/dev/atelier` : réglages en direct (curseurs, interrupteurs, sélecteurs de couleur) pour chaque élément du catalogue : poussière (densité, taille, vitesse, dérive, lueur, couleur, forme), brume, faisceau (angle, largeur, intensité, balancement), halo, verre (opacité, flou, saturation, bord lumineux, ombre), typographie (échelle, poids), rayons, ressorts de mouvement, et tout élément ajouté en cours de route.
+- Interrupteur « avec / sans » par élément pour juger de son effet.
+- Presets nommés (« Piste A », « Piste B », « v3 »…) enregistrés dans des fichiers (`src/design/presets/*.json`), comparaison A/B côte à côte, retour à n'importe quel preset précédent, historique daté. Rien n'est perdu quand on change de direction.
+- Bouton « Exporter » : écrit les valeurs choisies dans le fichier de tokens et la liste des éléments retenus.
+- Aperçu sur les écrans réels (accueil, dialogue d'ajout, éditeur de scènes, widget, réglages) dans les 5 thèmes, pas seulement sur une page de test.
+- Mesure de fluidité et de coût (CPU/GPU) d'un preset en un clic, avec comparaison aux budgets de l'étape 8.
+
+Je règle à l'œil sans consommer de tokens ; Claude intervient pour proposer, coder un nouvel élément, mesurer et figer.
+
+**Déroulé d'une session (répétable à l'infini)**
+1. Lire `docs/DA-JOURNAL.md` et mes retours.
+2. Si je veux une nouvelle direction : proposer 2 ou 3 pistes réellement différentes (pas des variantes cosmétiques d'une même idée), chacune en preset jouable, avec ses références et son coût de performance estimé ; ne coder en dur que ce qui sert à ces pistes. Sinon, appliquer mes retouches par lots (jamais une par une).
+3. Montrer le résultat (captures avant/après, ou page `/dev/atelier` prête à tester) et s'arrêter pour mon retour.
+4. Mettre à jour `docs/DA-JOURNAL.md` : ce qui est essayé, gardé, rejeté, et pourquoi (avec mes mots), le preset courant, les prochaines pistes. Ce fichier permet de reprendre dans une conversation neuve sans rien perdre.
+5. Commit à chaque tour validé (`feat:`/`refactor: DA ronde N`), tag `da-rN`. Aucune fusion dans main avant le gel de la DA, sauf accord explicite : on travaille sur la branche `step-12b-atelier-da`.
+
+**Prompt de session (à copier-coller à chaque reprise)**
+```
+Étape 12b, atelier de DA. Lis CLAUDE.md, docs/DA-JOURNAL.md et docs/RETOUCHES.md, puis mes retours ci-dessous. [retours, captures, références]. Je veux : [nouvelle direction / ajustements / geler]. Réponds en suivant le déroulé de la fiche 12b.
+```
+
+**Gel de la DA** (quand je dis « je fige la DA »)
+(a) supprimer du code les éléments non retenus ; (b) figer les tokens et le preset retenu comme « DA officielle v1 » dans `docs/DESIGN.md`, qui devient la référence et prime sur les maquettes de `reference/` ; (c) rejouer les mesures de fluidité (budgets CPU/GPU de l'étape 8 respectés, ou écart justifié par écrit) ; (d) vérifier les 5 thèmes, le contraste ≥ 4,5:1, `prefers-reduced-motion`, l'absence de saut de mise en page, tests et lint verts ; (e) captures finales, merge explicite dans main, tag `v0.12b`. Le réglage fin de la performance (veille, qualité adaptative, niveaux Éco/Équilibré/Élevé/Ultra) se fait ensuite à l'étape 13, sur le design définitif.
+**Critères** je dis « je fige la DA » de moi-même ; aucun élément non retenu ne reste dans le code ; `docs/DESIGN.md` décrit la DA officielle v1.
+
+---
+
 ## ÉTAPE 13 — Performance : veille, qualité adaptative, benchmark, réglages
 **Modèle** **Opus 5.5** · **Effort** **Extra** · **Plan** Oui · **Quota** ●●●● · **À fournir** `docs/MACHINE.md`, capture 08. *Lance-la au début d'une fenêtre de quota fraîche.*
 
@@ -383,6 +422,25 @@ D. Accessibilité : clavier de bout en bout, focus visible, contrastes ≥ 4,5:1
 E. Dette : fichiers > 400 lignes, code mort, TODO, dépendances inutiles (taille du bundle et de l'installeur avant/après).
 Livrable : docs/AUDIT.md (≤ 200 lignes) : constats, corrections faites, restes assumés. Tests verts. Aucun changement de comportement visible sans me le dire.
 ```
+
+---
+
+## Passe de finition (avant l'étape 19)
+**Modèle** Sonnet 5.5 · **Effort** Moyen · **Plan** Non · **Quota** ●● · Reprend la section « Petits ajustements et vérification finale » de `docs/ROADMAP.md`.
+
+```
+Lis CLAUDE.md et la section « Petits ajustements et vérification finale » de docs/ROADMAP.md.
+
+PASSE DE FINITION. Traite les points dans cet ordre, par lots, et coche chacun dans la ROADMAP.
+1. Tri de la détection : (a) filtres de bruit renforcés (désinstallateurs, aide/documentation, « Check For Updates », « About/Configure Java », « Module Docs », « Report a Problem », « Windows App Cert Kit », variantes mode compatibilité / sans échec, doublons de même nom et même cible) ; (b) bouton « Ignorer » par app (champ ignoredDetections dans settings.json, case « Afficher les ignorées ») ; (c) groupe « Lanceurs et outils » (Riot Client, Epic Games Launcher, Steam, Roblox Studio, Unity Hub, GOG Galaxy, Battle.net…) replié et décoché par défaut ; (d) meilleure suggestion de catégorie par liste de motifs locale.
+2. Bouton « Parcourir » pour choisir un exe (plugin dialog ; vérifie la version et les permissions minimales).
+3. Suivi des jeux Steam (processus sans match.exe) pour que waitReady, focus et close marchent aussi sur eux.
+4. Test d'Epic avec un vrai jeu installé (URI de lancement et .item réels) ; si aucun jeu Epic n'est installé, dis « non testé » et demande-moi.
+5. Menu « Quitter » du tray et rafraîchissement de l'icône au changement de thème système (si pas fait à l'étape 12).
+6. Clic carte (sélection puis lancement) : rappelle-moi le comportement actuel et demande-moi si je le garde.
+7. Tests : Windows 10, mise à l'échelle 125/150 %, écran 60 Hz, premier lancement sans config. Dis clairement ce que tu n'as pas pu exécuter.
+```
+**Critères** les faux positifs connus disparaissent de la liste par défaut ; un jeu Steam lancé par une scène est suivi ; rapport honnête des tests non exécutés.
 
 ---
 
