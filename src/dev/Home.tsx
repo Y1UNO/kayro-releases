@@ -172,7 +172,7 @@ export default function HomeDev() {
   return (
     <ThemeProvider initialThemeId={themeId}>
       <Atmosphere layers={benchLayers(params)} />
-      <HomeScreen key={params.get("view")} />
+      <HomeScreen key={params.get("view")} onOpenScenes={() => {}} />
       {bench && (
         <pre
           id="bench"

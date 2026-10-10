@@ -34,8 +34,14 @@ const HomeDev: ComponentType | null =
     ? lazy(() => import("./dev/Home"))
     : null;
 
+// Scene screens with fake data (step 11): development builds only.
+const ScenesDev: ComponentType | null =
+  import.meta.env.DEV && location.pathname === "/dev/scenes"
+    ? lazy(() => import("./dev/Scenes"))
+    : null;
+
 const appRoot = createRoot(root);
-const DevPage = Catalogue ?? LauncherBench ?? HomeDev;
+const DevPage = Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev;
 
 if (DevPage) {
   appRoot.render(

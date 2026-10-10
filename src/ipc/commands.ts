@@ -3,6 +3,9 @@
 import { commands, type AppEntry, type AppError, type NewApp, type Settings } from "./bindings";
 import type {
   AddReport,
+  ImportPreview,
+  SceneFile,
+  SlotsFile,
   AppRunState,
   InspectReport,
   FocusResult,
@@ -70,3 +73,26 @@ export const detect = {
   scan: (): Promise<Outcome<ScanReport>> => checked(commands.detectScan()),
   cancel: (): Promise<Outcome<void>> => plain(commands.detectCancel()),
 };
+
+/** Scenes, slots, and the sharing of scenes (`.hubscene`). */
+export const scenesIpc = {
+  list: (): Promise<Outcome<SceneFile[]>> => plain(commands.scenesList()),
+  save: (scene: SceneFile): Promise<Outcome<SceneFile>> => checked(commands.scenesSave(scene)),
+  delete: (id: string): Promise<Outcome<null>> => checked(commands.scenesDelete(id)),
+  newId: (name: string): Promise<Outcome<string>> => plain(commands.scenesNewId(name)),
+  slots: (): Promise<Outcome<SlotsFile>> => plain(commands.slotsGet()),
+  setSlots: (slots: Record<string, string>): Promise<Outcome<SlotsFile>> =>
+    checked(commands.slotsSet(slots)),
+  /** Starts a scene; progress arrives as `scene-progress` events. */
+  run: (id: string, closeConfirmed: boolean): Promise<Outcome<number>> =>
+    checked(commands.sceneRun(id, closeConfirmed)),
+  cancel: (): Promise<Outcome<boolean>> => plain(commands.sceneCancel()),
+  /** Writes the shareable file and returns where it is. */
+  exportScene: (id: string): Promise<Outcome<string>> => checked(commands.sceneExport(id)),
+  importPreview: (path: string): Promise<Outcome<ImportPreview>> =>
+    checked(commands.sceneImportPreview(path)),
+  importScene: (path: string, links: Record<string, string>): Promise<Outcome<SceneFile>> =>
+    checked(commands.sceneImport(path, links)),
+};
+
+export type ScenesIpc = typeof scenesIpc;

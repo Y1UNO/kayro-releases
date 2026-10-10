@@ -71,3 +71,45 @@ export const PlusIcon = (p: IconProps) => (
     <path d="M12 5v14M5 12h14" />
   </Icon>
 );
+
+export const ChevronLeftIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m15 18-6-6 6-6" />
+  </Icon>
+);
+
+export const PlayIcon = ({ size = 14, ...p }: IconProps) => (
+  <Icon size={size} fill="currentColor" stroke="none" {...p}>
+    <path d="M7 4v16l13-8z" />
+  </Icon>
+);
+
+export const StopIcon = ({ size = 14, ...p }: IconProps) => (
+  <Icon size={size} fill="currentColor" stroke="none" {...p}>
+    <rect x="6" y="6" width="12" height="12" rx="2" />
+  </Icon>
+);
+
+export const GripIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />
+  </Icon>
+);
+
+export const TrashIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M9 7V4h6v3" />
+  </Icon>
+);
+
+export const ShareIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 3v12m0-12L8 7m4-4 4 4M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6" />
+  </Icon>
+);
+
+export const ScenesIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m12 4 9 5-9 5-9-5zM3 14l9 5 9-5" />
+  </Icon>
+);

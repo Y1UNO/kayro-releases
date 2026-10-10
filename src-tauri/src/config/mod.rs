@@ -6,7 +6,9 @@ pub mod atomic;
 pub mod dirstore;
 pub mod migrate;
 pub mod scene;
+pub mod scene_ops;
 pub mod schema;
+pub mod share;
 pub mod store;
 pub mod validate;
 

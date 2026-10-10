@@ -202,7 +202,7 @@ fn validate_fields(
     Ok(())
 }
 
-fn hotkey(value: &str) -> Check {
+pub fn hotkey(value: &str) -> Check {
     text("hotkey", value, 64)?;
     let parts: Vec<&str> = value.split('+').map(str::trim).collect();
     let Some((key, mods)) = parts.split_last() else {

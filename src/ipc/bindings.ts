@@ -67,6 +67,19 @@ export const commands = {
 	 *  except while Windows is showing an administrator prompt for a `launch`.
 	 */
 	sceneCancel: () => __TAURI_INVOKE<boolean>("scene_cancel"),
+	/**  Deletes a scene (its file included). Its slots stay: other scenes may use them. */
+	scenesDelete: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("scenes_delete", { id })),
+	/**  A scene id that no scene uses yet, derived from a name (used on the first save). */
+	scenesNewId: (name: string) => __TAURI_INVOKE<string>("scenes_new_id", { name }),
+	/**
+	 *  Writes `<id>.hubscene` (slot names only) in the exports folder, shows it in Explorer and
+	 *  returns its path. Never overwrites an earlier export.
+	 */
+	sceneExport: (id: string) => typedError<string, AppError>(__TAURI_INVOKE("scene_export", { id })),
+	/**  Reads and validates a `.hubscene` file and says which slots it needs. Writes nothing. */
+	sceneImportPreview: (path: string) => typedError<ImportPreview, AppError>(__TAURI_INVOKE("scene_import_preview", { path })),
+	/**  Imports a `.hubscene` file as a new scene; `links` maps its slot names to the user's apps. */
+	sceneImport: (path: string, links: { [key in string]: string }) => typedError<SceneFile_Serialize, AppError>(__TAURI_INVOKE("scene_import", { path, links })),
 };
 
 /** Events */
@@ -204,6 +217,20 @@ export type FocusResult = "focused" |
 /**  Running, but no window could be brought forward (tray app, other privileges…). */
 "failed";
 
+/**  What the interface shows before importing: nothing is written yet. */
+export type ImportPreview = {
+	name: string,
+	stepCount: number,
+	slots: ImportSlot[],
+};
+
+/**  One slot of a file about to be imported, with the app it would be linked to by default. */
+export type ImportSlot = {
+	name: string,
+	/**  The app this slot is already linked to on this machine (if that app still exists). */
+	suggestedApp: string | null,
+};
+
 export type InspectReport = {
 	candidates: Candidate[],
 	refused: Refused[],
@@ -300,7 +327,7 @@ export type SceneFile_Deserialize = {
 	schemaVersion: number,
 	id: string,
 	name: string,
-	/**  Accepted and kept; binding it to a global shortcut comes with the scene editor. */
+	/**  Only stored here; registering it as a global shortcut comes with step 12. */
 	hotkey?: string | null,
 	steps: Step[],
 };
@@ -310,7 +337,7 @@ export type SceneFile_Serialize = {
 	schemaVersion: number,
 	id: string,
 	name: string,
-	/**  Accepted and kept; binding it to a global shortcut comes with the scene editor. */
+	/**  Only stored here; registering it as a global shortcut comes with step 12. */
 	hotkey?: string | null,
 	steps: Step[],
 };

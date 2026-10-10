@@ -7,7 +7,9 @@ use specta::Type;
 use tauri::{AppHandle, Manager, Runtime, State};
 use tauri_specta::Event;
 
+use crate::config::scene_ops::ImportPreview;
 use crate::config::schema::{SceneFile, SlotsFile};
+use crate::config::share;
 use crate::config::ConfigState;
 use crate::error::AppError;
 use crate::ipc::notify;
@@ -110,4 +112,74 @@ pub fn scene_run<R: Runtime>(
 #[specta::specta]
 pub fn scene_cancel(runner: State<'_, SceneRunner>) -> bool {
     runner.cancel()
+}
+
+/// Deletes a scene (its file included). Its slots stay: other scenes may use them.
+#[tauri::command]
+#[specta::specta]
+pub fn scenes_delete(state: State<'_, ConfigState>, id: String) -> Result<(), AppError> {
+    state.delete_scene(&id)
+}
+
+/// A scene id that no scene uses yet, derived from a name (used on the first save).
+#[tauri::command]
+#[specta::specta]
+pub fn scenes_new_id(state: State<'_, ConfigState>, name: String) -> String {
+    state.new_scene_id(&name)
+}
+
+/// Writes `<id>.hubscene` (slot names only) in the exports folder, shows it in Explorer and
+/// returns its path. Never overwrites an earlier export.
+#[tauri::command]
+#[specta::specta]
+pub fn scene_export(state: State<'_, ConfigState>, id: String) -> Result<String, AppError> {
+    let scene = state
+        .scene(&id)
+        .ok_or_else(|| AppError::not_found(format!("scene «{id}»")))?;
+    let path = share::write_export(&state.paths().exports_dir(), &scene)?;
+    tracing::info!(scene = %id, file = %path.display(), "scene exported");
+    reveal(&path);
+    Ok(path.display().to_string())
+}
+
+/// Reads and validates a `.hubscene` file and says which slots it needs. Writes nothing.
+#[tauri::command]
+#[specta::specta]
+pub fn scene_import_preview(
+    state: State<'_, ConfigState>,
+    path: String,
+) -> Result<ImportPreview, AppError> {
+    let file = read_shared(&path)?;
+    Ok(state.preview_import(&file))
+}
+
+/// Imports a `.hubscene` file as a new scene; `links` maps its slot names to the user's apps.
+#[tauri::command]
+#[specta::specta]
+pub fn scene_import(
+    state: State<'_, ConfigState>,
+    path: String,
+    links: BTreeMap<String, String>,
+) -> Result<SceneFile, AppError> {
+    let file = read_shared(&path)?;
+    let scene = state.import_scene(&file, &links)?;
+    tracing::info!(scene = %scene.id, slots = file.slots.len(), "scene imported");
+    Ok(scene)
+}
+
+fn read_shared(path: &str) -> Result<share::HubSceneFile, AppError> {
+    let path = path.trim().trim_matches('"');
+    share::read(std::path::Path::new(path)).map_err(|reason| {
+        tracing::warn!(%reason, "scene file refused");
+        AppError::validation("file", reason)
+    })
+}
+
+/// Selects the file in Explorer. Best effort: the export is already written.
+fn reveal(path: &std::path::Path) {
+    let mut arg = std::ffi::OsString::from("/select,");
+    arg.push(path);
+    if let Err(e) = std::process::Command::new("explorer.exe").arg(arg).spawn() {
+        tracing::warn!(error = %e, "could not show the export in Explorer");
+    }
 }

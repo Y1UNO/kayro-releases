@@ -4,6 +4,7 @@ import {
   type AppEntry,
   type AppRunState,
   type DetectProgress,
+  type ProgressEvent,
   type Settings,
 } from "./bindings";
 
@@ -49,6 +50,15 @@ export async function onDetectProgress(
 ): Promise<Unlisten> {
   try {
     return await events.detectProgress.listen((e) => handler(e.payload));
+  } catch {
+    return noop;
+  }
+}
+
+/** Progress of the scene being played: its start, one event per step change, and its end. */
+export async function onSceneProgress(handler: (event: ProgressEvent) => void): Promise<Unlisten> {
+  try {
+    return await events.sceneProgress.listen((e) => handler(e.payload));
   } catch {
     return noop;
   }
