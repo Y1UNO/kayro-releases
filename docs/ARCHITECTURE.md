@@ -59,7 +59,8 @@ Tous les fichiers portent `"schemaVersion": N` + migration.
 ```
 - Types d'étapes : `launch`, `wait`, `waitReady` (le processus ou la fenêtre de l'app liée au slot existe), `focus`, `close` (fermeture douce + confirmation). Le trait `Action` est extensible (OBS, lumières… plus tard).
 - Exécution asynchrone, annulable, avec état par étape (en attente / en cours / ok / échec / ignoré). Un échec n'arrête pas la scène sauf si l'étape est marquée `required`.
-- Le fichier partagé n'a que des noms de slots. À l'import, l'utilisateur relie chaque slot à une de ses apps.
+- Le fichier partagé (`.hubscene` : `format`, `schemaVersion`, `name`, `slots`, `steps`) n'a que des noms de slots, ni id, ni raccourci, ni chemin ; 256 Kio max, schéma strict. À l'import, l'utilisateur relie chaque slot à une de ses apps (`config/share.rs`).
+- Éditeur : le mode simple ne stocke rien de plus (il génère des étapes `launch` / `wait` / `waitReady`, `features/scenes/simple.ts`).
 
 ## 4. Fenêtres et fonctionnement
 - **Instant** : la fenêtre reste chargée, cachée, dans la zone de notification ; le raccourci l'affiche en moins de 150 ms. Option « Mode économe » : la fenêtre est détruite quand elle est cachée (moins de RAM, ouverture ~400 ms).

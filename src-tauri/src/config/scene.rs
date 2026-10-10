@@ -10,7 +10,6 @@ use super::validate::validate_id;
 pub const MAX_STEPS: usize = 200;
 /// Longest single `wait` or `waitReady` timeout.
 pub const MAX_DELAY_MS: u32 = 10 * 60 * 1000;
-const MAX_HOTKEY: usize = 40;
 
 /// One step. `required`: if it fails, the rest of the scene is not run.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
@@ -61,6 +60,17 @@ impl Step {
         }
     }
 
+    /// The slot this step names (`wait` has none).
+    pub fn slot(&self) -> Option<&str> {
+        match self {
+            Self::Launch { slot, .. }
+            | Self::WaitReady { slot, .. }
+            | Self::Focus { slot, .. }
+            | Self::Close { slot, .. } => Some(slot),
+            Self::Wait { .. } => None,
+        }
+    }
+
     pub fn kind(&self) -> &'static str {
         match self {
             Self::Launch { .. } => "launch",
@@ -71,7 +81,7 @@ impl Step {
         }
     }
 
-    fn check(&self) -> Result<(), String> {
+    pub(super) fn check(&self) -> Result<(), String> {
         match self {
             Self::Wait { ms, .. } if *ms > MAX_DELAY_MS => {
                 Err(format!("wait over {MAX_DELAY_MS} ms"))
@@ -97,10 +107,21 @@ pub struct SceneFile {
     pub schema_version: u32,
     pub id: String,
     pub name: String,
-    /// Accepted and kept; binding it to a global shortcut comes with the scene editor.
+    /// Only stored here; registering it as a global shortcut comes with step 12.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hotkey: Option<String>,
     pub steps: Vec<Step>,
+}
+
+/// Display name of a scene: 1–200 characters, no control characters.
+pub(super) fn check_name(name: &str) -> Result<(), String> {
+    if name.is_empty() || name.chars().count() > 200 {
+        return Err("name must be 1–200 characters".into());
+    }
+    if name.chars().any(char::is_control) {
+        return Err("name must not contain control characters".into());
+    }
+    Ok(())
 }
 
 impl StrictFile for SceneFile {
@@ -109,11 +130,9 @@ impl StrictFile for SceneFile {
             return Err(format!("unsupported schemaVersion {}", self.schema_version));
         }
         validate_id(&self.id).map_err(|e| e.to_string())?;
-        if self.name.is_empty() || self.name.chars().count() > 200 {
-            return Err("name must be 1–200 characters".into());
-        }
-        if self.hotkey.as_ref().is_some_and(|h| h.len() > MAX_HOTKEY) {
-            return Err("hotkey too long".into());
+        check_name(&self.name)?;
+        if let Some(hotkey) = &self.hotkey {
+            super::validate::hotkey(hotkey).map_err(|e| e.to_string())?;
         }
         if self.steps.len() > MAX_STEPS {
             return Err("too many steps".into());
@@ -173,5 +192,17 @@ mod tests {
         let mut many = base(json!({"type":"wait","ms":1}));
         many["steps"] = json!(vec![json!({"type":"wait","ms":1}); MAX_STEPS + 1]);
         assert!(parse(many).is_err());
+    }
+
+    #[test]
+    fn name_and_hotkey_are_checked() {
+        let with = |name: &str, hotkey: serde_json::Value| {
+            parse(json!({"schemaVersion":1,"id":"s","name":name,"hotkey":hotkey,"steps":[]}))
+        };
+        assert!(with("Soirée", json!("Ctrl+Alt+1")).is_ok());
+        assert!(with("bad\u{0}name", json!("Ctrl+Alt+1")).is_err());
+        for bad in ["rm -rf", "Ctrl+", "A", &"Ctrl+Alt+".repeat(20)] {
+            assert!(with("S", json!(bad)).is_err(), "{bad}");
+        }
     }
 }

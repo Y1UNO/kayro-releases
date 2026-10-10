@@ -35,7 +35,7 @@ function cardCentre(id: string): { x: number; y: number } {
 }
 
 /** The home screen: top bar, category title, carousel (or grid), category tabs, scene dock. */
-export function HomeScreen() {
+export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
   const apps = useHub((s) => s.apps);
   const running = useHub((s) => s.running);
   const groups = useMemo(() => groupByCategory(apps), [apps]);
@@ -210,7 +210,7 @@ export function HomeScreen() {
             onCategory={setCategory}
             onView={(view) => dispatch({ type: "setView", view })}
           />
-          <SceneDock />
+          <SceneDock onManage={onOpenScenes} />
         </main>
 
         <CommandPalette

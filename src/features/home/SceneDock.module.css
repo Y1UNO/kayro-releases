@@ -6,10 +6,33 @@
   padding: var(--space-2);
   margin-top: 14px;
   flex-shrink: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* Placeholder content shown at full strength, as in the mock-up (the default disabled look is .45). */
-.item:disabled {
+/* Many scenes: the row scrolls on its own, the buttons beside it stay in place. */
+.scenes {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.item {
+  flex: none;
+  gap: 10px;
+}
+
+.progress {
+  font-size: var(--fs-12);
+  font-weight: 700;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.disabled:disabled {
   opacity: 1;
   cursor: default;
 }

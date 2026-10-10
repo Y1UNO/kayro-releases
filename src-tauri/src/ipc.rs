@@ -297,6 +297,11 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_scenes::slots_set,
             ipc_scenes::scene_run::<tauri::Wry>,
             ipc_scenes::scene_cancel,
+            ipc_scenes::scenes_delete,
+            ipc_scenes::scenes_new_id,
+            ipc_scenes::scene_export,
+            ipc_scenes::scene_import_preview,
+            ipc_scenes::scene_import,
         ])
         .events(collect_events![
             SettingsChanged,

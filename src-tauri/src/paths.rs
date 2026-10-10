@@ -59,6 +59,11 @@ impl DataPaths {
         self.root.join("scenes")
     }
 
+    /// Scenes exported for sharing (`exports/<id>.hubscene`).
+    pub fn exports_dir(&self) -> PathBuf {
+        self.root.join("exports")
+    }
+
     pub fn themes_dir(&self) -> PathBuf {
         self.root.join("themes")
     }
