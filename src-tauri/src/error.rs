@@ -11,6 +11,8 @@ pub enum ErrorCode {
     /// Reading or writing user data failed.
     Io,
     Internal,
+    /// Something of the same kind is already running (a scene is already being played).
+    Busy,
     /// The program, shortcut or protocol handler to start does not exist or is not installed.
     LaunchNotFound,
     /// Windows refused to start it (access denied).

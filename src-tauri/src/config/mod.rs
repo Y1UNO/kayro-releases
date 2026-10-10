@@ -5,17 +5,22 @@ pub mod apps;
 pub mod atomic;
 pub mod dirstore;
 pub mod migrate;
+pub mod scene;
 pub mod schema;
 pub mod store;
 pub mod validate;
 
+use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard};
 use std::time::Instant;
 
 use crate::error::{AppError, ErrorCode};
 use crate::paths::DataPaths;
 use apps::{AddFailure, AddReport, AppEntry, AppSource, AppsFile, NewApp};
-use schema::{SceneFile, Settings, SettingsPatch, SlotsFile, ThemeFile};
+use schema::{SceneFile, Settings, SettingsPatch, SlotsFile, StrictFile, ThemeFile};
+
+const MAX_SCENES: usize = 500;
+const MAX_SLOTS: usize = 200;
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -26,7 +31,7 @@ pub struct ConfigState {
     settings: Mutex<Settings>,
     apps: Mutex<AppsFile>,
     slots: Mutex<SlotsFile>,
-    scenes: Vec<SceneFile>,
+    scenes: Mutex<Vec<SceneFile>>,
     themes: Vec<ThemeFile>,
 }
 
@@ -51,7 +56,7 @@ impl ConfigState {
             settings: Mutex::new(settings),
             apps: Mutex::new(apps),
             slots: Mutex::new(slots),
-            scenes,
+            scenes: Mutex::new(scenes),
             themes,
         }
     }
@@ -151,8 +156,57 @@ impl ConfigState {
         lock(&self.slots).clone()
     }
 
-    pub fn scenes(&self) -> &[SceneFile] {
-        &self.scenes
+    /// Replaces all slots at once (slot name → app id). Linking to an app that is later removed
+    /// is allowed: the scene engine then skips the step and says so.
+    pub fn set_slots(&self, slots: BTreeMap<String, String>) -> Result<SlotsFile, AppError> {
+        if slots.len() > MAX_SLOTS {
+            return Err(AppError::validation("slots", "too many slots"));
+        }
+        for (name, app_id) in &slots {
+            validate::validate_id(name)
+                .and_then(|()| validate::validate_id(app_id))
+                .map_err(|_| AppError::validation("slots", format!("bad slot «{name}»")))?;
+        }
+        let mut guard = lock(&self.slots);
+        let next = SlotsFile {
+            schema_version: guard.schema_version,
+            slots,
+        };
+        store::save(&self.paths.slots(), &next)?;
+        *guard = next.clone();
+        Ok(next)
+    }
+
+    pub fn scenes(&self) -> Vec<SceneFile> {
+        lock(&self.scenes).clone()
+    }
+
+    pub fn scene(&self, id: &str) -> Option<SceneFile> {
+        lock(&self.scenes).iter().find(|s| s.id == id).cloned()
+    }
+
+    /// Validates then writes `scenes/<id>.json` (replacing a scene with the same id).
+    pub fn save_scene(&self, scene: SceneFile) -> Result<SceneFile, AppError> {
+        scene
+            .check()
+            .map_err(|message| AppError::validation("scene", message))?;
+        let mut guard = lock(&self.scenes);
+        let is_new = !guard.iter().any(|s| s.id == scene.id);
+        if is_new && guard.len() >= MAX_SCENES {
+            return Err(AppError::validation("scene", "too many scenes"));
+        }
+        let mut bytes = serde_json::to_vec_pretty(&scene).map_err(std::io::Error::other)?;
+        bytes.push(b'\n');
+        let path = self.paths.scenes_dir().join(format!("{}.json", scene.id));
+        atomic::write_atomic(&path, &bytes)?;
+        match guard.iter_mut().find(|s| s.id == scene.id) {
+            Some(slot) => *slot = scene.clone(),
+            None => {
+                guard.push(scene.clone());
+                guard.sort_by(|a, b| a.id.cmp(&b.id));
+            }
+        }
+        Ok(scene)
     }
 
     pub fn themes(&self) -> &[ThemeFile] {

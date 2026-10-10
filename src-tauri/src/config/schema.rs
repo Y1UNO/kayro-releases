@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use specta::Type;
 
+pub use super::scene::SceneFile;
 use super::store::{lenient_merge, Document, LoadReport};
 use super::validate::validate_settings;
 
@@ -134,16 +135,6 @@ pub trait StrictFile: serde::de::DeserializeOwned {
     fn check(&self) -> Result<(), String>;
 }
 
-/// Minimal scene (`scenes/<id>.json`); the step list arrives with the scene engine.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct SceneFile {
-    pub schema_version: u32,
-    pub id: String,
-    pub name: String,
-    pub steps: Vec<Value>,
-}
-
 /// Colour theme file (`themes/<id>.json`), same shape as `src/design/theme.ts`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -170,16 +161,6 @@ fn check_header(version: u32, id: &str, name: &str) -> Result<(), String> {
         return Err("name must be 1–200 characters".into());
     }
     Ok(())
-}
-
-impl StrictFile for SceneFile {
-    fn check(&self) -> Result<(), String> {
-        check_header(self.schema_version, &self.id, &self.name)?;
-        if self.steps.len() > 200 {
-            return Err("too many steps".into());
-        }
-        Ok(())
-    }
 }
 
 impl StrictFile for ThemeFile {

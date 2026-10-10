@@ -8,6 +8,7 @@ export const ERROR_MESSAGE_KEYS: Record<ErrorCode, MessageKey> = {
   duplicate: "errors.duplicate",
   io: "errors.io",
   internal: "errors.internal",
+  busy: "errors.busy",
   launchNotFound: "errors.launchNotFound",
   launchDenied: "errors.launchDenied",
   elevationRequired: "errors.elevationRequired",

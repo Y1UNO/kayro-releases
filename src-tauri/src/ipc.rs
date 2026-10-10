@@ -16,7 +16,7 @@ use crate::intake::{inspect, shortcut_target, InspectReport};
 use crate::launcher::system::SystemLauncher;
 use crate::launcher::{launch_app, LaunchResult};
 use crate::procwatch::{AppRunState, ProcWatch, RunningApps};
-use crate::{icons, platform};
+use crate::{icons, ipc_scenes, platform};
 
 /// Emitted after every successful change of the settings (also to the window that made it).
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -291,12 +291,19 @@ pub fn builder() -> Builder<tauri::Wry> {
             app_launch::<tauri::Wry>,
             app_focus::<tauri::Wry>,
             apps_running,
+            ipc_scenes::scenes_list,
+            ipc_scenes::scenes_save,
+            ipc_scenes::slots_get,
+            ipc_scenes::slots_set,
+            ipc_scenes::scene_run::<tauri::Wry>,
+            ipc_scenes::scene_cancel,
         ])
         .events(collect_events![
             SettingsChanged,
             AppsChanged,
             DetectProgress,
-            AppStateChanged
+            AppStateChanged,
+            ipc_scenes::SceneProgress
         ])
 }
 
