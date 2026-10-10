@@ -3,6 +3,8 @@ import type { MouseEvent } from "react";
 import { AnimatePresence, LazyMotion, MotionConfig, domAnimation, m } from "motion/react";
 import { EASE, SPRING } from "../../design";
 import { t } from "../../i18n";
+import { desktopIpc } from "../../ipc/commands";
+import { DisplaySettings } from "../settings/DisplaySettings";
 import type { AppEntry } from "../../ipc/bindings";
 import { hubStore, useHub } from "../../store";
 import { AddAppsDialog } from "../add-app/AddAppsDialog";
@@ -45,6 +47,8 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
   );
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const hideOnEscape = useHub((s) => s.settings?.hideOnEscape ?? true);
   const [menu, setMenu] = useState<MenuTarget | null>(null);
   const [editing, setEditing] = useState<{ app: AppEntry; remove: boolean } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -108,7 +112,11 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
         const app = list[focus];
         if (app) launch(app);
       },
-      onEscape: () => dispatch({ type: "setView", view: "carousel" }),
+      // Escape closes what is open (grid view); with nothing left to close it hides the hub.
+      onEscape: () => {
+        if (grid) dispatch({ type: "setView", view: "carousel" });
+        else if (hideOnEscape) void desktopIpc.hide();
+      },
       onSearch: () => setPaletteOpen(true),
       onEdit: () => {
         const app = list[focus];
@@ -178,7 +186,11 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion="user">
         <main className={styles.screen}>
-          <TopBar onSearch={() => setPaletteOpen(true)} onAdd={() => setAddOpen(true)} />
+          <TopBar
+            onSearch={() => setPaletteOpen(true)}
+            onAdd={() => setAddOpen(true)}
+            onSettings={() => setSettingsOpen(true)}
+          />
           <CategoryTitle category={state.category} compact={grid && count > 0} />
 
           <div
@@ -227,6 +239,7 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
             setNotice(t(count === 1 ? "addApps.addedOne" : "addApps.addedMany", { count }))
           }
         />
+        <DisplaySettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
         <EditAppDialog
           app={editing?.app ?? null}
           startWithRemove={editing?.remove}

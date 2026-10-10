@@ -4,6 +4,7 @@ import {
   type AppEntry,
   type AppRunState,
   type DetectProgress,
+  type HotkeysReport,
   type ProgressEvent,
   type Settings,
 } from "./bindings";
@@ -62,4 +63,38 @@ export async function onSceneProgress(handler: (event: ProgressEvent) => void): 
   } catch {
     return noop;
   }
+}
+
+async function listenTo<T>(
+  subscribe: (handler: (e: { payload: T }) => void) => Promise<UnlistenFn>,
+  handler: (payload: T) => void,
+): Promise<Unlisten> {
+  try {
+    return await subscribe((e) => handler(e.payload));
+  } catch {
+    return noop; // not running inside Tauri (plain browser, tests)
+  }
+}
+
+/** Events of the desktop side (shortcuts, visibility, recent apps). */
+export interface DesktopEvents {
+  onRecentsChanged(handler: (ids: string[]) => void): Promise<Unlisten>;
+  onHotkeysChanged(handler: (report: HotkeysReport) => void): Promise<Unlisten>;
+}
+
+export const desktopEvents: DesktopEvents = {
+  onRecentsChanged: (handler) => listenTo(events.recentsChanged.listen, handler),
+  onHotkeysChanged: (handler) => listenTo(events.hotkeysChanged.listen, handler),
+};
+
+/** The hub appeared or went away; `bench` asks the page to report when it painted. */
+export function onWindowVisibility(
+  handler: (e: { visible: boolean; bench: boolean }) => void,
+): Promise<Unlisten> {
+  return listenTo(events.windowVisibility.listen, handler);
+}
+
+/** A shortcut asks to confirm a scene that closes apps. */
+export function onSceneHotkey(handler: (sceneId: string) => void): Promise<Unlisten> {
+  return listenTo(events.sceneHotkey.listen, handler);
 }

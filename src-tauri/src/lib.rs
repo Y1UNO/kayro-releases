@@ -1,9 +1,11 @@
 pub mod config;
+pub mod desktop;
 pub mod detect;
 pub mod error;
 pub mod icons;
 pub mod intake;
 pub mod ipc;
+pub mod ipc_desktop;
 pub mod ipc_scenes;
 pub mod launcher;
 mod legacy;
@@ -12,27 +14,12 @@ pub mod paths;
 pub mod platform;
 pub mod procwatch;
 pub mod scenes;
-mod tray;
 
 use config::ConfigState;
-use error::AppError;
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::Manager;
+use tauri_plugin_global_shortcut::ShortcutState;
 
-const MAIN_WINDOW: &str = "main";
 pub(crate) const SILENT_FLAG: &str = "--silent";
-
-fn main_window(app: &AppHandle) -> Result<WebviewWindow, AppError> {
-    app.get_webview_window(MAIN_WINDOW)
-        .ok_or_else(|| AppError::not_found(format!("window «{MAIN_WINDOW}»")))
-}
-
-pub(crate) fn show_and_focus(app: &AppHandle) -> Result<(), AppError> {
-    let window = main_window(app)?;
-    window.show()?;
-    window.unminimize()?;
-    window.set_focus()?;
-    Ok(())
-}
 
 pub fn run() {
     // Before the logger: it creates the new data folder, which would hide the old one.
@@ -55,18 +42,32 @@ pub fn run() {
         // Must be the first plugin registered.
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             tracing::info!(?args, "second instance: showing the window");
-            if let Err(e) = show_and_focus(app) {
-                tracing::warn!(error = %e, "could not show the window");
-            }
+            desktop::show(app);
         }))
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec![SILENT_FLAG]),
+        ))
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, shortcut, event| {
+                    if event.state() == ShortcutState::Pressed {
+                        desktop::on_hotkey(app, shortcut.id());
+                    }
+                })
+                .build(),
+        )
         .invoke_handler(ipc.invoke_handler())
         .setup(move |app| {
             tracing::info!(app_name = %app.package_info().name, "setup done");
-            tray::setup(app.handle())?;
             ipc.mount_events(app);
             app.manage(ConfigState::load(paths::DataPaths::default_location()));
             app.manage(detect::scan::DetectState::default());
             app.manage(scenes::SceneRunner::default());
+            app.manage(desktop::DesktopState::default());
+            app.manage(desktop::hotkeys::HotkeyState::default());
+            // The icon first, then the window: the icon is there ~0.5 s sooner (spike 05).
+            desktop::tray::setup(app.handle())?;
             let for_apps = app.handle().clone();
             let for_events = app.handle().clone();
             app.manage(procwatch::ProcWatch::start_system(
@@ -76,10 +77,22 @@ pub fn run() {
                     ipc::notify(ipc::AppStateChanged(state).emit(&for_events));
                 },
             ));
+            let silent = std::env::args().any(|a| a == SILENT_FLAG);
+            desktop::startup(app.handle(), silent);
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running the application");
+        .build(tauri::generate_context!())
+        .expect("error while building the application")
+        .run(|_app, event| {
+            // The hub lives in the notification area: destroying the last window (economy mode)
+            // must not end it. Only the menu's « Quitter » (`app.exit`) does.
+            if let tauri::RunEvent::ExitRequested {
+                api, code: None, ..
+            } = event
+            {
+                api.prevent_exit();
+            }
+        });
 }
 
 #[cfg(test)]

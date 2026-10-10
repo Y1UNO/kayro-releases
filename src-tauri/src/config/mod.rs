@@ -10,6 +10,7 @@ pub mod scene_ops;
 pub mod schema;
 pub mod share;
 pub mod store;
+pub mod ui_state;
 pub mod validate;
 
 use std::collections::BTreeMap;
@@ -20,6 +21,7 @@ use crate::error::{AppError, ErrorCode};
 use crate::paths::DataPaths;
 use apps::{AddFailure, AddReport, AppEntry, AppSource, AppsFile, NewApp};
 use schema::{SceneFile, Settings, SettingsPatch, SlotsFile, StrictFile, ThemeFile};
+use ui_state::UiState;
 
 const MAX_SCENES: usize = 500;
 const MAX_SLOTS: usize = 200;
@@ -34,6 +36,7 @@ pub struct ConfigState {
     apps: Mutex<AppsFile>,
     slots: Mutex<SlotsFile>,
     scenes: Mutex<Vec<SceneFile>>,
+    ui_state: Mutex<UiState>,
     themes: Vec<ThemeFile>,
 }
 
@@ -44,6 +47,7 @@ impl ConfigState {
         let (settings, _) = store::load::<Settings>(&paths.settings());
         let (apps, _) = store::load::<AppsFile>(&paths.apps());
         let (slots, _) = store::load::<SlotsFile>(&paths.slots());
+        let (ui_state, _) = store::load::<UiState>(&paths.ui_state());
         let scenes = dirstore::load_dir::<SceneFile>(&paths.scenes_dir());
         let themes = dirstore::load_dir::<ThemeFile>(&paths.themes_dir());
         tracing::info!(
@@ -59,6 +63,7 @@ impl ConfigState {
             apps: Mutex::new(apps),
             slots: Mutex::new(slots),
             scenes: Mutex::new(scenes),
+            ui_state: Mutex::new(ui_state),
             themes,
         }
     }
@@ -79,6 +84,24 @@ impl ConfigState {
         store::save(&self.paths.settings(), &next)?;
         *guard = next.clone();
         Ok(next)
+    }
+
+    pub fn ui_state(&self) -> UiState {
+        lock(&self.ui_state).clone()
+    }
+
+    /// Applies `change` and writes `state.json` when it reports a change (true).
+    pub fn update_ui_state(
+        &self,
+        change: impl FnOnce(&mut UiState) -> bool,
+    ) -> std::io::Result<()> {
+        let mut guard = lock(&self.ui_state);
+        let mut next = guard.clone();
+        if change(&mut next) {
+            store::save(&self.paths.ui_state(), &next)?;
+            *guard = next;
+        }
+        Ok(())
     }
 
     pub fn apps(&self) -> AppsFile {

@@ -32,8 +32,14 @@ pub fn scenes_list(state: State<'_, ConfigState>) -> Vec<SceneFile> {
 
 #[tauri::command]
 #[specta::specta]
-pub fn scenes_save(state: State<'_, ConfigState>, scene: SceneFile) -> Result<SceneFile, AppError> {
-    state.save_scene(scene)
+pub fn scenes_save<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, ConfigState>,
+    scene: SceneFile,
+) -> Result<SceneFile, AppError> {
+    let saved = state.save_scene(scene)?;
+    crate::desktop::scenes_changed(&app);
+    Ok(saved)
 }
 
 #[tauri::command]
@@ -85,10 +91,22 @@ pub fn scene_run<R: Runtime>(
     id: String,
     close_confirmed: bool,
 ) -> Result<u32, AppError> {
+    start_scene(&app, &config, &runner, &id, close_confirmed)
+}
+
+/// What `scene_run` does, also used by scene shortcuts and the notification-area menu.
+pub fn start_scene<R: Runtime>(
+    app: &AppHandle<R>,
+    config: &ConfigState,
+    runner: &SceneRunner,
+    id: &str,
+    close_confirmed: bool,
+) -> Result<u32, AppError> {
     let scene = config
-        .scene(&id)
+        .scene(id)
         .ok_or_else(|| AppError::not_found(format!("scene «{id}»")))?;
     let (apps, slots) = (config.apps().apps, config.slots().slots);
+    let app = app.clone();
     runner.start(move |run_id, cancel| {
         let (running, clock) = (TauriRunning(app.clone()), RealClock::new());
         let env = Env {
@@ -117,8 +135,14 @@ pub fn scene_cancel(runner: State<'_, SceneRunner>) -> bool {
 /// Deletes a scene (its file included). Its slots stay: other scenes may use them.
 #[tauri::command]
 #[specta::specta]
-pub fn scenes_delete(state: State<'_, ConfigState>, id: String) -> Result<(), AppError> {
-    state.delete_scene(&id)
+pub fn scenes_delete<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, ConfigState>,
+    id: String,
+) -> Result<(), AppError> {
+    state.delete_scene(&id)?;
+    crate::desktop::scenes_changed(&app);
+    Ok(())
 }
 
 /// A scene id that no scene uses yet, derived from a name (used on the first save).
@@ -156,7 +180,8 @@ pub fn scene_import_preview(
 /// Imports a `.hubscene` file as a new scene; `links` maps its slot names to the user's apps.
 #[tauri::command]
 #[specta::specta]
-pub fn scene_import(
+pub fn scene_import<R: Runtime>(
+    app: AppHandle<R>,
     state: State<'_, ConfigState>,
     path: String,
     links: BTreeMap<String, String>,
@@ -164,6 +189,7 @@ pub fn scene_import(
     let file = read_shared(&path)?;
     let scene = state.import_scene(&file, &links)?;
     tracing::info!(scene = %scene.id, slots = file.slots.len(), "scene imported");
+    crate::desktop::scenes_changed(&app);
     Ok(scene)
 }
 

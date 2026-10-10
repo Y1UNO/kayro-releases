@@ -372,7 +372,10 @@ fn delete_scene_removes_file_and_refuses_odd_ids() {
     let (dir, s) = state();
     s.save_scene(scene_json("a")).unwrap();
     assert!(dir.path().join("scenes/a.json").exists());
-    assert_eq!(s.delete_scene("../a").unwrap_err().code, ErrorCode::Validation);
+    assert_eq!(
+        s.delete_scene("../a").unwrap_err().code,
+        ErrorCode::Validation
+    );
     assert_eq!(s.delete_scene("zz").unwrap_err().code, ErrorCode::NotFound);
     s.delete_scene("a").unwrap();
     assert!(!dir.path().join("scenes/a.json").exists() && s.scenes().is_empty());
@@ -396,19 +399,32 @@ fn import_links_slots_and_never_replaces_a_scene() {
         &["messagerie", "musique"],
     );
     // Nothing linked yet: no suggestion.
-    assert!(s.preview_import(&file).slots.iter().all(|x| x.suggested_app.is_none()));
+    assert!(s
+        .preview_import(&file)
+        .slots
+        .iter()
+        .all(|x| x.suggested_app.is_none()));
 
     let links = BTreeMap::from([("messagerie".to_string(), app.id.clone())]);
     let scene = s.import_scene(&file, &links).unwrap();
-    assert_eq!((scene.id.as_str(), scene.name.as_str()), ("soiree", "Soirée"));
+    assert_eq!(
+        (scene.id.as_str(), scene.name.as_str()),
+        ("soiree", "Soirée")
+    );
     assert_eq!(s.slots().slots.get("messagerie"), Some(&app.id));
     assert!(!s.slots().slots.contains_key("musique"));
     let preview = s.preview_import(&file);
-    assert_eq!(preview.slots[0].suggested_app.as_deref(), Some(app.id.as_str()));
+    assert_eq!(
+        preview.slots[0].suggested_app.as_deref(),
+        Some(app.id.as_str())
+    );
 
     // Importing again makes a second scene.
     let again = s.import_scene(&file, &links).unwrap();
-    assert_eq!((again.id.as_str(), again.name.as_str()), ("soiree-2", "Soirée (2)"));
+    assert_eq!(
+        (again.id.as_str(), again.name.as_str()),
+        ("soiree-2", "Soirée (2)")
+    );
     assert_eq!(s.scenes().len(), 2);
 }
 
@@ -417,8 +433,63 @@ fn import_refuses_unknown_slots_and_apps_and_writes_nothing() {
     let (_dir, s) = state();
     let file = shared(serde_json::json!([{"type":"launch","slot":"a"}]), &["a"]);
     let unknown_slot = BTreeMap::from([("zzz".to_string(), "x".to_string())]);
-    assert_eq!(s.import_scene(&file, &unknown_slot).unwrap_err().code, ErrorCode::Validation);
+    assert_eq!(
+        s.import_scene(&file, &unknown_slot).unwrap_err().code,
+        ErrorCode::Validation
+    );
     let unknown_app = BTreeMap::from([("a".to_string(), "ghost".to_string())]);
-    assert_eq!(s.import_scene(&file, &unknown_app).unwrap_err().code, ErrorCode::NotFound);
+    assert_eq!(
+        s.import_scene(&file, &unknown_app).unwrap_err().code,
+        ErrorCode::NotFound
+    );
     assert!(s.scenes().is_empty() && s.slots().slots.is_empty());
+}
+
+#[test]
+fn display_settings_default_for_an_older_file_and_reject_unknown_values() {
+    use super::schema::{DisplayMode, WidgetStyle};
+    let dir = tempfile::tempdir().unwrap();
+    fs::write(
+        dir.path().join("settings.json"),
+        r#"{"schemaVersion":1,"quality":"high"}"#,
+    )
+    .unwrap();
+    let s = ConfigState::load(DataPaths::new(dir.path())).settings();
+    assert_eq!(s.display_mode, DisplayMode::Immersive);
+    assert_eq!(s.widget_style, WidgetStyle::Brume);
+    assert!(s.hide_on_escape && !s.hide_on_blur && !s.economy_mode);
+
+    // A value that is not one of the choices keeps its default; the rest of the file is kept.
+    fs::write(
+        dir.path().join("settings.json"),
+        r#"{"schemaVersion":1,"displayMode":"fullscreen","widgetStyle":"orbe","economyMode":true}"#,
+    )
+    .unwrap();
+    let s = ConfigState::load(DataPaths::new(dir.path())).settings();
+    assert_eq!(s.display_mode, DisplayMode::Immersive);
+    assert_eq!(s.widget_style, WidgetStyle::Orbe);
+    assert!(s.economy_mode);
+}
+
+#[test]
+fn recents_and_placements_persist_across_a_reload() {
+    let dir = tempfile::tempdir().unwrap();
+    let state = ConfigState::load(DataPaths::new(dir.path()));
+    for id in ["a", "b", "a"] {
+        state.update_ui_state(|ui| ui.push_recent(id)).unwrap();
+    }
+    state
+        .update_ui_state(|ui| {
+            ui.widget.rect = Some(super::ui_state::Rect {
+                x: 5,
+                y: 12,
+                width: 700,
+                height: 80,
+            });
+            true
+        })
+        .unwrap();
+    let again = ConfigState::load(DataPaths::new(dir.path())).ui_state();
+    assert_eq!(again.recents, ["a", "b"]);
+    assert_eq!(again.widget.rect.unwrap().width, 700);
 }

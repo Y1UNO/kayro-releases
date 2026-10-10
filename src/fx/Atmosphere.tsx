@@ -3,6 +3,7 @@ import { Backdrop, useTheme, type Quality, type Theme } from "../design";
 import { useHub } from "../store";
 import { createFx } from "./createFx";
 import type { FxLayer, FxPalette } from "./FxLayer";
+import { onWindowVisibility } from "../ipc/events";
 import { connectFx } from "./target";
 
 interface Props {
@@ -40,8 +41,14 @@ export function Atmosphere({ quality, intensity, layers }: Props) {
     connectFx(layer);
     const onVisibility = () => (document.hidden ? layer.pause() : layer.resume());
     document.addEventListener("visibilitychange", onVisibility);
+    // WebView2 never fires `visibilitychange` for a window the core hides (spike 01): the core
+    // says so itself, and the loops stop for as long as the hub is not on screen.
+    const unlistenShown = onWindowVisibility(({ visible }) =>
+      visible ? layer.resume() : layer.pause(),
+    );
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
+      void unlistenShown.then((off) => off());
       connectFx(null);
       layer.dispose();
       setFx(null);

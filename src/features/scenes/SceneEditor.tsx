@@ -9,7 +9,7 @@ import {
 } from "../../design";
 import { t } from "../../i18n";
 import { errorText } from "../../ipc/errors";
-import { hubStore, sceneStore, useHub, useScenes } from "../../store";
+import { hubStore, sceneStore, useDesktop, useHub, useScenes } from "../../store";
 import { AdvancedEditor } from "./AdvancedEditor";
 import { ConfirmDialog } from "./ConfirmDialog";
 import {
@@ -44,6 +44,7 @@ export function SceneEditor({ sceneId, onBack }: Props) {
   const settingsHotkey = useHub((s) => s.settings?.hotkey);
   const scenes = useScenes((s) => s.scenes);
   const run = useScenes((s) => s.run);
+  const registrations = useDesktop((s) => s.hotkeys?.scenes);
   const { request, dialog } = usePlayScene();
 
   const [draft, dispatch] = useReducer(reduce, undefined, () => {
@@ -52,6 +53,12 @@ export function SceneEditor({ sceneId, onBack }: Props) {
     return scene ? draftFromScene(scene, slots, hubStore.getState().apps) : newDraft({ ...slots });
   });
   const [savedId, setSavedId] = useState<string | null>(draft.id);
+  // The saved shortcut of this scene is refused by Windows (another program owns it).
+  const unregistered =
+    draft.hotkey !== null &&
+    registrations?.some(
+      (r) => r.sceneId === savedId && r.hotkey === draft.hotkey && r.problem === "conflict",
+    ) === true;
   const baseline = useRef(snapshot(draft, apps));
   const [ask, setAsk] = useState<Ask>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -134,6 +141,7 @@ export function SceneEditor({ sceneId, onBack }: Props) {
         />
         <HotkeyField
           value={draft.hotkey}
+          unregistered={unregistered}
           taken={[...scenes.filter((s) => s.id !== savedId).map((s) => s.hotkey), settingsHotkey]}
           onChange={(hotkey) => dispatch({ type: "hotkey", hotkey })}
         />

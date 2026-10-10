@@ -12,6 +12,8 @@ import type {
   LaunchResult,
   ScanReport,
   SettingsPatch,
+  HotkeysReport,
+  MonitorInfo,
 } from "./bindings";
 
 export type Outcome<T> = { ok: true; value: T } | { ok: false; error: AppError };
@@ -56,7 +58,8 @@ export const ipc = {
     checked(commands.appsInspect(inputs)),
   /** The app's icon as a `data:` URL, or null when it has none. */
   appIcon: (id: string): Promise<Outcome<string | null>> => checked(commands.appIcon(id)),
-  appReady: (): Promise<Outcome<null>> => checked(commands.appReady()),
+  /** True when the core showed the window for a shortcut that is being measured. */
+  appReady: (): Promise<Outcome<boolean>> => plain(commands.appReady()),
   /** The one way to start an app: an app already open is brought to the front instead. */
   appLaunch: (id: string): Promise<Outcome<LaunchResult>> => checked(commands.appLaunch(id)),
   appFocus: (id: string): Promise<Outcome<FocusResult>> => checked(commands.appFocus(id)),
@@ -96,3 +99,28 @@ export const scenesIpc = {
 };
 
 export type ScenesIpc = typeof scenesIpc;
+
+/** Showing, hiding and fitting the window, screens, shortcuts, starting with Windows, recent apps. */
+export const desktopIpc = {
+  hide: (): Promise<Outcome<void>> => plain(commands.windowHide()),
+  /** Starts moving the window with the mouse (call from a pointer-down). */
+  drag: (): Promise<Outcome<null>> => checked(commands.windowDrag()),
+  /** The widget window follows the size of its content (logical pixels). */
+  fitWidget: (width: number, height: number): Promise<Outcome<null>> =>
+    checked(commands.widgetFit(width, height)),
+  /** Measurement only: the page painted after being shown. */
+  painted: (): Promise<Outcome<void>> => plain(commands.windowPainted()),
+  monitors: (): Promise<Outcome<MonitorInfo[]>> => plain(commands.monitorsList()),
+  chooseMonitor: (name: string): Promise<Outcome<null>> => checked(commands.monitorChoose(name)),
+  /** Refused with `hotkeyConflict` when another program owns the combination. */
+  setHotkey: (hotkey: string): Promise<Outcome<null>> => checked(commands.hotkeySet(hotkey)),
+  hotkeys: (): Promise<Outcome<HotkeysReport>> => plain(commands.hotkeysGet()),
+  /** The scene a shortcut asked to confirm while the page was not there to hear it. */
+  takePendingScene: (): Promise<Outcome<string | null>> => plain(commands.sceneHotkeyTake()),
+  autostart: (): Promise<Outcome<boolean>> => checked(commands.autostartGet()),
+  setAutostart: (enabled: boolean): Promise<Outcome<boolean>> =>
+    checked(commands.autostartSet(enabled)),
+  recents: (): Promise<Outcome<string[]>> => plain(commands.recentsGet()),
+};
+
+export type DesktopIpc = typeof desktopIpc;

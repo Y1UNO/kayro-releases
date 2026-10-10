@@ -74,6 +74,9 @@
       "editButton": "Modifier {name}",
       "moved": "« {name} » est maintenant dans {category}.",
       "dragging": "Dépose sur un onglet pour changer de catégorie"
+    },
+    "settings": {
+      "open": "Affichage et raccourci"
     }
   },
   "errors": {
@@ -87,7 +90,8 @@
     "launchDenied": "Windows a refusé de lancer cette application.",
     "elevationRequired": "Cette application demande les droits administrateur. Marquez-la « exécuter en administrateur » pour la lancer.",
     "elevationCancelled": "Lancement annulé : la demande d’autorisation administrateur a été refusée.",
-    "launchFailed": "Cette application n’a pas pu être lancée."
+    "launchFailed": "Cette application n’a pas pu être lancée.",
+    "hotkeyConflict": "Ce raccourci est déjà utilisé par une autre application. Choisissez-en un autre."
   },
   "addApps": {
     "tabsLabel": "Façon d’ajouter",
@@ -315,7 +319,8 @@
       "listening": "Appuie sur les touches…",
       "help": "Ctrl, Alt ou Maj + une touche. Échap annule, Retour arrière efface.",
       "invalid": "Il faut au moins Ctrl, Alt ou Maj, plus une lettre, un chiffre ou une touche F.",
-      "taken": "Ce raccourci est déjà utilisé."
+      "taken": "Ce raccourci est déjà utilisé.",
+      "registerFailed": "Une autre application utilise déjà ce raccourci : il ne fonctionnera pas."
     },
     "leave": {
       "title": "Quitter sans enregistrer ?",
@@ -393,6 +398,66 @@
       "other": "Autre fichier",
       "go": "Importer",
       "done": "« {name} » importée."
+    }
+  },
+  "widget": {
+    "label": "Widget {app}",
+    "bar": "Barre {app}",
+    "expand": "Déplier",
+    "collapse": "Replier",
+    "dragHint": "Déplacer le widget",
+    "search": {
+      "placeholder": "Rechercher une app ou une scène",
+      "label": "Rechercher",
+      "noResults": "Aucun résultat pour cette recherche."
+    },
+    "scenes": "Scènes",
+    "noScenes": "Aucune scène pour l’instant.",
+    "mainScene": "Lancer la scène {name}",
+    "running": "En cours",
+    "noRunning": "Rien n’est ouvert pour l’instant.",
+    "open": "Ouvert",
+    "toFront": "Au premier plan",
+    "toFrontLabel": "Mettre {name} au premier plan",
+    "recents": "Récents",
+    "noRecents": "Les apps que vous lancez apparaîtront ici.",
+    "category": "{category}",
+    "noneInCategory": "Aucune application dans cette catégorie.",
+    "launch": "Lancer {name}"
+  },
+  "displaySettings": {
+    "title": "Affichage et raccourci",
+    "close": "Fermer",
+    "mode": {
+      "label": "Mode d’affichage",
+      "help": "Immersif : sans bordure, à la taille de l’écran. Fenêtre : classique. Widget : une barre en haut de l’écran, toujours au premier plan."
+    },
+    "screen": {
+      "label": "Écran du mode immersif",
+      "item": "{name} · {width}×{height}"
+    },
+    "widgetStyle": {
+      "label": "Style du widget",
+      "aurore": "Aurore",
+      "sillage": "Sillage",
+      "brume": "Brume",
+      "orbe": "Orbe"
+    },
+    "hotkey": {
+      "label": "Raccourci pour afficher ou cacher {app}",
+      "failedAtStart": "Le raccourci {hotkey} est déjà utilisé par une autre application. {app} reste accessible par la zone de notification : choisissez un autre raccourci.",
+      "saved": "Raccourci enregistré."
+    },
+    "economy": {
+      "label": "Mode économe",
+      "help": "La fenêtre est détruite quand elle est cachée : moins de mémoire utilisée, mais environ 0,4 s pour la rouvrir. Désactivé, {app} reste chargé et apparaît en un instant."
+    },
+    "hideOnEscape": "Échap cache {app}",
+    "hideOnBlur": "Cliquer ailleurs cache {app}",
+    "autostart": {
+      "label": "Démarrer avec Windows",
+      "help": "{app} démarre sans fenêtre, dans la zone de notification.",
+      "failed": "Impossible de modifier le démarrage avec Windows."
     }
   }
 }

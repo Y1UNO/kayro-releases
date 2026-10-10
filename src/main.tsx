@@ -7,7 +7,8 @@ import { App } from "./App";
 import { ThemeProvider, applyQuality } from "./design";
 import { applyDefaultLogoColours } from "./brand";
 import { Atmosphere } from "./fx";
-import { hubStore } from "./store";
+import { WidgetApp } from "./features/widget/WidgetApp";
+import { desktopStore, hubStore, sceneStore } from "./store";
 import "./index.css";
 
 applyDefaultLogoColours();
@@ -51,6 +52,22 @@ if (DevPage) {
       </Suspense>
     </StrictMode>,
   );
+} else if (new URLSearchParams(location.search).get("w") === "widget") {
+  // The widget window: a transparent page with no atmosphere, its own bar and panel.
+  document.documentElement.dataset.window = "widget";
+  void Promise.all([
+    hubStore.getState().init(),
+    sceneStore.getState().init(),
+    desktopStore.getState().init(),
+  ]).finally(() => {
+    appRoot.render(
+      <StrictMode>
+        <ThemeProvider initialThemeId={hubStore.getState().settings?.themeId}>
+          <WidgetApp />
+        </ThemeProvider>
+      </StrictMode>,
+    );
+  });
 } else {
   // Load the user's data first (a few ms, local): the first paint already has the right theme
   // and quality level. A failed load still renders the app (defaults, error shown by <App />).

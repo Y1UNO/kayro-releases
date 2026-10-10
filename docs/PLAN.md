@@ -269,10 +269,10 @@ L'ordre est **conservé**.
 - [ ] Import/export `.hubscene` (slots seulement, validation stricte, liaison des slots à l'import)
 
 **12 · Modes, widget, raccourci, zone de notification**
-- [ ] Immersif / fenêtre / widget (d'après les spikes de l'étape 2) ; position et écran mémorisés par mode
-- [ ] **À faire hérité de l'étape 2** : tester Windows 10, échelles 125/150 % (widget, immersif sur 2 écrans à échelles différentes), Alt+Tab du widget, raccourci par défaut Ctrl+Alt+H (§6.2, gérer l'échec d'enregistrement), fenêtre créée après l'icône, `alwaysOnTop` limité à l'immersif
-- [ ] Raccourci configurable, menu de la zone de notification, démarrage avec Windows `--silent`
-- [ ] Widget replié/déplié (recherche, scènes, en cours, récents) ; style en réglage (C · Brume par défaut) ; « Mode économe »
+- [x] Immersif / fenêtre / widget (d'après les spikes de l'étape 2) ; position et écran mémorisés par mode
+- [x] **Hérités de l'étape 2** : Alt+Tab du widget (style `WS_EX_TOOLWINDOW` réappliqué après chaque `show`, vérifié sur la vraie fenêtre), raccourci par défaut Ctrl+Alt+H avec échec d'enregistrement géré, fenêtre créée après l'icône, `alwaysOnTop` limité à l'immersif (retiré à la perte du focus). **Non testés** : Windows 10, échelles 125/150 % (reportés à la passe de finition)
+- [x] Raccourci configurable, menu de la zone de notification, démarrage avec Windows `--silent`
+- [x] Widget replié/déplié (recherche, scènes, en cours, récents) ; style en réglage (C · Brume par défaut) ; « Mode économe » (réouverture mesurée à ~680 ms, cible 400 ms non atteinte : voir ROADMAP)
 
 **13 · Performance**
 - [ ] États Actif/Atténué/Veille (masqué, sans focus, plein écran, écran verrouillé = `QUNS_NOT_PRESENT`) ; zéro boucle en veille

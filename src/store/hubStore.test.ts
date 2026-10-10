@@ -12,6 +12,11 @@ const SETTINGS: Settings = {
   hotkey: "Ctrl+Alt+H",
   language: "fr",
   atmosphereIntensity: 1,
+  displayMode: "immersive",
+  widgetStyle: "brume",
+  hideOnEscape: true,
+  hideOnBlur: false,
+  economyMode: false,
 };
 
 function entry(id: string, over: Partial<AppEntry> = {}): AppEntry {
@@ -46,7 +51,7 @@ function fakeIpc(over: Partial<Ipc> = {}): Ipc {
     appIcon: async () => ok(null),
     appsUpdate: async (e) => ok(e),
     appsRemove: async () => ok(null),
-    appReady: async () => ok(null),
+    appReady: async () => ok(false),
     appLaunch: async () => ok({ kind: "started", pid: 1 }),
     appFocus: async () => ok("focused"),
     appsRunning: async () => ok([]),

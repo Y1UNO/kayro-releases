@@ -124,6 +124,11 @@ export default function HomeDev() {
         hotkey: "Ctrl+Alt+H",
         language: "fr",
         atmosphereIntensity: Number(params.get("intensity")) || 1,
+        displayMode: "immersive",
+        widgetStyle: "brume",
+        hideOnEscape: true,
+        hideOnBlur: false,
+        economyMode: false,
       },
       // Fake launch: the app just shows as "open".
       launchApp: (id: string) => {

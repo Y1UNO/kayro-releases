@@ -8,13 +8,15 @@ interface Props {
   /** Shortcuts already used by other scenes and by the app. */
   taken: readonly (string | null | undefined)[];
   onChange: (hotkey: string | null) => void;
+  /** Another program already owns this combination: it is saved but will not work. */
+  unregistered?: boolean;
 }
 
 /**
- * Press-a-combination field. Only the text is stored: registering it as a global shortcut
- * comes with step 12. Escape cancels, Backspace / Delete clears.
+ * Press-a-combination field. The core registers the shortcut globally and says when it could
+ * not (`unregistered`). Escape cancels, Backspace / Delete clears.
  */
-export function HotkeyField({ value, taken, onChange }: Props) {
+export function HotkeyField({ value, taken, onChange, unregistered = false }: Props) {
   const [listening, setListening] = useState(false);
   const [hint, setHint] = useState<"invalid" | null>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -70,6 +72,11 @@ export function HotkeyField({ value, taken, onChange }: Props) {
       {!listening && conflict && (
         <span className={styles.warn} role="status">
           {t("scenes.hotkey.taken")}
+        </span>
+      )}
+      {!listening && !conflict && unregistered && (
+        <span className={styles.warn} role="status">
+          {t("scenes.hotkey.registerFailed")}
         </span>
       )}
     </div>

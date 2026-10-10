@@ -23,6 +23,8 @@ pub enum ErrorCode {
     ElevationCancelled,
     /// Any other failure to start (`message` has the Win32 code).
     LaunchFailed,
+    /// The keyboard shortcut is already used by another program (or another shortcut of the hub).
+    HotkeyConflict,
 }
 
 /// Error returned by IPC commands. `message` is for logs and developers; the UI shows its own
