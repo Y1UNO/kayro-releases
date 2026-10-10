@@ -22,6 +22,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [ ] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
 | [ ] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
 | [ ] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
+| [ ] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages, onglet « Sons » de l'atelier, `docs/SONS.md` | 12b, 13 | E |
 | [ ] 18 | Audit : perf, sécurité, robustesse, accessibilité | 1–16 | F |
 | [ ] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis | 18 | F |
 

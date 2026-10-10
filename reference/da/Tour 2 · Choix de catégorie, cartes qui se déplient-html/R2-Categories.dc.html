@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kayro choix de catégorie</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Manrope',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+.gl{position:relative;background:rgba(255,255,255,0.07);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 20px 50px rgba(0,0,0,0.5)}
+.mv{transition:transform .75s cubic-bezier(.2,.9,.2,1),opacity .5s ease}
+.fade{transition:opacity .5s ease,transform .6s cubic-bezier(.2,.9,.2,1)}
+.catcard:hover{filter:brightness(1.08)}
+@media (prefers-reduced-motion:reduce){.mv,.fade{transition-duration:.01s}}
+</style>
+</helmet>
+<div style="position:relative;overflow:hidden;width:1280px;height:760px;background:{{t.bg}};color:#F4F1FA">
+  <div style="position:absolute;left:500px;top:0;width:280px;height:620px;background:linear-gradient(180deg,{{t.beam}},rgba(0,0,0,0) 80%);-webkit-mask-image:linear-gradient(90deg,transparent,#000 35%,#000 65%,transparent);mask-image:linear-gradient(90deg,transparent,#000 35%,#000 65%,transparent);pointer-events:none"></div>
+  <div style="position:absolute;left:340px;top:420px;width:600px;height:300px;border-radius:50%;background:radial-gradient(closest-side,{{t.warm}},rgba(0,0,0,0));pointer-events:none"></div>
+
+  <div style="position:absolute;left:56px;top:24px;right:56px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;border-radius:11px;background:linear-gradient(160deg,{{t.a}},{{t.b}});display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L14.2 10 L12 15.5 L9.8 10 Z" fill="#15132B"></path><path d="M4.2 11.5 A7.8 7.8 0 0 0 19.8 11.5 A7.8 5.2 0 0 1 4.2 11.5 Z" fill="#15132B"></path></svg></div>
+      <span style="font-family:'Cormorant Garamond',serif;font-size:27px;font-weight:500">Kayro</span>
+    </div>
+    <button onClick="{{back}}" class="fade" style="display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.18);border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;background:rgba(255,255,255,0.06);color:#F4F1FA;opacity:{{ui.backO}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Toutes les catégories</button>
+  </div>
+
+  <div class="fade" style="position:absolute;left:0;top:96px;width:1280px;text-align:center;opacity:{{ui.askO}};transform:translateY({{ui.askY}}px)">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.32em;color:{{t.soft}}">CHOISIS UN UNIVERS</div>
+    <div style="margin-top:6px;font-family:'Cormorant Garamond',serif;font-size:64px;line-height:1;font-weight:300">Que veux-tu lancer&nbsp;?</div>
+  </div>
+  <div class="fade" style="position:absolute;left:0;top:88px;width:1280px;text-align:center;opacity:{{ui.catO}};transform:translateY({{ui.catY}}px)">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.32em;color:{{t.soft}}">CATÉGORIE</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:96px;line-height:1;font-weight:300">{{ui.catName}}</div>
+  </div>
+
+  <sc-for list="{{cats}}" as="c" hint-placeholder-count="5">
+    <button onClick="{{c.pick}}" aria-label="Ouvrir {{c.name}}" class="mv catcard" style="position:absolute;left:535px;top:270px;width:210px;height:290px;box-sizing:border-box;padding:18px;border-radius:22px;text-align:left;color:#F4F1FA;background:radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,0.22),rgba(255,255,255,0) 55%),linear-gradient(165deg,{{c.c1}},{{c.c2}} 85%);border:1px solid rgba(255,255,255,0.22);box-shadow:0 24px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.4);transform-origin:50% 100%;transform:{{c.tf}};opacity:{{c.o}};pointer-events:{{c.pe}};display:flex;flex-direction:column;justify-content:space-between;z-index:{{c.z}}">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:76px;font-weight:300;line-height:0.9">{{c.letter}}</div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font-size:19px;font-weight:700">{{c.name}}</div>
+        <div style="font-size:13px;color:rgba(244,241,250,0.8)">{{c.count}}</div>
+      </div>
+    </button>
+  </sc-for>
+
+  <sc-for list="{{apps}}" as="p" hint-placeholder-count="5">
+    <div class="mv" style="position:absolute;left:520px;top:236px;width:240px;height:336px;box-sizing:border-box;padding:16px;border-radius:20px;color:#F4F1FA;background:radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,0.2),rgba(255,255,255,0) 55%),linear-gradient(170deg,{{p.c1}},{{p.c2}} 80%);border:1px solid {{p.edge}};box-shadow:0 26px 60px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.4);transform:{{p.tf}};opacity:{{p.o}};transition-delay:{{p.delay}}ms;z-index:{{p.z}};display:flex;flex-direction:column;justify-content:space-between;pointer-events:none">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:96px;font-weight:300;line-height:1">{{p.letter}}</div>
+      <div style="padding:10px 12px;border-radius:13px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.14);font-size:16px;font-weight:600">{{p.name}}</div>
+    </div>
+  </sc-for>
+
+  <div class="fade" style="position:absolute;left:0;bottom:30px;width:1280px;display:flex;justify-content:center;opacity:{{ui.hintO}}">
+    <div style="font-size:13px;color:rgba(244,241,250,0.72)">Clique sur une carte : elle s'ouvre et ses apps se déploient en éventail.</div>
+  </div>
+  <div class="fade" style="position:absolute;left:0;bottom:28px;width:1280px;display:flex;justify-content:center;opacity:{{ui.tabsO}};pointer-events:{{ui.tabsPe}}">
+    <div class="gl" style="display:flex;gap:4px;padding:5px;border-radius:16px">
+      <sc-for list="{{tabs}}" as="b" hint-placeholder-count="5">
+        <button onClick="{{b.pick}}" style="border:0;border-radius:12px;padding:9px 20px;font-size:14px;font-weight:600;background:{{b.bg}};color:{{b.fg}}">{{b.name}}</button>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","default":"lavande-peche","options":["lavande-peche","mauve","sakura","bleu-gris","opale","cuivre"],"section":"Thème"},"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const TH = {
+      'lavande-peche': ['#B7A2F2', '#F6A98A', '#15112B', '#0C0A1A', '#06050D', '#D9CEFA'],
+      'mauve': ['#C99ACB', '#9476C2', '#1A1228', '#100B1A', '#08060D', '#E6CCE8'],
+      'sakura': ['#F7B7C4', '#D9708E', '#24121E', '#150A12', '#0B0509', '#FBD8DF'],
+      'bleu-gris': ['#A3B0DE', '#7282BC', '#141A30', '#0B0F1E', '#05070F', '#D3DAF2'],
+      'opale': ['#9FD0E8', '#F2A2B8', '#10202A', '#0A131A', '#05090D', '#D2ECF6'],
+      'cuivre': ['#D99A6C', '#B07A78', '#24160F', '#150D09', '#0A0605', '#F0D2BC']
+    };
+    const v = TH[this.props.theme] || TH['lavande-peche'];
+    const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const hexA = (h, a) => 'rgba(' + rgb(h).join(',') + ',' + a + ')';
+    const mix = (h1, h2, k) => { const x = rgb(h1), y = rgb(h2); return 'rgb(' + x.map((c, i) => Math.round(c * (1 - k) + y[i] * k)).join(',') + ')'; };
+    const dark = (h, k) => { const x = rgb(h); return 'rgb(' + x.map((c) => Math.round(c * k)).join(',') + ')'; };
+    const t = { a: v[0], b: v[1], soft: v[5], bg: 'radial-gradient(90% 75% at 50% 0%,' + v[2] + ' 0%,' + v[3] + ' 50%,' + v[4] + ' 100%)', beam: hexA(v[0], 0.2), warm: hexA(v[1], 0.18) };
+    const st = this.state || {};
+    const phase = st.phase || 'choose';
+    const ci = st.cat ?? 0;
+    const C = [
+      { name: 'Jeux', letter: 'J', apps: [['Apex Legends', '#C9473B'], ['Clair Obscur', '#C79A55'], ['Hades II', '#8E7BD6'], ['Slay the Spire 2', '#B8434F'], ['Forza Horizon 6', '#3F9BD8']] },
+      { name: 'Stream', letter: 'S', apps: [['OBS Studio', '#6A6A8A'], ['Discord', '#5865F2'], ['NVIDIA Broadcast', '#76B947'], ['Voicemeeter', '#C98A3A'], ['Spotify', '#1DB954']] },
+      { name: 'Créativité', letter: 'C', apps: [['Blender', '#E87D0D'], ['DaVinci Resolve', '#4A7AC9'], ['FL Studio 2024', '#F29A3A'], ['Audacity', '#2A5AC9'], ['PureRef', '#8A8AA0']] },
+      { name: 'Logiciels', letter: 'L', apps: [['Visual Studio Code', '#2A8AD9'], ['7-Zip', '#5A9A5A'], ['CPU-Z', '#7A6AA9'], ['MSI Afterburner', '#C93A3A'], ['WinSCP', '#3A7AB9']] },
+      { name: 'Autre', letter: 'A', apps: [['Wallpaper Engine', '#3A8AC9'], ['Lossless Scaling', '#9A6AC9'], ['Modrinth App', '#3AB96A'], ['CurseForge', '#E8743A'], ['Hue Sync', '#C9A93A']] }
+    ];
+    const open = phase !== 'choose';
+    const cats = C.map((c, i) => {
+      const d = i - 2;
+      let tf, o = 1;
+      if (!open) tf = 'translate(' + d * 160 + 'px,' + Math.abs(d) * 18 + 'px) rotate(' + d * 7 + 'deg)';
+      else if (i === ci) { tf = 'translate(0px,-60px) scale(0.35)'; o = 0; }
+      else { tf = 'translate(' + (d === 0 ? (i < ci ? -1 : 1) : d) * 720 + 'px,160px) rotate(' + d * 20 + 'deg)'; o = 0; }
+      return {
+        name: c.name, letter: c.letter, count: '5 apps', tf, o, pe: open ? 'none' : 'auto', z: 10 - Math.abs(d),
+        c1: mix(v[0], v[1], i / 4), c2: dark(mix(v[0], v[1], i / 4), 0.18),
+        pick: () => { this.setState({ cat: i, phase: 'open' }); setTimeout(() => this.setState({ phase: 'spread' }), 420); }
+      };
+    });
+    const X = [-428, -230, 0, 230, 428], S = [0.73, 0.73, 1, 0.73, 0.73];
+    const apps = C[ci].apps.map((p, i) => {
+      const d = Math.abs(i - 2);
+      let tf, o;
+      if (phase === 'choose') { tf = 'translate(0px,40px) scale(0.4)'; o = 0; }
+      else if (phase === 'open') { tf = 'translate(' + (i - 2) * 6 + 'px,' + d * 4 + 'px) scale(0.55) rotate(' + (i - 2) * 3 + 'deg)'; o = 1; }
+      else { tf = 'translate(' + X[i] + 'px,0px) scale(' + S[i] + ')'; o = i === 2 ? 1 : 0.62; }
+      return {
+        name: p[0], letter: p[0][0], tf, o, delay: phase === 'spread' ? d * 70 : 0, z: 10 - d,
+        c1: mix(p[1], v[0], 0.45), c2: dark(mix(p[1], v[0], 0.45), 0.16),
+        edge: i === 2 && phase === 'spread' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)'
+      };
+    });
+    const tabs = C.map((c, i) => ({
+      name: c.name, bg: i === ci ? 'rgba(255,255,255,0.16)' : 'transparent', fg: i === ci ? '#FFFFFF' : 'rgba(244,241,250,0.78)',
+      pick: () => { this.setState({ cat: i, phase: 'open' }); setTimeout(() => this.setState({ phase: 'spread' }), 300); }
+    }));
+    const ui = {
+      askO: open ? 0 : 1, askY: open ? -20 : 0, catO: open ? 1 : 0, catY: open ? 0 : 20, catName: C[ci].name,
+      backO: open ? 1 : 0, hintO: open ? 0 : 1, tabsO: phase === 'spread' ? 1 : 0, tabsPe: phase === 'spread' ? 'auto' : 'none'
+    };
+    return { t, cats, apps, tabs, ui, back: () => this.setState({ phase: 'choose' }) };
+  }
+}
+</script>
+</body>
+</html>

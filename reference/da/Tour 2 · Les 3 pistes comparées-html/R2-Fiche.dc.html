@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kayro trois pistes</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Manrope',system-ui,sans-serif}
+.lab{font-size:11px;font-weight:700;letter-spacing:0.18em;color:rgba(244,241,250,0.72)}
+</style>
+</helmet>
+<div style="position:relative;overflow:hidden;width:1280px;height:760px;box-sizing:border-box;padding:40px 48px;background:radial-gradient(90% 75% at 50% 0%,#15112B 0%,#0C0A1A 50%,#06050D 100%);color:#F4F1FA;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <div class="lab">TOUR 2 · BASE COMMUNE</div>
+      <h1 style="margin:0;font-family:'Cormorant Garamond',serif;font-size:54px;line-height:1;font-weight:300">Accueil de A, chaîne et widget de B</h1>
+    </div>
+    <p style="margin:0;max-width:440px;font-size:14px;line-height:1.5;color:rgba(244,241,250,0.8)">Les reflets ne sont qu'esquissés ici : le vrai verre liquide, avec une réfraction réelle, sera fait par le moteur graphique dans l'app. Les maquettes fixent la lumière, les formes et le mouvement.</p>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <sc-for list="{{base}}" as="b" hint-placeholder-count="5">
+      <div style="padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);font-size:13px"><span style="color:rgba(244,241,250,0.72)">{{b.k}} </span><span style="font-weight:600">{{b.v}}</span></div>
+    </sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;flex-grow:1;min-height:0">
+    <sc-for list="{{pistes}}" as="p" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;gap:12px;padding:22px;border-radius:22px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14)">
+        <div class="lab">{{p.num}}</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;line-height:1">{{p.name}}</div>
+        <div style="font-size:14px;line-height:1.5;color:rgba(244,241,250,0.85);font-style:italic">{{p.intent}}</div>
+        <div style="height:1px;background:linear-gradient(90deg,#B7A2F2,#F6A98A)"></div>
+        <sc-for list="{{p.rows}}" as="r" hint-placeholder-count="5">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:#D9CEFA">{{r.k}}</div>
+            <div style="font-size:13px;line-height:1.45">{{r.v}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      base: [
+        { k: 'Titres', v: 'Cormorant Garamond 300' }, { k: 'Interface', v: 'Manrope 500 à 700' },
+        { k: 'Rayons', v: 'cartes 20 · barres 18 · boutons 12' }, { k: 'Thèmes', v: '6, tirés des couleurs du logo' },
+        { k: 'Boutons principaux', v: 'dégradé du logo, texte #15132B' }
+      ],
+      pistes: [
+        { num: 'PISTE 1 · A DOMINANT', name: 'Nuit de cristal', intent: '« La vitrine de A, réchauffée par la couleur du jeu. »', rows: [
+          { k: 'LUMIÈRE', v: 'Faisceau froid qui tombe sur la carte active, petite lueur chaude dessous.' },
+          { k: 'PARTICULES', v: 'Étoiles qui scintillent sur place, givre léger.' },
+          { k: 'BRUME', v: 'Très légère, au ras du dock.' },
+          { k: 'MOUVEMENT', v: 'Précis, sans rebond, 320 à 480 ms.' },
+          { k: 'SENSATION', v: 'Calme, net, élégant.' } ] },
+        { num: 'PISTE 2 · A + B À PARTS ÉGALES', name: 'Deux lumières', intent: '« La lune en haut, le feu en bas, la carte au milieu. »', rows: [
+          { k: 'LUMIÈRE', v: 'Faisceau froid du haut et lueur de foyer du bas qui se rejoignent sur la carte.' },
+          { k: 'PARTICULES', v: 'Étoiles dans le haut, braises qui montent dans le bas.' },
+          { k: 'BRUME', v: 'Nappe tiède en bas qui dérive lentement.' },
+          { k: 'MOUVEMENT', v: 'Précis sur l’interface, respiration lente sur l’ambiance.' },
+          { k: 'SENSATION', v: 'Cinéma, chaleureux mais contrasté.' } ] },
+        { num: 'PISTE 3 · B DOMINANT', name: 'Velours lunaire', intent: '« La douceur de B dans la nuit de A. »', rows: [
+          { k: 'LUMIÈRE', v: 'Grand halo de lune derrière le titre, pas de faisceau.' },
+          { k: 'PARTICULES', v: 'Lucioles qui flottent et pulsent doucement.' },
+          { k: 'BRUME', v: 'Deux voiles colorés qui se croisent.' },
+          { k: 'MOUVEMENT', v: 'Ressorts doux, 500 à 700 ms, tout respire.' },
+          { k: 'SENSATION', v: 'Rêveur, enveloppant, très doux.' } ] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
