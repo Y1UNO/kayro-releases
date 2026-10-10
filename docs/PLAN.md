@@ -274,6 +274,9 @@ L'ordre est **conservé**.
 - [x] Raccourci configurable, menu de la zone de notification, démarrage avec Windows `--silent`
 - [x] Widget replié/déplié (recherche, scènes, en cours, récents) ; style en réglage (C · Brume par défaut) ; « Mode économe » (réouverture mesurée à ~680 ms, cible 400 ms non atteinte : voir ROADMAP)
 
+**12b · Atelier de DA — précisions**
+- [ ] Survol des cartes (soulèvement, inclinaison ≤ 3°, reflet suivant la souris, réglable) ; anneau cristallin fin sans pulsation (~680 px sur 1280×760) ; particules braises + étoiles (P2) ; animations de référence `reference/animations/` (images clés ffmpeg, version plus fluide à curseurs)
+
 **13 · Performance**
 - [ ] États Actif/Atténué/Veille (masqué, sans focus, plein écran, écran verrouillé = `QUNS_NOT_PRESENT`) ; zéro boucle en veille
 - [ ] 4 niveaux + qualité adaptative (p95 sur 2 s, remontée après 30 s) ; benchmark de 3 s
@@ -296,6 +299,10 @@ L'ordre est **conservé**.
 
 **17 · Ambiances sur mesure** (répétable)
 - [ ] Brief → `.hubmood` écrit à la main, formes originales, coût mesuré
+
+**17b · Sound design**
+- [ ] Moteur Web Audio (`AudioContext` partagé, buffers préchargés, gain maître), manifeste `sons.json` (événement → fichier, volume, jitter ±3 %), 10 événements
+- [ ] Réglages (interrupteur, volume maître 20 % par défaut, groupes interface/scènes, survol on/off), onglet « Sons » de `/dev/atelier`, `docs/SONS.md` (noms attendus + licences) ; audio suspendu en veille (étape 13) ; latence < 50 ms mesurée
 
 **18 · Audit**
 - [ ] Perf (budgets du §5), sécurité (CSP, capacités, imports malveillants), robustesse (fichiers corrompus), accessibilité

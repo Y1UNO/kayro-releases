@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kayro mix V3</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Manrope',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+.gl{position:relative;background:rgba(255,255,255,0.07);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 20px 50px rgba(0,0,0,0.5)}
+@keyframes tw{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:.95;transform:scale(1)}}
+@keyframes sway{0%,100%{transform:translateX(-10px)}50%{transform:translateX(10px)}}
+@keyframes breathe{0%,100%{opacity:.7}50%{opacity:1}}
+.star{animation:tw 4s ease-in-out infinite}
+.beam{animation:sway 14s ease-in-out infinite}
+.warm{animation:breathe 6s ease-in-out infinite}
+@keyframes moon{0%,100%{opacity:.8;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes veilA{0%,100%{transform:translateX(-80px) rotate(-6deg)}50%{transform:translateX(80px) rotate(-6deg)}}
+@keyframes veilB{0%,100%{transform:translateX(70px) rotate(5deg)}50%{transform:translateX(-70px) rotate(5deg)}}
+@keyframes fly{0%{transform:translate(0,0);opacity:.2}25%{opacity:.95}50%{transform:translate(30px,-24px);opacity:.4}75%{opacity:.9}100%{transform:translate(0,0);opacity:.2}}
+.moon{animation:moon 9s ease-in-out infinite}
+.veilA{animation:veilA 30s ease-in-out infinite}
+.veilB{animation:veilB 36s ease-in-out infinite}
+.fly{animation:fly 8s ease-in-out infinite}
+@keyframes rise{0%{transform:translate(0,0);opacity:0}15%{opacity:.9}60%{opacity:.6}100%{transform:translate(24px,-220px);opacity:0}}
+.ember{animation:rise 9s ease-in-out infinite}
+@keyframes ringB{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.035)}}
+@keyframes ringR{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.ringB{animation:ringB 10s ease-in-out infinite}
+.ringR{animation:ringR 80s linear infinite}
+@media (prefers-reduced-motion:reduce){.star,.beam,.warm,.moon,.veilA,.veilB,.fly,.ember,.ringB,.ringR{animation:none}}
+</style>
+</helmet>
+<div style="position:relative;overflow:hidden;width:1280px;height:760px;background:{{t.bg}};color:#F4F1FA">
+  <div class="moon" style="position:absolute;left:340px;top:-170px;width:600px;height:600px;border-radius:50%;background:radial-gradient(closest-side,{{t.moon}},{{t.moon2}} 55%,rgba(0,0,0,0));pointer-events:none"></div>
+  <div class="ringB" style="position:absolute;left:{{R.x}}px;top:{{R.y}}px;width:{{R.s}}px;height:{{R.s}}px;pointer-events:none">
+    <div style="position:absolute;inset:0;border-radius:50%;background:{{R.band}};filter:blur({{R.blur}}px)"></div>
+    <sc-if value="{{R.conic}}" hint-placeholder-val="{{false}}">
+      <div class="ringR" style="position:absolute;inset:0;border-radius:50%;background:{{R.cone}};-webkit-mask-image:{{R.mask}};mask-image:{{R.mask}};filter:blur({{R.blur2}}px);opacity:{{R.coneO}}"></div>
+    </sc-if>
+    <sc-if value="{{R.inner}}" hint-placeholder-val="{{false}}">
+      <div style="position:absolute;inset:{{R.innerInset}}px;border-radius:50%;background:{{R.band2}};filter:blur({{R.blur}}px)"></div>
+    </sc-if>
+  </div>
+  <div class="veilA" style="position:absolute;left:-200px;top:330px;width:1680px;height:220px;border-radius:50%;background:radial-gradient(closest-side,{{t.veilA}},rgba(0,0,0,0));pointer-events:none"></div>
+  <div class="veilB" style="position:absolute;left:-200px;top:460px;width:1680px;height:240px;border-radius:50%;background:radial-gradient(closest-side,{{t.veilB}},rgba(0,0,0,0));pointer-events:none"></div>
+  <sc-for list="{{embers}}" as="e" hint-placeholder-count="20">
+    <div class="ember" style="position:absolute;left:{{e.x}}px;top:{{e.y}}px;width:{{e.s}}px;height:{{e.s}}px;border-radius:50%;background:{{t.b}};box-shadow:0 0 8px {{t.b}};opacity:0;animation-delay:{{e.d}}s;animation-duration:{{e.t}}s"></div>
+  </sc-for>
+  <sc-for list="{{stars}}" as="s" hint-placeholder-count="24">
+    <div class="star" style="position:absolute;left:{{s.x}}px;top:{{s.y}}px;width:{{s.r}}px;height:{{s.r}}px;border-radius:50%;background:#F4F1FA;box-shadow:0 0 6px {{t.a}};animation-delay:{{s.d}}s;animation-duration:{{s.t}}s"></div>
+  </sc-for>
+  <div style="position:absolute;left:0;top:0;width:1280px;height:760px;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 55%,rgba(2,2,6,0.55) 100%);pointer-events:none"></div>
+
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;padding:24px 56px;height:100%">
+    <div class="gl" style="display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;height:56px;box-sizing:border-box;padding:0 10px 0 12px;border-radius:28px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:11px;background:linear-gradient(160deg,{{t.a}},{{t.b}});display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L14.2 10 L12 15.5 L9.8 10 Z" fill="#15132B"></path><path d="M4.2 11.5 A7.8 7.8 0 0 0 19.8 11.5 A7.8 5.2 0 0 1 4.2 11.5 Z" fill="#15132B"></path></svg></div>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:27px;font-weight:500">Kayro</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;width:400px;height:36px;box-sizing:border-box;padding:0 14px;border-radius:12px;background:rgba(0,0,0,0.32);color:rgba(244,241,250,0.75);font-size:14px;font-weight:500">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <span style="flex-grow:1">Rechercher une app ou une scène</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px;border:1px solid rgba(255,255,255,0.22)">Ctrl K</span>
+      </div>
+      <div style="display:flex;padding:3px;border-radius:12px;background:rgba(0,0,0,0.32);font-size:13px;font-weight:600">
+        <span style="padding:7px 13px;border-radius:9px;background:linear-gradient(160deg,{{t.a}},{{t.b}});color:#15132B">Immersif</span>
+        <span style="padding:7px 13px;color:rgba(244,241,250,0.8)">Fenêtre</span>
+        <span style="padding:7px 13px;color:rgba(244,241,250,0.8)">Widget</span>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.32em;color:{{t.soft}}">CATÉGORIE</div>
+      <h1 style="margin:0;font-family:'Cormorant Garamond',serif;font-size:96px;line-height:1;font-weight:300;letter-spacing:-0.02em">Jeux</h1>
+      <div style="width:220px;height:1px;background:linear-gradient(90deg,rgba(0,0,0,0),{{t.a}},{{t.b}},rgba(0,0,0,0))"></div>
+    </div>
+
+    <div style="position:relative;margin-top:22px;display:flex;align-items:center;justify-content:center;gap:22px;height:350px">
+      <sc-for list="{{cards}}" as="c" hint-placeholder-count="5">
+        <button aria-label="{{c.name}}" style="position:relative;overflow:hidden;box-sizing:border-box;width:{{c.w}}px;height:{{c.h}}px;padding:16px;border-radius:30px;text-align:left;color:#F4F1FA;opacity:{{c.o}};background:radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,0.18),rgba(255,255,255,0) 55%),linear-gradient(170deg,{{c.c1}},{{c.c2}} 80%);border:1px solid {{c.edge}};box-shadow:{{c.shadow}};display:flex;flex-direction:column;justify-content:space-between">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:{{c.fs}}px;font-weight:300;line-height:1">{{c.letter}}</div>
+          <div style="padding:9px 12px;border-radius:13px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.14);font-size:15px;font-weight:600">{{c.name}}</div>
+        </button>
+      </sc-for>
+      <div style="position:absolute;left:50%;bottom:-40px;width:420px;height:120px;margin-left:-210px;border-radius:50%;background:radial-gradient(closest-side,{{t.pool}},rgba(0,0,0,0));pointer-events:none"></div>
+    </div>
+
+    <div style="flex-grow:1"></div>
+
+    <div class="gl" style="display:flex;align-items:center;gap:4px;padding:5px;border-radius:26px">
+      <sc-for list="{{tabs}}" as="b" hint-placeholder-count="5">
+        <button style="border:0;border-radius:21px;padding:9px 20px;font-size:14px;font-weight:600;background:{{b.bg}};color:{{b.fg}}">{{b.label}}</button>
+      </sc-for>
+    </div>
+    <div class="gl" style="margin-top:12px;display:flex;align-items:center;gap:8px;padding:7px;border-radius:30px">
+      <button style="display:flex;align-items:center;gap:8px;border:0;border-radius:23px;padding:12px 22px;font-size:14px;font-weight:700;background:linear-gradient(160deg,{{t.a}},{{t.b}});color:#15132B"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"></path></svg>Soirée gaming</button>
+      <button style="border:1px solid rgba(255,255,255,0.16);border-radius:23px;padding:11px 20px;font-size:14px;font-weight:600;background:transparent;color:#F4F1FA">Stream</button>
+      <button style="border:1px solid rgba(255,255,255,0.16);border-radius:23px;padding:11px 20px;font-size:14px;font-weight:600;background:transparent;color:#F4F1FA">Créa</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","default":"lavande-peche","options":["lavande-peche","mauve","sakura","bleu-gris","opale","cuivre"],"section":"Thème"},"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const TH = {
+      'lavande-peche': ['#B7A2F2', '#F6A98A', '#15112B', '#0C0A1A', '#06050D', '#D9CEFA'],
+      'mauve': ['#C99ACB', '#9476C2', '#1A1228', '#100B1A', '#08060D', '#E6CCE8'],
+      'sakura': ['#F7B7C4', '#D9708E', '#24121E', '#150A12', '#0B0509', '#FBD8DF'],
+      'bleu-gris': ['#A3B0DE', '#7282BC', '#141A30', '#0B0F1E', '#05070F', '#D3DAF2'],
+      'opale': ['#9FD0E8', '#F2A2B8', '#10202A', '#0A131A', '#05090D', '#D2ECF6'],
+      'cuivre': ['#D99A6C', '#B07A78', '#24160F', '#150D09', '#0A0605', '#F0D2BC']
+    };
+    const v = TH[this.props.theme] || TH['lavande-peche'];
+    const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const hexA = (h, a) => 'rgba(' + rgb(h).join(',') + ',' + a + ')';
+    const mix = (h1, h2, k) => { const x = rgb(h1), y = rgb(h2); return 'rgb(' + x.map((c, i) => Math.round(c * (1 - k) + y[i] * k)).join(',') + ')'; };
+    const t = { a: v[0], b: v[1], soft: v[5], bg: 'radial-gradient(90% 75% at 50% 0%,' + v[2] + ' 0%,' + v[3] + ' 50%,' + v[4] + ' 100%)', beam: hexA(v[0], 0.26), warm: hexA(v[1], 0.35),
+      moon: hexA(v[0], 0.34), moon2: hexA(v[0], 0.12), ring: hexA(v[0], 0.28), veilA: hexA(v[0], 0.16), veilB: hexA(v[1], 0.14), flyGlow: hexA(v[1], 0.7), pool: hexA(v[1], 0.3) };
+    const games = [['Apex Legends', '#C9473B'], ['Clair Obscur', '#C79A55'], ['Hades II', '#8E7BD6'], ['Slay the Spire 2', '#B8434F'], ['Forza Horizon 6', '#3F9BD8']];
+    const cards = games.map((g, i) => {
+      const f = i === 2;
+      const c1 = mix(g[1], v[0], 0.5);
+      return {
+        name: g[0], letter: g[0][0], w: f ? 240 : 176, h: f ? 336 : 250, fs: f ? 96 : 60, o: f ? 1 : 0.6,
+        c1, c2: v[3], edge: f ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.16)',
+        shadow: f ? '0 30px 70px rgba(0,0,0,0.6),0 0 40px ' + hexA(v[0], 0.25) : '0 16px 36px rgba(0,0,0,0.5)'
+      };
+    });
+    const tabs = ['Jeux', 'Stream', 'Créativité', 'Logiciels', 'Autre'].map((l, i) => ({ label: l, bg: i === 0 ? 'rgba(255,255,255,0.15)' : 'transparent', fg: i === 0 ? '#FFFFFF' : 'rgba(244,241,250,0.78)' }));
+    const VAR = 3;
+    const band = (c, i0, i1, i2) => 'radial-gradient(closest-side,rgba(0,0,0,0) ' + i0 + '%,' + c + ' ' + i1 + '%,rgba(0,0,0,0) ' + i2 + '%)';
+    const RS = {
+      1: { x: 400, y: -150, s: 480, band: band(hexA(v[0], 0.30), 66, 82, 98), blur: 10, conic: false, inner: false },
+      2: { x: 300, y: -230, s: 680, band: band(hexA(v[0], 0.24), 58, 78, 99), blur: 18, conic: true,
+           cone: 'conic-gradient(from 0deg,' + hexA(v[0], 0.5) + ',' + hexA(v[1], 0.45) + ',' + hexA(v[0], 0.08) + ',' + hexA(v[1], 0.4) + ',' + hexA(v[0], 0.5) + ')',
+           mask: 'radial-gradient(closest-side,transparent 62%,#000 78%,transparent 96%)', blur2: 14, coneO: 0.8, inner: false },
+      3: { x: 160, y: -200, s: 960, band: band(hexA(v[0], 0.22), 52, 74, 99), blur: 26, conic: true,
+           cone: 'conic-gradient(from 200deg,' + hexA(v[1], 0.42) + ',' + hexA(v[0], 0.12) + ',' + hexA(v[0], 0.45) + ',' + hexA(v[1], 0.1) + ',' + hexA(v[1], 0.42) + ')',
+           mask: 'radial-gradient(closest-side,transparent 56%,#000 76%,transparent 97%)', blur2: 22, coneO: 0.7,
+           inner: true, innerInset: 150, band2: band(hexA(v[1], 0.14), 70, 84, 98) }
+    };
+    const R = RS[VAR];
+    const stars = [];
+    for (let i = 0; i < 24; i++) {
+      const a = Math.abs(Math.sin(i * 12.99) * 43758.5) % 1, b = Math.abs(Math.sin(i * 78.23) * 12543.1) % 1;
+      stars.push({ x: Math.round(20 + a * 1240), y: Math.round(70 + b * 260), r: (1.2 + (a * 7 % 1) * 1.8).toFixed(1), d: (-(b * 6)).toFixed(1), t: (3 + a * 3).toFixed(1) });
+    }
+    const nE = [0, 16, 20, 24][VAR];
+    const embers = [];
+    for (let i = 0; i < nE; i++) {
+      const a = Math.abs(Math.sin(i * 21.7) * 43758.5) % 1, b = Math.abs(Math.sin(i * 44.1) * 12543.1) % 1;
+      embers.push({ x: Math.round(300 + a * 680), y: Math.round(540 + b * 200), s: (2 + (a * 5 % 1) * 2.4).toFixed(1), d: (-(b * 9)).toFixed(1), t: (6 + a * 6).toFixed(1) });
+    }
+    return { t, cards, tabs, R, stars, embers };
+  }
+}
+</script>
+</body>
+</html>

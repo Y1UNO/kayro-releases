@@ -34,6 +34,7 @@ Chaque étape = une session Claude Code **courte et ciblée**. Tu colles le prom
 | 15 | Apparence et thèmes (interface) | Sonnet 5.5 | Moyen | Non | ● |
 | 16 | Moteur d'ambiances `.hubmood` + packs + écran Jeu | Opus 5.5 | Élevé | Oui | ●●● |
 | 17 | Ambiance sur mesure (1 jeu à la fois) | **Opus 5.5** | **Extra** | Non (brief) | ●●●● / jeu |
+| 17b | Sound design (sons discrets, atelier « Sons ») | Sonnet 5.5 | Moyen | Oui | ●● |
 | 18 | Audit final (perf, sécurité, accessibilité) | Opus 5.5 | Extra | Oui | ●●● |
 | 19 | Installeur et partage aux amis | Sonnet 5.5 | Moyen | Non | ●● |
 | — | Passe de finition (avant l'étape 19) | Sonnet 5.5 | Moyen | Non | ●● |
@@ -286,6 +287,12 @@ Mesure : temps raccourci→visible sur 20 essais (médiane + pire cas), cible < 
 
 **Principe technique : piloté par des données, pas codé en dur.** Le contenu de la DA n'est pas figé d'avance. Chaque élément visuel est déclaré dans un **catalogue** (nom, rôle, paramètres avec min/max/valeur par défaut, coût de performance estimé, activé ou non). L'atelier génère ses réglages à partir de ce catalogue. Ajouter, retirer ou désactiver un élément ne demande de toucher qu'à ce catalogue et à un module d'effet isolé derrière FxLayer. Un élément retiré disparaît proprement (code, tokens, réglages, textes) : aucun code mort, aucune charge inutile.
 
+**Précisions 12b (ajoutées au catalogue d'éléments réglables)**
+1. **Survol des cartes** (jeux, catégories) : effet très léger et premium, jamais voyant. Soulèvement de quelques pixels, inclinaison 3D de 2 à 3° maximum vers le curseur (parallaxe douce), léger reflet qui suit la souris, retour en douceur à la sortie. Réglages dans l'atelier : intensité de l'inclinaison, hauteur du soulèvement, durée/courbe, intensité du reflet. L'interrupteur global « réduire les animations » est respecté.
+2. **Anneau de la piste choisie** (maquette `R2-Mix-V4-Accueil`) : anneau **fin et net**, très cristallin façon liquid glass (bord clair, filets colorés aux couleurs du thème, léger reflet tournant lent), **sans pulsation**, de grande taille (~680 px de diamètre sur une composition 1280×760). Pas de flou diffus. La vraie réfraction sera faite par le moteur graphique, pas en CSS.
+3. **Particules** : braises montantes + étoiles scintillantes de la piste P2, nombre réglable.
+4. **Animations de référence** : vidéos OBS de l'utilisateur dans `reference/animations/` avec notes `.txt`. Extraire des images clés avec ffmpeg (l'installer si absent, après accord), regarder les images, lire les notes, puis proposer une version **plus fluide** avec curseurs de durée et de courbe.
+
 **Outils d'itération (à construire en premier : ils permettent d'itérer sans brûler le quota)**
 - Page dev `/dev/atelier` : réglages en direct (curseurs, interrupteurs, sélecteurs de couleur) pour chaque élément du catalogue : poussière (densité, taille, vitesse, dérive, lueur, couleur, forme), brume, faisceau (angle, largeur, intensité, balancement), halo, verre (opacité, flou, saturation, bord lumineux, ombre), typographie (échelle, poids), rayons, ressorts de mouvement, et tout élément ajouté en cours de route.
 - Interrupteur « avec / sans » par élément pour juger de son effet.
@@ -404,6 +411,32 @@ Tâche : écrire resources/moods/<jeu>.hubmood (même dossier que les packs de b
 Itère avec moi : tu me montres le rendu (capture ou description précise), je corrige, tu ajustes. Maximum 3 itérations dans cette session.
 ```
 **Critères** validé à l'œil ; fichier < 8 Ko ; budget respecté ; aucun contenu officiel.
+
+---
+
+## ÉTAPE 17b — Sound design
+**Modèle** Sonnet 5.5 · **Effort** Moyen · **Plan** Oui (`/plan`) · **Quota** ●● · **À fournir** mes sons dans `reference/sons/` (ou banques libres de droits : licence de chacun notée dans `docs/SONS.md`). Numérotée « 17b » pour ne décaler aucune autre étape ; à faire avant l'audit (18) pour qu'il couvre l'audio.
+
+**But** : des sons discrets et premium, cohérents avec les animations, jamais envahissants.
+
+**Principes**
+- **Activé à volume bas (20 %)** dès le premier lancement, avec un interrupteur général et un curseur de volume dans les réglages. Le mode « muet » est respecté instantanément.
+- Aucun son ne retarde une action : lecture asynchrone, jamais bloquante pour l'interface.
+- Pas de son quand la fenêtre est cachée (sauf fin de scène, réglable).
+- Aucune IA, aucune génération de son dans l'app : seulement de la **lecture de fichiers** fournis par l'utilisateur ou libres de droits.
+
+**Événements sonores** (catalogue data-driven, comme l'atelier DA) : ouverture de l'app · survol d'une carte (très léger) · clic / sélection · changement de catégorie · ouverture/fermeture du widget · lancement d'une scène · étape de scène réussie · fin de scène · erreur / conflit · changement de thème. Chaque événement = un fichier, un volume relatif, un « jitter » de hauteur optionnel (±3 %) pour éviter la répétition.
+
+**À construire**
+- Moteur audio côté interface (Web Audio API : un `AudioContext` partagé, buffers préchargés, gain maître) ; zéro dépendance si possible.
+- Dossier `src/assets/sons/` (fichiers courts .ogg ou .wav, < 200 ko chacun) + manifeste `sons.json` (événement → fichier, volume, jitter).
+- Réglages : interrupteur, volume maître, volume par groupe (interface / scènes), sons au survol on/off.
+- Page `/dev/atelier` : onglet « Sons » pour écouter chaque événement, ajuster volume et jitter en direct, sauvegarder dans un préréglage nommé.
+- Mode Éco / Veille (étape 13) : audio suspendu quand la fenêtre est cachée.
+- Si les fichiers n'existent pas encore : **emplacements vides documentés** (noms de fichiers attendus dans `docs/SONS.md`) et un son de test généré en code uniquement pour vérifier la chaîne — ne pas prétendre faire du sound design final.
+
+**Vérification** : latence action → son (< 50 ms mesurée), aucun son en muet, volume maître respecté, pas de crépitement au démarrage, tests vitest sur le manifeste et le routage des événements. Dire « non testé » pour ce qui ne l'est pas.
+**Fin d'étape** : cocher dans ROADMAP, rapport de 12 lignes max.
 
 ---
 
