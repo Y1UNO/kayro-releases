@@ -10,3 +10,4 @@ Lanceur d'applications pour Windows (anciennement nom de code « Hub »). Tauri 
 - Données et logs : `%APPDATA%/Kayro/` (dossier figé ; l'ancien `%APPDATA%/Hub/` est copié une fois, jamais supprimé).
 - Docs : `CLAUDE.md` (règles), `docs/PLAN.md` (choix techniques), `docs/ROADMAP.md` (avancement).
 - `spikes/` : code jetable des essais de l'étape 2, un `RESULTATS.md` par dossier.
+- `scripts/build-local.ps1` : compile en release et crée/met à jour le raccourci `Kayro.lnk` du bureau (`-CloseRunning` ferme Kayro doucement s'il est ouvert, `-NoBuild` ne met que le raccourci à jour).
