@@ -1,0 +1,59 @@
+{
+  "defaut": "7a",
+  "variables": {
+    "haut": "--logo-top",
+    "bas": "--logo-bottom",
+    "symbole": "--logo-glyph"
+  },
+  "contraste_min_requis": 4.5,
+  "variantes": [
+    {
+      "id": "7a",
+      "nom": "Lavande et pêche",
+      "haut": "#B7A2F2",
+      "bas": "#F6A98A",
+      "symbole": "#15132B",
+      "contraste_min": 8.16
+    },
+    {
+      "id": "7e",
+      "nom": "Mauve poudré",
+      "haut": "#C99ACB",
+      "bas": "#9476C2",
+      "symbole": "#15132B",
+      "contraste_min": 4.85
+    },
+    {
+      "id": "7f",
+      "nom": "Sakura",
+      "haut": "#F7B7C4",
+      "bas": "#D9708E",
+      "symbole": "#15132B",
+      "contraste_min": 5.74
+    },
+    {
+      "id": "7h",
+      "nom": "Bleu-gris sobre",
+      "haut": "#A3B0DE",
+      "bas": "#7282BC",
+      "symbole": "#15132B",
+      "contraste_min": 4.86
+    },
+    {
+      "id": "7i",
+      "nom": "Opale",
+      "haut": "#9FD0E8",
+      "bas": "#F2A2B8",
+      "symbole": "#15132B",
+      "contraste_min": 9.17
+    },
+    {
+      "id": "7j",
+      "nom": "Cuivre",
+      "haut": "#D99A6C",
+      "bas": "#B07A78",
+      "symbole": "#15132B",
+      "contraste_min": 5.09
+    }
+  ]
+}
