@@ -1,3 +1,4 @@
+import { APP_NAME } from "../app/appName";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import {
@@ -225,7 +226,7 @@ function GlassDemo() {
     <Panel title="Verre liquide : aperçu d’accueil (pas un composant)">
       <div className={styles.home}>
         <Surface as="nav" radius="29px" className={styles.topbar}>
-          <span className={styles.logo}>Hub</span>
+          <span className={styles.logo}>{APP_NAME}</span>
           <div className={styles.search}>
             <SearchIcon size={16} />
             <span className={styles.searchText}>Rechercher une app ou une scène</span>

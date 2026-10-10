@@ -1,4 +1,4 @@
-//! User data: versioned JSON in `%APPDATA%/Hub`, atomic writes, migrations, and recovery from
+//! User data: versioned JSON in `%APPDATA%/Kayro`, atomic writes, migrations, and recovery from
 //! damaged files. `ConfigState` is the single in-memory copy the IPC commands work on.
 
 pub mod apps;

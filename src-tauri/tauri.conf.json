@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Hub",
+  "productName": "Kayro",
   "version": "0.2.0",
   "identifier": "fr.yiuno.hub",
   "build": {
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Hub",
+        "title": "Kayro",
         "width": 1280,
         "height": 760,
         "center": true,

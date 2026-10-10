@@ -4,13 +4,13 @@ use tracing_subscriber::EnvFilter;
 
 use crate::paths::logs_dir;
 
-/// Initialises `tracing` with a daily rolling file in `%APPDATA%/Hub/logs` (7 files kept).
+/// Initialises `tracing` with a daily rolling file in `%APPDATA%/Kayro/logs` (7 files kept).
 /// The returned guard must stay alive for the whole run so buffered lines are flushed.
 pub fn init() -> Option<WorkerGuard> {
     std::fs::create_dir_all(logs_dir()).ok()?;
     let appender = RollingFileAppender::builder()
         .rotation(Rotation::DAILY)
-        .filename_prefix("hub")
+        .filename_prefix("kayro")
         .filename_suffix("log")
         .max_log_files(7)
         .build(logs_dir())

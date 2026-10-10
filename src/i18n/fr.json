@@ -35,7 +35,7 @@
     "running": "ouvert",
     "empty": {
       "noApps": {
-        "title": "Votre Hub est vide",
+        "title": "{app} est vide",
         "text": "Ajoutez vos jeux et vos logiciels pour les lancer d’ici."
       },
       "noAppsInCategory": {
@@ -71,7 +71,7 @@
       "edit": "Modifier…",
       "favorite": "Mettre en favori",
       "unfavorite": "Retirer des favoris",
-      "remove": "Retirer de Hub…",
+      "remove": "Retirer de {app}…",
       "editButton": "Modifier {name}",
       "moved": "« {name} » est maintenant dans {category}.",
       "dragging": "Dépose sur un onglet pour changer de catégorie"
@@ -134,7 +134,7 @@
     "drop": {
       "zone": "Glisse ici un .exe, un raccourci ou un lien",
       "zoneActive": "Relâche pour les ajouter à la liste",
-      "browserOnly": "Le glisser-déposer de fichiers ne fonctionne que dans l’application Hub. Tu peux coller un chemin ou un lien ci-dessous.",
+      "browserOnly": "Le glisser-déposer de fichiers ne fonctionne que dans l’application {app}. Tu peux coller un chemin ou un lien ci-dessous.",
       "pasteLabel": "Ou colle un lien ou un chemin",
       "pastePlaceholder": "https://… ou C:\\…\\MonJeu.exe",
       "pasteButton": "Analyser",
@@ -195,8 +195,8 @@
     "edit": {
       "title": "Modifier l’application",
       "save": "Enregistrer",
-      "delete": "Retirer de Hub…",
-      "deleteConfirm": "Retirer « {name} » de Hub ?",
+      "delete": "Retirer de {app}…",
+      "deleteConfirm": "Retirer « {name} » de {app} ?",
       "deleteExplain": "Le programme lui-même reste sur votre ordinateur.",
       "deleteYes": "Retirer",
       "deleteNo": "Garder"

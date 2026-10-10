@@ -11,7 +11,7 @@ import styles from "./AddApps.module.css";
 interface Props {
   /** The app being edited; null = closed. */
   app: AppEntry | null;
-  /** Open straight on the "remove from Hub?" question (from the context menu). */
+  /** Open straight on the "remove from the app?" question (from the context menu). */
   startWithRemove?: boolean;
   onClose: () => void;
 }

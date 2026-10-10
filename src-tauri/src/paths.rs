@@ -1,15 +1,22 @@
 use std::path::{Path, PathBuf};
 
-/// Frozen name of the user-data folder (`%APPDATA%/Hub`). It never follows the display
+/// Frozen name of the user-data folder (`%APPDATA%/Kayro`). It never follows the display
 /// name (`productName`), so a rename can never move the user's data.
-pub const DATA_DIR: &str = "Hub";
+pub const DATA_DIR: &str = "Kayro";
 
-/// `%APPDATA%/Hub`, or a folder next to the temp dir if `APPDATA` is missing.
-pub fn data_dir() -> PathBuf {
+/// Folder used before the project got its final name; copied once by `legacy`.
+pub const LEGACY_DATA_DIR: &str = "Hub";
+
+/// `%APPDATA%`, or the temp dir if it is missing.
+pub fn appdata_base() -> PathBuf {
     std::env::var_os("APPDATA")
         .map(PathBuf::from)
         .unwrap_or_else(std::env::temp_dir)
-        .join(DATA_DIR)
+}
+
+/// `%APPDATA%/Kayro`, or a folder next to the temp dir if `APPDATA` is missing.
+pub fn data_dir() -> PathBuf {
+    appdata_base().join(DATA_DIR)
 }
 
 pub fn logs_dir() -> PathBuf {

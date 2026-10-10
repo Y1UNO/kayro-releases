@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { APP_NAME } from "../app/appName";
 import { MESSAGE_KEYS, t } from "./index";
 import fr from "./fr.json";
 import { ERROR_MESSAGE_KEYS } from "../ipc/errors";
@@ -28,5 +29,12 @@ describe("catalogue", () => {
   it("has a message for every error code and no unused error message", () => {
     const used = Object.values(ERROR_MESSAGE_KEYS).map((k) => k.replace("errors.", ""));
     expect(Object.keys(fr.errors).sort()).toEqual([...used].sort());
+  });
+});
+
+describe("{app} placeholder", () => {
+  it("is always the display name", () => {
+    expect(t("home.menu.remove")).toBe(`Retirer de ${APP_NAME}…`);
+    expect(APP_NAME).toBe("Kayro");
   });
 });

@@ -49,7 +49,7 @@ HUB/
 **Écarts justifiés vs ARCHITECTURE.md**
 1. Module `windows` renommé **`desktop`** : un module `windows` masquerait la crate `windows` (`use windows::Win32…` deviendrait ambigu).
 2. **`platform/`** ajouté : tout le code Win32 `unsafe` est isolé derrière des fonctions sûres, que `scenes` et `procwatch` remplacent par des faux (trait) dans les tests.
-3. **`APP_NAME`** a une seule source : `productName` dans `tauri.conf.json`. Rust le lit via `package_info().name`, TypeScript le reçoit par `define` de Vite. Le dossier de données est une constante séparée et figée (`DATA_DIR = "Hub"`, chemin `%APPDATA%/Hub`), calculé par nous : `app_data_dir()` de Tauri dépend de l'identifiant de bundle, et un renommage ne doit jamais déplacer les données.
+3. **`APP_NAME`** a une seule source : `productName` dans `tauri.conf.json`. Rust le lit via `package_info().name`, TypeScript le reçoit par `define` de Vite. Le dossier de données est une constante séparée et figée (`DATA_DIR = "Kayro"`, chemin `%APPDATA%/Kayro` ; l'ancien `%APPDATA%/Hub` est copié une fois par `legacy.rs`), calculé par nous : `app_data_dir()` de Tauri dépend de l'identifiant de bundle, et un renommage ne doit jamais déplacer les données.
 4. Cache des affiches en **`.jpg`** (pas `.webp`), car l'encodeur WebP de `image` ne fait que du sans perte [S10]. Icônes en `.png` (transparence).
 
 ## 2. Choix techniques vérifiés
@@ -109,7 +109,7 @@ HUB/
 **Installeur** : `webviewInstallMode = embedBootstrapper` (+~1,8 Mo ; réseau nécessaire à l'installation seulement si WebView2 manque). `offlineInstaller` écarté (+~127 Mo) [S3].
 
 **CSP** :
-- `default-src 'self'` ; images depuis `'self'` + protocole asset limité à `%APPDATA%/Hub/cache/art/**`.
+- `default-src 'self'` ; images depuis `'self'` + protocole asset limité à `%APPDATA%/Kayro/cache/art/**`.
 - Aucune source distante. Polices locales.
 - Capacités Tauri : liste blanche par fenêtre.
 
@@ -226,7 +226,7 @@ L'ordre est **conservé**.
 - [ ] Bouton, pastille, onglets, interrupteur, recherche, curseur ; catalogue de composants (dev) ; contraste ≥ 4,5:1
 
 **4 · Données, config, IPC, i18n**
-- [ ] `config/` : `%APPDATA%/Hub`, écritures atomiques, `schemaVersion`, migrations + sauvegarde
+- [ ] `config/` : `%APPDATA%/Kayro`, écritures atomiques, `schemaVersion`, migrations + sauvegarde
 - [ ] Essai tauri-specta (15 min) → `bindings.ts` généré (plan B ts-rs)
 - [ ] Commandes `settings_*`, `apps_*` ; événements typés
 - [ ] Logs tracing en fichier tournant + commande « Exporter les logs »
@@ -337,6 +337,6 @@ L'ordre est **conservé**.
 3. **Mise à l'échelle** — ✅ *Mesuré* : échelle Windows **100 %** sur les deux écrans (MACHINE.md). Hypothèse conservée : px CSS à l'échelle Windows ; en immersif, la composition 1280×760 est agrandie selon la hauteur de l'écran (1440/760 ≈ 1,9, plafonné à ×1,5), à ajuster à l'œil à l'étape 7.
 4. **Cadence** — ✅ *Tranché* : canvas FxLayer limité à **144 Hz** (« Auto » = min(Hz, 144)) ; transitions et animations CSS de l'interface à la fréquence native de l'écran.
 5. **Windows 10** — ✅ *Tranché* : pris en charge « au mieux », **sans Mica** ; Win11 reste la cible.
-6. **Identifiant et dossier** — ✅ *Tranché* : identifiant **`fr.yiuno.hub`**, dossier de données **`%APPDATA%/Hub`**, figé même si le nom affiché change.
+6. **Identifiant et dossier** — ✅ *Tranché* : identifiant **`fr.yiuno.hub`**, dossier de données **`%APPDATA%/Kayro`** (ex-`Hub`, copié à la migration), figé même si le nom affiché change.
 7. **Types partagés** — ✅ *Tranché* : **tauri-specta** en versions exactes épinglées, **ts-rs** en plan B si l'essai de l'étape 4 échoue.
 8. **Test du niveau Éco** — ✅ *Tranché* : bridage CPU ×4 (DevTools) + 60 Hz ; « non testé sur vrai matériel » écrit dans les rapports tant qu'aucun PC modeste n'est disponible.

@@ -6,6 +6,7 @@ pub mod intake;
 pub mod ipc;
 pub mod ipc_scenes;
 pub mod launcher;
+mod legacy;
 mod logging;
 pub mod paths;
 pub mod platform;
@@ -34,7 +35,10 @@ pub(crate) fn show_and_focus(app: &AppHandle) -> Result<(), AppError> {
 }
 
 pub fn run() {
+    // Before the logger: it creates the new data folder, which would hide the old one.
+    let migration = legacy::migrate_legacy_data(&paths::appdata_base());
     let _log_guard = logging::init();
+    legacy::log_outcome(&migration);
     tracing::info!(version = env!("CARGO_PKG_VERSION"), "starting");
 
     let ipc = ipc::builder();
