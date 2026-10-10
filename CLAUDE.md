@@ -1,6 +1,6 @@
-# Hub — mémoire du projet
+# Kayro — mémoire du projet
 
-> « Hub » est un nom de code. Le nom affiché vit dans UNE seule constante (`APP_NAME`) pour pouvoir le changer en une ligne.
+> **Kayro** est le nom définitif (anciennement « Hub », nom de code). Le nom affiché vit dans UNE seule constante (`APP_NAME`, source : `productName`). Restent figés : l'identifiant `fr.yiuno.hub`, le crate Rust `hub`, les extensions `.hubmood` / `.hubscene`. Données : `%APPDATA%/Kayro` (l'ancien `%APPDATA%/Hub` est copié une fois au premier lancement, jamais modifié ni supprimé).
 
 ## Vision
 Lanceur d'applications pour Windows, très fluide et très réactif, avec un accent fort sur la **personnalisation** et le **visuel** :

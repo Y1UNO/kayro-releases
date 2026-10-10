@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "graphite",
   "name": "Graphite",
-  "author": "Hub",
+  "author": "Kayro",
   "description": "Neutre et sobre, presque monochrome.",
   "bg": ["#16161a", "#0f0f12", "#08080a"],
   "accent": "#e8e4de",

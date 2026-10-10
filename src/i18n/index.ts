@@ -1,3 +1,4 @@
+import { APP_NAME } from "../app/appName";
 import fr from "./fr.json";
 
 type Flatten<T, Prefix extends string = ""> = {
@@ -22,13 +23,12 @@ const messages = flatten(fr);
 /** All keys of the catalogue (for tests and tooling). */
 export const MESSAGE_KEYS: readonly string[] = [...messages.keys()];
 
-/** Looks a message up and fills its `{name}` placeholders. */
+/** Looks a message up and fills its `{name}` placeholders; `{app}` is always the display name. */
 export function t(key: MessageKey, params?: MessageParams): string {
   const message = messages.get(key);
   if (message === undefined) return key;
-  if (!params) return message;
   return message.replace(/\{(\w+)\}/g, (whole, name: string) => {
-    const value = params[name];
+    const value = name === "app" ? APP_NAME : params?.[name];
     return value === undefined ? whole : String(value);
   });
 }

@@ -1,14 +1,19 @@
 [package]
 name = "hub"
 version = "0.2.0"
-description = "Hub — application launcher"
+description = "Kayro — application launcher"
 edition = "2021"
-default-run = "hub"
+default-run = "Kayro"
 rust-version = "1.90"
 
 [lib]
 name = "hub_lib"
 crate-type = ["rlib"]
+
+# The executable is named after the product; the crate stays `hub`.
+[[bin]]
+name = "Kayro"
+path = "src/main.rs"
 
 [build-dependencies]
 tauri-build = { version = "2.7.1", features = [] }
