@@ -11,6 +11,7 @@ pub mod paths;
 pub mod platform;
 pub mod procwatch;
 pub mod scenes;
+mod tray;
 
 use config::ConfigState;
 use error::AppError;
@@ -57,6 +58,7 @@ pub fn run() {
         .invoke_handler(ipc.invoke_handler())
         .setup(move |app| {
             tracing::info!(app_name = %app.package_info().name, "setup done");
+            tray::setup(app.handle())?;
             ipc.mount_events(app);
             app.manage(ConfigState::load(paths::DataPaths::default_location()));
             app.manage(detect::scan::DetectState::default());

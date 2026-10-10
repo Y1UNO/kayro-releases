@@ -5,9 +5,12 @@ import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { ThemeProvider, applyQuality } from "./design";
+import { applyDefaultLogoColours } from "./brand";
 import { Atmosphere } from "./fx";
 import { hubStore } from "./store";
 import "./index.css";
+
+applyDefaultLogoColours();
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root not found");
