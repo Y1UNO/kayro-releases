@@ -4,6 +4,8 @@
 
 pub mod com;
 pub mod icon;
+pub mod own_window;
+pub mod startup;
 pub mod shell;
 pub mod theme;
 pub mod window;

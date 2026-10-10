@@ -8,24 +8,27 @@ import {
   PlusIcon,
   SearchIcon,
   SegmentedControl,
+  SettingsIcon,
   Surface,
 } from "../../design";
 import { t } from "../../i18n";
+import type { DisplayMode } from "../../ipc/bindings";
+import { hubStore, useHub } from "../../store";
 import styles from "./TopBar.module.css";
 
 interface Props {
   onSearch: () => void;
   onAdd: () => void;
+  onSettings: () => void;
 }
 
-const NOOP = () => {};
-
 /**
- * Glass top bar: logo and name, search field (opens the Ctrl+K palette), display modes, voice, hands.
- * Modes, voice and hands are in place but disabled: they arrive in steps 12, and in the voice and
- * hands extensions.
+ * Glass top bar: logo and name, search field (opens the Ctrl+K palette), display modes, display
+ * settings, voice, hands. Voice and hands are in place but disabled: they come with the voice
+ * and hands extensions.
  */
-export function TopBar({ onSearch, onAdd }: Props) {
+export function TopBar({ onSearch, onAdd, onSettings }: Props) {
+  const mode = useHub((s) => s.settings?.displayMode ?? "immersive");
   return (
     <Surface as="header" radius="29px" className={styles.bar}>
       <div className={styles.brand}>
@@ -47,17 +50,19 @@ export function TopBar({ onSearch, onAdd }: Props) {
         <IconButton label={t("home.addApps.open")} size="sm" onClick={onAdd}>
           <PlusIcon />
         </IconButton>
-        <SegmentedControl
+        <SegmentedControl<DisplayMode>
           label={t("home.modes.label")}
-          disabled
-          value="immersive"
-          onChange={NOOP}
+          value={mode}
+          onChange={(displayMode) => void hubStore.getState().setSettings({ displayMode })}
           options={[
             { value: "immersive", label: t("home.modes.immersive") },
             { value: "window", label: t("home.modes.window") },
             { value: "widget", label: t("home.modes.widget") },
           ]}
         />
+        <IconButton label={t("home.settings.open")} size="sm" onClick={onSettings}>
+          <SettingsIcon />
+        </IconButton>
         <IconButton label={t("home.voice")} size="sm" disabled>
           <MicIcon />
         </IconButton>

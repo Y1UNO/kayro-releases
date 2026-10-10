@@ -7,10 +7,11 @@ import * as __TAURI_EVENT from "@tauri-apps/api/event";
 export const commands = {
 	ping: () => __TAURI_INVOKE<string>("ping"),
 	/**
-	 *  Called by the UI after its first paint: the window stays hidden until then (no white
-	 *  flash), and stays hidden for good when started with `--silent`.
+	 *  Called by the UI after its first paint: a window that was built to be shown stays hidden
+	 *  until then (no white flash). A window started silently (`--silent`) or built in advance for
+	 *  the shortcut is not shown. True when the page must report its paint time (measurement).
 	 */
-	appReady: () => typedError<null, AppError>(__TAURI_INVOKE("app_ready")),
+	appReady: () => __TAURI_INVOKE<boolean>("app_ready"),
 	settingsGet: () => __TAURI_INVOKE<Settings>("settings_get"),
 	settingsSet: (patch: SettingsPatch) => typedError<Settings, AppError>(__TAURI_INVOKE("settings_set", { patch })),
 	appsList: () => __TAURI_INVOKE<AppEntry[]>("apps_list"),
@@ -80,6 +81,29 @@ export const commands = {
 	sceneImportPreview: (path: string) => typedError<ImportPreview, AppError>(__TAURI_INVOKE("scene_import_preview", { path })),
 	/**  Imports a `.hubscene` file as a new scene; `links` maps its slot names to the user's apps. */
 	sceneImport: (path: string, links: { [key in string]: string }) => typedError<SceneFile_Serialize, AppError>(__TAURI_INVOKE("scene_import", { path, links })),
+	/**  Hides the hub (Escape, the widget's own button…). */
+	windowHide: () => __TAURI_INVOKE<void>("window_hide"),
+	/**  Starts moving the calling window with the mouse (the widget has no title bar). */
+	windowDrag: () => typedError<null, AppError>(__TAURI_INVOKE("window_drag")),
+	/**  The page tells it painted after being shown (measurement only, see `KAYRO_BENCH_SHOW`). */
+	windowPainted: () => __TAURI_INVOKE<void>("window_painted"),
+	/**  Resizes the widget window to its content, in logical pixels. */
+	widgetFit: (width: number | null, height: number | null) => typedError<null, AppError>(__TAURI_INVOKE("widget_fit", { width, height })),
+	monitorsList: () => __TAURI_INVOKE<MonitorInfo[]>("monitors_list"),
+	/**  Picks the screen of the immersive mode (a `name` from `monitors_list`). */
+	monitorChoose: (name: string) => typedError<null, AppError>(__TAURI_INVOKE("monitor_choose", { name })),
+	/**
+	 *  Changes the show/hide shortcut. Refused (`hotkeyConflict`) when another program owns the
+	 *  combination: nothing changes then.
+	 */
+	hotkeySet: (hotkey: string) => typedError<null, AppError>(__TAURI_INVOKE("hotkey_set", { hotkey })),
+	hotkeysGet: () => __TAURI_INVOKE<HotkeysReport>("hotkeys_get"),
+	/**  The scene a shortcut asked to confirm, if the page was not there to hear the event. */
+	sceneHotkeyTake: () => __TAURI_INVOKE<string | null>("scene_hotkey_take"),
+	/**  Whether Windows starts the hub at login (the Run key is the source of truth). */
+	autostartGet: () => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_get")),
+	autostartSet: (enabled: boolean) => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_set", { enabled })),
+	recentsGet: () => __TAURI_INVOKE<string[]>("recents_get"),
 };
 
 /** Events */
@@ -87,8 +111,12 @@ export const events = {
 	appStateChanged: makeEvent<AppStateChanged>("app-state-changed"),
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
+	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
+	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
+	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
+	windowVisibility: makeEvent<WindowVisibility>("window-visibility"),
 };
 
 /* Types */
@@ -193,6 +221,12 @@ export type DetectedApp = {
 	suggestedCategory: string,
 };
 
+/**
+ *  How the hub is shown: a borderless window the size of the chosen screen, a normal window,
+ *  or a small bar at the top of the screen (ARCHITECTURE.md §4).
+ */
+export type DisplayMode = "immersive" | "window" | "widget";
+
 export type ErrorCode = 
 /**  The input was refused by validation (`field` tells which one when known). */
 "validation" | "notFound" | "duplicate" | 
@@ -209,13 +243,34 @@ export type ErrorCode =
 /**  The user dismissed the administrator prompt. */
 "elevationCancelled" | 
 /**  Any other failure to start (`message` has the Win32 code). */
-"launchFailed";
+"launchFailed" | 
+/**  The keyboard shortcut is already used by another program (or another shortcut of the hub). */
+"hotkeyConflict";
 
 export type FocusResult = "focused" | 
 /**  No process of this app is known (or the app cannot be followed). */
 "notRunning" | 
 /**  Running, but no window could be brought forward (tray app, other privileges…). */
 "failed";
+
+export type HotkeyProblem = 
+/**  Not a combination the hub can register. */
+"invalid" | 
+/**  Taken by another program, or already used by another shortcut of the hub. */
+"conflict";
+
+export type HotkeyStatus = {
+	hotkey: string,
+	problem: HotkeyProblem | null,
+};
+
+/**  Emitted whenever registrations change (start, new shortcut, scenes saved or deleted). */
+export type HotkeysChanged = HotkeysReport;
+
+export type HotkeysReport = {
+	toggle: HotkeyStatus | null,
+	scenes: SceneHotkeyStatus[],
+};
 
 /**  What the interface shows before importing: nothing is written yet. */
 export type ImportPreview = {
@@ -250,6 +305,14 @@ export type LaunchResult = { kind: "started"; pid: number | null } |
 /**  Which process to watch to know the app is running. */
 export type MatchRule = {
 	exe: string | null,
+};
+
+export type MonitorInfo = {
+	name: string,
+	width: number,
+	height: number,
+	/**  The screen the immersive mode uses. */
+	chosen: boolean,
 };
 
 /**  An app to add: the id is chosen by the core, never by the caller. */
@@ -287,6 +350,9 @@ export type Reason =
 "cancelled" | 
 /**  An earlier `required` step failed. */
 "aborted" | "launchNotFound" | "launchDenied" | "elevationRequired" | "elevationCancelled" | "launchFailed" | "focusFailed" | "closeFailed";
+
+/**  Emitted when the list of recently launched apps changes (most recent first). */
+export type RecentsChanged = string[];
 
 export type Refused = {
 	input: string,
@@ -342,6 +408,19 @@ export type SceneFile_Serialize = {
 	steps: Step[],
 };
 
+/**
+ *  A scene shortcut was pressed for a scene that must be confirmed (it closes apps): the
+ *  interface shows the confirmation. Also kept for a page that is not loaded yet
+ *  (`scene_hotkey_take`).
+ */
+export type SceneHotkey = string;
+
+export type SceneHotkeyStatus = {
+	sceneId: string,
+	hotkey: string,
+	problem: HotkeyProblem | null,
+};
+
 /**  Progress of the scene being played: one event per step change, plus its start and end. */
 export type SceneProgress = ProgressEvent;
 
@@ -354,6 +433,14 @@ export type Settings = {
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1 (DESIGN.md « intensité »). */
 	atmosphereIntensity: number | null,
+	displayMode: DisplayMode,
+	widgetStyle: WidgetStyle,
+	/**  Escape hides the hub once there is nothing left to close. */
+	hideOnEscape: boolean,
+	/**  Losing the focus hides the hub (the widget only folds its panel). */
+	hideOnBlur: boolean,
+	/**  « Mode économe »: the window is destroyed while hidden (less memory, slower to come back). */
+	economyMode: boolean,
 };
 
 /**  Emitted after every successful change of the settings (also to the window that made it). */
@@ -367,6 +454,11 @@ export type SettingsPatch = {
 	hotkey?: string | null,
 	language?: string | null,
 	atmosphereIntensity?: number | null,
+	displayMode?: DisplayMode | null,
+	widgetStyle?: WidgetStyle | null,
+	hideOnEscape?: boolean | null,
+	hideOnBlur?: boolean | null,
+	economyMode?: boolean | null,
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */
@@ -395,6 +487,15 @@ export type Step = { type: "launch"; slot: string; required?: boolean } | { type
 export type StepState = "pending" | "running" | "ok" | "failed" | 
 /**  Not run: unlinked slot, nothing to follow, scene cancelled or aborted… */
 "skipped";
+
+/**  Look of the widget bar (reference/Widget.dc.html); provisional until the art direction is frozen. */
+export type WidgetStyle = "aurore" | "sillage" | "brume" | "orbe";
+
+/**  The hub appeared (or went away). `bench` asks the page to report when it painted. */
+export type WindowVisibility = {
+	visible: boolean,
+	bench: boolean,
+};
 
 /* Tauri Specta runtime */
 async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; data: T } | { status: "error"; error: E }> {

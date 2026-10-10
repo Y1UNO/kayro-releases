@@ -14,6 +14,7 @@ export const ERROR_MESSAGE_KEYS: Record<ErrorCode, MessageKey> = {
   elevationRequired: "errors.elevationRequired",
   elevationCancelled: "errors.elevationCancelled",
   launchFailed: "errors.launchFailed",
+  hotkeyConflict: "errors.hotkeyConflict",
 };
 
 /** Text shown to the user (the Rust `message` is for logs only). */

@@ -55,6 +55,11 @@ impl DataPaths {
         self.root.join("slots.json")
     }
 
+    /// Where each display mode last was, and the recent apps.
+    pub fn ui_state(&self) -> PathBuf {
+        self.root.join("state.json")
+    }
+
     pub fn scenes_dir(&self) -> PathBuf {
         self.root.join("scenes")
     }

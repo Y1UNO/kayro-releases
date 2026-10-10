@@ -5,9 +5,11 @@ import { SceneEditor } from "./features/scenes/SceneEditor";
 import { ScenesScreen } from "./features/scenes/ScenesScreen";
 import { SceneToast } from "./features/scenes/SceneToast";
 import { t } from "./i18n";
-import { ipc } from "./ipc/commands";
 import { errorText } from "./ipc/errors";
-import { sceneStore, useHub } from "./store";
+import { desktopStore, sceneStore, useHub } from "./store";
+import { announceReady, useWindowShown } from "./app/useWindowShown";
+import { usePlayScene } from "./features/scenes/usePlayScene";
+import { useSceneHotkey } from "./features/scenes/useSceneHotkey";
 
 /** Where the user is: the home screen, the list of scenes, or the editor of one scene. */
 type Screen = { name: "home" } | { name: "scenes" } | { name: "editor"; sceneId: string | null };
@@ -21,14 +23,22 @@ export function App() {
     // Show the (hidden) window only once the first frame is painted: no white flash.
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
-        void ipc.appReady();
+        void announceReady();
       }),
     );
   }, []);
 
   useEffect(() => {
-    if (status === "ready") void sceneStore.getState().init();
+    if (status === "ready") {
+      void sceneStore.getState().init();
+      void desktopStore.getState().init();
+    }
   }, [status]);
+
+  // Reports the paint time when a measurement is running; confirms a scene a shortcut asked for.
+  useWindowShown();
+  const { request, dialog } = usePlayScene();
+  useSceneHotkey(request);
 
   if (status !== "ready") {
     return (
@@ -56,6 +66,7 @@ export function App() {
         <SceneEditor key={screen.sceneId ?? "new"} sceneId={screen.sceneId} onBack={toScenes} />
       )}
       <SceneToast />
+      {dialog}
     </>
   );
 }

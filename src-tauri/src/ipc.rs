@@ -16,7 +16,7 @@ use crate::intake::{inspect, shortcut_target, InspectReport};
 use crate::launcher::system::SystemLauncher;
 use crate::launcher::{launch_app, LaunchResult};
 use crate::procwatch::{AppRunState, ProcWatch, RunningApps};
-use crate::{icons, ipc_scenes, platform};
+use crate::{icons, ipc_desktop, ipc_scenes, platform};
 
 /// Emitted after every successful change of the settings (also to the window that made it).
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -46,16 +46,13 @@ pub fn ping() -> String {
     "pong".into()
 }
 
-/// Called by the UI after its first paint: the window stays hidden until then (no white
-/// flash), and stays hidden for good when started with `--silent`.
+/// Called by the UI after its first paint: a window that was built to be shown stays hidden
+/// until then (no white flash). A window started silently (`--silent`) or built in advance for
+/// the shortcut is not shown. True when the page must report its paint time (measurement).
 #[tauri::command]
 #[specta::specta]
-pub fn app_ready(app: AppHandle) -> Result<(), AppError> {
-    if std::env::args().any(|a| a == crate::SILENT_FLAG) {
-        tracing::info!("silent start: window stays hidden");
-        return Ok(());
-    }
-    crate::show_and_focus(&app)
+pub async fn app_ready<R: Runtime>(app: AppHandle<R>, window: tauri::WebviewWindow<R>) -> bool {
+    crate::desktop::page_ready(&app, window.label())
 }
 
 #[tauri::command]
@@ -66,13 +63,26 @@ pub fn settings_get(state: State<'_, ConfigState>) -> Settings {
 
 #[tauri::command]
 #[specta::specta]
-pub fn settings_set<R: Runtime>(
+pub async fn settings_set<R: Runtime>(
     app: AppHandle<R>,
-    state: State<'_, ConfigState>,
     patch: SettingsPatch,
 ) -> Result<Settings, AppError> {
+    // Async on purpose: a mode change builds a window, and building one from a synchronous
+    // command (which runs on the main thread, inside the page's own message) hangs on Windows.
+    update_settings(&app, patch)
+}
+
+/// Saves a settings change, tells every window, and lets the desktop act on it (display mode,
+/// economy mode). Also used by the notification-area menu.
+pub(crate) fn update_settings<R: Runtime>(
+    app: &AppHandle<R>,
+    patch: SettingsPatch,
+) -> Result<Settings, AppError> {
+    let state = app.state::<ConfigState>();
+    let old = state.settings();
     let settings = state.set_settings(patch)?;
-    notify(SettingsChanged(settings.clone()).emit(&app));
+    notify(SettingsChanged(settings.clone()).emit(app));
+    crate::desktop::settings_changed(app, &old, &settings);
     Ok(settings)
 }
 
@@ -215,13 +225,16 @@ pub async fn app_launch<R: Runtime>(
     id: String,
 ) -> Result<LaunchResult, AppError> {
     let entry = find_app(&config, &id)?;
-    tauri::async_runtime::spawn_blocking(move || {
-        let watch = app.state::<ProcWatch>();
+    let for_task = app.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let watch = for_task.state::<ProcWatch>();
         launch_app(&SystemLauncher, &*watch, &entry)
     })
     .await
     .map_err(|e| AppError::new(ErrorCode::Internal, format!("launch task failed: {e}")))?
-    .map_err(AppError::from)
+    .map_err(AppError::from)?;
+    crate::ipc_desktop::note_recent(&app, &config, &id);
+    Ok(result)
 }
 
 /// Brings an already running app to the front, without starting anything.
@@ -276,7 +289,7 @@ pub fn builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new()
         .commands(collect_commands![
             ping,
-            app_ready,
+            app_ready::<tauri::Wry>,
             settings_get,
             settings_set::<tauri::Wry>,
             apps_list,
@@ -292,23 +305,39 @@ pub fn builder() -> Builder<tauri::Wry> {
             app_focus::<tauri::Wry>,
             apps_running,
             ipc_scenes::scenes_list,
-            ipc_scenes::scenes_save,
+            ipc_scenes::scenes_save::<tauri::Wry>,
             ipc_scenes::slots_get,
             ipc_scenes::slots_set,
             ipc_scenes::scene_run::<tauri::Wry>,
             ipc_scenes::scene_cancel,
-            ipc_scenes::scenes_delete,
+            ipc_scenes::scenes_delete::<tauri::Wry>,
             ipc_scenes::scenes_new_id,
             ipc_scenes::scene_export,
             ipc_scenes::scene_import_preview,
-            ipc_scenes::scene_import,
+            ipc_scenes::scene_import::<tauri::Wry>,
+            ipc_desktop::window_hide::<tauri::Wry>,
+            ipc_desktop::window_drag::<tauri::Wry>,
+            ipc_desktop::window_painted::<tauri::Wry>,
+            ipc_desktop::widget_fit::<tauri::Wry>,
+            ipc_desktop::monitors_list::<tauri::Wry>,
+            ipc_desktop::monitor_choose::<tauri::Wry>,
+            ipc_desktop::hotkey_set::<tauri::Wry>,
+            ipc_desktop::hotkeys_get,
+            ipc_desktop::scene_hotkey_take::<tauri::Wry>,
+            ipc_desktop::autostart_get::<tauri::Wry>,
+            ipc_desktop::autostart_set::<tauri::Wry>,
+            ipc_desktop::recents_get,
         ])
         .events(collect_events![
             SettingsChanged,
             AppsChanged,
             DetectProgress,
             AppStateChanged,
-            ipc_scenes::SceneProgress
+            ipc_scenes::SceneProgress,
+            crate::desktop::WindowVisibility,
+            crate::desktop::SceneHotkey,
+            crate::desktop::hotkeys::HotkeysChanged,
+            ipc_desktop::RecentsChanged
         ])
 }
 

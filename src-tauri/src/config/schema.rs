@@ -31,6 +31,28 @@ pub enum ColorMode {
     Immersive,
 }
 
+/// How the hub is shown: a borderless window the size of the chosen screen, a normal window,
+/// or a small bar at the top of the screen (ARCHITECTURE.md §4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum DisplayMode {
+    #[default]
+    Immersive,
+    Window,
+    Widget,
+}
+
+/// Look of the widget bar (reference/Widget.dc.html); provisional until the art direction is frozen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum WidgetStyle {
+    Aurore,
+    Sillage,
+    #[default]
+    Brume,
+    Orbe,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
@@ -42,6 +64,14 @@ pub struct Settings {
     pub language: String,
     /// Strength of the animated atmosphere (fog, light, dust), 0.3–1 (DESIGN.md « intensité »).
     pub atmosphere_intensity: f32,
+    pub display_mode: DisplayMode,
+    pub widget_style: WidgetStyle,
+    /// Escape hides the hub once there is nothing left to close.
+    pub hide_on_escape: bool,
+    /// Losing the focus hides the hub (the widget only folds its panel).
+    pub hide_on_blur: bool,
+    /// « Mode économe »: the window is destroyed while hidden (less memory, slower to come back).
+    pub economy_mode: bool,
 }
 
 /// Bounds of [`Settings::atmosphere_intensity`].
@@ -58,6 +88,11 @@ impl Default for Settings {
             hotkey: "Ctrl+Alt+H".into(),
             language: "fr".into(),
             atmosphere_intensity: ATMOSPHERE_MAX,
+            display_mode: DisplayMode::default(),
+            widget_style: WidgetStyle::default(),
+            hide_on_escape: true,
+            hide_on_blur: false,
+            economy_mode: false,
         }
     }
 }
@@ -72,6 +107,11 @@ pub struct SettingsPatch {
     pub hotkey: Option<String>,
     pub language: Option<String>,
     pub atmosphere_intensity: Option<f32>,
+    pub display_mode: Option<DisplayMode>,
+    pub widget_style: Option<WidgetStyle>,
+    pub hide_on_escape: Option<bool>,
+    pub hide_on_blur: Option<bool>,
+    pub economy_mode: Option<bool>,
 }
 
 impl Settings {
@@ -93,6 +133,21 @@ impl Settings {
         }
         if let Some(v) = patch.atmosphere_intensity {
             self.atmosphere_intensity = v;
+        }
+        if let Some(v) = patch.display_mode {
+            self.display_mode = v;
+        }
+        if let Some(v) = patch.widget_style {
+            self.widget_style = v;
+        }
+        if let Some(v) = patch.hide_on_escape {
+            self.hide_on_escape = v;
+        }
+        if let Some(v) = patch.hide_on_blur {
+            self.hide_on_blur = v;
+        }
+        if let Some(v) = patch.economy_mode {
+            self.economy_mode = v;
         }
     }
 }
