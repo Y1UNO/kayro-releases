@@ -16,6 +16,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 10 | Moteur de scènes (Rust) | 6 | C |
 | [ ] 11 | Éditeur de scènes, dock, import/export `.hubscene` | 7, 10 | C |
 | [ ] 12 | Modes immersif/fenêtre/widget, raccourci, tray | 2, 7 | C |
+| [ ] 12b | Atelier de direction artistique (DA officielle v1), itératif, fini quand je dis « je fige la DA » | 8, 12 | C |
 | [ ] 13 | Performance : états, qualité adaptative, benchmark, réglages, sans échec | 6, 8, 12 | D |
 | [ ] 14 | Couleurs du jeu : art local, palette OKLab, modes | 5, 8 | E |
 | [ ] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
@@ -61,3 +62,17 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
   - Écarts : la barre des tâches suit `SystemUsesLightTheme` (repli `AppsUseLightTheme`), pas seulement `AppsUseLightTheme` ; le rafraîchissement part des événements de thème/échelle de la fenêtre. **Non testé** dans une vraie fenêtre Tauri : le tray, `setIcon` et le changement de thème à chaud. Pas de menu de tray (Quitter) ni de réglage (étape 15).
 - **Chore renommage Hub → Kayro — 2026-10-10** (branche `chore-kayro`) : `productName`/titre de fenêtre/`index.html`/thèmes/Cargo = Kayro ; `{app}` est un paramètre toujours rempli par `t()` (fr.json) ; exe `Kayro.exe` (`[[bin]]`), identifiant `fr.yiuno.hub` et crate `hub` inchangés. `src-tauri/src/legacy.rs` : si `%APPDATA%/Hub` existe et pas `Kayro`, copie dans `Kayro.migrating` puis renomme (jamais de `Kayro` à moitié copié), journalisée ; l'ancien dossier n'est ni modifié ni supprimé. Logs (`kayro.*.log`) et cache d'icônes vivent dans ce dossier. 4 tests dans un dossier temporaire.
 - **Chore raccourci bureau — 2026-10-10** (branche `chore-raccourci`) : `scripts/build-local.ps1` (build `--no-bundle` → `target/release/Kayro.exe`, `Kayro.lnk` réécrit sur place avec icône `icon.ico` et dossier de travail de l'exe ; Kayro ouvert → question o/N, `-CloseRunning`, ou arrêt avec message ; fermeture douce seulement, jamais de kill). Testé : build, raccourci (cible/icône/dossier), démarrage par le raccourci, cas « ouvert » avec et sans `-CloseRunning`, pas de doublon.
+
+## Petits ajustements et vérification finale
+À lancer avant l'étape 19 (« Passe de finition », voir `_kit/PROMPTS.md`).
+- [ ] Détection : filtres de bruit renforcés (désinstallateurs, aide/documentation, « Check For Updates », « About/Configure Java », « Module Docs », « Report a Problem », « Windows App Cert Kit », variantes mode compatibilité / sans échec, doublons de même nom et même cible)
+- [ ] Détection : bouton « Ignorer » par app (`ignoredDetections` dans settings.json, case « Afficher les ignorées »)
+- [ ] Détection : groupe « Lanceurs et outils » (Riot Client, Epic Games Launcher, Steam, Roblox Studio, Unity Hub, GOG Galaxy, Battle.net…) replié et décoché par défaut
+- [ ] Détection : meilleure suggestion de catégorie par liste de motifs locale
+- [ ] Bouton « Parcourir » pour choisir un exe (plugin dialog)
+- [ ] Suivi des jeux Steam (processus sans `match.exe`) pour que `waitReady`, `focus` et `close` marchent aussi sur eux
+- [ ] Test d'Epic avec un vrai jeu installé (URI de lancement et `.item` réels)
+- [ ] Menu « Quitter » du tray et rafraîchissement de l'icône au changement de thème système (si pas fait à l'étape 12)
+- [ ] Comportement du clic carte (sélection puis lancement) à confirmer à l'usage
+- [ ] Tests : Windows 10, mise à l'échelle 125/150 %, écran 60 Hz, premier lancement sans config
+- [x] Journal du renommage Hub → Kayro : dossier de données migré (`%APPDATA%/Hub` copié une fois vers `Kayro`), identifiant `fr.yiuno.hub` conservé (voir l'entrée « Chore renommage » du journal ci-dessus)

@@ -18,6 +18,8 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 7. Ambiguïté de design ou de comportement : pose une question courte plutôt que deviner.
 8. Fin d'étape : coche l'étape dans `docs/ROADMAP.md` (+ 1 à 3 lignes : décisions, limites, chiffres), puis rapport de 12 lignes maximum (fait / comment le tester / mesures de perf / limites connues / commit proposé) et stop. Ne fais pas de commit sans que je le demande.
 9. Honnêteté des mesures : rapporte les chiffres réels, y compris les mauvais. Ne dis jamais « testé » pour ce que tu n'as pas exécuté ; dis « non testé » et pourquoi.
+10. Étape 12b : atelier itératif, lire `docs/DA-JOURNAL.md` au début de chaque session.
+11. Après le gel de la DA, `docs/DESIGN.md` (DA officielle v1) prime sur `reference/`.
 
 ## Stack (à confirmer à l'étape 1)
 - Tauri 2 (Rust) + React + TypeScript + Vite. Animation d'interface : Framer Motion (`motion`). État : Zustand. Styles : CSS Modules + variables CSS (pas de bibliothèque d'UI lourde).
