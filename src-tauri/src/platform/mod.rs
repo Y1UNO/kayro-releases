@@ -5,6 +5,7 @@
 pub mod com;
 pub mod icon;
 pub mod shell;
+pub mod theme;
 pub mod window;
 
 /// A failed Win32 call, reduced to its error code.

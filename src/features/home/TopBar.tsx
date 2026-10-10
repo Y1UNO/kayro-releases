@@ -1,4 +1,5 @@
 import { APP_NAME } from "../../app/appName";
+import { Logo } from "../../brand";
 import {
   HandIcon,
   IconButton,
@@ -20,14 +21,17 @@ interface Props {
 const NOOP = () => {};
 
 /**
- * Glass top bar: name, search field (opens the Ctrl+K palette), display modes, voice, hands.
+ * Glass top bar: logo and name, search field (opens the Ctrl+K palette), display modes, voice, hands.
  * Modes, voice and hands are in place but disabled: they arrive in steps 12, and in the voice and
  * hands extensions.
  */
 export function TopBar({ onSearch, onAdd }: Props) {
   return (
     <Surface as="header" radius="29px" className={styles.bar}>
-      <div className={styles.brand}>{APP_NAME}</div>
+      <div className={styles.brand}>
+        <Logo size={30} className={styles.logo} />
+        <span>{APP_NAME}</span>
+      </div>
       <button
         type="button"
         className={styles.search}
