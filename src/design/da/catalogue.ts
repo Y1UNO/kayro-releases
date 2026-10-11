@@ -36,6 +36,8 @@ export const EASES: Readonly<Record<string, string>> = {
   // Round 3 (letters of the opening): leaves fast, settles long.
   vive: "cubic-bezier(0.16, 1, 0.3, 1)",
   ressort: "cubic-bezier(0.34, 1.36, 0.64, 1)",
+  // Round 3b (the category fan turns): slow start, slow end.
+  bascule: "cubic-bezier(0.65, 0, 0.35, 1)",
   lineaire: "linear",
 };
 
@@ -256,6 +258,10 @@ export const CATALOGUE: readonly DaElement[] = [
       range("labelTracking", 0, 0.5, 0.01, 0.32, "em"),
       toggle("underline", true),
       range("underlineW", 40, 400, 5, 220, "px"),
+      // Round 3b: a brighter rule (thickness, glow) and a light that glides along it now and then.
+      range("underlineH", 0.5, 3, 0.1, 1.5, "px"),
+      range("underlineGlow", 0, 1, 0.05, 0.6),
+      range("underlineShine", 0, 20, 0.5, 7, "s"),
       toggle("softLabel", true),
     ],
     css: (v) =>
@@ -266,6 +272,8 @@ export const CATALOGUE: readonly DaElement[] = [
             "--tracking-title": `${n(v, "tracking")}em`,
             "--da-label-tracking": `${n(v, "labelTracking")}em`,
             "--da-underline": v.underline ? px(v, "underlineW") : "0px",
+            "--da-underline-h": px(v, "underlineH"),
+            "--da-underline-glow": String(n(v, "underlineGlow")),
             ...(v.softLabel ? { "--da-label-color": "var(--text-soft)" } : {}),
           }
         : NONE,

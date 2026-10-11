@@ -17,6 +17,9 @@ export interface PillBox {
 export const SPRINGS: Readonly<Record<string, number>> = {
   net: 0,
   leger: 0.05,
+  // Round 3b, unfolding of the category deck: the mock-up's cubic-bezier(.34,1.32,.64,1) passes
+  // its target by 3.4 % (motion.test.ts).
+  liaison: 0.034,
 };
 export const MAX_BOUNCE = 0.08;
 

@@ -81,6 +81,7 @@ export class Choreo {
           if (t >= duration) this.finish(true);
         },
         opts.eco ? ECO_MAX_FPS : FX_MAX_FPS,
+        true, // before the glass engine: it measures what this frame wrote
       );
     });
   }

@@ -28,6 +28,8 @@ const SCREENS: Record<string, { label: string; url: (q: string) => string }> = {
   editeur: { label: "Éditeur de scène", url: (q) => `/dev/scenes?screen=editor&${q}` },
   composants: { label: "Composants", url: (q) => `/dev/catalogue?${q}` },
   ouverture: { label: "Ouverture (rejouable)", url: (q) => `/dev/home?opening=1&${q}` },
+  categories: { label: "Catégories (rejouable)", url: (q) => `/dev/home?fan=1&${q}` },
+  survol: { label: "Catégories (survol)", url: (q) => `/dev/home?fan=1&hover=2&${q}` },
 };
 
 interface Listed {

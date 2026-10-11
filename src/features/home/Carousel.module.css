@@ -12,6 +12,18 @@
   outline-offset: 4px;
 }
 
+/* A category sequence moves the cards from script (src/features/home/fan): no CSS transition. */
+.stage[data-seq] [data-d],
+.stage[data-seq] [data-stage] {
+  transition: none;
+}
+
+/* Edit button and light under the card stay full size outside the deck: away meanwhile. */
+.stage[data-seq] [data-d] [data-edit-app],
+.stage[data-seq] [data-d] [data-glow] {
+  opacity: 0;
+}
+
 /* Beats the global focus ring (tokens.css): the ring is drawn on the selected card instead. */
 .stage:focus-visible {
   outline: none;

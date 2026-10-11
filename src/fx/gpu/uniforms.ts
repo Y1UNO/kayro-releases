@@ -89,6 +89,7 @@ export function bgUniforms(
   k0: number,
   ring: boolean,
   intro: IntroFrame | null = null,
+  stageRing: readonly number[] | null = null,
 ): Uniforms {
   const { W, H } = v;
   // During the opening the home layers wait (`home` 0 → 1 in its hand-off).
@@ -149,7 +150,7 @@ export function bgUniforms(
     uBandT: (t / (num(bands, "period", 70) * 1000)) % 1,
     uLight: light,
     uVig: backdrop?.on !== false ? num(backdrop, "vignette", 0.55) : 0.62,
-    ...liquidRingUniforms(p, t, v, k, ring),
+    ...liquidRingUniforms(p, t, v, k, ring, stageRing),
     ...introUniforms(intro),
   };
 }
@@ -171,18 +172,26 @@ export function liquidRingOn(p: FxParams): boolean {
   return p.liquidRing?.on === true && p.crystalRing?.on === true;
 }
 
-function liquidRingUniforms(p: FxParams, t: number, v: View, k: number, ring: boolean): Uniforms {
+/** `cue` (round 3b, category fan): vertical offset (px), scale, opacity of the ring. */
+function liquidRingUniforms(
+  p: FxParams,
+  t: number,
+  v: View,
+  k: number,
+  ring: boolean,
+  cue: readonly number[] | null,
+): Uniforms {
   const c = p.crystalRing;
   const l = p.liquidRing;
   const on = ring && liquidRingOn(p);
-  const size = num(c, "size", 680);
-  const drop = on ? dropAt(t, num(l, "dripRate", 1.2)) : null;
+  const size = num(c, "size", 680) * (cue?.[1] ?? 1);
+  const drop = on ? dropAt(t, num(l, "dripRate", 3)) : null;
   return {
     uLRing: [
       v.W / 2 + num(c, "offsetX", 0),
-      num(c, "top", -230) + size / 2,
+      num(c, "top", -230) + num(c, "size", 680) / 2 + (cue?.[0] ?? 0),
       size / 2,
-      on ? num(l, "intensity", 0.32) * k : 0,
+      on ? num(l, "intensity", 0.32) * k * (cue?.[2] ?? 1) : 0,
     ],
     uLRing2: [
       num(l, "thickness", 1.2),
@@ -190,7 +199,12 @@ function liquidRingUniforms(p: FxParams, t: number, v: View, k: number, ring: bo
       ringPhase(t, num(l, "speed", 0.5)),
       t / 1000,
     ],
-    uDrip: [drop?.angle ?? 0, drop ? drop.progress : -1, num(l, "dripAmount", 16), 0],
+    uDrip: [
+      drop?.angle ?? 0,
+      drop ? drop.progress : -1,
+      num(l, "dripAmount", 28) * (cue?.[1] ?? 1),
+      num(l, "dripSize", 4),
+    ],
   };
 }
 

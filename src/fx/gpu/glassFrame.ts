@@ -8,6 +8,7 @@ import {
   type GlassKind,
 } from "../../design/glass/glassRegistry";
 import { parseColor } from "../../lib/color";
+import type { GlassPose } from "./cues";
 import type { PosterTextures } from "./posterTextures";
 
 /** Posters drawn by the engine this frame (null = none: off, fallen back, no texture support). */
@@ -66,6 +67,9 @@ function refresh(e: GlassEntry, dark: [number, number, number]): void {
 /**
  * The glass shapes of one frame, measured in the DOM (viewport CSS px) into the shader's uniform
  * arrays. Elements of a kind the engine does not draw (fallback, kind off) keep their CSS look.
+ *
+ * Round 3b: an element with a pose (cues.ts) is drawn from it (rotated, scaled, softened); posed
+ * elements with a stack order come last, back to front, and are never merged (`ns` = merged ones).
  */
 export class GlassFrame {
   readonly R = new Float32Array(MAX_GLASS * 4);
@@ -74,29 +78,43 @@ export class GlassFrame {
   readonly C = new Float32Array(MAX_GLASS * 4);
   /** Per shape: poster texture slot (−1 none), picture aspect (w / h), opacity, inset (px). */
   readonly P = new Float32Array(MAX_GLASS * 4);
+  /** Per shape: cos, sin of its angle, edge softness (px), stack order (0 = merged). */
+  readonly X = new Float32Array(MAX_GLASS * 4);
   n = 0;
+  /** Shapes [0, ns) are merged; [ns, n) are stacked, back to front. */
+  ns = 0;
+  /** Index of the hovered card of the fan (threads, sparks), −1 = none. */
+  hover = -1;
+  private hoverEl: Element | null = null;
   nested = 0;
   /** Selected card whose inside the engine draws (no DOM poster over it): centre, half size. */
   readonly sel = new Float32Array(4);
   hasSel = false;
-  private readonly prev = new Float32Array(MAX_GLASS * 8);
+  private readonly prev = new Float32Array(MAX_GLASS * 12);
   private prevN = -1;
+  private prevHover = -1;
   private readonly prevP = new Float32Array(MAX_GLASS);
   private readonly clips = new Map<HTMLElement, DOMRect>();
+  private readonly stacked: { e: GlassEntry; pose: GlassPose }[] = [];
 
   /** Measures every drawn element; true when a shape moved or changed since the last call. */
   measure(
     drawn: (kind: GlassKind) => boolean,
     tint: (kind: GlassKind) => number,
     posters: PosterPass | null = null,
+    poses: ReadonlyMap<Element, GlassPose> | null = null,
+    hoverEl: Element | null = null,
   ): boolean {
     let dark: [number, number, number] | null = null;
+    this.hoverEl = hoverEl;
+    this.hover = -1;
     this.clips.clear();
-    let n = 0;
-    let nested = 0;
+    this.stacked.length = 0;
+    this.n = 0;
+    this.nested = 0;
     this.hasSel = false;
     for (const e of glassEntries()) {
-      const on = drawn(e.kind) && n < MAX_GLASS;
+      const on = drawn(e.kind) && this.n + this.stacked.length < MAX_GLASS;
       if (!on) {
         if (e.el.dataset.glass) delete e.el.dataset.glass;
         if (e.el.dataset.glassPoster) delete e.el.dataset.glassPoster;
@@ -104,63 +122,94 @@ export class GlassFrame {
       }
       if (e.el.dataset.glass !== "gpu") e.el.dataset.glass = "gpu";
       if (e.dirty) refresh(e, (dark ??= themeTint()));
-      if (e.chain[0]?.visibility === "hidden") continue;
-      const opacity = chainOpacity(e.chain);
-      if (opacity <= 0.005) continue;
-      const r = e.el.getBoundingClientRect();
-      if (r.width < 1 || r.height < 1) continue;
-      const hw = r.width / 2;
-      const hh = r.height / 2;
-      const scale = e.el.offsetWidth > 0 ? r.width / e.el.offsetWidth : 1;
-      const o = n * 4;
-      this.R.set([r.left + hw, r.top + hh, hw, hh], o);
-      this.S.set([radiusPx(e.radius, hw, hh, scale), KIND_INDEX[e.kind], opacity, e.depth], o);
-      this.T.set([e.tint[0], e.tint[1], e.tint[2], tint(e.kind)], o);
-      let clip: DOMRect | undefined;
-      if (e.clip) {
-        clip = this.clips.get(e.clip);
-        if (!clip) this.clips.set(e.clip, (clip = e.clip.getBoundingClientRect()));
-      }
-      if (clip) this.C.set([clip.left, clip.top, clip.right, clip.bottom], o);
-      else this.C.set([-1e5, -1e5, 1e5, 1e5], o);
-      // Carousel cards only (`data-stage`): the grid can show far more cards than texture units.
-      const url =
-        posters && e.kind === "card" && e.el.dataset.stage !== undefined && e.el.dataset.poster;
-      const slot = url ? posters.textures.slotFor(url) : -1;
-      if (slot >= 0) {
-        const pa = posters!;
-        this.P.set([slot, pa.textures.aspect(slot), pa.opacity, pa.inset * scale], o);
-        if (e.el.dataset.glassPoster !== "gpu") e.el.dataset.glassPoster = "gpu";
-      } else {
-        this.P.set([-1, 1, 0, 0], o);
-        if (e.el.dataset.glassPoster) delete e.el.dataset.glassPoster;
-      }
-      if (e.depth) nested++;
-      // Glossy veil (round 2b): on the selected card, unless a DOM poster hides its inside (the
-      // CSS veil of SheenVeil.tsx is drawn above that poster instead).
-      if (
-        e.kind === "card" &&
-        !this.hasSel &&
-        e.el.getAttribute("aria-selected") === "true" &&
-        (!e.el.hasAttribute("data-poster") || e.el.dataset.glassPoster === "gpu")
-      ) {
-        this.sel.set([r.left + hw, r.top + hh, hw, hh]);
-        this.hasSel = true;
-      }
-      n++;
+      const pose = poses?.get(e.el);
+      if (pose && pose.z > 0) this.stacked.push({ e, pose });
+      else this.put(e, tint, posters, pose ?? null);
     }
-    this.n = n;
-    this.nested = nested;
-    let changed = n !== this.prevN;
+    this.ns = this.n;
+    this.stacked.sort((a, b) => a.pose.z - b.pose.z);
+    for (const { e, pose } of this.stacked) this.put(e, tint, posters, pose);
+    const n = this.n;
+    let changed = n !== this.prevN || this.hover !== this.prevHover;
+    this.prevHover = this.hover;
+    const M = MAX_GLASS * 4;
     for (let i = 0; i < n * 4 && !changed; i++) {
-      if (this.R[i] !== this.prev[i] || this.S[i] !== this.prev[MAX_GLASS * 4 + i]) changed = true;
+      if (this.R[i] !== this.prev[i] || this.S[i] !== this.prev[M + i]) changed = true;
+      if (this.X[i] !== this.prev[2 * M + i]) changed = true;
       if (i % 4 === 0 && this.P[i] !== this.prevP[i >> 2]) changed = true;
     }
     this.prev.set(this.R.subarray(0, n * 4), 0);
-    this.prev.set(this.S.subarray(0, n * 4), MAX_GLASS * 4);
+    this.prev.set(this.S.subarray(0, n * 4), M);
+    this.prev.set(this.X.subarray(0, n * 4), 2 * M);
     for (let i = 0; i < n; i++) this.prevP[i] = this.P[i * 4]!;
     this.prevN = n;
     return changed;
+  }
+
+  /** Writes one shape at index `n` (skipped when hidden or empty). */
+  private put(
+    e: GlassEntry,
+    tint: (kind: GlassKind) => number,
+    posters: PosterPass | null,
+    pose: GlassPose | null,
+  ): void {
+    if (e.chain[0]?.visibility === "hidden") return;
+    const opacity = chainOpacity(e.chain);
+    if (opacity <= 0.005) return;
+    let cx: number, cy: number, hw: number, hh: number, radius: number, scale: number;
+    if (pose) {
+      ({ x: cx, y: cy, hw, hh, r: radius } = pose);
+      scale = e.el.offsetWidth > 0 ? (2 * hw) / e.el.offsetWidth : 1;
+    } else {
+      const r = e.el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) return;
+      hw = r.width / 2;
+      hh = r.height / 2;
+      cx = r.left + hw;
+      cy = r.top + hh;
+      scale = e.el.offsetWidth > 0 ? r.width / e.el.offsetWidth : 1;
+      radius = radiusPx(e.radius, hw, hh, scale);
+    }
+    if (hw < 0.5 || hh < 0.5) return;
+    const o = this.n * 4;
+    this.R.set([cx, cy, hw, hh], o);
+    this.S.set([radius, KIND_INDEX[e.kind], opacity, e.depth], o);
+    this.T.set([e.tint[0], e.tint[1], e.tint[2], tint(e.kind)], o);
+    this.X.set(pose ? [Math.cos(pose.a), Math.sin(pose.a), pose.soft, pose.z] : [1, 0, 0, 0], o);
+    let clip: DOMRect | undefined;
+    if (e.clip) {
+      clip = this.clips.get(e.clip);
+      if (!clip) this.clips.set(e.clip, (clip = e.clip.getBoundingClientRect()));
+    }
+    if (clip) this.C.set([clip.left, clip.top, clip.right, clip.bottom], o);
+    else this.C.set([-1e5, -1e5, 1e5, 1e5], o);
+    // Carousel cards only (`data-stage`): the grid can show far more cards than texture units.
+    const url =
+      posters && e.kind === "card" && e.el.dataset.stage !== undefined && e.el.dataset.poster;
+    const slot = url ? posters.textures.slotFor(url) : -1;
+    if (slot >= 0) {
+      const pa = posters!;
+      this.P.set([slot, pa.textures.aspect(slot), pa.opacity, pa.inset * scale], o);
+      if (e.el.dataset.glassPoster !== "gpu") e.el.dataset.glassPoster = "gpu";
+    } else {
+      this.P.set([-1, 1, 0, 0], o);
+      if (e.el.dataset.glassPoster) delete e.el.dataset.glassPoster;
+    }
+    if (e.depth) this.nested++;
+    if (e.el === this.hoverEl) this.hover = this.n;
+    // Glossy veil (round 2b): on the selected card at rest, unless a DOM poster hides its inside
+    // (the CSS veil of SheenVeil.tsx is drawn above that poster instead).
+    if (
+      !pose &&
+      e.kind === "card" &&
+      !this.hasSel &&
+      e.el.getAttribute("aria-selected") === "true" &&
+      (!e.el.hasAttribute("data-poster") || e.el.dataset.glassPoster === "gpu")
+    ) {
+      this.sel.set([cx, cy, hw, hh]);
+      this.hasSel = true;
+    }
+    this.n++;
   }
 
   /** Gives every element its CSS look back (engine off or fallen back). */

@@ -8,6 +8,10 @@
 //   ?posters=1 (a stand-in poster on every card)   ?cycle=ms (clicks the next category tab every ms: watch the glass selection pill slide)
 //   ?opening=1 (the opening above the home screen; `replay` from the workshop)   ?seek=ms (one moment of it, still)
 //   ?loop=ms (plays the opening again every ms)   ?bench=transition (frame times, also during the sequences only)
+//   ?fan=1 (round 3b: start on the category fan; `replay` from the workshop plays the link again)
+//   ?seq=link|tab|back&seek=ms (one moment of a category sequence, still)
+//   ?loop=ms&seq=link|tab|back (that sequence again every ms, for the bench; link starts on the fan)
+//   ?fan=1&hover=i (card i of the fan hovered: lift, threads, sparks)
 import { useEffect, useRef, useState } from "react";
 import { QUALITIES, ThemeProvider, applyQuality } from "../design";
 import { Atmosphere } from "../fx";
@@ -28,6 +32,69 @@ const DEV_POSTERS = ["140406", "140411", "140423"].map(
   (t) => `/reference/inspirations/Capture d%27%C3%A9cran 2026-10-11 ${t}.png`,
 );
 import { ACTIVE_THEME_ID } from "../design/da";
+import type { CategoryId } from "../features/home/categories";
+
+/** The category journey, as exposed by useCategoryLink.ts in development builds. */
+interface LinkDev {
+  pick: (cat: CategoryId, seek?: number) => void;
+  tab: (cat: CategoryId, seek?: number) => void;
+  back: (seek?: number) => void;
+  mode: () => "fan" | "home";
+  fan: () => void;
+  home: () => void;
+  hover: (i: number) => void;
+}
+const linkDev = () => (window as unknown as { __categoryLink?: LinkDev }).__categoryLink;
+const CATS: CategoryId[] = ["jeux", "stream", "creativite", "logiciels", "autres"];
+
+/** Category sequences on demand (round 3b): still moments, loops for the bench, replay. */
+function useCategoryDev(params: URLSearchParams): void {
+  useEffect(() => {
+    const seq = params.get("seq");
+    const seek = params.has("seek") ? Number(params.get("seek")) : undefined;
+    const loop = Number(params.get("loop"));
+    const timers: number[] = [];
+    let n = 0;
+    const step = () => {
+      const l = linkDev();
+      if (!l) return;
+      const cat = CATS[n++ % CATS.length]!;
+      if (seq === "tab") l.tab(CATS[n % CATS.length]!);
+      else if (seq === "back") {
+        if (l.mode() === "fan") l.home();
+        else l.back();
+      } else if (l.mode() === "fan") l.pick(cat);
+      else l.fan();
+    };
+    // ?hover=i: card i of the fan stays hovered (threads, sparks; bench and captures).
+    const hover = params.has("hover") ? Number(params.get("hover")) : -1;
+    if (hover >= 0) timers.push(window.setTimeout(() => linkDev()?.hover(hover), 900));
+    if (seq && seek !== undefined) {
+      timers.push(
+        window.setTimeout(() => {
+          const l = linkDev();
+          if (seq === "link") l?.pick("jeux", seek);
+          else if (seq === "tab") l?.tab("stream", seek);
+          else l?.back(seek);
+        }, 800),
+      );
+    } else if (loop > 0 && (params.has("fan") || seq)) {
+      timers.push(window.setInterval(step, loop));
+    }
+    const replay = () => {
+      const l = linkDev();
+      if (!l) return;
+      l.fan();
+      timers.push(window.setTimeout(() => l.pick(CATS[n++ % CATS.length]!), 600));
+    };
+    if (params.has("fan")) window.addEventListener(REPLAY_EVENT, replay);
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener(REPLAY_EVENT, replay);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
 
 const MOCK: Record<string, string[]> = {
   jeux: ["Riot Client", "Minecraft", "Steam", "Epic Games", "Battle.net"],
@@ -75,7 +142,8 @@ export default function HomeDev() {
   const [bench, setBench] = useState<BenchResult | null>(null);
   const [opening, setOpening] = useState({ on: params.has("opening"), run: 0 });
   const under = useRef<HTMLDivElement>(null);
-  const seek = params.has("seek") ? Number(params.get("seek")) : null;
+  const seek = params.has("seek") && params.has("opening") ? Number(params.get("seek")) : null;
+  useCategoryDev(params);
   const [ready] = useState(() => {
     const apps = seed(params);
     hubStore.setState({
@@ -140,7 +208,7 @@ export default function HomeDev() {
     if (!params.has("opening")) return;
     const replay = () => setOpening((o) => ({ on: true, run: o.run + 1 }));
     window.addEventListener(REPLAY_EVENT, replay);
-    const loop = Number(params.get("loop"));
+    const loop = params.has("fan") ? 0 : Number(params.get("loop"));
     const id = loop > 0 ? window.setInterval(replay, loop) : 0;
     return () => {
       window.removeEventListener(REPLAY_EVENT, replay);
@@ -173,7 +241,11 @@ export default function HomeDev() {
     <ThemeProvider initialThemeId={themeId}>
       <Atmosphere layers={benchLayers(params)} />
       <div ref={under} style={{ height: "100%" }}>
-        <HomeScreen key={params.get("view")} onOpenScenes={() => {}} />
+        <HomeScreen
+          key={params.get("view")}
+          onOpenScenes={() => {}}
+          startOnFan={params.has("fan") || params.get("seq") === "link"}
+        />
       </div>
       {opening.on && (
         <Opening

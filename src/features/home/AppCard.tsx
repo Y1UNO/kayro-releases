@@ -1,7 +1,8 @@
-import { useCallback, useRef, type Ref } from "react";
+import { useCallback, useLayoutEffect, useRef, type Ref } from "react";
 import type { AppEntry } from "../../ipc/bindings";
 import { t } from "../../i18n";
 import { EditIcon, useGlass } from "../../design";
+import { markGlassDirtyFor } from "../../design/glass/glassRegistry";
 import { posterUrl } from "./art";
 import { monogram, shadeOf } from "./cardLook";
 import { useDa } from "../../design/da";
@@ -53,6 +54,10 @@ export function AppCard({
 }: Props) {
   const cardRef = useRef<HTMLButtonElement | null>(null);
   useGlass(cardRef, "card");
+  // The same card can show another app (tab change, round 3b): its tint is read again.
+  useLayoutEffect(() => {
+    if (cardRef.current) markGlassDirtyFor(cardRef.current);
+  }, [app.id]);
   const setCard = useCallback(
     (el: HTMLButtonElement | null) => {
       cardRef.current = el;
@@ -76,10 +81,11 @@ export function AppCard({
       className={stage ? styles.slot : styles.cell}
       style={vars}
       data-app-id={app.id}
+      data-d={stage ? d : undefined}
       data-active={active || undefined}
       data-hidden={hidden ? "" : undefined}
     >
-      {stage && <span className={styles.glow} aria-hidden="true" />}
+      {stage && <span className={styles.glow} data-glow="" aria-hidden="true" />}
       <button
         ref={setCard}
         id={domId}
@@ -111,10 +117,17 @@ export function AppCard({
         {stage && <span className={styles.veil} aria-hidden="true" />}
         {!poster && icon && (
           // Decorative like the poster: the button's label names the app.
-          <img className={styles.icon} src={icon} alt={""} draggable={false} decoding="async" />
+          <img
+            className={styles.icon}
+            data-face=""
+            src={icon}
+            alt={""}
+            draggable={false}
+            decoding="async"
+          />
         )}
         {!poster && !icon && (
-          <span className={styles.letter} aria-hidden="true">
+          <span className={styles.letter} data-face="" aria-hidden="true">
             {monogram(app.name)}
           </span>
         )}
@@ -122,7 +135,9 @@ export function AppCard({
         {shine && active && stage && <Shine />}
         {sheen && active && stage && <SheenVeil duration={Number(sheen.duration) || 1800} />}
         {running && <span className={styles.running} aria-hidden="true" />}
-        <span className={styles.plate}>{app.name}</span>
+        <span className={styles.plate} data-face="">
+          {app.name}
+        </span>
       </button>
       {/* Mouse shortcut; the keyboard has F2 and the context-menu key (see HomeScreen). */}
       <button

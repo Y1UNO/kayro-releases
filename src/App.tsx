@@ -64,7 +64,7 @@ export function App() {
         className={opening.hidden ? styles.under : styles.screens}
         style={opening.hidden && !opening.play ? { opacity: 0 } : undefined}
       >
-        {screen.name === "home" && <HomeScreen onOpenScenes={toScenes} />}
+        {screen.name === "home" && <HomeScreen onOpenScenes={toScenes} startOnFan={opening.fan} />}
         {screen.name === "scenes" && (
           <ScenesScreen
             onBack={() => setScreen({ name: "home" })}

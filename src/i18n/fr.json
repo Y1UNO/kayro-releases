@@ -81,7 +81,17 @@
     },
     "settings": {
       "open": "Affichage et raccourci"
-    }
+    },
+    "fan": {
+      "label": "Choisis un univers",
+      "title": "Que veux-tu lancer ?",
+      "open": "Ouvrir {name}",
+      "appsOne": "1 app",
+      "appsMany": "{count} apps",
+      "appsNone": "Aucune app",
+      "list": "Catégories"
+    },
+    "allCategories": "Toutes les catégories"
   },
   "errors": {
     "validation": "Ces informations ne sont pas valides.",

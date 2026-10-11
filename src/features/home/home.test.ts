@@ -103,17 +103,29 @@ describe("categories", () => {
 });
 
 describe("home state", () => {
+  it("opens each category on its third app (5 cards shown), fewer apps: the last one", () => {
+    const s = initialHomeState("jeux", {
+      jeux: 12,
+      stream: 5,
+      creativite: 2,
+      logiciels: 1,
+      autres: 0,
+    });
+    expect(s.focus).toEqual({ jeux: 2, stream: 2, creativite: 1, logiciels: 0, autres: 0 });
+    expect(initialHomeState().focus.jeux).toBe(2);
+  });
+
   it("remembers the selection of each category", () => {
     let s = initialHomeState();
     s = homeReducer(s, { type: "moveFocus", delta: 2, count: 5 });
     s = homeReducer(s, { type: "setCategory", category: "stream" });
-    expect(s.focus.stream).toBe(0);
+    expect(s.focus.stream).toBe(2);
     s = homeReducer(s, { type: "setCategory", category: "jeux" });
-    expect(s.focus.jeux).toBe(2);
+    expect(s.focus.jeux).toBe(4);
   });
 
   it("stops at both ends instead of wrapping", () => {
-    let s = initialHomeState();
+    let s = homeReducer(initialHomeState(), { type: "setFocus", index: 0, count: 3 });
     s = homeReducer(s, { type: "moveFocus", delta: -1, count: 3 });
     expect(s.focus.jeux).toBe(0);
     s = homeReducer(s, { type: "moveFocus", delta: 10, count: 3 });
@@ -125,7 +137,7 @@ describe("home state", () => {
   });
 
   it("returns the same state when nothing changes (no useless render)", () => {
-    const s = initialHomeState();
+    const s = homeReducer(initialHomeState(), { type: "setFocus", index: 0, count: 4 });
     expect(homeReducer(s, { type: "setCategory", category: "jeux" })).toBe(s);
     expect(homeReducer(s, { type: "moveFocus", delta: -1, count: 4 })).toBe(s);
     expect(homeReducer(s, { type: "setView", view: "carousel" })).toBe(s);

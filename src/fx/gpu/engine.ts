@@ -5,10 +5,19 @@ import type { FxLayer, FxPalette, FxParams } from "../FxLayer";
 import { frameLoop, type FrameLoop } from "../loop";
 import { prefersReducedMotion } from "../motionPref";
 import { BudgetWatch } from "./budgetWatch";
-import { cueVersion, introCue, sameIntro, type IntroFrame } from "./cues";
+import {
+  cueVersion,
+  introCue,
+  sameIntro,
+  sameRing,
+  stageCue,
+  type IntroFrame,
+  type StageFrame,
+} from "./cues";
 import { rgb01 } from "./gl";
-import { GlassFrame, type PosterPass } from "./glassFrame";
-import { MAX_POSTERS, PosterTextures } from "./posterTextures";
+import { GlassFrame } from "./glassFrame";
+import { posterPassOf, shapeUniforms } from "./glassPass";
+import { PosterTextures } from "./posterTextures";
 import { PointerLight } from "./pointer";
 import { Renderer } from "./renderer";
 import { Scene } from "./scene";
@@ -21,7 +30,6 @@ import {
   lightOf,
   liquidRingOn,
   parallaxPx,
-  posterK,
   sheenPos,
   sheenUniforms,
   ringUniforms,
@@ -67,6 +75,7 @@ export class GlassEngine implements FxLayer {
   private reduced = false;
   private sheen = -1;
   private intro: IntroFrame | null = null;
+  private stage: StageFrame | null = null;
   private cueSeen = -1;
   private bg: number[][] = [];
   private view: View = { W: 1, H: 1, w: 1, h: 1 };
@@ -280,27 +289,6 @@ export class GlassEngine implements FxLayer {
     kindOn(this.params, kind) && this.watch.allows(kind);
   private tint = (kind: GlassKind): number => kindTint(this.params, kind);
 
-  /** Posters drawn as textures this frame, or null (element off, fallen back on the ladder). */
-  private posterPass(): PosterPass | null {
-    const p = this.params;
-    const t = this.posters;
-    if (!t || p.posterGlass?.on !== true || !this.watch.allows("poster")) {
-      if (t && t.count > 0) {
-        t.limit = 0; // free them all now
-        t.end();
-      }
-      return null;
-    }
-    const c = p.glassCards;
-    const max = p.posterGlass.maxTextures;
-    t.limit = Math.min(MAX_POSTERS, typeof max === "number" ? Math.round(max) : MAX_POSTERS);
-    return {
-      textures: t,
-      opacity: typeof c?.posterOpacity === "number" ? c.posterOpacity : 1,
-      inset: typeof c?.posterInset === "number" ? c.posterInset : 3,
-    };
-  }
-
   private tick(dt: number, now: number): void {
     const rung = this.watch.push(dt);
     if (rung) {
@@ -312,11 +300,17 @@ export class GlassEngine implements FxLayer {
     }
     this.scene.step(dt);
     const fading = this.pointer.step(dt);
-    const pass = this.posterPass();
+    const pass = posterPassOf(this.params, this.posters, this.watch);
     pass?.textures.begin();
-    let moved = this.frame.measure(this.drawn, this.tint, pass);
+    // The category fan / deck gives the poses of its cards (round 3b).
+    const sc = stageCue();
+    const stage = sc ? sc(now) : null;
+    const poses = stage?.poses ?? null;
+    const hoverEl = stage?.hover?.el ?? null;
+    let moved = this.frame.measure(this.drawn, this.tint, pass, poses, hoverEl);
     // A poster just became a texture: draw (the DOM picture was hidden in this same frame).
-    if (this.posters?.end()) moved = this.frame.measure(this.drawn, this.tint, pass) || true;
+    if (this.posters?.end())
+      moved = this.frame.measure(this.drawn, this.tint, pass, poses, hoverEl) || true;
     const slot = Math.floor(now / (1000 / this.ambientFps));
     // The glossy veil asks for frames only while it glides (and once more when it stops).
     const sheen = this.frame.hasSel ? sheenPos(this.params, now, this.reduced) : -1;
@@ -326,9 +320,13 @@ export class GlassEngine implements FxLayer {
     // A sequence of the interface (the opening) asks for every frame while its picture changes.
     const cue = introCue();
     const intro = cue ? cue(now) : null;
-    const cued = cueVersion() !== this.cueSeen || !sameIntro(intro, this.intro);
+    const cued =
+      cueVersion() !== this.cueSeen ||
+      !sameIntro(intro, this.intro) ||
+      !sameRing(stage, this.stage);
     this.cueSeen = cueVersion();
     this.intro = intro;
+    this.stage = stage;
     if (!(moved || ambient || fading || cued || this.pointer.moved || this.dirty)) return;
     this.ambientSlot = slot;
     this.pointer.moved = false;
@@ -357,6 +355,7 @@ export class GlassEngine implements FxLayer {
       this.intensity,
       ringAllowed,
       intro,
+      this.stage?.ring ?? null,
     );
     // Lit particles receive the same lights as the background (moon, liquid ring, cursor).
     const par = [-this.pointer.ox * this.parallax, -this.pointer.oy * this.parallax * 0.6];
@@ -375,14 +374,7 @@ export class GlassEngine implements FxLayer {
       {
         ...glassUniforms(p, light, palette, v),
         ...sheenUniforms(p, this.sheen, f.hasSel ? f.sel : null, this.reduced),
-        uN: f.n,
-        uNested: f.nested > 0 ? 1 : 0,
-        uR: f.R,
-        uS: f.S,
-        uT: f.T,
-        uC: f.C,
-        uPo: f.P,
-        uPosterK: posterK(p),
+        ...shapeUniforms(f, p, this.stage),
       },
       this.posters ? () => this.posters!.bind() : null,
     );

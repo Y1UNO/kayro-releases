@@ -69,6 +69,11 @@ export function markGlassDirty(): void {
   for (const e of entries) e.dirty = true;
 }
 
+/** One element's static info must be read again (it now shows something else). */
+export function markGlassDirtyFor(el: HTMLElement): void {
+  for (const e of entries) if (e.el === el) e.dirty = true;
+}
+
 /** Declares `ref`'s element as glass of `kind` (`undefined` = not glass). */
 export function useGlass(ref: RefObject<HTMLElement | null>, kind: GlassKind | undefined): void {
   useLayoutEffect(() => {

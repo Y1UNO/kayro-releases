@@ -142,8 +142,10 @@ export const GLASS_ELEMENTS: readonly DaElement[] = [
       range("blur", 0, 30, 0.5, 9, "px"),
       range("intensity", 0, 1, 0.01, 0.32),
       range("speed", 0, 3, 0.05, 0.5, "tr/min"),
-      range("dripRate", 0, 6, 0.1, 1.2, "/min"),
-      range("dripAmount", 0, 60, 1, 16, "px"),
+      // Drops (round 3b: they really come off): how often, how far they float, their size.
+      range("dripRate", 0, 6, 0.1, 3, "/min"),
+      range("dripAmount", 0, 60, 1, 28, "px"),
+      range("dripSize", 1, 10, 0.5, 4, "px"),
     ],
   },
   {

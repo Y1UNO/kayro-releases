@@ -54,7 +54,7 @@ uniform vec4 uLight;    // cursor x, y, intensity (fade included), radius
 uniform float uVig;     // vignette strength
 uniform vec4 uLRing;    // liquid ring: centre x, y, radius, intensity (0 = off)
 uniform vec4 uLRing2;   // thickness, glow width (px), highlight phase (rad), time (s)
-uniform vec4 uDrip;     // drop: angle (rad), progress 0–1 (< 0: none), reach (px), -
+uniform vec4 uDrip;     // drop: angle (rad), progress 0–1 (< 0: none), distance it floats (px), radius (px)
 // Opening (round 3, src/fx/gpu/cues.ts): background fade-in, a halo and a ring drawn by hand.
 uniform float uIntro;   // background fade 0–1 (1 = no opening)
 uniform vec4 uIHalo;    // halo: centre x, y, radius x (y = 0.794 x), opacity
@@ -99,22 +99,31 @@ vec3 liquidRing(vec2 p) {
   vec2 d = p - uLRing.xy;
   float r = length(d);
   float th = uLRing2.x;
-  float reach = max(uDrip.z, 0.0) + uLRing2.y * 7.0 + 12.0;
+  float reach = max(uDrip.z, 0.0) + uDrip.w * 3.0 + uLRing2.y * 7.0 + 12.0;
   if (abs(r - uLRing.z) > reach) return vec3(0.0);
   float a = atan(d.y, d.x);
   float t = uLRing2.w;
   float wob = 0.7 * sin(a * 3.0 + t * 0.21) + 0.45 * sin(a * 5.0 - t * 0.13 + 1.7);
   float sd = abs(r - uLRing.z - wob) - th * 0.5;
   if (uDrip.y >= 0.0) {
+    // A drop (round 3b): a bulge swells (0–.25), stretches out until its neck breaks (.25–.42),
+    // floats free a little further then comes back (.42–.72), touches and melts back into the
+    // ring (.72–.88), which settles. Smooth union: wide while attached, none once detached.
     float pr = uDrip.y;
-    float swell = smoothstep(0.0, 0.45, pr) * (1.0 - smoothstep(0.62, 1.0, pr));
-    float apart = smoothstep(0.32, 0.52, pr) * (1.0 - smoothstep(0.55, 0.78, pr));
+    float go = smoothstep(0.0, 0.25, pr) * 0.3 + smoothstep(0.18, 0.55, pr) * 0.7;
+    float back = smoothstep(0.55, 0.86, pr);
+    float dist = uDrip.z * go * (1.0 - back);
+    float size = uDrip.w * smoothstep(0.0, 0.22, pr) * (1.0 - smoothstep(0.8, 1.0, pr));
+    float free = smoothstep(0.3, 0.42, pr) * (1.0 - smoothstep(0.64, 0.76, pr));
     vec2 dir = vec2(cos(uDrip.x), sin(uDrip.x));
-    vec2 q = p - (uLRing.xy + dir * (uLRing.z + uDrip.z * swell));
-    vec2 qr = vec2(dot(q, dir), dot(q, vec2(-dir.y, dir.x)));
-    float stretch = 1.0 + 0.9 * swell * (1.0 - apart);
-    float blob = length(qr / vec2(stretch, 1.0)) - (th * 0.5 + uDrip.z * 0.15 * swell);
-    float k = mix(uDrip.z * 0.55, max(uDrip.z * 0.06, 0.6), apart) + 0.001;
+    vec2 side = vec2(-dir.y, dir.x);
+    // Floating free, it drifts a little sideways, like a droplet in water.
+    vec2 c = uLRing.xy + dir * (uLRing.z + dist) + side * sin(pr * 9.0) * 2.5 * free;
+    vec2 q = p - c;
+    vec2 qr = vec2(dot(q, dir), dot(q, side));
+    float stretch = 1.0 + 0.7 * smoothstep(0.12, 0.36, pr) * (1.0 - free);
+    float blob = length(qr / vec2(stretch, 1.0)) - max(size, 0.01);
+    float k = mix(size * 2.4 + 2.0, 0.001, free);
     sd = smin(sd, blob, k);
   }
   float o = max(sd, 0.0);

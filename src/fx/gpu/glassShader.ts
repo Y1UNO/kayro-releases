@@ -6,6 +6,8 @@
 // following the slope of a round bevel (strong at the edge, neutral in the middle), one offset
 // per colour channel (fine fringes), a little frost (mip levels), the tint, a crisp rim line,
 // sharp speculars (fixed key light + the cursor light) and a soft shadow outside.
+// Round 3b: a shape may be rotated (uX: cos, sin) and softened; stacked shapes (cards of the fan
+// and of the deck) come last, back to front, each drawn over the ones before it, never merged.
 
 import { MAX_POSTERS } from "./posterTextures";
 
@@ -41,6 +43,9 @@ export const GLASS_UNIFORMS = [
   "uSheenBox",
   "uPo",
   "uPosterK",
+  "uX",
+  "uNS",
+  "uHov",
   ...Array.from({ length: MAX_POSTERS }, (_, i) => `uP${i}`),
 ] as const;
 
@@ -70,6 +75,9 @@ uniform vec4 uSheen;       // glossy veil: position 0–1 (< 0: none), intensity
 uniform vec4 uSheenBox;    // selected card: centre x, y, half width, half height
 uniform vec4 uPo[MAXS];    // poster per shape: texture slot (< 0: none), picture w / h, opacity, inset
 uniform vec2 uPosterK;     // poster: refraction (× the rim's), reflection on the rim
+uniform vec4 uX[MAXS];     // per shape: cos, sin of its angle, edge softness (px), stack order
+uniform int uNS;           // shapes [0, uNS) are merged; [uNS, uN) are stacked, back to front
+uniform vec2 uHov;         // hovered card of the fan: shape index (< 0 none), level (deeper shadow)
 ${POSTER_SAMPLERS}
 
 // Samplers cannot be indexed by a variable in GLSL ES 3.00: one constant branch per texture unit.
@@ -108,18 +116,23 @@ vec3 sdg(vec2 p, vec2 b, float r) {
   return vec3(min(g, 0.0) + l - r, s * n);
 }
 
+// Shape space of shape i (rotated with it) and back.
+vec2 rotL(int i, vec2 v) { vec4 x = uX[i]; return vec2(x.x * v.x + x.y * v.y, -x.y * v.x + x.x * v.y); }
+vec2 rotW(int i, vec2 v) { vec4 x = uX[i]; return vec2(x.x * v.x - x.y * v.y, x.y * v.x + x.x * v.y); }
+
 void field(vec2 p, float depth, out float D, out vec2 N, out vec4 KA, out vec4 KB, out vec4 T, out float A, out vec2 O, out int B) {
   D = 1e5; N = vec2(0.0, 1.0); KA = vec4(0.0); KB = vec4(0.0); T = vec4(0.0); A = 0.0; O = p; B = -1;
   float best = 1e5;
   float k = max(uFusion, 0.001);
   for (int i = 0; i < MAXS; i++) {
-    if (i >= uN) break;
+    if (i >= uNS) break;
     vec4 s = uS[i];
     if (abs(s.w - depth) > 0.5) continue;
     vec4 c = uC[i];
     if (p.x < c.x || p.y < c.y || p.x > c.z || p.y > c.w) continue;
     vec4 r = uR[i];
-    vec3 g = sdg(p - r.xy, r.zw, s.x);
+    vec3 g = sdg(rotL(i, p - r.xy), r.zw, s.x);
+    g.yz = rotW(i, g.yz);
     float h = clamp(0.5 + 0.5 * (D - g.x) / k, 0.0, 1.0);
     D = mix(D, g.x, h) - k * h * (1.0 - h);
     N = mix(N, g.yz, h);
@@ -139,14 +152,17 @@ vec3 bgAt(vec2 p, float lod) {
   return textureLod(uTex, vec2(p.x / uView.x, 1.0 - p.y / uView.y), lod).rgb;
 }
 
-vec3 layer(vec3 under, vec2 p, float depth, float px) {
-  float D; vec2 N; vec4 KA; vec4 KB; vec4 T; float A; vec2 O; int B;
-  field(p, depth, D, N, KA, KB, T, A, O, B);
-  if (A <= 0.0 || D > 48.0) return under;
-  // Soft shadow, a little lower than the shape.
-  float Ds = max(D - 6.0 * N.y, 0.0);
-  vec3 c0 = under * (1.0 - KB.z * A * 0.5 * exp(-Ds / 16.0) * step(0.0, D));
-  float cover = clamp(0.5 - D / px, 0.0, 1.0) * A;
+vec3 shade(vec3 under, vec2 p, float depth, float px, float D, vec2 N, vec4 KA, vec4 KB, vec4 T, float A, vec2 O, int B, float soft) {
+  // Hovered card of the fan: a deeper, wider shadow (its threads and sparks are DOM).
+  float hv = (B >= 0 && B == int(uHov.x + 0.5)) ? clamp(uHov.y, 0.0, 1.0) : 0.0;
+  float reach = 48.0 + soft * 2.0 + 40.0 * hv;
+  if (A <= 0.0 || D > reach) return under;
+  // Soft shadow, a little lower than the shape, faded out to zero before the reach (no edge).
+  float Ds = max(D - (6.0 + 6.0 * hv) * N.y, 0.0);
+  float sh = KB.z * A * 0.5 * (1.0 + 0.4 * hv) * exp(-Ds / (16.0 + soft + 10.0 * hv));
+  sh *= 1.0 - smoothstep(reach * 0.55, reach, D);
+  vec3 c0 = under * (1.0 - sh * step(0.0, D));
+  float cover = clamp(0.5 - D / (px + soft * 2.0), 0.0, 1.0) * A;
   if (cover <= 0.0) return c0;
 
   float x = max(-D, 0.0);
@@ -159,7 +175,7 @@ vec3 layer(vec3 under, vec2 p, float depth, float px) {
   float gr = uMatter.x > 0.0 ? (grain(p - O) - 0.5) * uMatter.x * smoothstep(0.0, 0.25, u) : 0.0;
   off += vec2(gr, -gr) * 2.0;
   float disp = KA.z * 0.35;
-  float lod = KA.w * 4.0 + bend * 0.6;
+  float lod = KA.w * 4.0 + bend * 0.6 + soft * 0.3;
   vec3 col = vec3(
     bgAt(p + off * (1.0 + disp), lod).r,
     bgAt(p + off, lod).g,
@@ -173,10 +189,10 @@ vec3 layer(vec3 under, vec2 p, float depth, float px) {
     vec4 r = uR[B];
     int sl = int(P.x + 0.5);
     vec2 hb = max(r.zw - P.w, vec2(1.0));
-    vec2 q = p - r.xy;
+    vec2 q = rotL(B, p - r.xy);
     vec3 gp = sdg(q, hb, max(uS[B].x - P.w, 0.0));
-    vec2 o = off * uPosterK.x;
-    float lodP = bend * 2.0;
+    vec2 o = rotL(B, off) * uPosterK.x;
+    float lodP = bend * 2.0 + soft * 0.3;
     vec3 pc = vec3(
       posterTex(sl, coverUv(q + o * (1.0 + disp), hb, P.y), lodP).r,
       posterTex(sl, coverUv(q + o, hb, P.y), lodP).g,
@@ -187,7 +203,7 @@ vec3 layer(vec3 under, vec2 p, float depth, float px) {
       vec3 rc = posterTex(sl, coverUv(qm, hb, P.y), 3.0);
       col = mix(col, rc, uPosterK.y * 0.6 * exp(-gp.x / 6.0));
     }
-    col = mix(col, pc, clamp(0.5 - gp.x / px, 0.0, 1.0) * P.z);
+    col = mix(col, pc, clamp(0.5 - gp.x / (px + soft * 2.0), 0.0, 1.0) * P.z);
   }
 
   vec3 n3 = normalize(vec3(N * slope * KB.x * 0.9, 1.0));
@@ -226,12 +242,38 @@ vec3 layer(vec3 under, vec2 p, float depth, float px) {
   return mix(c0, min(col, vec3(1.0)), cover);
 }
 
+vec3 layer(vec3 under, vec2 p, float depth, float px) {
+  float D; vec2 N; vec4 KA; vec4 KB; vec4 T; float A; vec2 O; int B;
+  field(p, depth, D, N, KA, KB, T, A, O, B);
+  return shade(under, p, depth, px, D, N, KA, KB, T, A, O, B, 0.0);
+}
+
+// Stacked shapes, back to front: each one over what is already drawn (its shadow included).
+vec3 stacked(vec3 col, vec2 p, float px) {
+  for (int i = 0; i < MAXS; i++) {
+    if (i >= uN) break;
+    if (i < uNS) continue;
+    vec4 c = uC[i];
+    if (p.x < c.x || p.y < c.y || p.x > c.z || p.y > c.w) continue;
+    vec4 r = uR[i];
+    vec4 s = uS[i];
+    float soft = uX[i].z;
+    vec3 g = sdg(rotL(i, p - r.xy), r.zw, s.x);
+    float hvi = i == int(uHov.x + 0.5) ? clamp(uHov.y, 0.0, 1.0) : 0.0;
+    if (g.x > 48.0 + soft * 2.0 + 40.0 * hvi) continue;
+    int kind = int(s.y + 0.5);
+    col = shade(col, p, 0.0, px, g.x, rotW(i, g.yz), uKA[kind], uKB[kind], uT[i], s.z, r.xy, i, soft);
+  }
+  return col;
+}
+
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) * uView / uRes;
   float px = uView.x / uRes.x;
   vec3 col = texture(uTex, gl_FragCoord.xy / uRes).rgb;
   if (uN > 0) {
     col = layer(col, p, 0.0, px);
+    if (uN > uNS) col = stacked(col, p, px);
     if (uNested > 0) col = layer(col, p, 1.0, px);
   }
   outColor = vec4(col, 1.0);

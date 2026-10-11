@@ -42,12 +42,43 @@
   transition: font-size var(--dur-card) var(--ease);
 }
 
-/* Thin gradient rule under the title (art direction `categoryTitle.underline`; 0 px = none). */
+/* Gradient rule under the title (art direction `categoryTitle.underline`; 0 px = none): brighter
+   in the middle, a soft glow of colour A (round 3b), a light gliding along it now and then. */
 .underline {
+  position: relative;
   width: var(--da-underline, 0px);
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--grad-a), var(--grad-b), transparent);
+  height: var(--da-underline-h, 1px);
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--grad-a) 22%,
+    color-mix(in srgb, var(--grad-a), #fff 45%) 50%,
+    var(--grad-b) 78%,
+    transparent
+  );
+  box-shadow: 0 0 calc(10px * var(--da-underline-glow, 0))
+    color-mix(in srgb, var(--grad-a) calc(var(--da-underline-glow, 0) * 100%), transparent);
   transition: width var(--dur-card) var(--ease);
+}
+
+.underlineClip {
+  position: absolute;
+  inset: -2px 0;
+  overflow: hidden;
+  border-radius: 2px;
+  mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+}
+
+/* The light: a short white stroke, moved by a one-shot Web Animation (transform only). */
+.underlineShine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 26%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  transform: translateX(-110%);
 }
 
 .block[data-compact] .box {

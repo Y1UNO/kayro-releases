@@ -59,3 +59,67 @@ export function sameIntro(a: IntroFrame | null, b: IntroFrame | null): boolean {
     a.draw[2] === b.draw[2]
   );
 }
+
+/**
+ * A glass shape whose pose a sequence knows (round 3b: cards of the category fan, apps of the
+ * deck). The engine draws it from this pose instead of measuring the element: a rotated element's
+ * `getBoundingClientRect` is its bounding box, not its shape. Viewport CSS px, angle in radians
+ * (clockwise, like CSS `rotate`).
+ */
+export interface GlassPose {
+  x: number;
+  y: number;
+  hw: number;
+  hh: number;
+  /** Corner radius (px, already scaled). */
+  r: number;
+  a: number;
+  /** Edge softness (px): a card leaving the fan blurs out without any CSS filter. */
+  soft: number;
+  /** Stack order (≥ 1, back to front): stacked cards overlap without merging. 0 = merged as usual. */
+  z: number;
+}
+
+/**
+ * The hovered card of the fan (round 3b): the engine deepens its shadow. Its light threads and
+ * sparks are DOM, above the cards: the engine draws under the DOM, so where cards overlap the
+ * neighbour's picture would hide anything drawn on the hovered card's rim.
+ */
+export interface HoverCue {
+  el: Element;
+  /** Hover level 0–1. */
+  h: number;
+}
+
+/** One moment of the home screen's category sequences, as the engine draws it. */
+export interface StageFrame {
+  poses: ReadonlyMap<Element, GlassPose>;
+  /** Home liquid ring: vertical offset (px), scale, opacity. */
+  ring: readonly [number, number, number];
+  hover?: HoverCue | null;
+}
+
+export type StageSampler = (now: number) => StageFrame | null;
+
+let stage: StageSampler | null = null;
+
+/** The category fan / deck registers its sampler while it is on screen (null when it leaves). */
+export function setStageCue(s: StageSampler | null): void {
+  stage = s;
+  version++;
+}
+
+export function stageCue(): StageSampler | null {
+  return stage;
+}
+
+/** Same ring and hover cue (the poses are compared by the glass frame itself). */
+export function sameRing(a: StageFrame | null, b: StageFrame | null): boolean {
+  const x = a?.ring;
+  const y = b?.ring;
+  if (!x || !y) return x === y;
+  const ha = a?.hover ?? null;
+  const hb = b?.hover ?? null;
+  const sameHover = ha === hb || (ha !== null && hb !== null && ha.el === hb.el && ha.h === hb.h);
+  return x[0] === y[0] && x[1] === y[1] && x[2] === y[2] && sameHover;
+}

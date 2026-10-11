@@ -1,6 +1,7 @@
 import { APP_NAME } from "../../app/appName";
 import { Logo } from "../../brand";
 import {
+  ChevronLeftIcon,
   HandIcon,
   IconButton,
   MicIcon,
@@ -20,6 +21,12 @@ interface Props {
   onSearch: () => void;
   onAdd: () => void;
   onSettings: () => void;
+  /** "All categories": back to the category fan (round 3b). */
+  onAllCategories: () => void;
+  /** False on the fan itself: the button is faded out by the sequence and not reachable. */
+  allCategories: boolean;
+  /** The button, faded by the category sequences (linkDirector.ts). */
+  backRef: (el: HTMLElement | null) => void;
 }
 
 /**
@@ -27,13 +34,33 @@ interface Props {
  * settings, voice, hands. Voice and hands are in place but disabled: they come with the voice
  * and hands extensions.
  */
-export function TopBar({ onSearch, onAdd, onSettings }: Props) {
+export function TopBar({
+  onSearch,
+  onAdd,
+  onSettings,
+  onAllCategories,
+  allCategories,
+  backRef,
+}: Props) {
   const mode = useHub((s) => s.settings?.displayMode ?? "immersive");
   return (
     <Surface as="header" glassKind="bar" radius="var(--da-bar-radius, 29px)" className={styles.bar}>
-      <div className={styles.brand}>
-        <Logo size={30} className={styles.logo} />
-        <span>{APP_NAME}</span>
+      <div className={styles.left}>
+        <div className={styles.brand}>
+          <Logo size={30} className={styles.logo} />
+          <span>{APP_NAME}</span>
+        </div>
+        <button
+          ref={backRef}
+          type="button"
+          className={styles.back}
+          onClick={onAllCategories}
+          inert={!allCategories}
+          aria-hidden={!allCategories || undefined}
+        >
+          <ChevronLeftIcon size={14} />
+          {t("home.allCategories")}
+        </button>
       </div>
       <button
         type="button"

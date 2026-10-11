@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "name": "Actif",
-  "savedAt": "2026-10-11T14:54:53.364Z",
+  "savedAt": "2026-10-11T16:45:56.305Z",
   "themeId": "lavande-peche",
   "values": {
     "backdrop": {
       "on": true,
       "shape": "radial",
-      "vignette": 0.25,
-      "grain": 0.08,
-      "lift": 0.15
+      "vignette": 0.55,
+      "grain": 0.09,
+      "lift": 0
     },
     "moonHalo": {
       "on": true,
@@ -45,13 +45,13 @@
     },
     "embers": {
       "on": true,
-      "count": 40,
-      "size": 1.2,
+      "count": 20,
+      "size": 3.2,
       "rise": 220,
       "life": 9,
-      "glow": 6,
+      "glow": 8,
       "zoneX": 50,
-      "zoneW": 85,
+      "zoneW": 53,
       "zoneTop": 71,
       "zoneH": 26,
       "color": ""
@@ -154,8 +154,8 @@
       "blur": 9,
       "intensity": 0.32,
       "speed": 0.5,
-      "dripRate": 1.2,
-      "dripAmount": 16
+      "dripRate": 3,
+      "dripAmount": 28
     },
     "lightBands": {
       "on": true,
@@ -167,11 +167,11 @@
     },
     "bokeh": {
       "on": true,
-      "count": 5,
-      "size": 20,
-      "intensity": 0.08,
-      "zoneTop": 0,
-      "zoneH": 90
+      "count": 12,
+      "size": 56,
+      "intensity": 0.14,
+      "zoneTop": 18,
+      "zoneH": 60
     },
     "cursorLight": {
       "on": false,
@@ -180,9 +180,9 @@
       "spec": 0.6
     },
     "particleLight": {
-      "on": true,
-      "intensity": 1,
-      "reach": 0.9,
+      "on": false,
+      "intensity": 0.6,
+      "reach": 1,
       "halo": 0.35
     },
     "matter": {

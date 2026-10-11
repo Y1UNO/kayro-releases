@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useMemo, useRef } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { WheelEvent } from "react";
 import type { AppEntry, AppRunState } from "../../ipc/bindings";
 import { useFxTarget } from "../../fx";
@@ -6,6 +6,7 @@ import { t } from "../../i18n";
 import { AppCard } from "./AppCard";
 import { cardGeometry, daStore, useDa } from "../../design/da";
 import { geometryVars, mountedRange, type Geometry } from "./carouselGeometry";
+import { inheritKeys } from "./deckKeys";
 import { cssVars } from "./cssVars";
 import styles from "./Carousel.module.css";
 
@@ -93,6 +94,27 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
 
   const [from, to] = mountedRange(focus, apps.length);
   const mounted = apps.slice(from, to + 1);
+  // Same cards across a tab change (round 3b): the deck gathers and unfolds these elements.
+  // Derived state, updated during render when the list or the selection changes.
+  const [keyed, setKeyed] = useState(() => ({
+    apps,
+    focus,
+    s: inheritKeys(
+      null,
+      apps.map((a) => a.id),
+      focus,
+    ),
+  }));
+  let keys = keyed.s.keys;
+  if (keyed.apps !== apps || keyed.focus !== focus) {
+    const s = inheritKeys(
+      keyed.s,
+      apps.map((a) => a.id),
+      focus,
+    );
+    keys = s.keys;
+    setKeyed({ apps, focus, s });
+  }
 
   return (
     <div
@@ -100,6 +122,7 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
       className={styles.stage}
       style={cssVars(geometryVars(geometry))}
       role="listbox"
+      data-carousel-stage=""
       tabIndex={0}
       aria-label={t("home.apps")}
       aria-orientation="horizontal"
@@ -110,7 +133,7 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
         const i = from + k;
         return (
           <AppCard
-            key={app.id}
+            key={keys.get(app.id) ?? app.id}
             app={app}
             mode="stage"
             d={i - focus}

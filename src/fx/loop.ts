@@ -13,8 +13,11 @@
 export type Tick = (dt: number, now: number) => void;
 
 export interface FrameLoop {
-  /** Returns the unsubscribe function. */
-  subscribe(tick: Tick, maxFps?: number): () => void;
+  /**
+   * Returns the unsubscribe function. `first`: ticks before the others on each frame (scripted
+   * sequences write the DOM before the glass engine measures it, so both show the same moment).
+   */
+  subscribe(tick: Tick, maxFps?: number, first?: boolean): () => void;
   pause(): void;
   resume(): void;
   /** True while a frame is requested (for tests and the bench). */
@@ -68,9 +71,10 @@ export function createFrameLoop(
   }
 
   return {
-    subscribe(tick, maxFps = 0) {
+    subscribe(tick, maxFps = 0, first = false) {
       const sub: Sub = { tick, interval: maxFps > 0 ? 1000 / maxFps : 0, last: -1, slot: 0 };
-      subs.push(sub);
+      if (first) subs.unshift(sub);
+      else subs.push(sub);
       schedule();
       return () => {
         const i = subs.indexOf(sub);
