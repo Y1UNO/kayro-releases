@@ -12,6 +12,7 @@
 }
 
 .list {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -47,6 +48,11 @@
 .tab[aria-selected="true"]:hover {
   background: var(--fill-tab-active);
   color: var(--text-active);
+}
+
+/* Glass selection pill drawn by the engine: the selected tab loses its CSS fill. */
+.list:has(> [data-glass="gpu"]) .tab[aria-selected="true"] {
+  background: transparent;
 }
 
 /* A card is being dragged over this tab: dropping it here moves the app to this category. */

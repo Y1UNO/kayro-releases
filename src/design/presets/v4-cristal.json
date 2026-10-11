@@ -41,14 +41,6 @@
       "period": 40,
       "frost": 5
     },
-    "ringGpu": {
-      "on": false,
-      "refraction": 0.5,
-      "dispersion": 0.35,
-      "blur": 0,
-      "spec": 0.8,
-      "quality": "high"
-    },
     "embers": {
       "on": true,
       "count": 20,
@@ -137,6 +129,40 @@
     },
     "shine": {
       "on": false
+    },
+    "lightBands": {
+      "on": false,
+      "count": 3,
+      "intensity": 0.1,
+      "width": 70,
+      "angle": -24,
+      "period": 70
+    },
+    "bokeh": {
+      "on": false,
+      "count": 12,
+      "size": 56,
+      "intensity": 0.14,
+      "zoneTop": 18,
+      "zoneH": 60
+    },
+    "cursorLight": {
+      "on": false,
+      "intensity": 0.3,
+      "radius": 300,
+      "spec": 0.6
+    },
+    "glassEngine": {
+      "on": false,
+      "refraction": 0.6,
+      "thickness": 26,
+      "dispersion": 0.55,
+      "blur": 0.22,
+      "bevel": 0.75,
+      "spec": 0.8,
+      "shadow": 0.5,
+      "fusion": 16,
+      "resolution": "auto"
     }
   }
 }

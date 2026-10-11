@@ -10,5 +10,11 @@ import type { AppEntry } from "../../ipc/bindings";
  */
 export function posterUrl(app: Pick<AppEntry, "art">): string | null {
   void app.art.poster;
-  return null;
+  return import.meta.env.DEV ? devPoster : null;
+}
+
+/** Dev pages only (`/dev/home?posters=1`): the same stand-in poster on every card. */
+let devPoster: string | null = null;
+export function setDevPoster(url: string | null): void {
+  if (import.meta.env.DEV) devPoster = url;
 }

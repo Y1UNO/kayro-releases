@@ -5,7 +5,7 @@ import type { FxLayer, FxPalette, FxParams, FxTarget } from "./FxLayer";
 import { MoonLayer } from "./css/moonFx";
 import { RingLayer } from "./css/ringFx";
 import { ParticlesLayer } from "./canvas/particles";
-import { RingGlLayer } from "./gpu/ringGl";
+import { GlassEngine, type EngineState } from "./gpu/engine";
 import { frameLoop } from "./loop";
 
 /** Fade before a pause / after a resume (ARCHITECTURE.md §5: « Atténué », 400 ms). */
@@ -19,22 +19,46 @@ export function clampIntensity(v: number | null | undefined): number {
   return Math.min(INTENSITY_MAX, Math.max(INTENSITY_MIN, v));
 }
 
+/** Layers the glass engine draws itself while it runs (they are hidden and paused meanwhile). */
+function replacedBy(engine: EngineState, l: FxLayer): boolean {
+  if (!engine.active) return false;
+  if (l instanceof RingLayer) return engine.ring;
+  return (
+    l instanceof MoonLayer ||
+    l instanceof ParticlesLayer ||
+    l instanceof CssFxLayer ||
+    l instanceof DustLayer
+  );
+}
+
 /**
  * The atmosphere: every layer behind one `FxLayer`, plus the fade and the real stop of `pause`.
- * Layers are stacked in order (CSS fog and light, then the dust canvas). `make` lets a test or a
- * future WebGL engine supply other layers.
+ * Layers are stacked in order (CSS fog and light, then the dust canvas); the glass engine puts its
+ * canvas under them and, while it runs, the layers it replaces are paused. `make` lets a test or
+ * the dev bench supply other layers.
  */
 export function createFx(
-  make: () => FxLayer[] = () => [
+  make: (onEngine: (s: EngineState) => void) => FxLayer[] = (onEngine) => [
     new CssFxLayer(),
     new MoonLayer(),
     new RingLayer(),
-    new RingGlLayer(),
     new DustLayer(),
     new ParticlesLayer(),
+    new GlassEngine(onEngine),
   ],
 ): FxLayer {
-  const layers = make();
+  let engine: EngineState = { active: false, ring: false };
+  const onEngine = (s: EngineState) => {
+    const before = engine;
+    engine = s;
+    for (const l of layers) {
+      const was = replacedBy(before, l);
+      const now = replacedBy(s, l);
+      if (now && !was) l.pause();
+      else if (was && !now && !paused) l.resume();
+    }
+  };
+  const layers = make(onEngine);
   let host: HTMLDivElement | null = null;
   let fadeTimer = 0;
   let paused = false;
@@ -84,7 +108,7 @@ export function createFx(
       paused = false;
       window.clearTimeout(fadeTimer);
       frameLoop().resume();
-      for (const l of layers) l.resume();
+      for (const l of layers) if (!replacedBy(engine, l)) l.resume();
       delete host.dataset.fx; // opacity → 1 in FADE_MS
     },
     dispose() {

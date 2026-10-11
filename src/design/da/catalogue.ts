@@ -10,76 +10,22 @@
  *  - `fx`: the atmosphere layers read the values through `FxLayer.setParams`.
  */
 
-export type DaValue = number | boolean | string;
-/** Values of one element: `on` plus one entry per parameter. */
-export type ElementValues = { readonly on: boolean } & Readonly<Record<string, DaValue>>;
-/** Values of every element, by element id. */
-export type DaValues = Readonly<Record<string, ElementValues>>;
+import { color, n, NONE, px, range, select, toggle, type DaElement } from "./daParams";
+import { GLASS_ELEMENTS } from "./catalogueGlass";
 
-export interface RangeParam {
-  kind: "range";
-  key: string;
-  min: number;
-  max: number;
-  step: number;
-  default: number;
-  unit?: string;
-}
-export interface ToggleParam {
-  kind: "toggle";
-  key: string;
-  default: boolean;
-}
-export interface SelectParam {
-  kind: "select";
-  key: string;
-  options: readonly string[];
-  default: string;
-}
-/** `""` = the theme's colour; otherwise `#rrggbb`. */
-export interface ColorParam {
-  kind: "color";
-  key: string;
-  default: string;
-}
-export type DaParam = RangeParam | ToggleParam | SelectParam | ColorParam;
-
-export type DaGroup = "fond" | "particules" | "interface" | "mouvement" | "historique";
-export type DaCost = "faible" | "moyen" | "élevé";
-
-export interface DaElement {
-  id: string;
-  group: DaGroup;
-  cost: DaCost;
-  defaultOn: boolean;
-  params: readonly DaParam[];
-  /** Read by the atmosphere layers (FxLayer.setParams). */
-  fx?: true;
-  /** CSS variables written on <html>. Called with the element's values, `on` included. */
-  css?: (v: ElementValues) => Record<string, string>;
-}
-
-const range = (
-  key: string,
-  min: number,
-  max: number,
-  step: number,
-  def: number,
-  unit?: string,
-): RangeParam => ({ kind: "range", key, min, max, step, default: def, unit });
-const toggle = (key: string, def: boolean): ToggleParam => ({ kind: "toggle", key, default: def });
-const select = (key: string, options: readonly string[], def: string): SelectParam => ({
-  kind: "select",
-  key,
-  options,
-  default: def,
-});
-const color = (key: string, def = ""): ColorParam => ({ kind: "color", key, default: def });
-
-/** No CSS variable (element off: the stylesheet fallbacks apply). */
-const NONE: Record<string, string> = {};
-const n = (v: ElementValues, k: string) => v[k] as number;
-const px = (v: ElementValues, k: string) => `${n(v, k)}px`;
+export type {
+  ColorParam,
+  DaCost,
+  DaElement,
+  DaGroup,
+  DaParam,
+  DaValue,
+  DaValues,
+  ElementValues,
+  RangeParam,
+  SelectParam,
+  ToggleParam,
+} from "./daParams";
 
 /** Curves offered for UI motion (`ease` select). */
 export const EASES: Readonly<Record<string, string>> = {
@@ -171,21 +117,6 @@ export const CATALOGUE: readonly DaElement[] = [
       range("frost", 0, 12, 0.5, 5, "px"),
     ],
   },
-  {
-    // Spike (step 12b): WebGL2 ring with real refraction; geometry from `crystalRing`.
-    id: "ringGpu",
-    group: "fond",
-    cost: "élevé",
-    defaultOn: false,
-    fx: true,
-    params: [
-      range("refraction", 0, 1, 0.01, 0.5),
-      range("dispersion", 0, 1, 0.01, 0.35),
-      range("blur", 0, 1, 0.01, 0),
-      range("spec", 0, 1, 0.01, 0.8),
-      select("quality", ["high", "balanced", "eco"], "high"),
-    ],
-  },
   // ---- Particles (piste P2 « Deux lumières ») ----
   {
     id: "embers",
@@ -221,6 +152,8 @@ export const CATALOGUE: readonly DaElement[] = [
       color("color", "#f4f1fa"),
     ],
   },
+  // ---- Liquid glass (WebGL2 engine, step 12b round 2) ----
+  ...GLASS_ELEMENTS,
   // ---- Interface ----
   {
     id: "cards",

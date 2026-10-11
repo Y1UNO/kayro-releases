@@ -45,6 +45,7 @@ export class RingLayer implements FxLayer {
       return el;
     };
     this.ring = div("ring", host);
+    this.ring.dataset.ring = ""; // stays visible over the glass engine when it does not draw the ring
     this.frost = div("frost", this.ring);
     div("inner", this.ring);
     div("fringeA", this.ring);

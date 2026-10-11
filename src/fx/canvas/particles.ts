@@ -15,7 +15,7 @@ import { hash } from "./dust";
 
 export const MAX_PARTICLES = 40;
 /** Per particle: x, y (fractions of the screen), size (px), period (ms), phase (0–1). */
-const STRIDE = 5;
+export const STRIDE = 5;
 const RECT = 3;
 const SPRITE = 64;
 
@@ -75,7 +75,7 @@ export function twinkle(p: number): number {
   return ease(p < 0.5 ? p * 2 : (1 - p) * 2);
 }
 
-function advance(state: Float32Array, count: number, dt: number): void {
+export function advance(state: Float32Array, count: number, dt: number): void {
   for (let i = 0; i < count; i++) {
     const o = i * STRIDE;
     const p = state[o + 4]! + dt / state[o + 3]!;

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type { KeyboardEvent } from "react";
-import { IconButton, Surface } from "../../design";
+import { IconButton, SelectionPill, Surface } from "../../design";
 import { t } from "../../i18n";
 import { CATEGORY_IDS, CATEGORY_LABELS, type CategoryId } from "./categories";
 import type { HomeView } from "./homeState";
@@ -50,13 +50,18 @@ export function CategoryTabs({
   return (
     <div className={styles.row}>
       <div className={styles.group}>
-        <Surface radius="var(--da-bar-radius, var(--radius-3xl))" className={styles.tabs}>
+        <Surface
+          glassKind="bar"
+          radius="var(--da-bar-radius, var(--radius-3xl))"
+          className={styles.tabs}
+        >
           <div
             role="tablist"
             aria-label={t("home.categoriesNav")}
             className={styles.list}
             data-own-keys
           >
+            <SelectionPill value={category} selector='[aria-selected="true"]' />
             {CATEGORY_IDS.map((id, i) => {
               const selected = id === category;
               return (
@@ -86,6 +91,7 @@ export function CategoryTabs({
         <IconButton
           label={view === "grid" ? t("home.view.toCarousel") : t("home.view.toGrid")}
           size="sm"
+          glass
           className={styles.viewToggle}
           onClick={() => onView(view === "grid" ? "carousel" : "grid")}
         >

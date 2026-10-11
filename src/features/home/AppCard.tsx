@@ -1,7 +1,7 @@
-import type { Ref } from "react";
+import { useCallback, useRef, type Ref } from "react";
 import type { AppEntry } from "../../ipc/bindings";
 import { t } from "../../i18n";
-import { EditIcon } from "../../design";
+import { EditIcon, useGlass } from "../../design";
 import { posterUrl } from "./art";
 import { monogram, shadeOf } from "./cardLook";
 import { useDa } from "../../design/da";
@@ -11,6 +11,12 @@ import { Shine } from "./Shine";
 import { useAppIcon } from "./useAppIcon";
 import { cardTilt } from "./cardTilt";
 import styles from "./AppCard.module.css";
+
+/** Forwards an element to a ref received as a prop (callback or object). */
+function assignRef<T>(ref: Ref<T> | undefined, value: T): void {
+  if (typeof ref === "function") ref(value);
+  else if (ref) ref.current = value;
+}
 
 interface Props {
   app: AppEntry;
@@ -44,6 +50,15 @@ export function AppCard({
   onClick,
   buttonRef,
 }: Props) {
+  const cardRef = useRef<HTMLButtonElement | null>(null);
+  useGlass(cardRef, "card");
+  const setCard = useCallback(
+    (el: HTMLButtonElement | null) => {
+      cardRef.current = el;
+      assignRef(buttonRef, el);
+    },
+    [buttonRef],
+  );
   const poster = posterUrl(app);
   const shine = useDa((s) => s.values.shine?.on === true);
   const icon = useAppIcon(app);
@@ -64,7 +79,7 @@ export function AppCard({
     >
       {stage && <span className={styles.glow} aria-hidden="true" />}
       <button
-        ref={buttonRef}
+        ref={setCard}
         id={domId}
         type="button"
         role="option"

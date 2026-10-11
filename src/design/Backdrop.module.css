@@ -30,3 +30,9 @@
     rgba(4, 2, 8, var(--da-vignette, 0.62)) 100%
   );
 }
+
+/* The glass engine draws the vignette into its background (so the glass refracts it and is not
+   darkened by it). */
+:global(:root[data-glass-engine]) .vignette {
+  display: none;
+}

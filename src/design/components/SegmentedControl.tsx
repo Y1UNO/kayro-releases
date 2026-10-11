@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import type { KeyboardEvent } from "react";
+import { SelectionPill } from "../glass/SelectionPill";
 import styles from "./SegmentedControl.module.css";
 
 export interface SegmentOption<T extends string> {
@@ -17,6 +18,8 @@ interface Props<T extends string> {
   /** Shown but not usable (a feature that arrives in a later step). */
   disabled?: boolean;
   className?: string;
+  /** Liquid glass selection pill (drawn by the glass engine when it runs). */
+  glassPill?: boolean;
 }
 
 /** Radio group rendered as segments. Roving tabindex: Tab enters once, arrows move and select. */
@@ -28,6 +31,7 @@ export function SegmentedControl<T extends string>({
   size = "md",
   disabled = false,
   className,
+  glassPill = false,
 }: Props<T>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -65,7 +69,9 @@ export function SegmentedControl<T extends string>({
       aria-label={label}
       aria-disabled={disabled || undefined}
       className={[styles.group, styles[size], className].filter(Boolean).join(" ")}
+      data-hole-host=""
     >
+      {glassPill && <SelectionPill value={value} selector='[aria-checked="true"]' />}
       {options.map((opt, i) => {
         const selected = opt.value === value;
         return (

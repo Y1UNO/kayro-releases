@@ -37,6 +37,12 @@
   opacity: 0;
 }
 
+/* The glass engine (src/fx/gpu) draws the whole atmosphere in its canvas: the CSS and 2D layers
+   are hidden (and paused by createFx), except the CSS ring when the engine does not draw it. */
+.host[data-gpu] > :not([data-engine], [data-ring]) {
+  display: none;
+}
+
 /* --atmosphere: intensity setting, 0.3–1 (the mock-up dims its whole atmosphere layer). */
 .root {
   position: absolute;

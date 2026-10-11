@@ -45,3 +45,12 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+/* Round liquid-glass button drawn by the glass engine: only a faint hover fill stays in CSS. */
+.button[data-glass="gpu"] {
+  background: none;
+}
+
+.button[data-glass="gpu"]:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}

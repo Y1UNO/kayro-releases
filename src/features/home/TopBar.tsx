@@ -30,7 +30,7 @@ interface Props {
 export function TopBar({ onSearch, onAdd, onSettings }: Props) {
   const mode = useHub((s) => s.settings?.displayMode ?? "immersive");
   return (
-    <Surface as="header" radius="var(--da-bar-radius, 29px)" className={styles.bar}>
+    <Surface as="header" glassKind="bar" radius="var(--da-bar-radius, 29px)" className={styles.bar}>
       <div className={styles.brand}>
         <Logo size={30} className={styles.logo} />
         <span>{APP_NAME}</span>
@@ -47,10 +47,11 @@ export function TopBar({ onSearch, onAdd, onSettings }: Props) {
         <Pill tone="key">{t("home.search.shortcut")}</Pill>
       </button>
       <div className={styles.tools}>
-        <IconButton label={t("home.addApps.open")} size="sm" onClick={onAdd}>
+        <IconButton label={t("home.addApps.open")} size="sm" glass onClick={onAdd}>
           <PlusIcon />
         </IconButton>
         <SegmentedControl<DisplayMode>
+          glassPill
           label={t("home.modes.label")}
           value={mode}
           onChange={(displayMode) => void hubStore.getState().setSettings({ displayMode })}
@@ -60,13 +61,13 @@ export function TopBar({ onSearch, onAdd, onSettings }: Props) {
             { value: "widget", label: t("home.modes.widget") },
           ]}
         />
-        <IconButton label={t("home.settings.open")} size="sm" onClick={onSettings}>
+        <IconButton label={t("home.settings.open")} size="sm" glass onClick={onSettings}>
           <SettingsIcon />
         </IconButton>
-        <IconButton label={t("home.voice")} size="sm" disabled>
+        <IconButton label={t("home.voice")} size="sm" glass disabled>
           <MicIcon />
         </IconButton>
-        <IconButton label={t("home.hands")} size="sm" disabled>
+        <IconButton label={t("home.hands")} size="sm" glass disabled>
           <HandIcon />
         </IconButton>
       </div>

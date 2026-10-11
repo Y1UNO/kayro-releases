@@ -33,6 +33,7 @@ export function SceneDock({ onManage }: Props) {
   return (
     <Surface
       as="nav"
+      glassKind="dock"
       radius="var(--da-bar-radius, var(--radius-4xl))"
       className={styles.dock}
       aria-label={t("home.dock.label")}
@@ -70,10 +71,10 @@ export function SceneDock({ onManage }: Props) {
         )}
       </div>
       <span className={styles.separator} aria-hidden="true" />
-      <IconButton label={t("home.dock.manage")} onClick={onManage}>
+      <IconButton label={t("home.dock.manage")} glass onClick={onManage}>
         <ScenesIcon size={20} />
       </IconButton>
-      <IconButton label={t("home.voice")} disabled className={styles.disabled}>
+      <IconButton label={t("home.voice")} glass disabled className={styles.disabled}>
         <MicIcon size={20} />
       </IconButton>
       {dialog}

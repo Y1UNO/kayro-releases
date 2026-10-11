@@ -345,3 +345,28 @@
   );
   transform: translateX(0) skewX(-14deg);
 }
+
+/* Liquid glass card (engine running): the canvas under the interface draws the glass slab tinted
+   with the card colour; the poster sits inside the thick rim, slightly see-through so that the
+   refraction shows through its middle (art direction `glassCards`). */
+.card[data-glass="gpu"] {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.card[data-glass="gpu"] .poster,
+.card[data-glass="gpu"] .posterShade {
+  inset: var(--da-poster-inset, 7px);
+  width: calc(100% - 2 * var(--da-poster-inset, 7px));
+  height: calc(100% - 2 * var(--da-poster-inset, 7px));
+  border-radius: max(0px, calc(var(--da-card-radius, 28px) - var(--da-poster-inset, 7px)));
+}
+
+.slot .card[data-glass="gpu"] .poster {
+  opacity: var(--da-poster-opacity, 0.8);
+}
+
+.cell .card[data-glass="gpu"] .poster {
+  opacity: var(--da-grid-poster-opacity, 0.85);
+}

@@ -5,6 +5,7 @@
 //   ?fx=eco|balanced|high|ultra (quality, default high)   ?intensity=0.3…1   ?nodust=1 (CSS layer only)
 //   ?addmock=1 (fake core for the add / edit dialogs: detected apps, drop, add, edit, remove)
 //   ?fps=N (cadence of the continuous layers, instead of the budget's)
+//   ?posters=1 (a stand-in poster on every card)   ?cycle=ms (clicks the next category tab every ms: watch the glass selection pill slide)
 import { useEffect, useState } from "react";
 import { QUALITIES, ThemeProvider, applyQuality } from "../design";
 import { Atmosphere } from "../fx";
@@ -16,6 +17,10 @@ import { ipc } from "../ipc/commands";
 import { hubStore } from "../store";
 import { installAddAppsMock } from "./addAppsMock";
 import { runBench, type BenchResult } from "./bench";
+import { setDevPoster } from "../features/home/art";
+
+/** A colourful picture of the repository, as a stand-in game poster (dev server only). */
+const DEV_POSTER = "/reference/inspirations/Capture d%27%C3%A9cran 2026-10-11 140423.png";
 import { ACTIVE_THEME_ID } from "../design/da";
 
 const MOCK: Record<string, string[]> = {
@@ -60,6 +65,7 @@ function benchLayers(params: URLSearchParams) {
 
 export default function HomeDev() {
   const params = new URLSearchParams(location.search);
+  if (params.has("posters")) setDevPoster(DEV_POSTER);
   const [bench, setBench] = useState<BenchResult | null>(null);
   const [ready] = useState(() => {
     const apps = seed(params);
@@ -106,6 +112,19 @@ export default function HomeDev() {
   useEffect(() => {
     // Inside the Tauri window (not a plain browser): show it, like <App /> does.
     if ("__TAURI_INTERNALS__" in window) void ipc.appReady();
+  }, []);
+
+  useEffect(() => {
+    const ms = Number(params.get("cycle"));
+    if (!(ms > 0)) return;
+    let i = 0;
+    const id = window.setInterval(() => {
+      const tabs = document.querySelectorAll<HTMLElement>("[role=tab]");
+      i = (i + 1) % Math.max(1, tabs.length);
+      tabs[i]?.click();
+    }, ms);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

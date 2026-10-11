@@ -1,0 +1,10 @@
+/* Measured by the glass engine, never painted: its look comes from the canvas under the UI. */
+.pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-radius: 999px;
+  pointer-events: none;
+}
