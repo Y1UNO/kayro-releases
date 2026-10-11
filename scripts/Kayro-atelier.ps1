@@ -9,7 +9,9 @@
   3. Lance la vraie fenêtre WebView2 (npm run dev:atelier-bench, rechargement à chaud) avec des
      données temporaires (%TEMP%\Kayro-atelier) et sa propre identité (fr.yiuno.hub.atelier) :
      elle tourne à côté de Kayro sans toucher à ses données.
-  Fermer cette fenêtre de console (ou la fenêtre de l'atelier) arrête l'atelier.
+  Fermer cette fenêtre de console arrête l'atelier, serveur Vite compris : celui que ce script
+  démarre est placé dans un « job » Windows qui l'arrête dès que le script disparaît (avant, il
+  restait en arrière-plan à tenir le port et le journal, et le lancement suivant échouait).
 .PARAMETER ServerOnly
   Test : s'arrête après le serveur (pas de navigateur, pas de fenêtre).
 .PARAMETER NoBrowser
@@ -41,6 +43,74 @@ function Stop-WithError([string]$text) {
     Write-Host "Journal : $log" -ForegroundColor Yellow
     [void](Read-Host 'Appuie sur Entrée pour fermer')
     exit 1
+}
+
+# Any unexpected error: show it and keep the console open (without this, the window of the
+# shortcut vanished at once and nothing told why).
+trap { Stop-WithError "Erreur inattendue : $($_.Exception.Message)" }
+
+# The log may still be held by the dev server of an earlier launch (cmd's ">>" keeps it open
+# while Vite runs, and rewriting it then fails): use the next free numbered log instead.
+function Open-Log {
+    foreach ($i in 0..9) {
+        $f = if ($i -eq 0) { Join-Path $logDir 'atelier.log' } else { Join-Path $logDir "atelier-$i.log" }
+        try {
+            Set-Content -Path $f -Value "=== Atelier Kayro, $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') ===" -Encoding UTF8 -ErrorAction Stop
+            return $f
+        }
+        catch { }
+    }
+    Join-Path $env:TEMP "Kayro-atelier-$PID.log"
+}
+
+# Windows job closed with this script (kill on close): what is put in it, and every process it
+# starts afterwards, stops when this PowerShell exits, however it exits (console closed, killed).
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class KayroKillJob {
+    [StructLayout(LayoutKind.Sequential)]
+    struct Basic {
+        public long UserTime, JobUserTime; public uint LimitFlags;
+        public UIntPtr MinWs, MaxWs; public uint ActiveProcessLimit; public UIntPtr Affinity;
+        public uint PriorityClass, SchedulingClass;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    struct Io { public ulong R, W, O, RB, WB, OB; }
+    [StructLayout(LayoutKind.Sequential)]
+    struct Extended { public Basic B; public Io I; public UIntPtr ProcMem, JobMem, PeakProc, PeakJob; }
+    [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr CreateJobObject(IntPtr a, string n);
+    [DllImport("kernel32.dll", SetLastError = true)] static extern bool SetInformationJobObject(IntPtr j, int c, ref Extended i, int l);
+    [DllImport("kernel32.dll", SetLastError = true)] static extern bool AssignProcessToJobObject(IntPtr j, IntPtr p);
+    [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr OpenProcess(uint a, bool i, int id);
+    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
+    // Never closed by this script: Windows closes it when the process ends, which kills the job.
+    static IntPtr job = IntPtr.Zero;
+    public static bool Add(int pid) {
+        if (job == IntPtr.Zero) {
+            job = CreateJobObject(IntPtr.Zero, null);
+            var info = new Extended();
+            info.B.LimitFlags = 0x2000; // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            if (!SetInformationJobObject(job, 9, ref info, Marshal.SizeOf(typeof(Extended)))) return false;
+        }
+        IntPtr p = OpenProcess(0x0101, false, pid); // PROCESS_SET_QUOTA | PROCESS_TERMINATE
+        if (p == IntPtr.Zero) return false;
+        bool ok = AssignProcessToJobObject(job, p);
+        CloseHandle(p);
+        return ok;
+    }
+}
+'@
+
+# Puts a process and its children already started in the kill-on-close job (later children join
+# it by themselves). A failure only means the old behaviour: the server may outlive the console.
+function Add-ToKillJob([int]$id) {
+    $todo = @($id)
+    while ($todo.Count -gt 0) {
+        $p, $todo = $todo
+        if (-not [KayroKillJob]::Add($p)) { Write-Step "(job Windows indisponible pour le PID $p : le serveur pourra survivre à la console)" 'DarkYellow' }
+        $todo += @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$p" | ForEach-Object { [int]$_.ProcessId })
+    }
 }
 
 # Vite listens on "localhost", which is often [::1] only (IPv6): test both loopbacks.
@@ -78,7 +148,7 @@ function Resolve-Tool([string]$name, [string[]]$candidates) {
     return $null
 }
 
-Set-Content -Path $log -Value "=== Atelier Kayro, $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') ===" -Encoding UTF8
+$log = Open-Log
 
 $nodeDirs = @(
     (Join-Path $env:ProgramFiles 'nodejs'),
@@ -124,6 +194,7 @@ if (-not (Test-Port $port)) {
     # Redirected by cmd (not PowerShell): appended to the log, read back on failure.
     $vite = Start-Process -FilePath $env:ComSpec -WorkingDirectory $root -WindowStyle Hidden -PassThru `
         -ArgumentList "/d /c `"`"$npm`" run dev >> `"$log`" 2>&1`""
+    Add-ToKillJob $vite.Id
     $deadline = (Get-Date).AddSeconds(60)
     while (-not (Test-Port $port)) {
         if ($vite.HasExited -or (Get-Date) -gt $deadline) {

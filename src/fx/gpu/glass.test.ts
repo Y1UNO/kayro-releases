@@ -26,7 +26,7 @@ describe("glass engine frame budget", () => {
     expect(w.level).toBe(0);
   });
 
-  it("steps down after two bad windows in a row: resolution, then each kind, then off", () => {
+  it("steps down after two bad windows in a row: posters, resolution, each kind, then off", () => {
     const w = new BudgetWatch();
     const rungs: string[] = [];
     for (let i = 0; i < 2 * LADDER.length; i++) {
@@ -40,14 +40,17 @@ describe("glass engine frame budget", () => {
   it("drops the least visible glass first", () => {
     const w = new BudgetWatch();
     expect(w.scale()).toBe(1);
-    w.level = 2; // scale, button
+    w.level = 1; // poster
+    expect(w.allows("poster")).toBe(false);
+    expect(w.scale()).toBe(1);
+    w.level = 3; // poster, scale, button
     expect(w.scale()).toBe(0.75);
     expect(w.allows("button")).toBe(false);
     expect(w.allows("dock")).toBe(true);
     expect(w.allows("card")).toBe(true);
     expect(w.allows("ring")).toBe(true);
     expect(w.allows("pill")).toBe(true);
-    w.level = 7; // … bar, pill, card, ring
+    w.level = 8; // … bar, pill, card, ring
     expect(w.allows("pill")).toBe(false);
     expect(w.allows("ring")).toBe(false);
     expect(w.off).toBe(false);

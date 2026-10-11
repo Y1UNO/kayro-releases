@@ -7,6 +7,7 @@ import { monogram, shadeOf } from "./cardLook";
 import { useDa } from "../../design/da";
 import { DEFAULT_GEOMETRY, isVisible, slotOffset, type Geometry } from "./carouselGeometry";
 import { cssVars } from "./cssVars";
+import { SheenVeil } from "./SheenVeil";
 import { Shine } from "./Shine";
 import { useAppIcon } from "./useAppIcon";
 import { cardTilt } from "./cardTilt";
@@ -61,6 +62,7 @@ export function AppCard({
   );
   const poster = posterUrl(app);
   const shine = useDa((s) => s.values.shine?.on === true);
+  const sheen = useDa((s) => (s.values.cardSheen?.on === true ? s.values.cardSheen : null));
   const icon = useAppIcon(app);
   const stage = mode === "stage";
   const hidden = stage && !isVisible(d);
@@ -86,6 +88,9 @@ export function AppCard({
         aria-selected={active}
         className={styles.card}
         aria-label={running ? `${app.name}, ${t("home.running")}` : app.name}
+        // Read by the glass engine: it may draw this poster as a texture (round 2b).
+        data-poster={poster ?? undefined}
+        data-stage={stage ? "" : undefined}
         tabIndex={-1}
         onClick={onClick}
         {...cardTilt}
@@ -115,6 +120,7 @@ export function AppCard({
         )}
         <span className={styles.sheen} aria-hidden="true" />
         {shine && active && stage && <Shine />}
+        {sheen && active && stage && <SheenVeil duration={Number(sheen.duration) || 1800} />}
         {running && <span className={styles.running} aria-hidden="true" />}
         <span className={styles.plate}>{app.name}</span>
       </button>

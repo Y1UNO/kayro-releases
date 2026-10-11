@@ -14,6 +14,7 @@ export const BG_UNIFORMS = [
   "uA",
   "uB",
   "uMoon",
+  "uAir",
   "uVeilA",
   "uVeilB",
   "uVeil",
@@ -39,6 +40,7 @@ uniform float uRadial;  // 1 = radial (V4), 0 = linear (sketch)
 uniform vec3 uA;
 uniform vec3 uB;
 uniform vec4 uMoon;     // centre x, y, radius, intensity
+uniform vec2 uAir;      // moon glow spread 0–1, background lift 0–0.3 (round 2b, "plus aéré")
 uniform vec4 uVeilA;    // centre x, y, radius x, radius y
 uniform vec4 uVeilB;
 uniform vec4 uVeil;     // rotation A, rotation B (rad), intensity A, intensity B
@@ -61,7 +63,11 @@ vec3 base(vec2 p) {
 float moon(vec2 p) {
   float t = length(p - uMoon.xy) / uMoon.z;
   float i = uMoon.w;
-  float a = t < 0.55 ? mix(i, 0.35 * i, t / 0.55) : mix(0.35 * i, 0.0, (t - 0.55) / 0.45);
+  // Spread moves the knee outwards and raises it: same centre, a wider and softer glow.
+  float k = 0.55 + 0.15 * uAir.x;
+  float m = (0.35 + 0.4 * uAir.x) * i;
+  float u = clamp((t - k) / (1.0 - k), 0.0, 1.0);
+  float a = t < k ? mix(i, m, t / k) : m * (1.0 - mix(u, smoothstep(0.0, 1.0, u), uAir.x));
   return t < 1.0 ? a : 0.0;
 }
 
@@ -133,6 +139,7 @@ vec3 bands(vec2 p) {
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) * uView / uRes;
   vec3 c = base(p);
+  c = mix(c, mix(uBg0, uA, 0.35), uAir.y);
   c = mix(c, uA, moon(p));
   c = mix(c, uA, veil(p, uVeilA, uVeil.x) * uVeil.z);
   c = mix(c, uB, veil(p, uVeilB, uVeil.y) * uVeil.w);
@@ -150,7 +157,15 @@ void main() {
 }
 `;
 
-export const SPRITE_UNIFORMS = ["uView", "uStar"] as const;
+export const SPRITE_UNIFORMS = [
+  "uView",
+  "uStar",
+  "uMoon",
+  "uLight",
+  "uLRing",
+  "uPLight",
+  "uPar",
+] as const;
 
 /** Per instance: aI = x, y, size (CSS px), alpha; aC = rgb, kind (0 ember, 1 star, 2 bokeh). */
 export const SPRITE_VERTEX = `#version 300 es
@@ -158,14 +173,33 @@ layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec4 aI;
 layout(location = 2) in vec4 aC;
 uniform vec2 uView;
+uniform vec4 uMoon;    // as in the background pass
+uniform vec4 uLight;   // cursor x, y, intensity (fade included), radius
+uniform vec4 uLRing;   // liquid ring centre x, y, radius, intensity
+uniform vec4 uPLight;  // lit particles (round 2b): intensity, reach, halo, 0
+uniform vec2 uPar;     // parallax shift of the nearest layer (px); stars far, bokeh mid, embers near
 out vec2 vUv;
 out vec4 vC;
 out float vA;
+// Light received at q from the engine's lights (embers and stars only, not the bokeh).
+float received(vec2 q) {
+  float r = uPLight.y;
+  vec2 dm = (q - uMoon.xy) / (uMoon.z * r);
+  float m = uMoon.w * 1.6 * exp(-dot(dm, dm) * 1.5);
+  float dr = (length(q - uLRing.xy) - uLRing.z) / (60.0 * r);
+  float g = uLRing.w * 1.8 * exp(-dr * dr);
+  vec2 dc = (q - uLight.xy) / (uLight.w * r);
+  float c = uLight.z * 2.6 * exp(-dot(dc, dc) * 2.0);
+  return min(m + g + c, 1.5);
+}
 void main() {
-  vec2 p = aI.xy + aPos * aI.z * 0.5;
+  float depth = aC.w < 0.5 ? 1.0 : (aC.w < 1.5 ? 0.35 : 0.65);
+  vec2 q = aI.xy + uPar * depth;
+  float lit = (aC.w < 1.5 && uPLight.x > 0.0) ? received(q) * uPLight.x : 0.0;
+  vec2 p = q + aPos * aI.z * 0.5 * (1.0 + uPLight.z * lit);
   vUv = aPos;
-  vC = aC;
-  vA = aI.w;
+  vC = vec4(mix(aC.rgb, vec3(1.0), 0.35 * min(lit, 1.0)), aC.w);
+  vA = aI.w * (1.0 + 1.2 * lit);
   gl_Position = vec4(p.x / uView.x * 2.0 - 1.0, 1.0 - p.y / uView.y * 2.0, 0.0, 1.0);
 }
 `;

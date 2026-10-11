@@ -3,10 +3,21 @@ import type { GlassKind } from "../../design/glass/glassRegistry";
 /**
  * Frame budget of the glass engine. The engine's ticks are timed; over each window, if the 95th
  * percentile is more than twice the median (frames are being dropped, not just jittering) for two
- * windows in a row, the engine steps one rung down the ladder: lower resolution first, then each
- * kind of glass falls back to its CSS look (least visible first), then the whole engine (CSS).
+ * windows in a row, the engine steps one rung down the ladder: the posters drawn as textures go
+ * back to their DOM image first (round 2b), then lower resolution, then each kind of glass falls
+ * back to its CSS look (least visible first), then the whole engine (CSS).
  */
-export const LADDER = ["scale", "button", "dock", "bar", "pill", "card", "ring", "off"] as const;
+export const LADDER = [
+  "poster",
+  "scale",
+  "button",
+  "dock",
+  "bar",
+  "pill",
+  "card",
+  "ring",
+  "off",
+] as const;
 export type Rung = (typeof LADDER)[number];
 
 export const WINDOW = 120;
@@ -42,11 +53,11 @@ export class BudgetWatch {
 
   /** Resolution factor left by the ladder. */
   scale(): number {
-    return this.level > 0 ? 0.75 : 1;
+    return this.level > LADDER.indexOf("scale") ? 0.75 : 1;
   }
 
   /** False once this kind has fallen back to CSS ("ring" included). */
-  allows(kind: GlassKind | "ring"): boolean {
+  allows(kind: GlassKind | "ring" | "poster"): boolean {
     const i = LADDER.indexOf(kind);
     return i < 0 || this.level <= i;
   }

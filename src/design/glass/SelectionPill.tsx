@@ -66,11 +66,12 @@ export function SelectionPill({ value, selector }: Props) {
         const css = getComputedStyle(pill);
         const duration = num(css.getPropertyValue("--da-pill-dur"), 420);
         const stretch = num(css.getPropertyValue("--da-pill-stretch"), 0.35);
+        const bounce = num(css.getPropertyValue("--da-pill-bounce"), 0);
         let elapsed = 0;
         stop = frameLoop().subscribe((dt) => {
           elapsed += dt;
           const p = Math.min(1, elapsed / duration);
-          place(pillAt(from, to, p, stretch));
+          place(pillAt(from, to, p, stretch, bounce));
           if (p >= 1) {
             stop?.();
             stop = null;

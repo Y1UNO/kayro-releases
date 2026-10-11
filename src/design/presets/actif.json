@@ -1,20 +1,22 @@
 {
   "schemaVersion": 1,
   "name": "Actif",
-  "savedAt": "2026-10-11T13:30:48.231Z",
-  "themeId": "bleu-gris",
+  "savedAt": "2026-10-11T14:54:53.364Z",
+  "themeId": "lavande-peche",
   "values": {
     "backdrop": {
       "on": true,
       "shape": "radial",
-      "vignette": 0.55,
-      "grain": 0.09
+      "vignette": 0.25,
+      "grain": 0.08,
+      "lift": 0.15
     },
     "moonHalo": {
       "on": true,
       "size": 600,
       "top": -170,
       "intensity": 0.34,
+      "spread": 0,
       "breathe": 0.04,
       "period": 9
     },
@@ -43,13 +45,13 @@
     },
     "embers": {
       "on": true,
-      "count": 20,
-      "size": 3.2,
+      "count": 40,
+      "size": 1.2,
       "rise": 220,
       "life": 9,
-      "glow": 8,
+      "glow": 6,
       "zoneX": 50,
-      "zoneW": 53,
+      "zoneW": 85,
       "zoneTop": 71,
       "zoneH": 26,
       "color": ""
@@ -110,7 +112,8 @@
       "shadow": 1,
       "tint": 0.14,
       "duration": 420,
-      "stretch": 0.35
+      "stretch": 0.35,
+      "spring": "net"
     },
     "glassBars": {
       "on": false,
@@ -164,17 +167,42 @@
     },
     "bokeh": {
       "on": true,
-      "count": 12,
-      "size": 56,
-      "intensity": 0.14,
-      "zoneTop": 18,
-      "zoneH": 60
+      "count": 5,
+      "size": 20,
+      "intensity": 0.08,
+      "zoneTop": 0,
+      "zoneH": 90
     },
     "cursorLight": {
-      "on": true,
+      "on": false,
       "intensity": 0.3,
       "radius": 300,
       "spec": 0.6
+    },
+    "particleLight": {
+      "on": true,
+      "intensity": 1,
+      "reach": 0.9,
+      "halo": 0.35
+    },
+    "matter": {
+      "on": false,
+      "rimGrain": 0.35,
+      "rimDepth": 0.4,
+      "parallax": 12
+    },
+    "cardSheen": {
+      "on": false,
+      "intensity": 0.3,
+      "duration": 1800,
+      "width": 28,
+      "angle": 18
+    },
+    "posterGlass": {
+      "on": false,
+      "refraction": 1,
+      "reflection": 0.35,
+      "maxTextures": 6
     },
     "cards": {
       "on": true,

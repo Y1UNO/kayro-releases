@@ -16,7 +16,14 @@ import {
 } from "./gl";
 import { GLASS_FRAGMENT, GLASS_UNIFORMS } from "./glassShader";
 import { RING_FRAGMENT, RING_UNIFORMS, RING_VERTEX } from "./ringShader";
+import { MAX_POSTERS } from "./posterTextures";
 import { MAX_SPRITES, SPRITE_FLOATS } from "./scene";
+
+/** Poster samplers of the glass pass: uP0 … on texture units 1 … (unit 0 = background). */
+const POSTER_UNITS: Uniforms = Object.fromEntries(
+  Array.from({ length: MAX_POSTERS }, (_, i) => [`uP${i}`, i + 1]),
+);
+const INT_UNIFORMS = new Set(["uTex", "uN", "uNested", ...Object.keys(POSTER_UNITS)]);
 
 /** Uniform values: name → numbers (vec2/3/4 or arrays as flat lists). */
 export type Uniforms = Record<string, number | readonly number[] | Float32Array>;
@@ -95,6 +102,7 @@ export class Renderer {
     sprites: { data: Float32Array; count: number; u: Uniforms },
     ring: Uniforms | null,
     glass: Uniforms,
+    bindPosters: (() => void) | null = null,
   ): void {
     const { gl, a, b } = this;
     if (!a || !b) return;
@@ -140,7 +148,8 @@ export class Renderer {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, src.tex);
     gl.generateMipmap(gl.TEXTURE_2D);
-    this.use(this.glass, { ...glass, uTex: 0 });
+    bindPosters?.(); // poster textures on units 1…6 (round 2b)
+    this.use(this.glass, { ...glass, uTex: 0, ...POSTER_UNITS });
     gl.bindVertexArray(this.quad);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     gl.bindVertexArray(null);
@@ -161,7 +170,7 @@ export class Renderer {
       const loc = p.loc[name];
       if (loc === undefined || loc === null) continue;
       if (typeof v === "number") {
-        if (name === "uTex" || name === "uN" || name === "uNested") gl.uniform1i(loc, v);
+        if (INT_UNIFORMS.has(name)) gl.uniform1i(loc, v);
         else gl.uniform1f(loc, v);
       } else if (v instanceof Float32Array) {
         gl.uniform4fv(loc, v); // arrays of vec4

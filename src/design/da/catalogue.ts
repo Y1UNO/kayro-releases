@@ -11,6 +11,7 @@
  */
 
 import { color, n, NONE, px, range, select, toggle, type DaElement } from "./daParams";
+import { AIR_ELEMENTS } from "./catalogueAir";
 import { GLASS_ELEMENTS } from "./catalogueGlass";
 
 export type {
@@ -47,6 +48,12 @@ export const FONT_PAIRS: Readonly<Record<string, { title: string; ui: string }>>
   },
 };
 
+/** A rounded rectangle filling its box (radius in px), as a CSS mask image. */
+export function cardHole(radius: number): string {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' rx='${radius}'/></svg>`;
+  return `url("data:image/svg+xml,${svg.replace(/%/g, "%25").replace(/</g, "%3C").replace(/>/g, "%3E")}")`;
+}
+
 export const CATALOGUE: readonly DaElement[] = [
   // ---- Background ("velours lunaire", mock-up R2-Mix-V4) ----
   {
@@ -58,6 +65,8 @@ export const CATALOGUE: readonly DaElement[] = [
       select("shape", ["radial", "lineaire"], "radial"),
       range("vignette", 0, 1, 0.01, 0.55),
       range("grain", 0, 0.2, 0.01, 0.09),
+      // Round 2b ("plus aéré"): lifts the whole background towards a light mix of the theme.
+      range("lift", 0, 0.3, 0.01, 0),
     ],
     css: (v) => ({
       "--da-bg":
@@ -66,6 +75,7 @@ export const CATALOGUE: readonly DaElement[] = [
           : "linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bottom) 100%)",
       "--da-vignette": String(v.on ? n(v, "vignette") : 0.62),
       "--da-grain": String(v.on ? n(v, "grain") : 0.09),
+      "--da-bg-lift": String(v.on ? n(v, "lift") : 0),
     }),
   },
   {
@@ -78,6 +88,8 @@ export const CATALOGUE: readonly DaElement[] = [
       range("size", 200, 1200, 10, 600, "px"),
       range("top", -600, 400, 5, -170, "px"),
       range("intensity", 0, 0.8, 0.01, 0.34),
+      // 0 = mock-up profile (falls to 35 % at 55 % of the radius); 1 = wide, airy glow.
+      range("spread", 0, 1, 0.01, 0),
       range("breathe", 0, 0.1, 0.005, 0.04),
       range("period", 3, 30, 0.5, 9, "s"),
     ],
@@ -154,6 +166,7 @@ export const CATALOGUE: readonly DaElement[] = [
   },
   // ---- Liquid glass (WebGL2 engine, step 12b round 2) ----
   ...GLASS_ELEMENTS,
+  ...AIR_ELEMENTS,
   // ---- Interface ----
   {
     id: "cards",
@@ -177,6 +190,8 @@ export const CATALOGUE: readonly DaElement[] = [
             "--da-card-dim": String(n(v, "dim")),
             "--da-card-edge": `rgba(255, 255, 255, ${n(v, "edge")})`,
             "--da-card-pool": String(n(v, "pool")),
+            // Card-shaped hole in the light pool when the engine draws the poster (round 2b).
+            "--da-card-hole": cardHole(n(v, "radius")),
           }
         : NONE,
   },

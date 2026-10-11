@@ -4,6 +4,7 @@
 // and the kinds stay comparable. `glassEngine` off = the CSS look of round 1, to compare.
 // Round 2a (user's feedback): by default only the cards and the selection pills are glass; bars,
 // dock and round buttons keep their CSS look (their kinds stay available, off).
+import { SPRINGS } from "../glass/pillMotion";
 import { n, range, select, type DaElement, type DaParam, type ElementValues } from "./daParams";
 
 /** Glass kinds drawn by the engine, by catalogue element (the DOM registry uses the same names). */
@@ -108,14 +109,20 @@ export const GLASS_ELEMENTS: readonly DaElement[] = [
     }),
   ),
   // Selection pill of the category tabs and of the display mode selector: a small piece of glass
-  // that slides from one choice to the other, stretching a little on the way (springs: round 2b).
+  // that slides from one choice to the other, stretching a little on the way. Round 2b: `spring`
+  // = named preset "net" (no bounce) or "leger" (passes its target by 5 %, settles back).
   glassKind(
     "glassPills",
     { thickness: 0.7, blur: 0.6, tint: 0.14 },
-    [range("duration", 150, 900, 10, 420, "ms"), range("stretch", 0, 1, 0.01, 0.35)],
+    [
+      range("duration", 150, 900, 10, 420, "ms"),
+      range("stretch", 0, 1, 0.01, 0.35),
+      select("spring", Object.keys(SPRINGS), "net"),
+    ],
     (v) => ({
       "--da-pill-dur": `${n(v, "duration")}ms`,
       "--da-pill-stretch": String(n(v, "stretch")),
+      "--da-pill-bounce": String(SPRINGS[String(v.spring)] ?? 0),
     }),
   ),
   glassKind("glassBars", { on: false, thickness: 0.8, tint: 0.34 }),

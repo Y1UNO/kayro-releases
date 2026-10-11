@@ -26,7 +26,12 @@ export const ELEMENT_LABELS: Record<string, ElementLabel> = {
   backdrop: {
     name: "Fond et vignette",
     role: "Dégradé du thème, vignette, grain",
-    params: { shape: "Forme du dégradé", vignette: "Vignette", grain: "Grain" },
+    params: {
+      shape: "Forme du dégradé",
+      vignette: "Vignette",
+      grain: "Grain",
+      lift: "Clarté du fond",
+    },
   },
   moonHalo: {
     name: "Halo de lune",
@@ -35,6 +40,7 @@ export const ELEMENT_LABELS: Record<string, ElementLabel> = {
       size: "Diamètre",
       top: "Position haute",
       intensity: "Intensité",
+      spread: "Largeur de la lueur",
       breathe: "Respiration",
       period: "Période",
     },
@@ -127,6 +133,7 @@ export const ELEMENT_LABELS: Record<string, ElementLabel> = {
       tint: "Teinte",
       duration: "Durée du glissement",
       stretch: "Étirement liquide",
+      spring: "Ressort",
     },
   },
   liquidRing: {
@@ -305,6 +312,39 @@ export const ELEMENT_LABELS: Record<string, ElementLabel> = {
   cardHalo: { name: "Halo sous la carte", role: "Halo du croquis sous la sélection" },
   dust: { name: "Poussière", role: "Poussière montante du croquis", params: { count: "Nombre" } },
   shine: { name: "Bande de lumière", role: "Reflet qui traverse la carte active" },
+  particleLight: {
+    name: "Particules éclairées",
+    role: "Braises et étoiles éclairées par la lune, l'anneau et le curseur (moteur)",
+    params: { intensity: "Intensité", reach: "Portée des lumières", halo: "Halo des particules" },
+  },
+  matter: {
+    name: "Matière et profondeur",
+    role: "Grain et épaisseur du rebord de verre, parallaxe des particules (moteur)",
+    params: {
+      rimGrain: "Grain du rebord",
+      rimDepth: "Profondeur du rebord",
+      parallax: "Parallaxe des particules",
+    },
+  },
+  posterGlass: {
+    name: "Affiches dans le verre",
+    role: "L'affiche locale de la carte réfractée et reflétée par son verre (moteur)",
+    params: {
+      refraction: "Réfraction de l'affiche",
+      reflection: "Reflet sur le rebord",
+      maxTextures: "Textures au plus",
+    },
+  },
+  cardSheen: {
+    name: "Voile brillant",
+    role: "Reflet liquide qui glisse sur la carte sélectionnée",
+    params: {
+      intensity: "Intensité",
+      duration: "Durée du glissement",
+      width: "Largeur du voile",
+      angle: "Angle",
+    },
+  },
 };
 
 export const OPTION_LABELS: Record<string, string> = {
@@ -313,6 +353,8 @@ export const OPTION_LABELS: Record<string, string> = {
   douce: "douce",
   premium: "premium",
   ressort: "ressort",
+  net: "net (sans rebond)",
+  leger: "léger rebond",
   kayro: "Cormorant + Manrope",
   historique: "Fraunces + DM Sans",
   high: "Élevée",

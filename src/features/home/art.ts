@@ -8,13 +8,17 @@ import type { AppEntry } from "../../ipc/bindings";
  * CSP) is opened in step 9, when apps are added with their art. Until then `art.poster` is always
  * empty for real data, and this stays the single place to change.
  */
-export function posterUrl(app: Pick<AppEntry, "art">): string | null {
+export function posterUrl(app: Pick<AppEntry, "art"> & { id?: string }): string | null {
   void app.art.poster;
-  return import.meta.env.DEV ? devPoster : null;
+  if (!import.meta.env.DEV || devPosters.length === 0) return null;
+  // Several stand-ins, spread over the cards (tests the engine's poster textures, round 2b).
+  let h = 0;
+  for (const c of app.id ?? "") h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return devPosters[h % devPosters.length]!;
 }
 
-/** Dev pages only (`/dev/home?posters=1`): the same stand-in poster on every card. */
-let devPoster: string | null = null;
-export function setDevPoster(url: string | null): void {
-  if (import.meta.env.DEV) devPoster = url;
+/** Dev pages only (`/dev/home?posters=1`): stand-in posters, spread over the cards. */
+let devPosters: readonly string[] = [];
+export function setDevPoster(urls: readonly string[] | null): void {
+  if (import.meta.env.DEV) devPosters = urls ?? [];
 }

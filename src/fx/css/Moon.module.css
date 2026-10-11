@@ -35,7 +35,8 @@
   background: radial-gradient(
     closest-side,
     rgb(from var(--fx-a) r g b / var(--moon-i, 0.34)),
-    rgb(from var(--fx-a) r g b / calc(var(--moon-i, 0.34) * 0.35)) 55%,
+    rgb(from var(--fx-a) r g b / calc(var(--moon-i, 0.34) * var(--moon-knee-i, 0.35)))
+      var(--moon-knee, 55%),
     transparent
   );
 }

@@ -8,6 +8,15 @@ import {
   type GlassKind,
 } from "../../design/glass/glassRegistry";
 import { parseColor } from "../../lib/color";
+import type { PosterTextures } from "./posterTextures";
+
+/** Posters drawn by the engine this frame (null = none: off, fallen back, no texture support). */
+export interface PosterPass {
+  textures: PosterTextures;
+  /** Opacity of the poster in a carousel card, inset of the poster inside the rim (CSS px). */
+  opacity: number;
+  inset: number;
+}
 
 /** Index of each kind in the shader's per-kind arrays. */
 export const KIND_INDEX: Readonly<Record<GlassKind, number>> = {
@@ -63,22 +72,34 @@ export class GlassFrame {
   readonly S = new Float32Array(MAX_GLASS * 4);
   readonly T = new Float32Array(MAX_GLASS * 4);
   readonly C = new Float32Array(MAX_GLASS * 4);
+  /** Per shape: poster texture slot (−1 none), picture aspect (w / h), opacity, inset (px). */
+  readonly P = new Float32Array(MAX_GLASS * 4);
   n = 0;
   nested = 0;
+  /** Selected card whose inside the engine draws (no DOM poster over it): centre, half size. */
+  readonly sel = new Float32Array(4);
+  hasSel = false;
   private readonly prev = new Float32Array(MAX_GLASS * 8);
   private prevN = -1;
+  private readonly prevP = new Float32Array(MAX_GLASS);
   private readonly clips = new Map<HTMLElement, DOMRect>();
 
   /** Measures every drawn element; true when a shape moved or changed since the last call. */
-  measure(drawn: (kind: GlassKind) => boolean, tint: (kind: GlassKind) => number): boolean {
+  measure(
+    drawn: (kind: GlassKind) => boolean,
+    tint: (kind: GlassKind) => number,
+    posters: PosterPass | null = null,
+  ): boolean {
     let dark: [number, number, number] | null = null;
     this.clips.clear();
     let n = 0;
     let nested = 0;
+    this.hasSel = false;
     for (const e of glassEntries()) {
       const on = drawn(e.kind) && n < MAX_GLASS;
       if (!on) {
         if (e.el.dataset.glass) delete e.el.dataset.glass;
+        if (e.el.dataset.glassPoster) delete e.el.dataset.glassPoster;
         continue;
       }
       if (e.el.dataset.glass !== "gpu") e.el.dataset.glass = "gpu";
@@ -102,7 +123,30 @@ export class GlassFrame {
       }
       if (clip) this.C.set([clip.left, clip.top, clip.right, clip.bottom], o);
       else this.C.set([-1e5, -1e5, 1e5, 1e5], o);
+      // Carousel cards only (`data-stage`): the grid can show far more cards than texture units.
+      const url =
+        posters && e.kind === "card" && e.el.dataset.stage !== undefined && e.el.dataset.poster;
+      const slot = url ? posters.textures.slotFor(url) : -1;
+      if (slot >= 0) {
+        const pa = posters!;
+        this.P.set([slot, pa.textures.aspect(slot), pa.opacity, pa.inset * scale], o);
+        if (e.el.dataset.glassPoster !== "gpu") e.el.dataset.glassPoster = "gpu";
+      } else {
+        this.P.set([-1, 1, 0, 0], o);
+        if (e.el.dataset.glassPoster) delete e.el.dataset.glassPoster;
+      }
       if (e.depth) nested++;
+      // Glossy veil (round 2b): on the selected card, unless a DOM poster hides its inside (the
+      // CSS veil of SheenVeil.tsx is drawn above that poster instead).
+      if (
+        e.kind === "card" &&
+        !this.hasSel &&
+        e.el.getAttribute("aria-selected") === "true" &&
+        (!e.el.hasAttribute("data-poster") || e.el.dataset.glassPoster === "gpu")
+      ) {
+        this.sel.set([r.left + hw, r.top + hh, hw, hh]);
+        this.hasSel = true;
+      }
       n++;
     }
     this.n = n;
@@ -110,15 +154,20 @@ export class GlassFrame {
     let changed = n !== this.prevN;
     for (let i = 0; i < n * 4 && !changed; i++) {
       if (this.R[i] !== this.prev[i] || this.S[i] !== this.prev[MAX_GLASS * 4 + i]) changed = true;
+      if (i % 4 === 0 && this.P[i] !== this.prevP[i >> 2]) changed = true;
     }
     this.prev.set(this.R.subarray(0, n * 4), 0);
     this.prev.set(this.S.subarray(0, n * 4), MAX_GLASS * 4);
+    for (let i = 0; i < n; i++) this.prevP[i] = this.P[i * 4]!;
     this.prevN = n;
     return changed;
   }
 
   /** Gives every element its CSS look back (engine off or fallen back). */
   static unmarkAll(): void {
-    for (const e of glassEntries()) delete e.el.dataset.glass;
+    for (const e of glassEntries()) {
+      delete e.el.dataset.glass;
+      delete e.el.dataset.glassPoster;
+    }
   }
 }

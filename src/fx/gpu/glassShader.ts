@@ -7,7 +7,16 @@
 // per colour channel (fine fringes), a little frost (mip levels), the tint, a crisp rim line,
 // sharp speculars (fixed key light + the cursor light) and a soft shadow outside.
 
+import { MAX_POSTERS } from "./posterTextures";
+
 export const MAX_SHAPES = 24;
+// Poster samplers (round 2b) and the constant branch that reads each one.
+const units = Array.from({ length: MAX_POSTERS }, (_, i) => i);
+const POSTER_SAMPLERS = units.map((i) => `uniform sampler2D uP${i};`).join("\n");
+const POSTER_BRANCHES = units
+  .map((i) => `  if (s == ${i}) return textureLod(uP${i}, uv, lod).rgb;`)
+  .join("\n");
+
 /** Glass kinds (card, bar, dock, button, pill): see KIND_INDEX in glassFrame.ts. */
 export const KINDS = 5;
 
@@ -27,6 +36,12 @@ export const GLASS_UNIFORMS = [
   "uLight",
   "uSpec",
   "uLightCol",
+  "uMatter",
+  "uSheen",
+  "uSheenBox",
+  "uPo",
+  "uPosterK",
+  ...Array.from({ length: MAX_POSTERS }, (_, i) => `uP${i}`),
 ] as const;
 
 export const GLASS_FRAGMENT = `#version 300 es
@@ -50,6 +65,37 @@ uniform float uFusion;     // smooth union radius (px)
 uniform vec4 uLight;       // cursor x, y, intensity (fade included), radius
 uniform float uSpec;       // cursor light on glass
 uniform vec3 uLightCol;
+uniform vec2 uMatter;      // round 2b: rim grain, rim depth (inner shadow + inner edge line)
+uniform vec4 uSheen;       // glossy veil: position 0–1 (< 0: none), intensity, half width (px), angle
+uniform vec4 uSheenBox;    // selected card: centre x, y, half width, half height
+uniform vec4 uPo[MAXS];    // poster per shape: texture slot (< 0: none), picture w / h, opacity, inset
+uniform vec2 uPosterK;     // poster: refraction (× the rim's), reflection on the rim
+${POSTER_SAMPLERS}
+
+// Samplers cannot be indexed by a variable in GLSL ES 3.00: one constant branch per texture unit.
+vec3 posterTex(int s, vec2 uv, float lod) {
+${POSTER_BRANCHES}
+  return vec3(0.0);
+}
+
+// Like CSS object-fit: cover, for a picture of aspect ia in a box of half size hb.
+vec2 coverUv(vec2 q, vec2 hb, float ia) {
+  vec2 uv = q / (2.0 * hb) + 0.5;
+  float ba = hb.x / hb.y;
+  if (ia > ba) uv.x = 0.5 + (uv.x - 0.5) * ba / ia;
+  else uv.y = 0.5 + (uv.y - 0.5) * ia / ba;
+  return uv;
+}
+
+// Value noise on a 1.5 px lattice, stable on the glass (coordinates relative to its centre).
+float hash(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
+float grain(vec2 q) {
+  vec2 i = floor(q / 1.5);
+  vec2 f = fract(q / 1.5);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0)), f.x), f.y);
+}
 
 // Signed distance to a rounded box and its gradient (outwards).
 vec3 sdg(vec2 p, vec2 b, float r) {
@@ -62,8 +108,9 @@ vec3 sdg(vec2 p, vec2 b, float r) {
   return vec3(min(g, 0.0) + l - r, s * n);
 }
 
-void field(vec2 p, float depth, out float D, out vec2 N, out vec4 KA, out vec4 KB, out vec4 T, out float A) {
-  D = 1e5; N = vec2(0.0, 1.0); KA = vec4(0.0); KB = vec4(0.0); T = vec4(0.0); A = 0.0;
+void field(vec2 p, float depth, out float D, out vec2 N, out vec4 KA, out vec4 KB, out vec4 T, out float A, out vec2 O, out int B) {
+  D = 1e5; N = vec2(0.0, 1.0); KA = vec4(0.0); KB = vec4(0.0); T = vec4(0.0); A = 0.0; O = p; B = -1;
+  float best = 1e5;
   float k = max(uFusion, 0.001);
   for (int i = 0; i < MAXS; i++) {
     if (i >= uN) break;
@@ -81,6 +128,8 @@ void field(vec2 p, float depth, out float D, out vec2 N, out vec4 KA, out vec4 K
     KB = mix(KB, uKB[kind], h);
     T = mix(T, uT[i], h);
     A = mix(A, s.z, h);
+    O = mix(O, r.xy, h);
+    if (g.x < best) { best = g.x; B = i; }
   }
   float l = length(N);
   N = l > 1e-4 ? N / l : vec2(0.0, 1.0);
@@ -91,8 +140,8 @@ vec3 bgAt(vec2 p, float lod) {
 }
 
 vec3 layer(vec3 under, vec2 p, float depth, float px) {
-  float D; vec2 N; vec4 KA; vec4 KB; vec4 T; float A;
-  field(p, depth, D, N, KA, KB, T, A);
+  float D; vec2 N; vec4 KA; vec4 KB; vec4 T; float A; vec2 O; int B;
+  field(p, depth, D, N, KA, KB, T, A, O, B);
   if (A <= 0.0 || D > 48.0) return under;
   // Soft shadow, a little lower than the shape.
   float Ds = max(D - 6.0 * N.y, 0.0);
@@ -106,6 +155,9 @@ vec3 layer(vec3 under, vec2 p, float depth, float px) {
   float bend = 1.0 - sqrt(1.0 - u * u);            // lens: neutral in the middle
   float slope = u / sqrt(max(1.0 - u * u, 0.03));
   vec2 off = -N * KA.x * th * 1.4 * bend;          // pulled inwards
+  // Rim grain: the glass of the rim is not perfectly smooth (a little frost, light and shade).
+  float gr = uMatter.x > 0.0 ? (grain(p - O) - 0.5) * uMatter.x * smoothstep(0.0, 0.25, u) : 0.0;
+  off += vec2(gr, -gr) * 2.0;
   float disp = KA.z * 0.35;
   float lod = KA.w * 4.0 + bend * 0.6;
   vec3 col = vec3(
@@ -114,6 +166,29 @@ vec3 layer(vec3 under, vec2 p, float depth, float px) {
     bgAt(p + off * (1.0 - disp), lod).b
   );
   col = mix(col, T.rgb, T.a) * 1.03 + 0.015 * (1.0 - T.a);
+  if (depth < 0.5 && B >= 0 && uPo[B].x >= 0.0) {
+    // The card's own poster under its glass (round 2b): bent by the rim's lens like the
+    // background (one offset per colour channel), and mirrored faintly on the rim around it.
+    vec4 P = uPo[B];
+    vec4 r = uR[B];
+    int sl = int(P.x + 0.5);
+    vec2 hb = max(r.zw - P.w, vec2(1.0));
+    vec2 q = p - r.xy;
+    vec3 gp = sdg(q, hb, max(uS[B].x - P.w, 0.0));
+    vec2 o = off * uPosterK.x;
+    float lodP = bend * 2.0;
+    vec3 pc = vec3(
+      posterTex(sl, coverUv(q + o * (1.0 + disp), hb, P.y), lodP).r,
+      posterTex(sl, coverUv(q + o, hb, P.y), lodP).g,
+      posterTex(sl, coverUv(q + o * (1.0 - disp), hb, P.y), lodP).b
+    );
+    if (gp.x > 0.0 && uPosterK.y > 0.0) {
+      vec2 qm = q - gp.yz * 2.0 * gp.x;
+      vec3 rc = posterTex(sl, coverUv(qm, hb, P.y), 3.0);
+      col = mix(col, rc, uPosterK.y * 0.6 * exp(-gp.x / 6.0));
+    }
+    col = mix(col, pc, clamp(0.5 - gp.x / px, 0.0, 1.0) * P.z);
+  }
 
   vec3 n3 = normalize(vec3(N * slope * KB.x * 0.9, 1.0));
   vec3 V = vec3(0.0, 0.0, 1.0);
@@ -130,6 +205,24 @@ vec3 layer(vec3 under, vec2 p, float depth, float px) {
     cur = (pow(max(dot(n3, normalize(Lc + V)), 0.0), KB.w * 0.8) * 1.1 + exp(-x / 0.8) * 0.3) * att;
   }
   col += uLightCol * (spec + cur) + vec3(rim) + bend * 0.06 * KB.x;
+  col += gr * 0.09;
+  if (uSheen.x >= 0.0 && depth < 0.5) {
+    // Glossy veil: a soft band with a brighter core, gliding across the selected card.
+    vec2 q = p - uSheenBox.xy;
+    if (abs(q.x) <= uSheenBox.z && abs(q.y) <= uSheenBox.w) {
+      vec2 dir = vec2(cos(uSheen.w), sin(uSheen.w));
+      float reach = abs(uSheenBox.z * dir.x) + abs(uSheenBox.w * dir.y) + uSheen.z * 2.0;
+      float d = (dot(q, dir) - mix(-reach, reach, uSheen.x)) / max(uSheen.z, 1.0);
+      float band = exp(-d * d * 1.6) * 0.75 + exp(-d * d * 14.0) * 0.35;
+      col += uLightCol * band * uSheen.y * 0.45;
+    }
+  }
+  if (uMatter.y > 0.0) {
+    // Depth: the inner wall of the rim shades the inside a little, its inner edge catches light.
+    float inner = x - th;
+    col *= 1.0 - uMatter.y * 0.3 * (inner > 0.0 ? exp(-inner / 7.0) : 0.0);
+    col += uLightCol * uMatter.y * 0.07 * exp(-abs(inner) / 0.9);
+  }
   return mix(c0, min(col, vec3(1.0)), cover);
 }
 

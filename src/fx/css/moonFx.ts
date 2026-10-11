@@ -104,6 +104,10 @@ export class MoonLayer implements FxLayer {
     s.setProperty("--moon-size", `${num(m, "size", 600)}px`);
     s.setProperty("--moon-top", `${num(m, "top", -170)}px`);
     s.setProperty("--moon-i", String(num(m, "intensity", 0.34)));
+    // Same profile as the engine's moon (bgShader.ts): spread pushes and raises the knee.
+    const spread = num(m, "spread", 0);
+    s.setProperty("--moon-knee", `${55 + 15 * spread}%`);
+    s.setProperty("--moon-knee-i", String(0.35 + 0.4 * spread));
     s.setProperty("--veil-a", String(num(v, "intensityA", 0.16)));
     s.setProperty("--veil-b", String(num(v, "intensityB", 0.14)));
     s.setProperty("--veil-top-a", `${num(v, "topA", 43)}%`);

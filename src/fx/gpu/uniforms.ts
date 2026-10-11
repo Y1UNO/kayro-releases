@@ -1,4 +1,5 @@
 import { GLASS_KIND_ELEMENT } from "../../design/da/catalogueGlass";
+import { sheenAt, STILL_AT, STILL_DIM } from "./sheen";
 import type { GlassKind } from "../../design/glass/glassRegistry";
 import { pingPong } from "../css/drift";
 import type { FxPalette, FxParams } from "../FxLayer";
@@ -25,6 +26,45 @@ export interface View {
 }
 
 const rgb = (c: readonly number[]) => [c[0]! / 255, c[1]! / 255, c[2]! / 255];
+
+/** Glossy veil position (−1 = resting / off) at engine time `now` (ms). */
+export function sheenPos(p: FxParams, now: number, reduced: boolean): number {
+  const s = p.cardSheen;
+  if (s?.on !== true) return -1;
+  return reduced ? STILL_AT : sheenAt(now, num(s, "duration", 1800));
+}
+
+/** Glossy veil uniforms for the selected card's box (`box` = centre, half size). */
+export function sheenUniforms(
+  p: FxParams,
+  pos: number,
+  box: Float32Array | null,
+  reduced: boolean,
+) {
+  const s = p.cardSheen;
+  const on = box !== null && pos >= 0;
+  const half = box ? (num(s, "width", 28) / 100) * (box[2]! + box[3]!) * 0.5 : 0;
+  return {
+    uSheen: [
+      on ? pos : -1,
+      num(s, "intensity", 0.3) * (reduced ? STILL_DIM : 1),
+      half,
+      num(s, "angle", 18) * DEG,
+    ],
+    uSheenBox: box ? Array.from(box) : [0, 0, 0, 0],
+  };
+}
+
+/** Poster textures: refraction (× the rim's), reflection on the rim. */
+export function posterK(p: FxParams): number[] {
+  const g = p.posterGlass;
+  return [num(g, "refraction", 1), num(g, "reflection", 0.35)];
+}
+
+/** Parallax of the particles (px, nearest layer), or 0 (matter off, reduced motion). */
+export function parallaxPx(p: FxParams, reduced: boolean): number {
+  return p.matter?.on === true && !reduced ? num(p.matter, "parallax", 12) : 0;
+}
 
 /** Cursor light uniform: x, y, intensity (fade included), radius. */
 export function lightOf(p: FxParams, pointer: PointerLight): number[] {
@@ -73,6 +113,10 @@ export function bgUniforms(
       num(moon, "top", -170) + mSize / 2,
       (mSize / 2) * (1 + num(moon, "breathe", 0.04) * mu),
       moon?.on ? num(moon, "intensity", 0.34) * (0.8 + 0.2 * mu) * k : 0,
+    ],
+    uAir: [
+      moon?.on ? num(moon, "spread", 0) : 0,
+      backdrop?.on !== false ? num(backdrop, "lift", 0) * k : 0,
     ],
     uVeilA: [
       W / 2 + (-amp + 2 * amp * ua),
@@ -139,7 +183,13 @@ export function spriteUniforms(p: FxParams, v: View): Uniforms {
     typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c)
       ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255)
       : [244 / 255, 241 / 255, 250 / 255];
-  return { uView: [v.W, v.H], uStar: star };
+  const l = p.particleLight;
+  const lit = l?.on === true;
+  return {
+    uView: [v.W, v.H],
+    uStar: star,
+    uPLight: [lit ? num(l, "intensity", 0.6) : 0, num(l, "reach", 1), num(l, "halo", 0.35), 0],
+  };
 }
 
 /** The ring in the background texture, or null (ring off / fallen back). */
@@ -218,5 +268,8 @@ export function glassUniforms(p: FxParams, light: number[], pal: FxPalette, v: V
     uLight: light,
     uSpec: p.cursorLight?.on ? num(p.cursorLight, "spec", 0.6) : 0,
     uLightCol: [0.85 + 0.15 * a[0]!, 0.85 + 0.15 * a[1]!, 0.85 + 0.15 * a[2]!],
+    uMatter: p.matter?.on
+      ? [num(p.matter, "rimGrain", 0.35), num(p.matter, "rimDepth", 0.4)]
+      : [0, 0],
   };
 }

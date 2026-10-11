@@ -6,7 +6,8 @@ import { frameLoop, type FrameLoop } from "../loop";
 import { prefersReducedMotion } from "../motionPref";
 import { BudgetWatch } from "./budgetWatch";
 import { rgb01 } from "./gl";
-import { GlassFrame } from "./glassFrame";
+import { GlassFrame, type PosterPass } from "./glassFrame";
+import { MAX_POSTERS, PosterTextures } from "./posterTextures";
 import { PointerLight } from "./pointer";
 import { Renderer } from "./renderer";
 import { Scene } from "./scene";
@@ -17,6 +18,10 @@ import {
   kindTint,
   lightOf,
   liquidRingOn,
+  parallaxPx,
+  posterK,
+  sheenPos,
+  sheenUniforms,
   ringUniforms,
   spriteUniforms,
   type View,
@@ -56,6 +61,9 @@ export class GlassEngine implements FxLayer {
   private dirty = true;
   private ambientFps = 60;
   private ambientSlot = -1;
+  private parallax = 0;
+  private reduced = false;
+  private sheen = -1;
   private bg: number[][] = [];
   private view: View = { W: 1, H: 1, w: 1, h: 1 };
   private state: EngineState = { active: false, ring: false };
@@ -63,6 +71,7 @@ export class GlassEngine implements FxLayer {
   private themeTimer = 0;
   private readonly scene = new Scene();
   private readonly frame = new GlassFrame();
+  private posters: PosterTextures | null = null;
   private readonly pointer = new PointerLight();
   private readonly watch = new BudgetWatch();
   private readonly onResize = () => {
@@ -142,6 +151,9 @@ export class GlassEngine implements FxLayer {
     if (!this.gl && !this.create()) return;
     const reduced = prefersReducedMotion();
     this.scene.configure(this.params, this.quality, reduced);
+    this.reduced = reduced;
+    this.parallax = parallaxPx(this.params, reduced);
+    this.pointer.parallax = this.parallax > 0;
     const b = budgetFor(this.quality, reduced);
     this.ambientFps = fxFps(b);
     this.layout();
@@ -178,6 +190,7 @@ export class GlassEngine implements FxLayer {
     this.canvas = canvas;
     this.gl = gl;
     this.renderer = renderer;
+    this.posters = new PosterTextures(gl);
     this.readTheme();
     return true;
   }
@@ -194,6 +207,8 @@ export class GlassEngine implements FxLayer {
     this.pointer.detach();
     window.removeEventListener("resize", this.onResize);
     this.canvas?.removeEventListener("webglcontextlost", this.onLost);
+    this.posters?.dispose();
+    this.posters = null;
     this.renderer?.dispose();
     this.gl?.getExtension("WEBGL_lose_context")?.loseContext();
     this.canvas?.remove();
@@ -261,19 +276,49 @@ export class GlassEngine implements FxLayer {
     kindOn(this.params, kind) && this.watch.allows(kind);
   private tint = (kind: GlassKind): number => kindTint(this.params, kind);
 
+  /** Posters drawn as textures this frame, or null (element off, fallen back on the ladder). */
+  private posterPass(): PosterPass | null {
+    const p = this.params;
+    const t = this.posters;
+    if (!t || p.posterGlass?.on !== true || !this.watch.allows("poster")) {
+      if (t && t.count > 0) {
+        t.limit = 0; // free them all now
+        t.end();
+      }
+      return null;
+    }
+    const c = p.glassCards;
+    const max = p.posterGlass.maxTextures;
+    t.limit = Math.min(MAX_POSTERS, typeof max === "number" ? Math.round(max) : MAX_POSTERS);
+    return {
+      textures: t,
+      opacity: typeof c?.posterOpacity === "number" ? c.posterOpacity : 1,
+      inset: typeof c?.posterInset === "number" ? c.posterInset : 3,
+    };
+  }
+
   private tick(dt: number, now: number): void {
     const rung = this.watch.push(dt);
     if (rung) {
       console.warn(`Glass engine: frame budget missed, step down (${rung})`);
+      document.documentElement.dataset.glassRung = rung; // last rung taken (logs, dev bench)
       if (this.watch.off) return this.fail("budget d'image dépassé");
       if (rung === "scale") this.layout();
       this.dirty = true;
     }
     this.scene.step(dt);
     const fading = this.pointer.step(dt);
-    const moved = this.frame.measure(this.drawn, this.tint);
+    const pass = this.posterPass();
+    pass?.textures.begin();
+    let moved = this.frame.measure(this.drawn, this.tint, pass);
+    // A poster just became a texture: draw (the DOM picture was hidden in this same frame).
+    if (this.posters?.end()) moved = this.frame.measure(this.drawn, this.tint, pass) || true;
     const slot = Math.floor(now / (1000 / this.ambientFps));
-    const ambient = this.scene.animated && slot !== this.ambientSlot;
+    // The glossy veil asks for frames only while it glides (and once more when it stops).
+    const sheen = this.frame.hasSel ? sheenPos(this.params, now, this.reduced) : -1;
+    const gliding = !this.reduced && (sheen >= 0 || this.sheen >= 0);
+    this.sheen = sheen;
+    const ambient = (this.scene.animated || gliding) && slot !== this.ambientSlot;
     if (!(moved || ambient || fading || this.pointer.moved || this.dirty)) return;
     this.ambientSlot = slot;
     this.pointer.moved = false;
@@ -290,19 +335,33 @@ export class GlassEngine implements FxLayer {
     const ring = ringAllowed ? ringUniforms(p, palette, this.scene, light, v) : null;
     const liquid = ringAllowed && liquidRingOn(p);
     const f = this.frame;
+    const bg = bgUniforms(p, palette, this.bg, this.scene, light, v, this.intensity, ringAllowed);
+    // Lit particles receive the same lights as the background (moon, liquid ring, cursor).
+    const par = [-this.pointer.ox * this.parallax, -this.pointer.oy * this.parallax * 0.6];
+    const su = {
+      ...spriteUniforms(p, v),
+      uMoon: bg.uMoon!,
+      uLight: light,
+      uLRing: bg.uLRing!,
+      uPar: par,
+    };
     renderer.render(
-      bgUniforms(p, palette, this.bg, this.scene, light, v, this.intensity, ringAllowed),
-      { data: this.scene.sprites, count: this.scene.count, u: spriteUniforms(p, v) },
+      bg,
+      { data: this.scene.sprites, count: this.scene.count, u: su },
       ring,
       {
         ...glassUniforms(p, light, palette, v),
+        ...sheenUniforms(p, this.sheen, f.hasSel ? f.sel : null, this.reduced),
         uN: f.n,
         uNested: f.nested > 0 ? 1 : 0,
         uR: f.R,
         uS: f.S,
         uT: f.T,
         uC: f.C,
+        uPo: f.P,
+        uPosterK: posterK(p),
       },
+      this.posters ? () => this.posters!.bind() : null,
     );
     this.setState({ active: true, ring: ring !== null || liquid });
   }

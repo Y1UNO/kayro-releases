@@ -19,8 +19,10 @@ import { installAddAppsMock } from "./addAppsMock";
 import { runBench, type BenchResult } from "./bench";
 import { setDevPoster } from "../features/home/art";
 
-/** A colourful picture of the repository, as a stand-in game poster (dev server only). */
-const DEV_POSTER = "/reference/inspirations/Capture d%27%C3%A9cran 2026-10-11 140423.png";
+/** Colourful pictures of the repository, as stand-in game posters (dev server only). */
+const DEV_POSTERS = ["140406", "140411", "140423"].map(
+  (t) => `/reference/inspirations/Capture d%27%C3%A9cran 2026-10-11 ${t}.png`,
+);
 import { ACTIVE_THEME_ID } from "../design/da";
 
 const MOCK: Record<string, string[]> = {
@@ -65,7 +67,7 @@ function benchLayers(params: URLSearchParams) {
 
 export default function HomeDev() {
   const params = new URLSearchParams(location.search);
-  if (params.has("posters")) setDevPoster(DEV_POSTER);
+  if (params.has("posters")) setDevPoster(DEV_POSTERS);
   const [bench, setBench] = useState<BenchResult | null>(null);
   const [ready] = useState(() => {
     const apps = seed(params);
@@ -133,8 +135,11 @@ export default function HomeDev() {
       if (params.get("view") === "grid")
         window.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
       void runBench(10_000, params.get("bench") === "idle" ? 0 : 30).then((r) => {
-        (window as unknown as { __bench: BenchResult }).__bench = r;
-        setBench(r);
+        // Last rung of the glass engine's fallback ladder, if it stepped down during the bench.
+        const rung = document.documentElement.dataset.glassRung ?? "none";
+        const res = { ...r, rung };
+        (window as unknown as { __bench: BenchResult }).__bench = res;
+        setBench(res);
       });
     }, 1500);
     return () => window.clearTimeout(id);

@@ -11,6 +11,16 @@
   );
 }
 
+/* "Plus aéré" (backdrop.lift): the whole background lifted towards a light mix of the theme. Under
+   the atmosphere layers; the glass engine draws its own (its canvas covers this one). */
+.root::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg-top) 65%, var(--grad-a));
+  opacity: var(--da-bg-lift, 0);
+}
+
 /* 256 px noise tile (scripts/make-noise.mjs), repeated. */
 .grain {
   position: absolute;
