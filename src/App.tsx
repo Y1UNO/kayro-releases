@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./App.module.css";
 import { HomeScreen } from "./features/home/HomeScreen";
 import { SceneEditor } from "./features/scenes/SceneEditor";
@@ -10,6 +10,8 @@ import { desktopStore, sceneStore, useHub } from "./store";
 import { announceReady, useWindowShown } from "./app/useWindowShown";
 import { usePlayScene } from "./features/scenes/usePlayScene";
 import { useSceneHotkey } from "./features/scenes/useSceneHotkey";
+import { Opening } from "./features/opening/Opening";
+import { useOpening } from "./features/opening/useOpening";
 
 /** Where the user is: the home screen, the list of scenes, or the editor of one scene. */
 type Screen = { name: "home" } | { name: "scenes" } | { name: "editor"; sceneId: string | null };
@@ -18,6 +20,8 @@ export function App() {
   const status = useHub((s) => s.status);
   const error = useHub((s) => s.lastError);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
+  const opening = useOpening();
+  const under = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Show the (hidden) window only once the first frame is painted: no white flash.
@@ -55,16 +59,23 @@ export function App() {
   const toScenes = () => setScreen({ name: "scenes" });
   return (
     <>
-      {screen.name === "home" && <HomeScreen onOpenScenes={toScenes} />}
-      {screen.name === "scenes" && (
-        <ScenesScreen
-          onBack={() => setScreen({ name: "home" })}
-          onEdit={(sceneId) => setScreen({ name: "editor", sceneId })}
-        />
-      )}
-      {screen.name === "editor" && (
-        <SceneEditor key={screen.sceneId ?? "new"} sceneId={screen.sceneId} onBack={toScenes} />
-      )}
+      <div
+        ref={under}
+        className={opening.hidden ? styles.under : styles.screens}
+        style={opening.hidden && !opening.play ? { opacity: 0 } : undefined}
+      >
+        {screen.name === "home" && <HomeScreen onOpenScenes={toScenes} />}
+        {screen.name === "scenes" && (
+          <ScenesScreen
+            onBack={() => setScreen({ name: "home" })}
+            onEdit={(sceneId) => setScreen({ name: "editor", sceneId })}
+          />
+        )}
+        {screen.name === "editor" && (
+          <SceneEditor key={screen.sceneId ?? "new"} sceneId={screen.sceneId} onBack={toScenes} />
+        )}
+      </div>
+      {opening.play && <Opening under={under} onDone={opening.finish} />}
       <SceneToast />
       {dialog}
     </>

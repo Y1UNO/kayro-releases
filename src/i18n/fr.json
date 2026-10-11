@@ -4,6 +4,10 @@
     "appsCount": "Applications : {count}",
     "loadFailed": "Vos données n’ont pas pu être chargées."
   },
+  "opening": {
+    "subtitle": "Lanceur d’applications",
+    "skip": "Animation d’ouverture : appuie sur une touche ou clique pour passer"
+  },
   "home": {
     "search": {
       "placeholder": "Rechercher une app ou une scène",

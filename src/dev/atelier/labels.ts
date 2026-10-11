@@ -1,5 +1,6 @@
 // French labels of the workshop (dev only: never in a production bundle). One entry per element
 // of src/design/da/catalogue.ts; a missing label falls back to the id.
+import { MOTION_LABELS } from "./labelsMotion";
 
 export const GROUPS: Record<string, string> = {
   fond: "Fond",
@@ -345,6 +346,7 @@ export const ELEMENT_LABELS: Record<string, ElementLabel> = {
       angle: "Angle",
     },
   },
+  ...MOTION_LABELS,
 };
 
 export const OPTION_LABELS: Record<string, string> = {
@@ -355,6 +357,7 @@ export const OPTION_LABELS: Record<string, string> = {
   ressort: "ressort",
   net: "net (sans rebond)",
   leger: "léger rebond",
+  vive: "sortie vive",
   kayro: "Cormorant + Manrope",
   historique: "Fraunces + DM Sans",
   high: "Élevée",

@@ -1,0 +1,224 @@
+/*
+ * Opening V1-A (art direction round 3). Values of the mock-up R3-Ouverture-V1-A (1280×760 board,
+ * same CSS px in the app): logo tile 132 px, gap 30, name 118 px Cormorant 300, line 2 px,
+ * subtitle 12 px 700 spaced 0.32 em, row centred at 41.6 % of the height. Everything that moves
+ * has its own layer: the sequence writes transform / opacity from script at every frame.
+ */
+.root {
+  --opening-r: 200px;
+  --opening-blur: 6px;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  color: var(--text);
+  cursor: default;
+  will-change: opacity;
+}
+
+.hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*
+ * Without the engine: the opening paints its own background above the CSS atmosphere (dark, then
+ * the mock-up's gradient fades in); the hand-off reveals the home screen's. The engine does both
+ * itself (this layer then stays at opacity 0).
+ */
+.bg {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-bottom);
+  opacity: 0;
+}
+
+.bgLight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    90% 75% at 50% 0%,
+    var(--bg-top) 0%,
+    var(--bg-mid) 50%,
+    var(--bg-bottom) 100%
+  );
+  opacity: 0;
+  will-change: opacity;
+}
+
+.centre {
+  position: absolute;
+  left: 50%;
+  top: 41.6%;
+  width: 0;
+  height: 0;
+}
+
+/* CSS fallback of the engine's halo and ring (hidden while the engine draws them). */
+.halo {
+  position: absolute;
+  left: calc(var(--opening-r) * -1.7);
+  top: calc(var(--opening-r) * -1.35);
+  width: calc(var(--opening-r) * 3.4);
+  height: calc(var(--opening-r) * 2.7);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--grad-a) 30%, transparent),
+    transparent
+  );
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.ring {
+  position: absolute;
+  left: calc(var(--opening-r) * -1);
+  top: calc(var(--opening-r) * -1);
+  width: calc(var(--opening-r) * 2);
+  height: calc(var(--opening-r) * 2);
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1.6px solid color-mix(in srgb, var(--grad-a) 90%, transparent);
+  outline: 0.8px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2.2px;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.ring::after {
+  content: "";
+  position: absolute;
+  inset: 2.4px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--grad-b) 70%, transparent);
+}
+
+.row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 41.6%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  transform: translateY(-50%);
+}
+
+/* The logo is above the letters: they come out from behind its right edge. */
+.logoBox {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 132px;
+  height: 132px;
+}
+
+/* Brand tile = 56 of 64 units: a 151 px symbol draws a 132 px tile (corner 23.6 px). */
+.logo {
+  position: absolute;
+  inset: 0;
+  border-radius: 23.6px;
+  box-shadow: 0 30px 80px color-mix(in srgb, var(--grad-a) 30%, transparent);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.logo svg {
+  position: absolute;
+  left: -9.4px;
+  top: -9.4px;
+  width: 151px;
+  height: 151px;
+}
+
+.soft {
+  box-shadow: none;
+  filter: blur(14px);
+}
+
+.sheenClip {
+  position: absolute;
+  inset: 0;
+  border-radius: 23.6px;
+  overflow: hidden;
+}
+
+.sheen {
+  position: absolute;
+  left: 0;
+  top: -20px;
+  width: 46px;
+  height: 180px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0)
+  );
+  transform: translateX(-170px) skewX(-20deg);
+  will-change: transform;
+}
+
+.word {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.letters {
+  display: flex;
+  font-family: var(--font-title);
+  font-size: 118px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.slot {
+  position: relative;
+  display: inline-block;
+}
+
+.letter,
+.blurred {
+  display: inline-block;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.blurred {
+  position: absolute;
+  left: 0;
+  top: 0;
+  filter: blur(var(--opening-blur));
+}
+
+.root[data-eco] .blurred,
+.root[data-eco] .soft {
+  display: none;
+}
+
+.line {
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
+  transform: scaleX(0);
+  transform-origin: left;
+  will-change: transform;
+}
+
+.sub {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  opacity: 0;
+  will-change: transform, opacity;
+}

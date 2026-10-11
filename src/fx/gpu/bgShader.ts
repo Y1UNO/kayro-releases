@@ -25,6 +25,10 @@ export const BG_UNIFORMS = [
   "uLRing",
   "uLRing2",
   "uDrip",
+  "uIntro",
+  "uIHalo",
+  "uIRing",
+  "uIRing2",
 ] as const;
 
 export const BG_FRAGMENT = `#version 300 es
@@ -51,6 +55,11 @@ uniform float uVig;     // vignette strength
 uniform vec4 uLRing;    // liquid ring: centre x, y, radius, intensity (0 = off)
 uniform vec4 uLRing2;   // thickness, glow width (px), highlight phase (rad), time (s)
 uniform vec4 uDrip;     // drop: angle (rad), progress 0–1 (< 0: none), reach (px), -
+// Opening (round 3, src/fx/gpu/cues.ts): background fade-in, a halo and a ring drawn by hand.
+uniform float uIntro;   // background fade 0–1 (1 = no opening)
+uniform vec4 uIHalo;    // halo: centre x, y, radius x (y = 0.794 x), opacity
+uniform vec4 uIRing;    // ring: centre x, y, radius, opacity (0 = off)
+uniform vec4 uIRing2;   // drawn fraction 0–1, glint angle (rad), glint opacity, scale
 
 vec3 base(vec2 p) {
   float t;
@@ -117,6 +126,40 @@ vec3 liquidRing(vec2 p) {
   return col * lum * hl * uLRing.w;
 }
 
+// Antialiased line of width w (CSS px) at signed distance d; aa = CSS px per target pixel.
+float strokeAt(float d, float w, float aa) {
+  return clamp((0.5 * w - abs(d)) / aa + 0.5, 0.0, 1.0) * min(w / aa, 1.0);
+}
+
+// Opening ring (mock-up R3-Ouverture-V1-A): three thin strokes (A 1.6 px on the radius, B 1 px
+// just inside, white 0.8 px just outside) drawn from the top clockwise, and a short white arc with
+// a glow that makes one turn. The scale widens the strokes too (CSS transform of the mock-up).
+vec3 introRing(vec2 p, vec3 c) {
+  vec2 d = p - uIRing.xy;
+  float r = length(d);
+  float s = uIRing2.w;
+  float R = uIRing.z;
+  if (abs(r - R) > 24.0 * s) return c;
+  float aa = uView.x / uRes.x;
+  float th = atan(d.x, -d.y);
+  if (th < 0.0) th += 6.28318531;
+  float drawn = uIRing2.x <= 0.0 ? 0.0 : clamp((uIRing2.x * 6.28318531 - th) * r / aa + 0.5, 0.0, 1.0);
+  float o = uIRing.w * drawn;
+  c = mix(c, uB, 0.7 * o * strokeAt(r - (R - 4.0 * s), 1.0 * s, aa));
+  c = mix(c, uA, 0.9 * o * strokeAt(r - R, 1.6 * s, aa));
+  c = mix(c, vec3(1.0), 0.55 * o * strokeAt(r - (R + 3.0 * s), 0.8 * s, aa));
+  if (uIRing2.z > 0.0) {
+    // 70 px of a 200 px radius = 0.35 rad, round caps, white drop shadow of 6 px.
+    float da = mod(th - (uIRing2.y + 0.175) + 3.14159265, 6.28318531) - 3.14159265;
+    float along = max(abs(da) - 0.175, 0.0) * r;
+    float dist = length(vec2(along, r - R));
+    float core = clamp((1.2 * s - dist) / aa + 0.5, 0.0, 1.0);
+    float glow = 0.9 * exp(-dist * dist / (18.0 * s * s));
+    c = mix(c, vec3(1.0), clamp(core + 0.6 * glow, 0.0, 1.0) * uIRing2.z * uIRing.w);
+  }
+  return c;
+}
+
 vec3 bands(vec2 p) {
   vec3 acc = vec3(0.0);
   vec2 dir = vec2(cos(uBands.w), sin(uBands.w));
@@ -153,6 +196,13 @@ void main() {
   vec2 v = (p - uView * vec2(0.5, 0.42)) / (uView * vec2(0.5, 0.58));
   float t = length(v) / 1.41421356;
   c = mix(c, vec3(4.0, 2.0, 8.0) / 255.0, uVig * clamp((t - 0.48) / 0.52, 0.0, 1.0));
+  // Opening: the page starts on the darkest colour; halo and ring sit above the background.
+  if (uIntro < 1.0) c = mix(uBg2, c, uIntro);
+  if (uIHalo.w > 0.0) {
+    vec2 q = (p - uIHalo.xy) / vec2(uIHalo.z, uIHalo.z * 0.794);
+    c = mix(c, uA, 0.3 * uIHalo.w * clamp(1.0 - length(q), 0.0, 1.0));
+  }
+  if (uIRing.w > 0.0) c = introRing(p, c);
   outColor = vec4(c, 1.0);
 }
 `;
@@ -165,6 +215,7 @@ export const SPRITE_UNIFORMS = [
   "uLRing",
   "uPLight",
   "uPar",
+  "uKind",
 ] as const;
 
 /** Per instance: aI = x, y, size (CSS px), alpha; aC = rgb, kind (0 ember, 1 star, 2 bokeh). */
@@ -178,6 +229,7 @@ uniform vec4 uLight;   // cursor x, y, intensity (fade included), radius
 uniform vec4 uLRing;   // liquid ring centre x, y, radius, intensity
 uniform vec4 uPLight;  // lit particles (round 2b): intensity, reach, halo, 0
 uniform vec2 uPar;     // parallax shift of the nearest layer (px); stars far, bokeh mid, embers near
+uniform vec3 uKind;    // opacity of the embers, stars, bokeh (opening, round 3; 1 otherwise)
 out vec2 vUv;
 out vec4 vC;
 out float vA;
@@ -199,7 +251,8 @@ void main() {
   vec2 p = q + aPos * aI.z * 0.5 * (1.0 + uPLight.z * lit);
   vUv = aPos;
   vC = vec4(mix(aC.rgb, vec3(1.0), 0.35 * min(lit, 1.0)), aC.w);
-  vA = aI.w * (1.0 + 1.2 * lit);
+  float kind = aC.w < 0.5 ? uKind.x : (aC.w < 1.5 ? uKind.y : uKind.z);
+  vA = aI.w * (1.0 + 1.2 * lit) * kind;
   gl_Position = vec4(p.x / uView.x * 2.0 - 1.0, 1.0 - p.y / uView.y * 2.0, 0.0, 1.0);
 }
 `;

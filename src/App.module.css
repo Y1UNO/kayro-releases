@@ -3,3 +3,14 @@
   z-index: 1;
   padding: 32px;
 }
+
+/* The screens, in one box so that the opening (art direction round 3) can fade them in. */
+.screens {
+  height: 100%;
+}
+
+/* While the opening plays: own layer (its opacity changes at every frame of the hand-off). */
+.under {
+  height: 100%;
+  will-change: opacity;
+}

@@ -24,6 +24,8 @@
 }
 
 .title {
+  /* Own layer: animated from script (see HomeScreen.module.css .layer). */
+  will-change: transform, opacity;
   position: absolute;
   left: 0;
   right: 0;

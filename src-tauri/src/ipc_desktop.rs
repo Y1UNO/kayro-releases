@@ -1,6 +1,8 @@
 //! IPC of the desktop side: hiding, dragging and fitting the widget, screens, shortcuts, starting
 //! with Windows, recent apps (registered in `ipc::builder`).
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri::{AppHandle, Runtime, State, WebviewWindow};
@@ -29,6 +31,39 @@ pub fn note_recent<R: Runtime>(app: &AppHandle<R>, config: &ConfigState, id: &st
         Ok(()) => {}
         Err(e) => tracing::warn!(error = %e, "could not save the recent apps"),
     }
+}
+
+static OPENING_PLAYED: AtomicBool = AtomicBool::new(false);
+
+/// Whether the opening animation plays now: once per run of the program, at the first time the
+/// main window is on screen (a silent start waits for the first show; in economy mode the window
+/// is built again at every show, so the page cannot remember it itself).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum OpeningDue {
+    /// Play it now (asked once: the next answers are `No`).
+    Now,
+    /// Not played yet but the window is hidden: ask again when it is shown.
+    Later,
+    No,
+}
+
+fn opening_due_for(visible: bool) -> OpeningDue {
+    if OPENING_PLAYED.load(Ordering::SeqCst) {
+        OpeningDue::No
+    } else if !visible {
+        OpeningDue::Later
+    } else if OPENING_PLAYED.swap(true, Ordering::SeqCst) {
+        OpeningDue::No
+    } else {
+        OpeningDue::Now
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn opening_due<R: Runtime>(window: WebviewWindow<R>) -> OpeningDue {
+    opening_due_for(window.is_visible().unwrap_or(true))
 }
 
 #[tauri::command]
@@ -165,4 +200,18 @@ pub fn autostart_set<R: Runtime>(app: AppHandle<R>, enabled: bool) -> Result<boo
     }
     tracing::info!(enabled, "start with Windows changed");
     autostart_get(app)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{opening_due_for, OpeningDue};
+
+    #[test]
+    fn the_opening_is_due_once_per_run_at_the_first_show() {
+        assert_eq!(opening_due_for(false), OpeningDue::Later);
+        assert_eq!(opening_due_for(false), OpeningDue::Later);
+        assert_eq!(opening_due_for(true), OpeningDue::Now);
+        assert_eq!(opening_due_for(true), OpeningDue::No);
+        assert_eq!(opening_due_for(false), OpeningDue::No);
+    }
 }

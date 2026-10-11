@@ -1,4 +1,5 @@
 import { GLASS_KIND_ELEMENT } from "../../design/da/catalogueGlass";
+import type { IntroFrame } from "./cues";
 import { sheenAt, STILL_AT, STILL_DIM } from "./sheen";
 import type { GlassKind } from "../../design/glass/glassRegistry";
 import { pingPong } from "../css/drift";
@@ -85,10 +86,13 @@ export function bgUniforms(
   scene: Scene,
   light: number[],
   v: View,
-  k: number,
+  k0: number,
   ring: boolean,
+  intro: IntroFrame | null = null,
 ): Uniforms {
   const { W, H } = v;
+  // During the opening the home layers wait (`home` 0 → 1 in its hand-off).
+  const k = k0 * (intro ? intro.home : 1);
   const t = scene.drifting ? scene.time : 0;
   const moon = p.moonHalo;
   const veils = p.veils;
@@ -116,7 +120,7 @@ export function bgUniforms(
     ],
     uAir: [
       moon?.on ? num(moon, "spread", 0) : 0,
-      backdrop?.on !== false ? num(backdrop, "lift", 0) * k : 0,
+      backdrop?.on !== false ? num(backdrop, "lift", 0) * k0 : 0,
     ],
     uVeilA: [
       W / 2 + (-amp + 2 * amp * ua),
@@ -146,7 +150,20 @@ export function bgUniforms(
     uLight: light,
     uVig: backdrop?.on !== false ? num(backdrop, "vignette", 0.55) : 0.62,
     ...liquidRingUniforms(p, t, v, k, ring),
+    ...introUniforms(intro),
   };
+}
+
+/** Opening uniforms (round 3): nothing drawn when `intro` is null. */
+export function introUniforms(intro: IntroFrame | null): Uniforms {
+  if (!intro)
+    return { uIntro: 1, uIHalo: [0, 0, 1, 0], uIRing: [0, 0, 1, 0], uIRing2: [0, 0, 0, 1] };
+  return { uIntro: intro.fade, uIHalo: intro.halo, uIRing: intro.ring, uIRing2: intro.draw };
+}
+
+/** Opacity of the embers, stars and bokeh (the opening fades them in; 1 otherwise). */
+export function kindUniform(intro: IntroFrame | null): number[] {
+  return intro ? [intro.embers, intro.fade, intro.fade * intro.home] : [1, 1, 1];
 }
 
 /** The liquid ring is drawn (its element and the crystal ring's geometry on). */

@@ -27,6 +27,7 @@ const SCREENS: Record<string, { label: string; url: (q: string) => string }> = {
   scenes: { label: "Scènes", url: (q) => `/dev/scenes?screen=scenes&${q}` },
   editeur: { label: "Éditeur de scène", url: (q) => `/dev/scenes?screen=editor&${q}` },
   composants: { label: "Composants", url: (q) => `/dev/catalogue?${q}` },
+  ouverture: { label: "Ouverture (rejouable)", url: (q) => `/dev/home?opening=1&${q}` },
 };
 
 interface Listed {
@@ -195,6 +196,15 @@ export default function Atelier() {
                 ))}
               </select>
             </label>
+            {screen === "ouverture" && (
+              <button
+                type="button"
+                className={styles.small}
+                onClick={() => sides.forEach((to) => post({ to, type: "replay" }))}
+              >
+                Rejouer
+              </button>
+            )}
             <label>
               Qualité{" "}
               <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)}>

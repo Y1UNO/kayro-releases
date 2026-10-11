@@ -1,4 +1,5 @@
 // Frame-time bench of the dev pages (step 7; reused by the art direction workshop, step 12b).
+import { activeSequences } from "../design/motion/choreo";
 
 export interface BenchResult {
   frames: number;
@@ -10,12 +11,15 @@ export interface BenchResult {
   /** Frames longer than 1.5× the median frame (a frame missed at this refresh rate). */
   dropped: number;
   hz: number;
+  /** Frames while a scripted sequence ran (round 3: opening, links), if any did. */
+  during?: { frames: number; p95: number; max: number; dropped: number };
 }
 
 /** Sends ArrowRight / ArrowLeft at `keyHz` keys per second (30 = a held key, 0 = none) for `ms`, and records every frame time. */
 export function runBench(ms: number, keyHz = 30): Promise<BenchResult> {
   return new Promise((resolve) => {
     const deltas: number[] = [];
+    const busy: boolean[] = [];
     let last = performance.now();
     const start = last;
     let dir = "ArrowRight";
@@ -23,6 +27,7 @@ export function runBench(ms: number, keyHz = 30): Promise<BenchResult> {
     let steps = 0;
     const loop = (now: number) => {
       deltas.push(now - last);
+      busy.push(activeSequences() > 0);
       sinceKey += now - last;
       last = now;
       if (sinceKey >= 1000 / keyHz) {
@@ -36,6 +41,16 @@ export function runBench(ms: number, keyHz = 30): Promise<BenchResult> {
         const sorted = [...deltas.slice(1)].sort((a, b) => a - b);
         const q = (p: number) =>
           sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
+        const seq = deltas.slice(1).filter((_, i) => busy[i + 1]);
+        seq.sort((a, b) => a - b);
+        const during = seq.length
+          ? {
+              frames: seq.length,
+              p95: seq[Math.min(seq.length - 1, Math.floor(0.95 * seq.length))] ?? 0,
+              max: seq[seq.length - 1] ?? 0,
+              dropped: seq.filter((d) => d > 1.5 * q(0.5)).length,
+            }
+          : undefined;
         resolve({
           frames: sorted.length,
           p50: q(0.5),
@@ -45,6 +60,7 @@ export function runBench(ms: number, keyHz = 30): Promise<BenchResult> {
           over25ms: sorted.filter((d) => d > 25).length,
           dropped: sorted.filter((d) => d > 1.5 * q(0.5)).length,
           hz: Math.round(1000 / (q(0.5) || 16.7)),
+          during,
         });
       }
     };

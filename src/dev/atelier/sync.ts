@@ -8,7 +8,11 @@ export type Side = "A" | "B";
 
 export type ToPreview =
   | { to: Side; type: "values"; values: DaValues }
-  | { to: Side; type: "bench"; ms: number; keyHz: number };
+  | { to: Side; type: "bench"; ms: number; keyHz: number }
+  | { to: Side; type: "replay" };
+
+/** Window event a preview page listens to, to play its sequence again (opening, round 3). */
+export const REPLAY_EVENT = "kayro:replay";
 
 export type FromPreview =
   { from: Side; type: "hello" } | { from: Side; type: "bench"; result: BenchResult };
@@ -23,6 +27,7 @@ export function listenAsPreview(side: string | null): void {
     const m = e.data;
     if (m.to !== side) return;
     if (m.type === "values") daStore.getState().replace(m.values);
+    else if (m.type === "replay") window.dispatchEvent(new Event(REPLAY_EVENT));
     else if (m.type === "bench") {
       void runBench(m.ms, m.keyHz).then((result) => {
         const reply: FromPreview = { from: side, type: "bench", result };

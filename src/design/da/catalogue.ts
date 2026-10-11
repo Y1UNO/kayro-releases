@@ -13,6 +13,7 @@
 import { color, n, NONE, px, range, select, toggle, type DaElement } from "./daParams";
 import { AIR_ELEMENTS } from "./catalogueAir";
 import { GLASS_ELEMENTS } from "./catalogueGlass";
+import { MOTION_ELEMENTS } from "./catalogueMotion";
 
 export type {
   ColorParam,
@@ -32,6 +33,8 @@ export type {
 export const EASES: Readonly<Record<string, string>> = {
   douce: "cubic-bezier(0.2, 0.8, 0.2, 1)",
   premium: "cubic-bezier(0.22, 1, 0.36, 1)",
+  // Round 3 (letters of the opening): leaves fast, settles long.
+  vive: "cubic-bezier(0.16, 1, 0.3, 1)",
   ressort: "cubic-bezier(0.34, 1.36, 0.64, 1)",
   lineaire: "linear",
 };
@@ -167,6 +170,7 @@ export const CATALOGUE: readonly DaElement[] = [
   // ---- Liquid glass (WebGL2 engine, step 12b round 2) ----
   ...GLASS_ELEMENTS,
   ...AIR_ELEMENTS,
+  ...MOTION_ELEMENTS,
   // ---- Interface ----
   {
     id: "cards",

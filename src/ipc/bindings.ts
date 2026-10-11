@@ -104,6 +104,7 @@ export const commands = {
 	autostartGet: () => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_get")),
 	autostartSet: (enabled: boolean) => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_set", { enabled })),
 	recentsGet: () => __TAURI_INVOKE<string[]>("recents_get"),
+	openingDue: () => __TAURI_INVOKE<OpeningDue>("opening_due"),
 };
 
 /** Events */
@@ -326,6 +327,17 @@ export type NewApp = {
 	moodId: string | null,
 	favorite: boolean,
 };
+
+/**
+ *  Whether the opening animation plays now: once per run of the program, at the first time the
+ *  main window is on screen (a silent start waits for the first show; in economy mode the window
+ *  is built again at every show, so the page cannot remember it itself).
+ */
+export type OpeningDue = 
+/**  Play it now (asked once: the next answers are `No`). */
+"now" | 
+/**  Not played yet but the window is hidden: ask again when it is shown. */
+"later" | "no";
 
 /**  Payload of the `scene_progress` event. */
 export type ProgressEvent = {

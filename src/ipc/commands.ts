@@ -3,6 +3,7 @@
 import { commands, type AppEntry, type AppError, type NewApp, type Settings } from "./bindings";
 import type {
   AddReport,
+  OpeningDue,
   ImportPreview,
   SceneFile,
   SlotsFile,
@@ -121,6 +122,8 @@ export const desktopIpc = {
   setAutostart: (enabled: boolean): Promise<Outcome<boolean>> =>
     checked(commands.autostartSet(enabled)),
   recents: (): Promise<Outcome<string[]>> => plain(commands.recentsGet()),
+  /** Once per run of the program, at the first show: the opening animation (round 3). */
+  openingDue: (): Promise<Outcome<OpeningDue>> => plain(commands.openingDue()),
 };
 
 export type DesktopIpc = typeof desktopIpc;

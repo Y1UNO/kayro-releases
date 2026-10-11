@@ -6,7 +6,7 @@ Lu au début de chaque session de l'étape 12b. Permet de reprendre dans une con
 - Nom : **V4 Aéré lumineux** (`src/design/presets/v4-aere-lumineux.json`, thème Bleu-gris, ronde 2b) : base `v4-aere-bleu-gris` (2a) + fond aéré, particules éclairées, matière, voile brillant, affiches dans le verre, pastille « léger rebond ». `active.json` (défaut du catalogue) n'a pas été modifié : toujours V4 Verre liquide, lavande-pêche
 - 2a : **V4 Verre liquide** : moteur WebGL2 sur les cartes et les pastilles de sélection seulement, anneau liquide
 - Fichiers : `src/design/presets/v4-verre-liquide.json` ; comparaison : `v4-verre-liquide-complet.json` (tout en verre, anneau en tube : état du premier essai 2a), `v4-cristal.json` (V4 de la ronde 1, CSS, moteur coupé), `croquis-12.json` (étapes 3 à 12), `v4-cristal-gpu.json` (anneau seul dans le moteur, comme le spike)
-- Branche / tags : `step-12b-atelier-da` / `da-r1`, `da-r2a` (2a commitée le 2026-10-11, avec `v4-aere-bleu-gris`). Ronde 2b : **non commitée**, en attente de ton test
+- Branche / tags : `step-12b-atelier-da` / `da-r1`, `da-r2a` (2a commitée le 2026-10-11, avec `v4-aere-bleu-gris`), ronde 2b commitée (`e497060`). Ronde 3a : **non commitée** (tag prévu `da-r3a`, à ta demande) ; préréglage `v4-r3-signature.json` = V4 Aéré lumineux + ouverture
 
 ## Mode d'emploi
 - `npm run dev` puis `http://localhost:1420/dev/atelier` (navigateur) : réglages à gauche (générés depuis `src/design/da/catalogue.ts`), écrans réels à droite (Accueil, grille, ajout d'apps, scènes, éditeur, composants), 11 thèmes, qualité, comparaison A/B, Enregistrer / Charger / Historique, Exporter (→ `active.json` = DA de l'app), Mesurer (10 s).
@@ -122,6 +122,77 @@ Lecture : le moteur plein écran coûte ~1 point de GPU de plus que le CSS mais 
 **Testé (fin de 2b)** : tsc, eslint, prettier (fichiers touchés), vitest 410/410 (+ `air.test.ts` : préréglages, parallaxe, voile, ressorts ; `posterTextures.test.ts` : chargement, libération, plafond, refus), build de production sans code d'atelier ni image de test (grep). `cargo test` non relancé (aucun changement Rust).
 **Gardé / Rejeté** : — (à remplir avec tes mots après ton test)
 
+## Ronde 3 — 2026-10-11 (animations signature)
+**Demande** : 3 sous-rondes avec arrêt et validation à l'œil entre chacune. Specs : `reference/animations/R3-*.txt` (les .txt font foi, « MES REMARQUES » vides ; maquettes HTML lues comme du code pour les valeurs exactes). Contraintes : p95 ≤ 5,4 ms en Élevée ET Éco en vraie fenêtre 2560×1440 ~278 Hz, au repos ET pendant la transition ; reduced motion = état final direct ; repli CSS sans WebGL ; transform/opacity seulement hors moteur ; anneau et verre par le moteur ; ressorts par `SPRINGS` (≤ 8 %) ; tout réglable dans l'atelier, couleurs du thème ; une transition à la fois (jeton) ; CSS < 400 lignes. Cette conversation : **3b-0 (diagnostic) + 3a seulement** ; 3b dans une nouvelle conversation qui repart de ce journal.
+
+### Tes décisions (à appliquer en 3b)
+- **Parcours** : au lancement de Kayro seulement : ouverture → **éventail** → (clic) liaison → carrousel. Rappel par Ctrl+Alt+H : directement le carrousel de la dernière catégorie (hub masqué sur l'éventail → remis sur le carrousel sans animation). Bouton « Toutes les catégories » dans la barre du haut → retour animé vers l'éventail. **Échap sur l'éventail** → carrousel de la dernière catégorie (animation inverse = liaison vers cette carte) ; Échap sur le carrousel garde son rôle.
+- **Flottaison** : les 5 cartes flottent très légèrement (phase et amplitude propres, très lent), la survolée un peu plus + les filets ; amplitudes repos et survol réglables ; aucune en reduced motion ; boucle arrêtée dès que l'éventail n'est plus affiché (60 i/s, 30 en Éco).
+- **Ouverture** : une fois par démarrage du programme, au premier affichage ; jamais au rappel par raccourci ; désactivable (`opening.on`).
+- **3c** (éditeur « chaîne de points », dépliage du widget) : accepté en principe, **non implémenté** → prochaine petite ronde (voir « Reste à faire »).
+
+### 3b-0 — diagnostic du changement d'onglet (p95 7,2 ms depuis la 2a)
+**Méthode** : banc CDP sur la vraie fenêtre (`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222 npm run dev:atelier-bench`, puis navigation vers `/dev/home?preset=…&bench=…` ; scripts gardés hors dépôt), une variable à la fois, puis trace Chromium (`Tracing`).
+**Cause** : ni le moteur (moteur coupé : 7,2 ms, 229 perdues), ni la pastille (coupée : 7,2 ms, 199). La trace montre, pendant ~450 ms après chaque clic, le fil GPU saturé (≈ 50 ms occupées sur 50) par des **repeints du document entier 2560×1440 à chaque image** : le ressort Framer Motion qui fait entrer la catégorie (`.layer` de `HomeScreen`, et le titre de `CategoryTitle`) est piloté en script, sur des éléments sans couche de composition propre → chaque image repeint la racine.
+**Correctif** (2 lignes, mesuré utile) : `will-change: transform, opacity` sur `.layer` (`HomeScreen.module.css`) et `.title` (`CategoryTitle.module.css`).
+
+| Changement d'onglet toutes les 1,5 s (`cycle=1500`) | Qualité | p95 | Images perdues / 10 s |
+|---|---|---|---|
+| avant (3 essais) | Élevée | 7,2 ms ❌ | 209 / 224 / 224 |
+| après (4 essais) | Élevée | 3,7 ms ✅ | 83 / 34 / 48 / 38 |
+| après | Éco | 3,7 ms ✅ | 28 |
+| repos, après le correctif | Élevée / Éco | 3,7 / 3,7 ms ✅ | 0 / 0 |
+
+Reste : le commit React de la nouvelle catégorie (11–17 ms en build de dev, une tâche par clic) et le repeint des boutons d'onglets (transition de couleur) ; la 3b remplace de toute façon ce remontage par le deck (mêmes cartes, pas de remontage). **Leçon pour la suite** : un élément animé depuis le script doit avoir sa propre couche (`will-change`) pendant l'animation.
+
+### 3a — Ouverture V1-A « les lettres sortent du logo »
+**Fait** :
+- Séquence pure `src/features/opening/openingTimeline.ts` (`openingAt(t, réglages, géométrie)` → toutes les valeurs à l'instant t). Base V1 figée selon la spec (fond 700 ms ; halo 100/1 400 ; anneau 200/1 100 en 3 filets ; reflet 950/1 050 ; logo 950/800 ; éclat 1 450/900 ; anneau ×1,4 + fondu 1 750/850 ; filet 2 550/700 ; sous-titre 2 800/600 ; braises dès 2 500). V1-A : glissement du logo à 1 750, lettres toutes les 85 ms dès 2 000, opaques à 30 % du trajet. **Décalages des lettres et distance du glissement mesurés dans la page** (le logo part centré dans la fenêtre ; chaque lettre part du centre final du logo) : sur la maquette, la formule redonne K −127 … o −326 (test).
+- Moteur (`bgShader.ts`, `uniforms.ts`, `engine.ts`) : fondu du fond depuis la couleur la plus sombre, halo centré, **anneau dessiné depuis le haut dans le sens horaire avec ses 3 filets** (A 1,6 px, B 1 px dedans, blanc 0,8 px dehors) et le reflet (arc de 70 px + lueur) ; braises / étoiles / bokeh en fondu (`uKind`) ; couches de l'accueil (lune, voiles, bandes, anneau liquide) à 0 pendant l'ouverture puis en fondu au passage. Le moteur échantillonne la séquence avec sa propre horloge (même grille d'images que le DOM) et ne redessine que si l'image change.
+- DOM (`Opening.tsx` + `runOpening.ts` + `Opening.module.css`) : logo de la marque (tuile 132 px), éclat, 5 lettres (depuis `APP_NAME`), filet A→B, sous-titre (messages `opening.*`). **Flou sans filtre animé** : fondu enchaîné avec une copie floue fixe (logo 14 px, lettres `letterBlur`) ; Éco : pas de copie floue. Styles écrits seulement s'ils changent.
+- Saut : clic ou touche → fin immédiate (la touche n'atteint pas l'accueil). Reduced motion : composition finale tout de suite, puis accueil après `max(1,2 s, tenue)` sans fondu. Sans moteur : fond, halo et anneau en CSS (l'anneau apparaît en fondu, sans tracé ni reflet), par-dessus l'atmosphère CSS jusqu'au passage.
+- Passage à l'accueil échelonné : l'ouverture s'efface sur les 55 premiers % de `handoff`, l'accueil arrive sur les 70 derniers % (sinon le nom et les cartes se superposaient à mi-fondu).
+- Quand : `useOpening.ts` + nouvelle commande Rust **`opening_due`** (`ipc_desktop.rs`, testée) : « now » une seule fois par processus quand la fenêtre est visible ; « later » si elle est cachée (démarrage silencieux : page sombre et accueil masqué jusqu'au premier affichage) ; « no » ensuite (le mode économie recrée la fenêtre à chaque rappel, la page ne peut pas s'en souvenir). Types régénérés (`npm run gen:types`).
+- Option **`ringGrow`** (désactivée) : l'anneau grandit et se déplace jusqu'à l'anneau de l'accueil (`crystalRing`), puis passe la main à l'anneau liquide.
+- Atelier : écran « Ouverture (rejouable) » + bouton **Rejouer** (message `replay`) ; élément `opening` (groupe Mouvement, `src/design/da/catalogueMotion.ts`, libellés `src/dev/atelier/labelsMotion.ts`) : vitesse générale, durée et courbe du glissement, délai entre lettres, durée / courbe / échelle / flou de départ des lettres, rayon de l'anneau, anneau → accueil, tenue, passage. Nouvelle courbe `vive` = `cubic-bezier(.16,1,.3,1)` dans `EASES`.
+- Pages de dev : `/dev/home?opening=1` (`&seek=ms` fige un instant, `&loop=ms` rejoue, `&bench=transition` mesure).
+- Valeurs finales = celles de la spec (aucune retouche sans ton œil) : vitesse 1, glissement 650 ms « premium », lettres 85 ms / 800 ms « vive » / 0,45 / 6 px, anneau 200 px, tenue 600 ms, passage 600 ms.
+
+**Socle pour 3b** (déjà là, testé) :
+- `src/design/motion/curve.ts` : `cubicBezier`, `curveOf("cubic-bezier(…)" | "ease"…)`, `seg(t, délai, durée, courbe)`, `lerp`. Le ressort de la spec liaison `(.34,1.32,.64,1)` dépasse de **3,4 %** (test) → à ajouter dans `SPRINGS` (ex. « liaison » 0,034) en 3b.
+- `src/design/motion/choreo.ts` : `Choreo.play(durée, render, {eco, reduced, from})` / `seek` / `cancel` / `time(now)` ; plafond = `FX_MAX_FPS` (30 en Éco) sur la grille commune du `frameLoop` ; une séquence à la fois (la précédente se résout `false`) ; `activeSequences()` pour le banc. `render` écrit transform/opacity directement ; **les éléments animés doivent avoir `will-change` pendant la séquence**.
+- `src/fx/gpu/cues.ts` : `setIntroCue(sampler)` (le moteur appelle `sampler(now)` à chaque image ; `sameIntro` évite les images inutiles) ; à étendre en 3b pour le survol (filets, étincelles) et les poses des cartes tournées.
+- Banc : `BenchResult.during` = p95 / max / perdues des seules images où une séquence tourne (`?bench=transition`).
+
+**Mesures 3a** (vraie fenêtre WebView2, build de dev, 2560×1440 = 1707×960 CSS à 150 %, 278 Hz ; ouverture rejouée toutes les 5 s pendant 10 s, donc ~95 % des images « pendant » ; le remontage React toutes les 5 s compte dans le max) :
+
+| Ouverture | Qualité | p95 pendant | Images perdues pendant | Max |
+|---|---|---|---|---|
+| premier jet | Élevée | 5,0 ms ✅ (serré) | 74 | 24 ms |
+| premier jet | Éco | 4,4 ms ✅ | 23 | 22 ms |
+| final : styles écrits seulement s'ils changent (2 essais) | Élevée | **4,6 / 4,3 ms ✅** | 40 / 33 | 36 / 30 ms |
+| final | Éco | **4,0 ms ✅** | 15 | 31 ms |
+| repli CSS (moteur coupé), premier jet | Élevée | 5,3 ms ✅ | 101 | 36 ms |
+
+Coût des copies floues ≈ 0,3 ms de p95 (`letterBlur` 0 : 4,7 ms au premier jet). Trace : 0 repeint pendant l'ouverture, GPU ~20 % occupé, le reste = fil principal (recalcul des couches, réduit par l'écriture conditionnelle). **Mesures écartées** : une dernière série (repos compris, à 5,3 ms) a été prise pendant qu'**Apex Legends tournait** (≈ 4 cœurs + GPU) et en même temps que le script PowerShell CPU/GPU ; elle n'est pas retenue. **CPU / GPU de l'ouverture : non mesurés proprement** (à refaire PC libre, script lancé seul). Repli CSS non remesuré après l'écriture conditionnelle. Build de production non mesuré (étape 13) ; 60 Hz non testé.
+
+**Captures** : `docs/captures/da-r3a-ouverture-sequence.jpg` (0 → 3 400 ms puis l'accueil ; l'image « 5000 ms » = accueil après passage, prise avant l'échelonnage du passage), `da-r3a-ouverture-2100.jpg` (lettres qui sortent), `da-r3a-ouverture-finale.jpg`, `da-r3a-anneau-accueil-et-reduit.jpg` (option `ringGrow` à 2,3 s et 4,1 s ; reduced motion émulé), `da-r3a-repli-css.jpg` (sans moteur, 0,4 / 1,3 / 2,9 s). « Avant » = pas d'ouverture (l'app ouvrait directement l'accueil).
+
+**Testé** : tsc, eslint, prettier (fichiers touchés), vitest **429/429** (+ `motion.test.ts` : courbes, ressort 3,4 %, choreo avec faux `frameLoop`, annulation, reduced, seek ; `opening.test.ts` : instants clés, lettres, décalages vs maquette, passage, vitesse, `ringGrow`, préréglages, uniformes neutres), `cargo test` 174 ✅, clippy ✅, build de production sans code d'atelier (grep). En vraie fenêtre (page de dev) : séquence, saut par touche (accueil à opacité 1, ouverture retirée), reduced motion (émulation CDP), repli CSS, `ringGrow`.
+**Non testé** : le vrai démarrage de l'app (`App.tsx` → `opening_due` : lancement normal, démarrage silencieux puis premier raccourci, mode économie) — seule la page de dev a été vue ; lecteur d'écran sur le texte caché « appuie sur une touche… » ; 60 Hz / autre échelle.
+**Limites connues** :
+- Repli CSS : pas de tracé de l'anneau ni de reflet ; étoiles absentes pendant l'ouverture ; avec `ringGrow` l'anneau CSS ne se déplace pas.
+- L'anneau d'ouverture est centré sur la position de départ du logo (la maquette le met 11 px plus bas).
+- Le logo est celui de la marque (`brand/Logo`, coin 23,6 px pour une tuile de 132) et non la tuile de la maquette (coin 34 px).
+- Une touche pressée pour sauter l'ouverture est consommée (Échap compris).
+
+**Gardé / Rejeté** : — (à remplir avec tes mots après ton test)
+
+### Reste à faire
+- **3b** (nouvelle conversation) : liaison A (éventail → deck → carrousel, mélange au changement d'onglet, retour), survol (filets + étincelles dans le moteur, flottaison), décisions ci-dessus. Moteur : formes tournées / mises à l'échelle (nouveau tableau d'uniformes, budget ≥ 224 vec4 à vérifier), cartes qui se chevauchent sans fusion, poses fournies par `choreo` (pas de getBoundingClientRect pendant le mouvement) ; `SPRINGS` « liaison » ; brancher la fin de l'ouverture sur l'éventail (aujourd'hui → accueil).
+- **3c** (petite ronde suivante, accepté en principe) : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
+- Remesurer l'ouverture (CPU/GPU, repli CSS) PC libre.
+
 ## Éléments du catalogue
 | Élément | État | Remarque |
 |---|---|---|
@@ -141,3 +212,4 @@ Lecture : le moteur plein écran coûte ~1 point de GPU de plus que le CSS mais 
 | Clarté du fond, largeur de la lueur de lune | à l'essai (2b) | 0 = rendu 2a |
 | Particules éclairées, matière et profondeur, voile brillant, affiches dans le verre | à l'essai (2b) | désactivés par défaut, activés dans `v4-aere-lumineux` |
 | Ressort de la pastille (net / léger rebond) | à l'essai (2b) | défaut « net » |
+| Ouverture V1-A (`opening`) | à l'essai (3a) | activée par défaut ; `ringGrow` désactivé |

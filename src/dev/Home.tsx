@@ -6,7 +6,9 @@
 //   ?addmock=1 (fake core for the add / edit dialogs: detected apps, drop, add, edit, remove)
 //   ?fps=N (cadence of the continuous layers, instead of the budget's)
 //   ?posters=1 (a stand-in poster on every card)   ?cycle=ms (clicks the next category tab every ms: watch the glass selection pill slide)
-import { useEffect, useState } from "react";
+//   ?opening=1 (the opening above the home screen; `replay` from the workshop)   ?seek=ms (one moment of it, still)
+//   ?loop=ms (plays the opening again every ms)   ?bench=transition (frame times, also during the sequences only)
+import { useEffect, useRef, useState } from "react";
 import { QUALITIES, ThemeProvider, applyQuality } from "../design";
 import { Atmosphere } from "../fx";
 import { DustLayer } from "../fx/canvas/dust";
@@ -18,6 +20,8 @@ import { hubStore } from "../store";
 import { installAddAppsMock } from "./addAppsMock";
 import { runBench, type BenchResult } from "./bench";
 import { setDevPoster } from "../features/home/art";
+import { Opening } from "../features/opening/Opening";
+import { REPLAY_EVENT } from "./atelier/sync";
 
 /** Colourful pictures of the repository, as stand-in game posters (dev server only). */
 const DEV_POSTERS = ["140406", "140411", "140423"].map(
@@ -69,6 +73,9 @@ export default function HomeDev() {
   const params = new URLSearchParams(location.search);
   if (params.has("posters")) setDevPoster(DEV_POSTERS);
   const [bench, setBench] = useState<BenchResult | null>(null);
+  const [opening, setOpening] = useState({ on: params.has("opening"), run: 0 });
+  const under = useRef<HTMLDivElement>(null);
+  const seek = params.has("seek") ? Number(params.get("seek")) : null;
   const [ready] = useState(() => {
     const apps = seed(params);
     hubStore.setState({
@@ -130,11 +137,25 @@ export default function HomeDev() {
   }, []);
 
   useEffect(() => {
+    if (!params.has("opening")) return;
+    const replay = () => setOpening((o) => ({ on: true, run: o.run + 1 }));
+    window.addEventListener(REPLAY_EVENT, replay);
+    const loop = Number(params.get("loop"));
+    const id = loop > 0 ? window.setInterval(replay, loop) : 0;
+    return () => {
+      window.removeEventListener(REPLAY_EVENT, replay);
+      window.clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (!params.has("bench")) return;
     const id = window.setTimeout(() => {
       if (params.get("view") === "grid")
         window.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
-      void runBench(10_000, params.get("bench") === "idle" ? 0 : 30).then((r) => {
+      const still = params.get("bench") === "idle" || params.get("bench") === "transition";
+      void runBench(10_000, still ? 0 : 30).then((r) => {
         // Last rung of the glass engine's fallback ladder, if it stepped down during the bench.
         const rung = document.documentElement.dataset.glassRung ?? "none";
         const res = { ...r, rung };
@@ -151,7 +172,17 @@ export default function HomeDev() {
   return (
     <ThemeProvider initialThemeId={themeId}>
       <Atmosphere layers={benchLayers(params)} />
-      <HomeScreen key={params.get("view")} onOpenScenes={() => {}} />
+      <div ref={under} style={{ height: "100%" }}>
+        <HomeScreen key={params.get("view")} onOpenScenes={() => {}} />
+      </div>
+      {opening.on && (
+        <Opening
+          key={opening.run}
+          under={under}
+          seek={seek}
+          onDone={() => setOpening((o) => ({ ...o, on: false }))}
+        />
+      )}
       {bench && (
         <pre
           id="bench"

@@ -327,6 +327,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_desktop::autostart_get::<tauri::Wry>,
             ipc_desktop::autostart_set::<tauri::Wry>,
             ipc_desktop::recents_get,
+            ipc_desktop::opening_due::<tauri::Wry>,
         ])
         .events(collect_events![
             SettingsChanged,
