@@ -3,7 +3,8 @@ import { useGlass } from "../../../design";
 import { t } from "../../../i18n";
 import { CATEGORY_IDS, CATEGORY_LABELS, type CategoryId } from "../categories";
 import { MAX_SPARKS } from "./fanFloat";
-import { SEGMENTS, type FanCardEls } from "./fanRender";
+import type { FanCardEls } from "./fanRender";
+import { rimClass, SEGMENTS } from "../rim/rimRender";
 import styles from "./CategoryFan.module.css";
 
 /** Hover of card i (pointer or keyboard focus); nx, ny = pointer over it, −1…1. */
@@ -162,16 +163,16 @@ function FanCard({
             <span
               key={`t${k}`}
               data-thread=""
-              className={styles.thread}
+              className={rimClass.thread}
               style={{ "--k": (k % SEGMENTS) / SEGMENTS } as CSSProperties}
               aria-hidden="true"
             />
           ))}
-          <span data-flash="" className={styles.flash} aria-hidden="true" />
-          <span data-thread-head="" className={styles.threadHead} aria-hidden="true" />
+          <span data-flash="" className={rimClass.flash} aria-hidden="true" />
+          <span data-thread-head="" className={rimClass.threadHead} aria-hidden="true" />
           <span
             data-thread-head=""
-            className={styles.threadHead}
+            className={rimClass.threadHead}
             style={{ "--k": 1 } as CSSProperties}
             aria-hidden="true"
           />
@@ -179,7 +180,7 @@ function FanCard({
             <span
               key={`s${k}`}
               data-spark=""
-              className={styles.spark}
+              className={rimClass.spark}
               style={{ "--k": k / (MAX_SPARKS - 1) } as CSSProperties}
               aria-hidden="true"
             />

@@ -53,8 +53,8 @@
 
 /* The field takes the focus ring instead of the bare input. */
 .field:has(.input:focus-visible) {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  outline: none;
+  box-shadow: var(--m-focus);
 }
 
 .list {
@@ -141,7 +141,8 @@
   font-size: var(--fs-15);
 }
 
-/* Beats the global focus ring (tokens.css): the ring is drawn around the whole field (above). */
+/* Beats the global focus ring (motion.css): the ring is drawn around the whole field (above). */
 .input:focus-visible {
   outline: none;
+  box-shadow: none;
 }

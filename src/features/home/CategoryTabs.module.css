@@ -28,9 +28,23 @@
   color: var(--text-2);
   font-size: var(--fs-15);
   font-weight: 600;
+  /* Level 1 (motion.css): hover in "court"; press in "micro", released on the "liaison" spring. */
   transition:
-    background-color var(--dur-hover) var(--ease),
-    color var(--dur-hover) var(--ease);
+    background-color var(--m1-court) var(--m-ease-in),
+    color var(--m1-court) var(--m-ease-in),
+    translate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease);
+}
+
+/* The selected tab stays on its pill (no rise). */
+.tab:not([aria-selected="true"]):hover {
+  translate: 0 var(--m-hover-rise-k);
+}
+
+.tab:active {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
 }
 
 /* 44 px hit area */
@@ -73,6 +87,4 @@
   transform: translateY(-50%);
 }
 
-.viewToggle:active:not(:disabled) {
-  transform: translateY(-50%) scale(0.94);
-}
+/* Its press is the IconButton's (`scale`, composed with this `transform`). */

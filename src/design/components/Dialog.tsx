@@ -1,7 +1,11 @@
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { prefersReducedMotion } from "../../fx/motionPref";
 import { Surface } from "../glass/Surface";
+import { useMotionTokens } from "../motion/current";
+import { durOf } from "../motion/tokens";
+import { usePresence } from "../motion/usePresence";
 import { CloseIcon } from "../icons";
 import { IconButton } from "./IconButton";
 import styles from "./Dialog.module.css";
@@ -23,6 +27,10 @@ const FOCUSABLE =
 /**
  * Modal dialog: rendered in a portal, focus moves in and is trapped (Tab cycles), Escape closes,
  * the rest of the app is `inert`, and focus returns to the opener on close.
+ *
+ * Motion (level 2 of the token table, round 4a): appears in "moyen" (scale 0.96 → 1, rises 14 px),
+ * closes in 0.7 × that without a cascade. Focus and `inert` are given back at once; the panel only
+ * stays on screen (inert to the pointer) for its exit, showing what it showed when it closed.
  */
 export function Dialog({
   open,
@@ -35,6 +43,11 @@ export function Dialog({
   const titleId = useId();
   const panel = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
+  const motion = useMotionTokens();
+  const presence = usePresence(open, durOf(motion, 2, "moyen", prefersReducedMotion(), true));
+  // The opener often clears its data on close: the exit shows the last content.
+  const [kept, setKept] = useState({ title, children });
+  if (open && (kept.title !== title || kept.children !== children)) setKept({ title, children });
   useEffect(() => {
     onCloseRef.current = onClose;
   });
@@ -86,13 +99,15 @@ export function Dialog({
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!presence) return null;
+  const shown = open ? { title, children } : kept;
 
   return createPortal(
     <div
       className={styles.scrim}
+      data-closing={presence === "out" ? "" : undefined}
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (open && e.target === e.currentTarget) onClose();
       }}
     >
       <Surface
@@ -106,13 +121,13 @@ export function Dialog({
         <div ref={panel} tabIndex={-1} className={styles.inner}>
           <header className={styles.header}>
             <h2 id={titleId} className={styles.title}>
-              {title}
+              {shown.title}
             </h2>
             <IconButton label={closeLabel} size="sm" onClick={onClose}>
               <CloseIcon />
             </IconButton>
           </header>
-          <div className={styles.body}>{children}</div>
+          <div className={styles.body}>{shown.children}</div>
         </div>
       </Surface>
     </div>,

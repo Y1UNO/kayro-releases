@@ -78,7 +78,8 @@ export function DisplaySettings({ open, onClose }: Props) {
       title={t("displaySettings.title")}
       closeLabel={t("displaySettings.close")}
     >
-      <div className={styles.body}>
+      {/* Rows in a cascade when the panel opens (level 2, motion.css). */}
+      <div className={styles.body} data-cascade="">
         <section className={styles.row}>
           <h3 className={styles.label}>{t("displaySettings.mode.label")}</h3>
           <SegmentedControl<DisplayMode>

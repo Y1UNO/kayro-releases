@@ -46,6 +46,12 @@ const ScenesDev: ComponentType | null =
     ? lazy(() => import("./dev/Scenes"))
     : null;
 
+// Motion language lab (step 12b, round 4a): the workshop's "Mouvement" screen. Dev only.
+const MotionDev: ComponentType | null =
+  import.meta.env.DEV && location.pathname === "/dev/motion"
+    ? lazy(() => import("./dev/MotionLab"))
+    : null;
+
 // Preview of the art direction workshop (step 12b): live values from `/dev/atelier`, or a saved
 // preset with `?preset=<file name>` (bench in the Tauri window). Dev only.
 if (import.meta.env.DEV && /[?&](atelier|preset)=/.test(location.search)) {
@@ -63,7 +69,7 @@ const Atelier: ComponentType | null =
     : null;
 
 const appRoot = createRoot(root);
-const DevPage = Atelier ?? Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev;
+const DevPage = Atelier ?? Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev ?? MotionDev;
 
 if (DevPage) {
   appRoot.render(

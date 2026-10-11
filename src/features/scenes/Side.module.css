@@ -32,8 +32,8 @@
 }
 
 .select:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  outline: none;
+  box-shadow: var(--m-focus);
 }
 
 /* ---- side column ---- */

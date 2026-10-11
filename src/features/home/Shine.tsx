@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import styles from "./AppCard.module.css";
+import styles from "./Shine.module.css";
 
 /** One sweep every 6 s (mock-up), first one a moment after the card became active. */
 const PERIOD_MS = 6000;

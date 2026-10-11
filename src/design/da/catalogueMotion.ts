@@ -1,7 +1,11 @@
 // Round 3 elements of the art direction catalogue (step 12b): signature animations. Read by the
 // screens through the store (no CSS variable, no FxLayer); the engine's part of an animation is
 // cued by the screen itself (src/fx/gpu/cues.ts).
-import { range, select, toggle, type DaElement } from "./daParams";
+import { EASES } from "../motion/eases";
+import { MOTION_DEFAULTS as M, motionCss, motionTokens, SPEEDS } from "../motion/tokens";
+import { NONE, range, select, toggle, type DaElement } from "./daParams";
+
+const CURVES = Object.keys(EASES);
 
 /** Curves of the round 3 sequences (subset of EASES, same names). */
 export const SEQUENCE_EASES = [
@@ -16,6 +20,43 @@ export const SEQUENCE_EASES = [
 export const LINK_SPRINGS = ["liaison", "leger", "net"] as const;
 
 export const MOTION_ELEMENTS: readonly DaElement[] = [
+  {
+    // Round 4a: the motion token table of the whole interface ("Vivant intelligent",
+    // src/design/motion/tokens.ts). Off = the defaults of the table (motion.css).
+    id: "motion",
+    group: "mouvement",
+    cost: "faible",
+    defaultOn: true,
+    params: [
+      select("speed", SPEEDS, "1"),
+      toggle("level1", true),
+      toggle("level2", true),
+      toggle("level3", true),
+      range("micro", 40, 400, 5, M.micro, "ms"),
+      range("court", 80, 600, 5, M.court, "ms"),
+      range("moyen", 120, 900, 5, M.moyen, "ms"),
+      range("long", 200, 1400, 10, M.long, "ms"),
+      range("outShare", 0.3, 1, 0.05, M.outShare),
+      select("easeIn", CURVES, M.easeIn),
+      select("easeOut", CURVES, M.easeOut),
+      select("easeMove", CURVES, M.easeMove),
+      select("easeBounce", CURVES, M.easeBounce),
+      range("cascade", 0, 150, 5, M.cascade, "ms"),
+      range("rise", 0, 40, 1, M.rise, "px"),
+      range("hoverRise", 0, 4, 0.5, M.hoverRise, "px"),
+      range("press", 0.85, 1, 0.01, M.press),
+      range("panelScale", 0.85, 1, 0.01, M.panelScale),
+      range("focusGap", 0, 6, 0.5, M.focusGap, "px"),
+      range("focusA", 0, 10, 0.5, M.focusA, "px"),
+      range("focusB", 0, 14, 0.5, M.focusB, "px"),
+      range("focusBAlpha", 0, 1, 0.05, M.focusBAlpha),
+      range("focusHalo", 0, 60, 1, M.focusHalo, "px"),
+      range("focusHaloAlpha", 0, 1, 0.05, M.focusHaloAlpha),
+      range("cardLift", 0, 24, 1, M.cardLift, "px"),
+      range("cardGrow", 1, 1.08, 0.005, M.cardGrow),
+    ],
+    css: (v) => (v.on ? motionCss(motionTokens(v)) : NONE),
+  },
   {
     // Opening V1-A "the letters come out of the logo" (reference/animations/R3-Ouverture-V1-A…):
     // the ring hatches (engine), the logo forms then slides left, the letters of the name come out

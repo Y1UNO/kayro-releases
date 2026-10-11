@@ -131,7 +131,7 @@ export function AppCard({
             {monogram(app.name)}
           </span>
         )}
-        <span className={styles.sheen} aria-hidden="true" />
+        <span className={styles.sheen} data-pointer-sheen="" aria-hidden="true" />
         {shine && active && stage && <Shine />}
         {sheen && active && stage && <SheenVeil duration={Number(sheen.duration) || 1800} />}
         {running && <span className={styles.running} aria-hidden="true" />}

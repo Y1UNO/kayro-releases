@@ -9,7 +9,7 @@
   gap: var(--space-3);
   max-width: min(560px, calc(100vw - 48px));
   padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
-  animation: toast-in var(--dur-panel) var(--ease) both;
+  animation: toast-in var(--m2-moyen) var(--m-ease-in) both; /* level 2 (motion.css) */
 }
 
 .text {
@@ -22,6 +22,6 @@
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -8px);
+    transform: translate(-50%, var(--m-rise-k));
   }
 }

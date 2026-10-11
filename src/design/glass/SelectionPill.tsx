@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
 import { frameLoop } from "../../fx/loop";
 import { prefersReducedMotion } from "../../fx/motionPref";
+import { currentMotion } from "../motion/current";
+import { durOf, springOf } from "../motion/tokens";
 import { useGlass } from "./glassRegistry";
 import { pillAt, type PillBox } from "./pillMotion";
 import styles from "./SelectionPill.module.css";
@@ -61,12 +63,13 @@ export function SelectionPill({ value, selector }: Props) {
     let stop: (() => void) | null = null;
     if (to) {
       const from = box.current;
-      if (!from || prefersReducedMotion()) place(to);
+      if (!from || prefersReducedMotion() || !currentMotion().levels[1]) place(to);
       else {
-        const css = getComputedStyle(pill);
-        const duration = num(css.getPropertyValue("--da-pill-dur"), 420);
-        const stretch = num(css.getPropertyValue("--da-pill-stretch"), 0.35);
-        const bounce = num(css.getPropertyValue("--da-pill-bounce"), 0);
+        // Level 2 of the motion table: "moyen" on the spring of the "déplacement" curve.
+        const m = currentMotion();
+        const duration = durOf(m, 2, "moyen", false);
+        const stretch = num(getComputedStyle(pill).getPropertyValue("--da-pill-stretch"), 0.35);
+        const bounce = springOf(m.easeNames.move);
         let elapsed = 0;
         stop = frameLoop().subscribe((dt) => {
           elapsed += dt;

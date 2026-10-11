@@ -130,8 +130,8 @@
 .box:focus-visible,
 .input:focus-visible,
 .select:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  outline: none;
+  box-shadow: var(--m-focus);
 }
 
 .tile {
@@ -300,8 +300,8 @@
   text-align: center;
   padding: 0 var(--space-4);
   transition:
-    border-color var(--dur-hover) var(--ease),
-    background-color var(--dur-hover) var(--ease);
+    border-color var(--m1-court) var(--m-ease-in),
+    background-color var(--m1-court) var(--m-ease-in);
 }
 
 /* Same zone under the detected list (mock-up): a drop anywhere on the window works. */

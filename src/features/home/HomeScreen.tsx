@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { AnimatePresence, LazyMotion, MotionConfig, domAnimation, m } from "motion/react";
-import { EASE, SPRING } from "../../design";
+import { useMotionTokens } from "../../design/motion/current";
+import { fmTransition } from "../../design/motion/tokens";
+import { prefersReducedMotion } from "../../fx/motionPref";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
 import { DisplaySettings } from "../settings/DisplaySettings";
@@ -60,6 +62,7 @@ export function HomeScreen({
 }) {
   const apps = useHub((s) => s.apps);
   const running = useHub((s) => s.running);
+  const motion = useMotionTokens();
   const groups = useMemo(() => groupByCategory(apps), [apps]);
 
   const [state, dispatch] = useReducer(homeReducer, groups, (g) =>
@@ -233,6 +236,7 @@ export function HomeScreen({
         onFocus={setFocus}
         onMove={move}
         onLaunch={launch}
+        dragging={drag !== null}
       />
     );
 
@@ -289,9 +293,24 @@ export function HomeScreen({
                   }
                   data-home-layer=""
                   className={styles.layer}
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0, transition: SPRING }}
-                  exit={{ opacity: 0, transition: { duration: 0.18, ease: EASE } }}
+                  // A list that enters (level 2 of the motion table): rises on "liaison".
+                  initial={{ opacity: 0, y: motion.rise }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    transition: fmTransition(motion, 2, "moyen", "move", prefersReducedMotion()),
+                  }}
+                  exit={{
+                    opacity: 0,
+                    transition: fmTransition(
+                      motion,
+                      2,
+                      "court",
+                      "out",
+                      prefersReducedMotion(),
+                      true,
+                    ),
+                  }}
                 >
                   {body}
                 </m.div>

@@ -27,9 +27,12 @@
   perspective: 900px;
   pointer-events: none; /* only the (scaled) card takes the mouse */
   transform: translate3d(var(--x), -50%, 0);
+  /* translate / scale: hover of the carousel card (AppCardMotion.module.css). */
   transition:
     transform var(--dur-card) var(--ease),
-    opacity var(--dur-card) ease;
+    opacity var(--dur-card) ease,
+    translate var(--lift-dur, 0s) var(--lift-ease, ease),
+    scale var(--lift-dur, 0s) var(--lift-ease, ease);
 }
 
 .slot[data-hidden] {
@@ -68,19 +71,32 @@
     0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Hover (art direction « survol des cartes »): `translate` lifts, `rotate` tilts towards the
-   pointer (written by useCardTilt.ts), each on its own property so the carousel's `transform`
-   keeps its own timing. */
+/* Hover (art direction « survol des cartes »): `rotate` tilts towards the pointer (cardTilt.ts),`
+   `translate` lifts a grid card (level 1; a carousel card lifts with its slot, level 3), `scale` =
+   press. Each on its own property so the carousel's `transform` keeps its own timing. */
 .card {
   transition:
     transform var(--dur-card) var(--ease),
-    translate var(--da-hover-dur, 0.4s) var(--da-hover-ease, var(--ease)),
-    rotate var(--da-hover-dur, 0.4s) var(--da-hover-ease, var(--ease)),
+    translate var(--m1-court) var(--m-ease-in),
+    rotate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease),
     border-color var(--dur-card) ease;
 }
 
-.card:hover {
-  translate: 0 var(--da-hover-lift, -3px);
+.cell .card:hover {
+  translate: 0 calc(var(--da-hover-lift, -3px) * var(--m-rm));
+}
+
+/* Press: ×0.94 in "micro", released on "rebond" (carousel) or "liaison" (grid). */
+.slot .card {
+  --m-press-dur: var(--card-hover-dur);
+  --m-press-ease: var(--card-hover-ease);
+}
+
+.card:active {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
 }
 
 .slot .card {
@@ -107,18 +123,12 @@
     rgba(255, 255, 255, 0) 70%
   );
   opacity: 0;
-  transition: opacity var(--da-hover-dur, 0.4s) var(--da-hover-ease, var(--ease));
+  transition: opacity var(--m1-court) var(--m-ease-in);
   pointer-events: none;
 }
 
 .card:hover .sheen {
   opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card:hover {
-    translate: none;
-  }
 }
 
 /* Fast scrolling (Carousel.tsx sets `data-fast` on the list): only the sliding is animated. */
@@ -337,30 +347,6 @@
   box-shadow:
     0 0 0 3px rgba(0, 0, 0, 0.28),
     0 0 12px var(--accent);
-}
-
-.shineClip {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-/* A soft band crosses the active card every 6 s (moved by Shine.tsx: transform only, the mock-up animates `left`). */
-.shine {
-  position: absolute;
-  top: -20%;
-  left: -60%;
-  width: 40%;
-  height: 140%;
-  background: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0.3),
-    rgba(255, 255, 255, 0)
-  );
-  transform: translateX(0) skewX(-14deg);
 }
 
 /* Liquid glass card (engine running): the canvas under the interface draws the glass slab tinted

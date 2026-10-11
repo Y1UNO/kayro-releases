@@ -45,11 +45,23 @@
   font-size: var(--fs-13);
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--dur-hover) var(--ease);
+  /* Level 1 (motion.css): hover in "court"; press in "micro", released on the "liaison" spring. */
+  transition:
+    background-color var(--m1-court) var(--m-ease-in),
+    translate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease);
 }
 
 .back:hover {
   background: rgba(255, 255, 255, 0.12);
+  translate: 0 var(--m-hover-rise-k);
+}
+
+.back:active,
+.search:active {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
 }
 
 .search {
@@ -71,6 +83,14 @@
   text-align: left;
   cursor: text;
   position: relative;
+  transition:
+    color var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease);
+}
+
+/* Its own inset shadow would hide the global focus ring (motion.css). */
+.search:focus-visible {
+  box-shadow: var(--m-focus);
 }
 
 /* 44 px hit area around the 38 px field. */

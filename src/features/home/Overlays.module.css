@@ -2,7 +2,7 @@
   position: fixed;
   z-index: 60;
   min-width: 220px;
-  animation: menu-in 0.14s var(--ease) both;
+  animation: menu-in var(--m1-micro) var(--m-ease-in) both; /* level 1: used in bursts */
 }
 
 .surface {
@@ -68,12 +68,12 @@
   padding: var(--space-3) var(--space-5);
   font-size: var(--fs-14);
   color: var(--text);
-  animation: notice-in var(--dur-panel) var(--ease) both;
+  animation: notice-in var(--m2-moyen) var(--m-ease-in) both; /* level 2 (motion.css) */
 }
 
 @keyframes notice-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -8px);
+    transform: translate(-50%, var(--m-rise-k));
   }
 }

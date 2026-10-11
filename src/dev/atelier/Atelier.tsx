@@ -30,6 +30,7 @@ const SCREENS: Record<string, { label: string; url: (q: string) => string }> = {
   ouverture: { label: "Ouverture (rejouable)", url: (q) => `/dev/home?opening=1&${q}` },
   categories: { label: "Catégories (rejouable)", url: (q) => `/dev/home?fan=1&${q}` },
   survol: { label: "Catégories (survol)", url: (q) => `/dev/home?fan=1&hover=2&${q}` },
+  mouvement: { label: "Mouvement (jetons, niveaux)", url: (q) => `/dev/motion?${q}` },
 };
 
 interface Listed {

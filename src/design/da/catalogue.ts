@@ -10,6 +10,7 @@
  *  - `fx`: the atmosphere layers read the values through `FxLayer.setParams`.
  */
 
+import { EASES } from "../motion/eases";
 import { color, n, NONE, px, range, select, toggle, type DaElement } from "./daParams";
 import { AIR_ELEMENTS } from "./catalogueAir";
 import { GLASS_ELEMENTS } from "./catalogueGlass";
@@ -29,17 +30,8 @@ export type {
   ToggleParam,
 } from "./daParams";
 
-/** Curves offered for UI motion (`ease` select). */
-export const EASES: Readonly<Record<string, string>> = {
-  douce: "cubic-bezier(0.2, 0.8, 0.2, 1)",
-  premium: "cubic-bezier(0.22, 1, 0.36, 1)",
-  // Round 3 (letters of the opening): leaves fast, settles long.
-  vive: "cubic-bezier(0.16, 1, 0.3, 1)",
-  ressort: "cubic-bezier(0.34, 1.36, 0.64, 1)",
-  // Round 3b (the category fan turns): slow start, slow end.
-  bascule: "cubic-bezier(0.65, 0, 0.35, 1)",
-  lineaire: "linear",
-};
+/** Curves offered for UI motion (`ease` selects): src/design/motion/eases.ts. */
+export { EASES };
 
 /** Font pairs (`typography.pair`): titles / interface. Both are bundled (no CDN). */
 export const FONT_PAIRS: Readonly<Record<string, { title: string; ui: string }>> = {
@@ -206,19 +198,27 @@ export const CATALOGUE: readonly DaElement[] = [
     group: "interface",
     cost: "faible",
     defaultOn: true,
+    // Round 4a: duration and curve come from the motion token table (`motion`); `lift` is the grid
+    // cards' (level 1), the carousel cards lift by the table's `cardLift` (level 3).
+    // Level 3 of the carousel cards: after `delay` of the pointer on the card, one glossy veil
+    // (`veilMs`) then the two light threads of the fan (its `categoryHover` look), `sparks` at most;
+    // a flash at the launch (`launchFlash` × the "long" token). The reflection that follows the
+    // pointer (`sheen`) is a 3rd effect: off on carousel cards unless `pointerSheen`.
     params: [
       range("tilt", 0, 3, 0.1, 2.5, "°"),
       range("lift", 0, 10, 0.5, 4, "px"),
-      range("duration", 100, 1200, 10, 450, "ms"),
-      select("ease", Object.keys(EASES), "premium"),
       range("sheen", 0, 0.5, 0.01, 0.18),
+      range("delay", 0, 400, 10, 120, "ms"),
+      range("veilMs", 300, 1600, 10, 800, "ms"),
+      range("sparks", 0, 4, 1, 4),
+      range("launchFlash", 0.5, 3, 0.1, 1.6),
+      toggle("pointerSheen", false),
     ],
     css: (v) => ({
       "--da-hover-tilt": String(v.on ? n(v, "tilt") : 0),
       "--da-hover-lift": v.on ? `${-n(v, "lift")}px` : "0px",
-      "--da-hover-dur": `${n(v, "duration")}ms`,
-      "--da-hover-ease": EASES[v.ease as string] ?? EASES.premium!,
       "--da-hover-sheen": String(v.on ? n(v, "sheen") : 0),
+      "--da-pointer-sheen": v.pointerSheen ? "1" : "0",
     }),
   },
   {
@@ -289,18 +289,7 @@ export const CATALOGUE: readonly DaElement[] = [
       return { "--font-title": pair.title, "--font-ui": pair.ui };
     },
   },
-  // ---- Motion ----
-  {
-    id: "motion",
-    group: "mouvement",
-    cost: "faible",
-    defaultOn: true,
-    params: [range("card", 200, 1200, 10, 600, "ms"), select("ease", Object.keys(EASES), "douce")],
-    css: (v) =>
-      v.on
-        ? { "--dur-card": `${n(v, "card")}ms`, "--ease": EASES[v.ease as string] ?? EASES.douce! }
-        : NONE,
-  },
+  // ---- Motion: the token table and the signature animations (catalogueMotion.ts) ----
   // ---- Elements of the step 3–12 sketch, kept to compare (off in the V4 direction) ----
   { id: "fog", group: "historique", cost: "moyen", defaultOn: false, fx: true, params: [] },
   { id: "beam", group: "historique", cost: "moyen", defaultOn: false, fx: true, params: [] },

@@ -2,7 +2,7 @@ export { Backdrop } from "./Backdrop";
 export { ThemeProvider, useTheme } from "./ThemeProvider";
 export { applyQuality, QUALITIES, QUALITY_LABELS } from "./quality";
 export type { Quality } from "./quality";
-export { DURATION, EASE, SPRING } from "./motion";
+export { EASE, SPRING } from "./motion";
 export { BUILTIN_THEMES, DEFAULT_THEME } from "./themes";
 export { parseTheme } from "./theme";
 export { themeGradient } from "./applyTheme";

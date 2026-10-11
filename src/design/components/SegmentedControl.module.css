@@ -27,10 +27,24 @@
   cursor: pointer;
   background: transparent;
   color: var(--text-2);
+  /* Level 1 (motion.css): hover in "court"; press in "micro", released on the "liaison" spring. */
   transition:
-    background-color var(--dur-hover) var(--ease),
-    color var(--dur-hover) var(--ease);
+    background-color var(--m1-court) var(--m-ease-in),
+    color var(--m1-court) var(--m-ease-in),
+    translate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease);
   font: inherit;
+}
+
+/* The selected segment stays on its pill (no rise). */
+.segment:not(.selected):hover {
+  translate: 0 var(--m-hover-rise-k);
+}
+
+.segment:active {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
 }
 
 .md .segment {

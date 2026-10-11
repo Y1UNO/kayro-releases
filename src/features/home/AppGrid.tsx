@@ -58,6 +58,8 @@ export function AppGrid({ apps, focus, running, onColumns, onFocus, onLaunch }: 
         tabIndex={0}
         aria-label={t("home.apps")}
         aria-activedescendant={activeDomId}
+        // The cells enter in a cascade (level 2, motion.css).
+        data-cascade=""
       >
         {apps.map((app, i) => (
           <AppCard

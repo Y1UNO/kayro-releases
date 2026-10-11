@@ -1,6 +1,38 @@
 // French labels of the round 3 elements (signature animations), merged into ELEMENT_LABELS.
 
 export const MOTION_LABELS = {
+  motion: {
+    name: "Mouvement : jetons (Vivant intelligent)",
+    role: "Table unique des durées, courbes, ressorts, cascade, appui et focus ; niveaux 1 net, 2 vivant, 3 magie",
+    params: {
+      speed: "Vitesse générale",
+      level1: "Niveau 1 « net » (survol, appui)",
+      level2: "Niveau 2 « vivant » (pastille, panneaux, listes, interrupteurs)",
+      level3: "Niveau 3 « magie » (cartes du carrousel)",
+      micro: "Durée micro",
+      court: "Durée courte",
+      moyen: "Durée moyenne",
+      long: "Durée longue",
+      outShare: "Disparition (× l'apparition)",
+      easeIn: "Courbe d'apparition",
+      easeOut: "Courbe de disparition",
+      easeMove: "Courbe de déplacement (ressort)",
+      easeBounce: "Courbe de rebond (cartes)",
+      cascade: "Cascade entre lignes",
+      rise: "Montée d'apparition",
+      hoverRise: "Montée au survol",
+      press: "Échelle à l'appui",
+      panelScale: "Échelle de départ d'un panneau",
+      focusGap: "Focus : écart (couleur du fond)",
+      focusA: "Focus : anneau A jusqu'à",
+      focusB: "Focus : anneau B jusqu'à",
+      focusBAlpha: "Focus : opacité de B",
+      focusHalo: "Focus : halo A",
+      focusHaloAlpha: "Focus : opacité du halo",
+      cardLift: "Carte survolée : soulèvement",
+      cardGrow: "Carte survolée : grossissement",
+    },
+  },
   opening: {
     name: "Ouverture (V1-A)",
     role: "L'anneau éclot, le logo se forme puis glisse, les lettres sortent de derrière lui",

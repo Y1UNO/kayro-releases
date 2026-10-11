@@ -13,13 +13,18 @@ export interface PillBox {
   h: number;
 }
 
-/** Overshoot of the travel, by preset (`glassPills.spring`). "net" = no bounce. */
+/**
+ * Overshoot of the travel, by named spring (the motion token table's curves of the same name, the
+ * category link, the fan). "net" = no bounce.
+ */
 export const SPRINGS: Readonly<Record<string, number>> = {
   net: 0,
   leger: 0.05,
   // Round 3b, unfolding of the category deck: the mock-up's cubic-bezier(.34,1.32,.64,1) passes
   // its target by 3.4 % (motion.test.ts).
   liaison: 0.034,
+  // Round 4a, cards of the carousel ("magie"): cubic-bezier(.34,1.45,.64,1) passes by 6.6 %.
+  rebond: 0.066,
 };
 export const MAX_BOUNCE = 0.08;
 

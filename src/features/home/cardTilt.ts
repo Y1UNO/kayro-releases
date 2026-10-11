@@ -23,13 +23,20 @@ export const cardTilt = {
     const max = hover?.on ? (hover.tilt as number) : 0;
     const mag = Math.min(1, Math.hypot(nx, ny));
     if (max <= 0 || mag < 0.01 || reduced?.matches) {
-      el.style.rotate = "";
+      tilt(el, "");
       return;
     }
     // Axis (-ny, nx): the side under the pointer goes slightly back.
-    el.style.rotate = `${(-ny).toFixed(3)} ${nx.toFixed(3)} 0 ${(max * mag).toFixed(2)}deg`;
+    tilt(el, `${(-ny).toFixed(3)} ${nx.toFixed(3)} 0 ${(max * mag).toFixed(2)}deg`);
   },
   onPointerLeave(e: PointerEvent<HTMLElement>) {
-    e.currentTarget.style.rotate = "";
+    tilt(e.currentTarget, "");
   },
 };
+
+/** The card and the layer of its light threads (a carousel card, round 4a) tilt together. */
+function tilt(el: HTMLElement, rotate: string): void {
+  el.style.rotate = rotate;
+  const rim = el.parentElement?.querySelector<HTMLElement>(":scope > [data-rim]");
+  if (rim) rim.style.rotate = rotate;
+}

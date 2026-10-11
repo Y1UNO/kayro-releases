@@ -176,16 +176,18 @@
   --tracking-label: 0.16em;
   --tracking-title: -0.03em;
 
-  /* Motion */
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --dur-card: 0.6s;
+  /* Motion. Interactions use the motion token table (motion.css, round 4a); these older names are
+     its aliases. The ambient fades (beam, colour, theme) keep their own slow durations. */
+  --ease: var(--m-ease-in);
+  --dur-card: calc(var(--m-long) * var(--m-rm));
+  --dur-hover: var(--m1-court);
+  --dur-panel: var(--m2-moyen);
   --dur-beam: 0.8s;
   --dur-color: 0.9s;
   --dur-theme: 0.9s;
-  --dur-hover: 0.4s;
-  --dur-panel: 0.35s;
 
-  /* Focus */
+  /* Focus: the ring of the motion table (motion.css); this outline is for the few places that
+     cannot take a box-shadow. */
   --focus-ring: 2px solid var(--accent-light);
   --focus-offset: 2px;
 
@@ -211,17 +213,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --dur-card: 0.15s;
     --dur-beam: 0.15s;
     --dur-color: 0.15s;
     --dur-theme: 0.15s;
-    --dur-hover: 0.15s;
-    --dur-panel: 0.15s;
   }
-}
-
-/* One visible focus style everywhere (keyboard only). */
-:where(button, [role="radio"], [role="switch"], input, a, [tabindex]):focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
 }

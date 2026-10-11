@@ -8,12 +8,22 @@
   justify-content: center;
   padding: var(--space-6);
   background: rgba(4, 2, 8, 0.55);
-  animation: scrim-in var(--dur-panel) var(--ease) both;
+  /* Level 2 (motion.css): in "moyen", out in 0.7 × without the cascade. */
+  animation: scrim-in var(--m2-moyen) var(--m-ease-in) both;
+}
+
+.scrim[data-closing] {
+  pointer-events: none;
+  animation: scrim-out var(--m2-moyen-out) var(--m-ease-out) both;
 }
 
 .panel {
   width: min(480px, 100%);
-  animation: panel-in var(--dur-panel) var(--ease) both;
+  animation: panel-in var(--m2-moyen) var(--m-ease-in) both;
+}
+
+.scrim[data-closing] .panel {
+  animation: panel-out var(--m2-moyen-out) var(--m-ease-out) both;
 }
 
 /* Wide: a fixed-height panel; the content (a tab strip, a list that scrolls, a footer) lays itself out. */
@@ -75,9 +85,22 @@
   }
 }
 
+@keyframes scrim-out {
+  to {
+    opacity: 0;
+  }
+}
+
 @keyframes panel-in {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.97);
+    transform: translateY(var(--m-rise-k)) scale(var(--m-panel-scale-k));
+  }
+}
+
+@keyframes panel-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--m-rise-k)) scale(var(--m-panel-scale-k));
   }
 }
