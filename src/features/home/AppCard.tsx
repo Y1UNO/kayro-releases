@@ -4,10 +4,12 @@ import { t } from "../../i18n";
 import { EditIcon } from "../../design";
 import { posterUrl } from "./art";
 import { monogram, shadeOf } from "./cardLook";
-import { isVisible, slotOffset } from "./carouselGeometry";
+import { useDa } from "../../design/da";
+import { DEFAULT_GEOMETRY, isVisible, slotOffset, type Geometry } from "./carouselGeometry";
 import { cssVars } from "./cssVars";
 import { Shine } from "./Shine";
 import { useAppIcon } from "./useAppIcon";
+import { cardTilt } from "./cardTilt";
 import styles from "./AppCard.module.css";
 
 interface Props {
@@ -16,6 +18,8 @@ interface Props {
   mode: "stage" | "grid";
   /** Carousel only: distance to the active card (negative = left). */
   d?: number;
+  /** Carousel only: card sizes (art direction). */
+  geometry?: Geometry;
   active: boolean;
   running: boolean;
   /** DOM id, referenced by the list's `aria-activedescendant`. */
@@ -29,14 +33,25 @@ interface Props {
  * `scale` when it is not the active one (see carouselGeometry.ts); a veil dims the others and a
  * separate glow lights the active one, so that only transform and opacity ever change.
  */
-export function AppCard({ app, mode, d = 0, active, running, domId, onClick, buttonRef }: Props) {
+export function AppCard({
+  app,
+  mode,
+  d = 0,
+  geometry = DEFAULT_GEOMETRY,
+  active,
+  running,
+  domId,
+  onClick,
+  buttonRef,
+}: Props) {
   const poster = posterUrl(app);
+  const shine = useDa((s) => s.values.shine?.on === true);
   const icon = useAppIcon(app);
   const stage = mode === "stage";
   const hidden = stage && !isVisible(d);
   const vars = cssVars({
     "--k": shadeOf(app.id),
-    ...(stage ? { "--x": `${slotOffset(d)}px` } : null),
+    ...(stage ? { "--x": `${slotOffset(d, geometry)}px` } : null),
   });
 
   return (
@@ -58,6 +73,7 @@ export function AppCard({ app, mode, d = 0, active, running, domId, onClick, but
         aria-label={running ? `${app.name}, ${t("home.running")}` : app.name}
         tabIndex={-1}
         onClick={onClick}
+        {...cardTilt}
       >
         {poster ? (
           <>
@@ -82,7 +98,8 @@ export function AppCard({ app, mode, d = 0, active, running, domId, onClick, but
             {monogram(app.name)}
           </span>
         )}
-        {active && stage && <Shine />}
+        <span className={styles.sheen} aria-hidden="true" />
+        {shine && active && stage && <Shine />}
         {running && <span className={styles.running} aria-hidden="true" />}
         <span className={styles.plate}>{app.name}</span>
       </button>

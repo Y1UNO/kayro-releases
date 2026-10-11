@@ -82,7 +82,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             schema_version: 1,
-            theme_id: "crepuscule".into(),
+            theme_id: "lavande-peche".into(),
             quality: Quality::default(),
             color_mode: ColorMode::default(),
             hotkey: "Ctrl+Alt+H".into(),

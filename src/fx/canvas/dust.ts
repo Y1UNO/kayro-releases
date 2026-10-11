@@ -1,7 +1,7 @@
 import type { Quality } from "../../design";
 import { budgetFor, dustCount, fxFps } from "../budget";
 import type { LayerOptions } from "../css/cssFx";
-import type { FxLayer, FxPalette } from "../FxLayer";
+import type { FxLayer, FxPalette, FxParams } from "../FxLayer";
 import { frameLoop, type FrameLoop } from "../loop";
 import { prefersReducedMotion } from "../motionPref";
 
@@ -70,6 +70,9 @@ export class DustLayer implements FxLayer {
   private readonly rects = new Float32Array(MAX * RECT);
   private count = 0;
   private base = 0;
+  private quality: Quality = "balanced";
+  /** Art direction (step 12b): on/off and count at the reference size; null = budget's. */
+  private wanted: number | null = null;
   private fps = 0;
   private alpha = 1;
   private paused = false;
@@ -95,9 +98,16 @@ export class DustLayer implements FxLayer {
     this.resize();
   }
 
+  setParams(p: FxParams): void {
+    const d = p.dust;
+    this.wanted = d ? (d.on === false ? 0 : Number(d.count ?? 14)) : null;
+    this.setQuality(this.quality);
+  }
+
   setQuality(quality: Quality): void {
+    this.quality = quality;
     const budget = budgetFor(quality, prefersReducedMotion());
-    this.base = budget.dust;
+    this.base = budget.dust > 0 ? (this.wanted ?? budget.dust) : 0;
     this.fps = fxFps(budget, this.options.fps);
     this.resize();
   }

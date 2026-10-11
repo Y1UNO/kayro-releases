@@ -154,6 +154,11 @@
   mask-image: linear-gradient(90deg, transparent, #000 32%, #000 68%, transparent);
 }
 
+.root:not([data-fog]) .oval,
+.root:not([data-floor]) .floor {
+  display: none;
+}
+
 .root:not([data-beam]) .beamMover {
   display: none;
 }

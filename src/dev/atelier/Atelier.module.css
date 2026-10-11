@@ -1,0 +1,175 @@
+/* Workshop page (dev only). Plain, dense, readable: it is a tool, not part of the art direction. */
+.page {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  background: #0b0a10;
+  color: #ece8f4;
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+}
+
+.panel {
+  overflow-y: auto;
+  border-right: 1px solid #2a2635;
+  padding: 0 12px 24px;
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0 10px;
+  background: #0b0a10;
+  border-bottom: 1px solid #2a2635;
+}
+
+.title {
+  margin: 0;
+  font:
+    600 16px/1.2 system-ui,
+    sans-serif;
+}
+
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.name {
+  flex: 1;
+  min-width: 120px;
+}
+
+.small {
+  padding: 3px 8px;
+  border: 1px solid #4a4458;
+  border-radius: 6px;
+  background: #1c1926;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.small[data-on] {
+  background: #4b3d7a;
+}
+
+.status,
+.hint,
+.measures p {
+  margin: 0;
+  color: #c9c2d9;
+}
+
+.measures {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.group {
+  margin-top: 12px;
+}
+
+.groupTitle {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a99fc4;
+}
+
+.element {
+  border: 1px solid #262230;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  padding: 4px 8px;
+}
+
+.element[data-off] {
+  opacity: 0.6;
+}
+
+.elementHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.elementName {
+  flex: 1;
+  font-weight: 600;
+}
+
+.cost {
+  font-size: 11px;
+  color: #a99fc4;
+}
+
+.cost[data-cost="élevé"] {
+  color: #f0a08a;
+}
+
+.role {
+  margin: 2px 0 6px;
+  color: #a99fc4;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 140px 1fr 64px;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+}
+
+.rowLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowValue {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.previews {
+  display: grid;
+  min-width: 0;
+}
+
+.previews[data-ab] {
+  grid-template-columns: 1fr 1fr;
+}
+
+.preview {
+  position: relative;
+  min-width: 0;
+}
+
+.frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 1;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.7);
+}

@@ -5,6 +5,7 @@ export type { Quality } from "./quality";
 export { DURATION, EASE, SPRING } from "./motion";
 export { BUILTIN_THEMES, DEFAULT_THEME } from "./themes";
 export { parseTheme } from "./theme";
+export { themeGradient } from "./applyTheme";
 export type { Theme } from "./theme";
 export { Surface } from "./glass/Surface";
 export { Button } from "./components/Button";

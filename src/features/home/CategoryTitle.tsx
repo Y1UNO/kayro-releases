@@ -28,6 +28,7 @@ export function CategoryTitle({ category, compact }: Props) {
           </m.h1>
         </AnimatePresence>
       </div>
+      <div className={styles.underline} aria-hidden="true" />
     </div>
   );
 }

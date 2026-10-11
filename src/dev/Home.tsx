@@ -1,6 +1,6 @@
 // Development page for the home screen (step 7): `/dev/home`, dev builds only (see main.tsx).
 // It fills the store with fake apps, so the screen can be checked in a plain browser:
-//   ?theme=crepuscule|boreale|ocean|rose|graphite   ?apps=60 (all in "jeux")   ?empty=1
+//   ?theme=<theme id> (default: the exported art direction's)   ?atelier=A|B (workshop preview)   ?apps=60 (all in "jeux")   ?empty=1
 //   ?view=grid   ?bench=1 (frame-time measurement while scrolling fast)   ?bench=idle (no input)
 //   ?fx=eco|balanced|high|ultra (quality, default high)   ?intensity=0.3…1   ?nodust=1 (CSS layer only)
 //   ?addmock=1 (fake core for the add / edit dialogs: detected apps, drop, add, edit, remove)
@@ -15,6 +15,8 @@ import type { AppEntry } from "../ipc/bindings";
 import { ipc } from "../ipc/commands";
 import { hubStore } from "../store";
 import { installAddAppsMock } from "./addAppsMock";
+import { runBench, type BenchResult } from "./bench";
+import { ACTIVE_THEME_ID } from "../design/da";
 
 const MOCK: Record<string, string[]> = {
   jeux: ["Riot Client", "Minecraft", "Steam", "Epic Games", "Battle.net"],
@@ -45,58 +47,6 @@ function seed(params: URLSearchParams): AppEntry[] {
   return Object.entries(MOCK).flatMap(([cat, names]) => names.map((nm, i) => entry(nm, cat, i)));
 }
 
-interface BenchResult {
-  frames: number;
-  p50: number;
-  p95: number;
-  p99: number;
-  max: number;
-  over25ms: number;
-  /** Frames longer than 1.5× the median frame (a frame missed at this refresh rate). */
-  dropped: number;
-  hz: number;
-}
-
-/** Sends ArrowRight / ArrowLeft at `keyHz` keys per second (30 = a held key, 0 = none) for `ms`, and records every frame time. */
-function runBench(ms: number, keyHz = 30): Promise<BenchResult> {
-  return new Promise((resolve) => {
-    const deltas: number[] = [];
-    let last = performance.now();
-    const start = last;
-    let dir = "ArrowRight";
-    let sinceKey = 0;
-    let steps = 0;
-    const loop = (now: number) => {
-      deltas.push(now - last);
-      sinceKey += now - last;
-      last = now;
-      if (sinceKey >= 1000 / keyHz) {
-        sinceKey = 0;
-        if (++steps % Math.max(4, Math.round(keyHz * 1.3)) === 0)
-          dir = dir === "ArrowRight" ? "ArrowLeft" : "ArrowRight";
-        window.dispatchEvent(new KeyboardEvent("keydown", { key: dir, bubbles: true }));
-      }
-      if (now - start < ms) requestAnimationFrame(loop);
-      else {
-        const sorted = [...deltas.slice(1)].sort((a, b) => a - b);
-        const q = (p: number) =>
-          sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
-        resolve({
-          frames: sorted.length,
-          p50: q(0.5),
-          p95: q(0.95),
-          p99: q(0.99),
-          max: sorted[sorted.length - 1] ?? 0,
-          over25ms: sorted.filter((d) => d > 25).length,
-          dropped: sorted.filter((d) => d > 1.5 * q(0.5)).length,
-          hz: Math.round(1000 / (q(0.5) || 16.7)),
-        });
-      }
-    };
-    requestAnimationFrame(loop);
-  });
-}
-
 /** Bench variants of the atmosphere layers (undefined = the normal ones). */
 function benchLayers(params: URLSearchParams) {
   const fps = Number(params.get("fps")) || undefined;
@@ -118,7 +68,7 @@ export default function HomeDev() {
       apps,
       settings: {
         schemaVersion: 1,
-        themeId: params.get("theme") ?? "crepuscule",
+        themeId: params.get("theme") ?? ACTIVE_THEME_ID,
         quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
         colorMode: "light",
         hotkey: "Ctrl+Alt+H",
@@ -173,7 +123,7 @@ export default function HomeDev() {
   }, []);
 
   if (!ready) return null;
-  const themeId = params.get("theme") ?? "crepuscule";
+  const themeId = params.get("theme") ?? ACTIVE_THEME_ID;
   return (
     <ThemeProvider initialThemeId={themeId}>
       <Atmosphere layers={benchLayers(params)} />

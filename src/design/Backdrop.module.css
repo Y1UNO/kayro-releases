@@ -4,7 +4,11 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bottom) 100%);
+  /* --da-bg: shape chosen in the art direction (radial in V4). */
+  background: var(
+    --da-bg,
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bottom) 100%)
+  );
 }
 
 /* 256 px noise tile (scripts/make-noise.mjs), repeated. */
@@ -14,11 +18,15 @@
   background-image: url("./assets/noise-256.png");
   background-size: 256px 256px;
   mix-blend-mode: overlay;
-  opacity: 0.09;
+  opacity: var(--da-grain, 0.09);
 }
 
 .vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 48%, rgba(4, 2, 8, 0.62) 100%);
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    rgba(0, 0, 0, 0) 48%,
+    rgba(4, 2, 8, var(--da-vignette, 0.62)) 100%
+  );
 }

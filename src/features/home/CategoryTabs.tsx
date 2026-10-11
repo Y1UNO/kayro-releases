@@ -50,7 +50,7 @@ export function CategoryTabs({
   return (
     <div className={styles.row}>
       <div className={styles.group}>
-        <Surface radius="var(--radius-3xl)" className={styles.tabs}>
+        <Surface radius="var(--da-bar-radius, var(--radius-3xl))" className={styles.tabs}>
           <div
             role="tablist"
             aria-label={t("home.categoriesNav")}

@@ -69,9 +69,15 @@ if (-not $NoBuild) {
 if (-not (Test-Path $exe)) { Stop-Here "exe introuvable : $exe" }
 if (-not (Test-Path $icon)) { Stop-Here "icone introuvable : $icon" }
 
-# 3. Desktop shortcut, rewritten in place.
+# 3. Desktop shortcut, rewritten in place, unless it already goes through the one-click launcher
+#    (scripts\Kayro.cmd, installed by install-raccourcis.ps1): that one stays as it is.
 $shell = New-Object -ComObject WScript.Shell
 $link = $shell.CreateShortcut($lnk)
+if ($link.TargetPath -and ($link.TargetPath -ieq (Join-Path $PSScriptRoot 'Kayro.cmd'))) {
+    [void][Runtime.InteropServices.Marshal]::ReleaseComObject($shell)
+    Write-Host "Pret : $exe (raccourci du lanceur conserve)" -ForegroundColor Green
+    exit 0
+}
 $link.TargetPath = $exe
 $link.WorkingDirectory = Split-Path -Parent $exe
 $link.IconLocation = "$icon,0"

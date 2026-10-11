@@ -1,10 +1,12 @@
-import { useId, useLayoutEffect, useRef } from "react";
+import { useId, useLayoutEffect, useMemo, useRef } from "react";
 import type { WheelEvent } from "react";
 import type { AppEntry, AppRunState } from "../../ipc/bindings";
 import { useFxTarget } from "../../fx";
 import { t } from "../../i18n";
 import { AppCard } from "./AppCard";
-import { SLOT, mountedRange } from "./carouselGeometry";
+import { cardGeometry, daStore, useDa } from "../../design/da";
+import { geometryVars, mountedRange, type Geometry } from "./carouselGeometry";
+import { cssVars } from "./cssVars";
 import styles from "./Carousel.module.css";
 
 interface Props {
@@ -37,6 +39,12 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
   const fast = useRef({ last: 0, timer: 0 });
   const listId = useId();
   const active = apps[focus];
+  // Card sizes come from the art direction (`cards` element, live in the workshop).
+  const cards = useDa((s) => s.values.cards);
+  const geometry = useMemo<Geometry>(() => {
+    const c = cardGeometry(cards);
+    return { slotW: c.activeW, slotH: c.activeH, sideW: c.sideW, gap: c.gap };
+  }, [cards]);
 
   // The active card always sits at the centre of the stage: the light stays there while the
   // cards slide under it (measured from the stage, not the moving card).
@@ -44,8 +52,9 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
     const el = stage.current;
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    const top = r.top + (r.height - SLOT.h) / 2;
-    return { x: r.left + r.width / 2, top, bottom: top + SLOT.h };
+    const h = cardGeometry(daStore.getState().values.cards).activeH;
+    const top = r.top + (r.height - h) / 2;
+    return { x: r.left + r.width / 2, top, bottom: top + h };
   }, []);
 
   // Fast scrolling: while the selection changes faster than the eye can follow, the dimming, the
@@ -89,6 +98,7 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
     <div
       ref={stage}
       className={styles.stage}
+      style={cssVars(geometryVars(geometry))}
       role="listbox"
       tabIndex={0}
       aria-label={t("home.apps")}
@@ -104,6 +114,7 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
             app={app}
             mode="stage"
             d={i - focus}
+            geometry={geometry}
             active={i === focus}
             running={running[app.id]?.running === true}
             domId={`${listId}-${app.id}`}

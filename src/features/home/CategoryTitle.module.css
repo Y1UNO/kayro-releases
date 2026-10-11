@@ -10,9 +10,9 @@
 .label {
   font-size: var(--fs-13);
   font-weight: 600;
-  letter-spacing: 0.22em;
+  letter-spacing: var(--da-label-tracking, 0.22em);
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--da-label-color, var(--accent));
 }
 
 /* Fixed box: titles are stacked in it while they cross-fade, so nothing around moves. */
@@ -33,11 +33,19 @@
   font-family: var(--font-title);
   font-size: var(--fs-title-xl);
   line-height: 1.05;
-  font-weight: 300;
+  font-weight: var(--da-title-weight, 300);
   letter-spacing: var(--tracking-title);
   text-shadow: 0 0 70px var(--glow);
   white-space: nowrap;
   transition: font-size var(--dur-card) var(--ease);
+}
+
+/* Thin gradient rule under the title (art direction `categoryTitle.underline`; 0 px = none). */
+.underline {
+  width: var(--da-underline, 0px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--grad-a), var(--grad-b), transparent);
+  transition: width var(--dur-card) var(--ease);
 }
 
 .block[data-compact] .box {

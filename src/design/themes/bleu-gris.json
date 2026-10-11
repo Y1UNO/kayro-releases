@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "bleu-gris",
+  "name": "Bleu-gris",
+  "author": "Kayro",
+  "description": "Bleu ardoise, calme et net.",
+  "bg": ["#141A30", "#0B0F1E", "#05070F"],
+  "accent": "#A3B0DE",
+  "glow": "rgba(114,130,188,.35)",
+  "fog": ["rgba(163,176,222,.34)", "rgba(163,176,222,.16)", "rgba(114,130,188,.14)"],
+  "card": [163, 176, 222],
+  "beam": [114, 130, 188],
+  "gradient": ["#A3B0DE", "#7282BC"],
+  "soft": "#D3DAF2"
+}

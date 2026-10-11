@@ -4,6 +4,7 @@
 //   ?empty=1 (no scene)   ?screen=scenes|editor|home   ?theme=…
 import { useState } from "react";
 import { ThemeProvider } from "../design";
+import { ACTIVE_THEME_ID } from "../design/da";
 import { Atmosphere } from "../fx";
 import { HomeScreen } from "../features/home/HomeScreen";
 import { SceneEditor } from "../features/scenes/SceneEditor";
@@ -130,7 +131,7 @@ export default function ScenesDev() {
       : ((params.get("screen") as "home" | "scenes" | null) ?? "scenes"),
   );
   return (
-    <ThemeProvider initialThemeId={params.get("theme") ?? "crepuscule"}>
+    <ThemeProvider initialThemeId={params.get("theme") ?? ACTIVE_THEME_ID}>
       <Atmosphere />
       {screen === "home" && <HomeScreen onOpenScenes={() => setScreen("scenes")} />}
       {screen === "scenes" && (

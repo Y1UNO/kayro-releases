@@ -30,7 +30,7 @@ interface Props {
 export function TopBar({ onSearch, onAdd, onSettings }: Props) {
   const mode = useHub((s) => s.settings?.displayMode ?? "immersive");
   return (
-    <Surface as="header" radius="29px" className={styles.bar}>
+    <Surface as="header" radius="var(--da-bar-radius, 29px)" className={styles.bar}>
       <div className={styles.brand}>
         <Logo size={30} className={styles.logo} />
         <span>{APP_NAME}</span>

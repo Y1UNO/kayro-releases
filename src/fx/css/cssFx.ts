@@ -1,6 +1,6 @@
 import type { Quality } from "../../design";
 import { budgetFor, fxFps } from "../budget";
-import type { FxLayer, FxPalette, FxTarget } from "../FxLayer";
+import type { FxLayer, FxPalette, FxParams, FxTarget } from "../FxLayer";
 import { frameLoop, type FrameLoop } from "../loop";
 import { prefersReducedMotion } from "../motionPref";
 import styles from "./Atmosphere.module.css";
@@ -29,6 +29,9 @@ export class CssFxLayer implements FxLayer {
   private swayOn = false;
   private fps = 0;
   private paused = false;
+  private quality: Quality = "balanced";
+  /** Art direction switches (step 12b): which of the sketch's elements are drawn. */
+  private shown = { fog: true, beam: true, floor: true, cardHalo: true };
   /** Own clock (ms): frozen while paused, so motion resumes where it stopped. */
   private time = 0;
   private unsubscribe: (() => void) | null = null;
@@ -47,6 +50,7 @@ export class CssFxLayer implements FxLayer {
     };
     const root = div("root", host);
     root.dataset.target = "none";
+    root.dataset.fog = root.dataset.floor = "";
     this.fog = [div("oval a", root), div("oval b", root), div("oval c", root)];
     div("floor", root);
     const light = div("light", root);
@@ -57,14 +61,28 @@ export class CssFxLayer implements FxLayer {
     this.root = root;
   }
 
+  setParams(p: FxParams): void {
+    this.shown = {
+      fog: p.fog?.on !== false,
+      beam: p.beam?.on !== false,
+      floor: p.floor?.on !== false,
+      cardHalo: p.cardHalo?.on !== false,
+    };
+    this.setQuality(this.quality);
+  }
+
   setQuality(quality: Quality): void {
+    this.quality = quality;
     const root = this.root;
     if (!root) return;
     const b = budgetFor(quality, prefersReducedMotion());
-    toggle(root, "beam", b.beam);
-    toggle(root, "halo", b.halo);
-    this.fogOn = b.fog === "animated";
-    this.swayOn = b.beam && b.sway;
+    const { fog, beam, floor, cardHalo } = this.shown;
+    toggle(root, "beam", b.beam && beam);
+    toggle(root, "halo", b.halo && cardHalo);
+    toggle(root, "fog", fog);
+    toggle(root, "floor", floor);
+    this.fogOn = fog && b.fog === "animated";
+    this.swayOn = beam && b.beam && b.sway;
     this.fps = fxFps(b, this.options.fps);
     // Back to rest for whatever stopped moving.
     if (!this.fogOn) for (const el of this.fog) el.style.transform = "";

@@ -1,0 +1,76 @@
+/*
+ * "Velours lunaire" (reference/da, mock-up R2-Mix-V4): a large moon halo at the top and two colour
+ * veils crossing slowly, plus the crystal ring (Ring.module.css). Gradients only (no filter: blur);
+ * only `transform` and `opacity` move. Sizes and strengths are custom properties written by the
+ * layers from the art direction catalogue.
+ */
+@property --fx-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgb(183, 162, 242);
+}
+@property --fx-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgb(246, 169, 138);
+}
+
+.root {
+  position: absolute;
+  inset: 0;
+  opacity: var(--atmosphere, 1);
+  transition:
+    --fx-a var(--dur-color) var(--ease),
+    --fx-b var(--dur-color) var(--ease);
+}
+
+.moon {
+  position: absolute;
+  left: 50%;
+  top: var(--moon-top, -170px);
+  width: var(--moon-size, 600px);
+  height: var(--moon-size, 600px);
+  margin-left: calc(var(--moon-size, 600px) / -2);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(from var(--fx-a) r g b / var(--moon-i, 0.34)),
+    rgb(from var(--fx-a) r g b / calc(var(--moon-i, 0.34) * 0.35)) 55%,
+    transparent
+  );
+}
+
+/* Mock-up: left -200 / width 1680 on a 1280 frame, heights 220 / 240 of 760. */
+.veil {
+  position: absolute;
+  left: -16%;
+  width: 132%;
+  border-radius: 50%;
+}
+
+.veilA {
+  top: var(--veil-top-a, 43%);
+  height: 29%;
+  background: radial-gradient(
+    closest-side,
+    rgb(from var(--fx-a) r g b / var(--veil-a, 0.16)),
+    transparent
+  );
+  transform: rotate(-6deg);
+}
+
+.veilB {
+  top: var(--veil-top-b, 60%);
+  height: 32%;
+  background: radial-gradient(
+    closest-side,
+    rgb(from var(--fx-b) r g b / var(--veil-b, 0.14)),
+    transparent
+  );
+  transform: rotate(5deg);
+}
+
+.root:not([data-moon]) .moon,
+.root:not([data-veils]) .veil {
+  display: none;
+}

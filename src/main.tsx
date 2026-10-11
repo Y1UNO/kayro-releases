@@ -1,10 +1,14 @@
 import "@fontsource-variable/fraunces/opsz.css"; // wght + opsz axes (optical size, as in the mock-ups)
 import "@fontsource-variable/dm-sans";
+// Art direction fonts (step 12b): Cormorant Garamond (titles) + Manrope (interface).
+import "@fontsource-variable/cormorant-garamond";
+import "@fontsource-variable/manrope";
 import { StrictMode, Suspense, lazy } from "react";
 import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { ThemeProvider, applyQuality } from "./design";
+import { installDa } from "./design/da";
 import { applyDefaultLogoColours } from "./brand";
 import { Atmosphere } from "./fx";
 import { WidgetApp } from "./features/widget/WidgetApp";
@@ -12,6 +16,7 @@ import { desktopStore, hubStore, sceneStore } from "./store";
 import "./index.css";
 
 applyDefaultLogoColours();
+installDa();
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root not found");
@@ -41,8 +46,24 @@ const ScenesDev: ComponentType | null =
     ? lazy(() => import("./dev/Scenes"))
     : null;
 
+// Preview of the art direction workshop (step 12b): live values from `/dev/atelier`, or a saved
+// preset with `?preset=<file name>` (bench in the Tauri window). Dev only.
+if (import.meta.env.DEV && /[?&](atelier|preset)=/.test(location.search)) {
+  const q = new URLSearchParams(location.search);
+  void import("./dev/atelier/sync").then((m) => {
+    m.listenAsPreview(q.get("atelier"));
+    void m.applyPresetParam(q.get("preset"));
+  });
+}
+
+// Art direction workshop (step 12b): development builds only.
+const Atelier: ComponentType | null =
+  import.meta.env.DEV && location.pathname === "/dev/atelier"
+    ? lazy(() => import("./dev/atelier/Atelier"))
+    : null;
+
 const appRoot = createRoot(root);
-const DevPage = Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev;
+const DevPage = Atelier ?? Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev;
 
 if (DevPage) {
   appRoot.render(

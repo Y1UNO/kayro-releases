@@ -1,7 +1,11 @@
 import type { Quality } from "../design";
 import { DustLayer } from "./canvas/dust";
 import { CssFxLayer, cls } from "./css/cssFx";
-import type { FxLayer, FxPalette, FxTarget } from "./FxLayer";
+import type { FxLayer, FxPalette, FxParams, FxTarget } from "./FxLayer";
+import { MoonLayer } from "./css/moonFx";
+import { RingLayer } from "./css/ringFx";
+import { ParticlesLayer } from "./canvas/particles";
+import { RingGlLayer } from "./gpu/ringGl";
 import { frameLoop } from "./loop";
 
 /** Fade before a pause / after a resume (ARCHITECTURE.md §5: « Atténué », 400 ms). */
@@ -21,7 +25,14 @@ export function clampIntensity(v: number | null | undefined): number {
  * future WebGL engine supply other layers.
  */
 export function createFx(
-  make: () => FxLayer[] = () => [new CssFxLayer(), new DustLayer()],
+  make: () => FxLayer[] = () => [
+    new CssFxLayer(),
+    new MoonLayer(),
+    new RingLayer(),
+    new RingGlLayer(),
+    new DustLayer(),
+    new ParticlesLayer(),
+  ],
 ): FxLayer {
   const layers = make();
   let host: HTMLDivElement | null = null;
@@ -54,6 +65,9 @@ export function createFx(
     },
     setFocusTarget(t: FxTarget | null) {
       for (const l of layers) l.setFocusTarget(t);
+    },
+    setParams(p: FxParams) {
+      for (const l of layers) l.setParams(p);
     },
     pause() {
       if (paused || !host) return;

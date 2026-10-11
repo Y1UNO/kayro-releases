@@ -33,7 +33,7 @@ export function SceneDock({ onManage }: Props) {
   return (
     <Surface
       as="nav"
-      radius="var(--radius-4xl)"
+      radius="var(--da-bar-radius, var(--radius-4xl))"
       className={styles.dock}
       aria-label={t("home.dock.label")}
     >

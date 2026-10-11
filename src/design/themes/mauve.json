@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "mauve",
+  "name": "Mauve",
+  "author": "Kayro",
+  "description": "Mauve doux et violet profond.",
+  "bg": ["#1A1228", "#100B1A", "#08060D"],
+  "accent": "#C99ACB",
+  "glow": "rgba(148,118,194,.35)",
+  "fog": ["rgba(201,154,203,.34)", "rgba(201,154,203,.16)", "rgba(148,118,194,.14)"],
+  "card": [201, 154, 203],
+  "beam": [148, 118, 194],
+  "gradient": ["#C99ACB", "#9476C2"],
+  "soft": "#E6CCE8"
+}

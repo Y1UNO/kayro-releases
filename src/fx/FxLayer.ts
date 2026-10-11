@@ -9,7 +9,18 @@ export interface FxPalette {
   beam: readonly [number, number, number];
   /** Fog layers A / B / C, CSS colours with alpha. */
   fog: readonly [string, string, string];
+  /** The two colours of the theme gradient (moon, veils, ring, embers, stars), rgb. */
+  a: readonly [number, number, number];
+  b: readonly [number, number, number];
 }
+
+/**
+ * Tunable values of the visual elements, by element id (catalogue of `src/design/da`, step 12b).
+ * Each layer reads the elements it draws; the quality budget still caps what may move.
+ */
+export type FxParams = Readonly<
+  Record<string, Readonly<Record<string, number | boolean | string>>>
+>;
 
 /** What the light falls on (the selected card), in viewport pixels. */
 export interface FxTarget {
@@ -20,8 +31,8 @@ export interface FxTarget {
 }
 
 /**
- * One layer of the animated atmosphere. Implementations: CSS (fog, beam, halo) and Canvas 2D
- * (dust); a WebGL one may come later. The interface never depends on an implementation, and the
+ * One layer of the animated atmosphere. Implementations: CSS (fog, beam, halo, moon, veils,
+ * crystal ring) and Canvas 2D (dust, embers, stars); a WebGL one comes with step 12b. The interface never depends on an implementation, and the
  * screens only talk to the composite returned by `createFx` (through `src/fx/index.ts`).
  */
 export interface FxLayer {
@@ -33,6 +44,7 @@ export interface FxLayer {
   setIntensity(intensity: number): void;
   /** `null`: nothing selected (empty screen), the light fades out. */
   setFocusTarget(target: FxTarget | null): void;
+  setParams(params: FxParams): void;
   /** Fades out, then stops every loop and CSS animation: no work at all until `resume`. */
   pause(): void;
   /** Restarts and fades back in. */

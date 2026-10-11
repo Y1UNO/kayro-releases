@@ -16,19 +16,40 @@ export const GAP = 20;
 export const VISIBLE_RADIUS = 2;
 export const MOUNT_RADIUS = VISIBLE_RADIUS + 1;
 
-const STEP = SIDE_W + GAP;
+/**
+ * Sizes tunable in the art direction workshop (`cards` element); the constants above are the
+ * defaults. Same rules: one fixed slot, side cards shrunk by `scale` (sideW / slotW).
+ */
+export interface Geometry {
+  slotW: number;
+  slotH: number;
+  sideW: number;
+  gap: number;
+}
+export const DEFAULT_GEOMETRY: Geometry = { slotW: SLOT.w, slotH: SLOT.h, sideW: SIDE_W, gap: GAP };
 
 /** Left edge of the *visible* card at distance `d`, measured from the centre of the active card. */
-export function cardLeft(d: number): number {
-  if (d === 0) return -SLOT.w / 2;
-  if (d > 0) return SLOT.w / 2 + GAP + (d - 1) * STEP;
-  return -(SLOT.w / 2 + GAP) - SIDE_W - (-d - 1) * STEP;
+export function cardLeft(d: number, g: Geometry = DEFAULT_GEOMETRY): number {
+  const step = g.sideW + g.gap;
+  if (d === 0) return -g.slotW / 2;
+  if (d > 0) return g.slotW / 2 + g.gap + (d - 1) * step;
+  return -(g.slotW / 2 + g.gap) - g.sideW - (-d - 1) * step;
 }
 
 /** `translateX` of the slot (centred on the stage by CSS): its centre is the card's centre. */
-export function slotOffset(d: number): number {
-  const w = d === 0 ? SLOT.w : SIDE_W;
-  return cardLeft(d) + w / 2;
+export function slotOffset(d: number, g: Geometry = DEFAULT_GEOMETRY): number {
+  const w = d === 0 ? g.slotW : g.sideW;
+  return cardLeft(d, g) + w / 2;
+}
+
+/** CSS variables of a geometry, set on the carousel stage (AppCard.module.css reads them). */
+export function geometryVars(g: Geometry): Record<`--${string}`, string> {
+  return {
+    "--slot-w": `${g.slotW}px`,
+    "--slot-h": `${g.slotH}px`,
+    "--side-w": `${g.sideW}px`,
+    "--side-scale": String(g.sideW / g.slotW),
+  };
 }
 
 export function isVisible(d: number): boolean {

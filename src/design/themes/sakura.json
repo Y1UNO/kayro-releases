@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "sakura",
+  "name": "Sakura",
+  "author": "Kayro",
+  "description": "Rose cerisier sur nuit prune.",
+  "bg": ["#24121E", "#150A12", "#0B0509"],
+  "accent": "#F7B7C4",
+  "glow": "rgba(217,112,142,.35)",
+  "fog": ["rgba(247,183,196,.34)", "rgba(247,183,196,.16)", "rgba(217,112,142,.14)"],
+  "card": [247, 183, 196],
+  "beam": [217, 112, 142],
+  "gradient": ["#F7B7C4", "#D9708E"],
+  "soft": "#FBD8DF"
+}

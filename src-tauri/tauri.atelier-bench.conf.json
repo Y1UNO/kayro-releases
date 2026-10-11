@@ -1,0 +1,7 @@
+{
+  "identifier": "fr.yiuno.hub.atelier",
+  "build": {
+    "devUrl": "http://localhost:1420/dev/atelier",
+    "beforeDevCommand": ""
+  }
+}

@@ -20,9 +20,11 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 232px;
-  height: 328px;
-  margin-left: -116px;
+  /* Geometry from the art direction (Carousel.tsx sets --slot-w / --slot-h / --side-w / --side-scale). */
+  width: var(--slot-w, 232px);
+  height: var(--slot-h, 328px);
+  margin-left: calc(var(--slot-w, 232px) / -2);
+  perspective: 900px;
   pointer-events: none; /* only the (scaled) card takes the mouse */
   transform: translate3d(var(--x), -50%, 0);
   transition:
@@ -51,7 +53,7 @@
   box-sizing: border-box;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 28px;
+  border-radius: var(--da-card-radius, 28px);
   color: #fff;
   cursor: pointer;
   pointer-events: auto;
@@ -66,22 +68,57 @@
     0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
+/* Hover (art direction « survol des cartes »): `translate` lifts, `rotate` tilts towards the
+   pointer (written by useCardTilt.ts), each on its own property so the carousel's `transform`
+   keeps its own timing. */
+.card {
+  transition:
+    transform var(--dur-card) var(--ease),
+    translate var(--da-hover-dur, 0.4s) var(--da-hover-ease, var(--ease)),
+    rotate var(--da-hover-dur, 0.4s) var(--da-hover-ease, var(--ease)),
+    border-color var(--dur-card) ease;
+}
+
+.card:hover {
+  translate: 0 var(--da-hover-lift, -3px);
+}
+
 .slot .card {
-  transform: scale(0.7414); /* SIDE_SCALE */
-  transition: transform var(--dur-card) var(--ease);
+  transform: scale(var(--side-scale, 0.7414)); /* SIDE_SCALE */
 }
 
 .slot[data-active] .card {
   transform: scale(1);
+  border-color: var(--da-card-edge, rgba(255, 255, 255, 0.22));
 }
 
 .cell .card {
-  border-radius: var(--radius-2xl);
-  transition: transform var(--dur-hover) var(--ease);
+  border-radius: var(--da-card-radius, var(--radius-2xl));
 }
 
-.cell .card:hover {
-  transform: translateY(-3px);
+/* Soft reflection following the pointer (--sheen-x / --sheen-y from useCardTilt.ts). */
+.sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    60% 50% at var(--sheen-x, 50%) var(--sheen-y, 0%),
+    rgba(255, 255, 255, var(--da-hover-sheen, 0)),
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  transition: opacity var(--da-hover-dur, 0.4s) var(--da-hover-ease, var(--ease));
+  pointer-events: none;
+}
+
+.card:hover .sheen {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover {
+    translate: none;
+  }
 }
 
 /* Fast scrolling (Carousel.tsx sets `data-fast` on the list): only the sliding is animated. */
@@ -98,7 +135,7 @@
   position: absolute;
   inset: 0;
   background: var(--bg-mid);
-  opacity: 0.3;
+  opacity: var(--da-card-dim, 0.3);
   transition: opacity var(--dur-card) ease;
   pointer-events: none;
 }
@@ -108,7 +145,7 @@
 }
 
 .slot:not([data-active]) .card:hover .veil {
-  opacity: 0.2;
+  opacity: calc(var(--da-card-dim, 0.3) * 0.66);
   transition-duration: var(--dur-hover);
 }
 
@@ -128,7 +165,7 @@
 }
 
 .slot[data-active] .glow {
-  opacity: 1;
+  opacity: var(--da-card-pool, 1);
 }
 
 /* Big serif monogram, 100 px (74 px once scaled on a side card). */
@@ -226,7 +263,7 @@
   right: 0;
   bottom: 18px;
   margin: 0 auto;
-  width: 136px;
+  width: calc(var(--side-w, 172px) - 36px);
   box-sizing: border-box;
   padding: 10px 14px;
   border: 1px solid var(--glass-border);
@@ -249,7 +286,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transform: scale(1.3488); /* 1 / SIDE_SCALE */
+  transform: scale(calc(1 / var(--side-scale, 0.7414))); /* 1 / SIDE_SCALE */
   transform-origin: 50% 100%;
   transition:
     transform var(--dur-card) var(--ease),
@@ -257,7 +294,7 @@
 }
 
 .slot[data-active] .plate {
-  width: 196px;
+  width: calc(var(--slot-w, 232px) - 36px);
   transform: scale(1);
 }
 

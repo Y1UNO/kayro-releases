@@ -58,4 +58,6 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 - Accessibilité : contraste du texte ≥ 4,5:1, navigation complète au clavier, focus visible, respect de `prefers-reduced-motion`.
 
 ## Hors périmètre pour l'instant (ne pas coder sans demande)
-Voix, contrôle par les mains, moteur WebGL, intégrations (OBS, Discord, lumières), salon d'amis, mises à jour automatiques. Prévoir les points d'extension, sans implémenter.
+Voix, contrôle par les mains, intégrations (OBS, Discord, lumières), salon d'amis, mises à jour automatiques. Prévoir les points d'extension, sans implémenter.
+
+**Moteur graphique (WebGL2 / shaders) : autorisé par l'utilisateur (étape 12b).** Toujours derrière `FxLayer`, avec repli CSS automatique (WebGL2 absent, contexte perdu, budget d'image dépassé) et coût mesuré.

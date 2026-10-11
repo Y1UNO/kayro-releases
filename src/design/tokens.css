@@ -55,6 +55,16 @@
   inherits: true;
   initial-value: rgb(255, 190, 140);
 }
+@property --grad-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgb(160, 104, 214);
+}
+@property --grad-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgb(255, 190, 140);
+}
 
 :root {
   color-scheme: dark;
@@ -70,6 +80,10 @@
   --fog-c: rgba(255, 205, 170, 0.14);
   --card: rgb(190, 120, 170);
   --beam: rgb(255, 190, 140);
+  /* Logo gradient A → B and soft label colour (step 12b; derived for the older themes). */
+  --grad-a: rgb(160, 104, 214);
+  --grad-b: rgb(255, 190, 140);
+  --text-soft: var(--accent-light);
 
   /* Derived from the accent (the mock-ups use a lighter tint for fills and active labels). */
   --accent-light: color-mix(in srgb, var(--accent) 60%, white);
@@ -190,7 +204,9 @@
     --fog-b var(--dur-theme) var(--ease),
     --fog-c var(--dur-theme) var(--ease),
     --card var(--dur-theme) var(--ease),
-    --beam var(--dur-theme) var(--ease);
+    --beam var(--dur-theme) var(--ease),
+    --grad-a var(--dur-theme) var(--ease),
+    --grad-b var(--dur-theme) var(--ease);
 }
 
 @media (prefers-reduced-motion: reduce) {

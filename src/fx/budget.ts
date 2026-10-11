@@ -17,6 +17,12 @@ export interface FxBudget {
   /** Dust particles at the reference size (1280×760); scaled by `dustCount`. */
   dust: number;
   /**
+   * Share of the embers and stars kept (art direction, step 12b): fewer in Eco and Balanced
+   * (brief: "moins de particules, 30 images/s" in Eco). 0 = none. Their slow drift, the veils and
+   * the ring's reflection only move when `fog` is "animated".
+   */
+  particles: number;
+  /**
    * Cadence of everything that moves continuously (fog drift, sway, dust), on the loop's shared
    * grid. Measured at step 8: what costs is the number of images composed per second, not one
    * layer or another (one CSS animation alone at 279 Hz: 6.9 % CPU and 9 % of frames missed).
@@ -32,16 +38,48 @@ export const FX_MAX_FPS = 144;
 export const ECO_MAX_FPS = 30;
 
 const BUDGETS: Record<Quality, FxBudget> = {
-  eco: { fog: "static", beam: false, sway: false, halo: true, dust: 0, maxFps: ECO_MAX_FPS },
-  balanced: { fog: "static", beam: false, sway: false, halo: true, dust: 0, maxFps: AMBIENT_FPS },
-  high: { fog: "animated", beam: true, sway: true, halo: true, dust: 14, maxFps: AMBIENT_FPS },
-  ultra: { fog: "animated", beam: true, sway: true, halo: true, dust: 14, maxFps: AMBIENT_FPS },
+  eco: {
+    fog: "static",
+    beam: false,
+    sway: false,
+    halo: true,
+    dust: 0,
+    particles: 0.5,
+    maxFps: ECO_MAX_FPS,
+  },
+  balanced: {
+    fog: "static",
+    beam: false,
+    sway: false,
+    halo: true,
+    dust: 0,
+    particles: 0.5,
+    maxFps: AMBIENT_FPS,
+  },
+  high: {
+    fog: "animated",
+    beam: true,
+    sway: true,
+    halo: true,
+    dust: 14,
+    particles: 1,
+    maxFps: AMBIENT_FPS,
+  },
+  ultra: {
+    fog: "animated",
+    beam: true,
+    sway: true,
+    halo: true,
+    dust: 14,
+    particles: 1,
+    maxFps: AMBIENT_FPS,
+  },
 };
 
 /** `reducedMotion`: no sway, no particles, static fog (DESIGN.md « Mouvement »). */
 export function budgetFor(quality: Quality, reducedMotion: boolean): FxBudget {
   const b = BUDGETS[quality];
-  return reducedMotion ? { ...b, fog: "static", sway: false, dust: 0 } : b;
+  return reducedMotion ? { ...b, fog: "static", sway: false, dust: 0, particles: 0 } : b;
 }
 
 /** Mock-up frame: the reference for particle density. */

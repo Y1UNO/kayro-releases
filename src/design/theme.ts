@@ -18,6 +18,10 @@ export interface Theme {
   card: [number, number, number];
   /** Colour of the light beam, rgb. */
   beam: [number, number, number];
+  /** Optional (logo themes, step 12b): the two colours of the logo gradient, A (top) and B. */
+  gradient?: [string, string];
+  /** Optional: soft text colour (labels). Derived from the accent when absent. */
+  soft?: string;
 }
 
 const KEYS = [
@@ -32,6 +36,8 @@ const KEYS = [
   "fog",
   "card",
   "beam",
+  "gradient",
+  "soft",
 ] as const;
 
 const MAX_TEXT = 200;
@@ -79,5 +85,11 @@ export function parseTheme(
   }
   if (!isRgb(o.card)) return { ok: false, error: "Champ « card » invalide." };
   if (!isRgb(o.beam)) return { ok: false, error: "Champ « beam » invalide." };
+  if (o.gradient !== undefined && !isColorList(o.gradient, 2)) {
+    return { ok: false, error: "Champ « gradient » invalide." };
+  }
+  if (o.soft !== undefined && (typeof o.soft !== "string" || !parseColor(o.soft))) {
+    return { ok: false, error: "Champ « soft » invalide." };
+  }
   return { ok: true, theme: o as unknown as Theme };
 }
