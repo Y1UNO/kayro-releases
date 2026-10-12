@@ -42,6 +42,10 @@ describe("contrast model matches tokens.css", () => {
     expect(Number(m?.[1])).toBeCloseTo(alpha, 5);
   });
 
+  it("dialog panel: the theme's middle background at the model's opacity", () => {
+    expect(norm(token("--panel-bg"))).toContain(`var(--bg-mid)${MODEL.panelMix * 100}%`);
+  });
+
   it("glass filter brightness", () => {
     expect(css).toContain(`brightness(${MODEL.glassBrightness})`);
   });

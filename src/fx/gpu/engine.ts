@@ -124,6 +124,9 @@ export class GlassEngine implements FxLayer {
   setPalette(p: FxPalette): void {
     this.palette = p;
     this.readTheme();
+    // An instant theme (the wave) is applied by the provider's layout effect, which runs after
+    // this one in the same commit: read once more before the next frame.
+    queueMicrotask(() => this.readTheme());
     // The theme cross-fades for 0.9 s: read the colours again once it has settled.
     window.clearTimeout(this.themeTimer);
     this.themeTimer = window.setTimeout(() => this.readTheme(), 1000);

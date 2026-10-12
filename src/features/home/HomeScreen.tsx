@@ -4,9 +4,10 @@ import { AnimatePresence, LazyMotion, MotionConfig, domAnimation, m } from "moti
 import { useMotionTokens } from "../../design/motion/current";
 import { fmTransition } from "../../design/motion/tokens";
 import { prefersReducedMotion } from "../../fx/motionPref";
+import { useReducedMotion } from "../../fx/useReducedMotion";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
-import { DisplaySettings } from "../settings/DisplaySettings";
+import { SettingsDialog } from "../settings/SettingsDialog";
 import type { AppEntry } from "../../ipc/bindings";
 import { hubStore, useHub } from "../../store";
 import { AddAppsDialog } from "../add-app/AddAppsDialog";
@@ -63,6 +64,7 @@ export function HomeScreen({
   const apps = useHub((s) => s.apps);
   const running = useHub((s) => s.running);
   const motion = useMotionTokens();
+  const reduced = useReducedMotion();
   const groups = useMemo(() => groupByCategory(apps), [apps]);
 
   const [state, dispatch] = useReducer(homeReducer, groups, (g) =>
@@ -242,7 +244,7 @@ export function HomeScreen({
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <MotionConfig reducedMotion="user">
+      <MotionConfig reducedMotion={reduced ? "always" : "never"}>
         <main className={styles.screen}>
           <TopBar
             onSearch={() => setPaletteOpen(true)}
@@ -345,7 +347,7 @@ export function HomeScreen({
             setNotice(t(count === 1 ? "addApps.addedOne" : "addApps.addedMany", { count }))
           }
         />
-        <DisplaySettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
         <EditAppDialog
           app={editing?.app ?? null}
           startWithRemove={editing?.remove}

@@ -11,6 +11,7 @@ import { WidgetApp } from "../features/widget/WidgetApp";
 import type { AppEntry, SceneFile, WidgetStyle } from "../ipc/bindings";
 import { desktopStore, hubStore, sceneStore } from "../store";
 import styles from "./Widget.module.css";
+import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
 
 const NAMES = ["Valorant", "Discord", "Spotify", "OBS Studio", "Steam", "Minecraft", "Blender"];
 const APPS: AppEntry[] = NAMES.map((name, i) => ({
@@ -43,7 +44,8 @@ function install(params: URLSearchParams): true {
       "w-2": { id: "w-2", running: true, foreground: true },
     },
     settings: {
-      schemaVersion: 1,
+      ...VISUAL_DEFAULTS,
+      schemaVersion: 2,
       themeId: params.get("theme") ?? ACTIVE_THEME_ID,
       quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
       colorMode: "light",

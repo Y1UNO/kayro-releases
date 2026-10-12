@@ -67,8 +67,9 @@
   --m-press-ease: var(--m-ease-move);
 }
 
+/* « Suivre Windows » off (round 5): `data-rm-ignore` on <html>, the system setting is ignored. */
 @media (prefers-reduced-motion: reduce) {
-  :root {
+  :root:not([data-rm-ignore]) {
     --m-rm: 0;
   }
 }

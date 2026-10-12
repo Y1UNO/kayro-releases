@@ -41,7 +41,7 @@ describe("intensity", () => {
     expect(clampIntensity(null)).toBe(1);
     expect(clampIntensity(Number.NaN)).toBe(1);
     expect(clampIntensity(0.1)).toBe(0.3);
-    expect(clampIntensity(2)).toBe(1);
+    expect(clampIntensity(2)).toBe(1.3);
     expect(clampIntensity(0.6)).toBe(0.6);
   });
 });

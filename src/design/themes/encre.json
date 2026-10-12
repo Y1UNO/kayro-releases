@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "encre",
+  "name": "Encre",
+  "author": "Kayro",
+  "description": "Encre et pêche, le noir du logo.",
+  "bg": ["#15151B", "#0C0C10", "#060608"],
+  "accent": "#F6A98A",
+  "glow": "rgba(183,162,242,.30)",
+  "fog": ["rgba(246,169,138,.26)", "rgba(246,169,138,.12)", "rgba(183,162,242,.14)"],
+  "card": [246, 169, 138],
+  "beam": [183, 162, 242],
+  "gradient": ["#F6A98A", "#B7A2F2"],
+  "soft": "#F3DCCF"
+}

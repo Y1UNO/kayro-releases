@@ -16,8 +16,11 @@ interface Props {
   title: string;
   /** Label of the close button. */
   closeLabel?: string;
-  /** `wide` = 760 px panel that fills the window height (forms and lists with their own scroll). */
-  size?: "md" | "wide";
+  /**
+   * `wide` = 760 px panel that fills the window height (forms and lists with their own scroll);
+   * `settings` = 1040 px, a side column of categories and a scrolling body (round 5).
+   */
+  size?: "md" | "wide" | "settings";
   children: ReactNode;
 }
 
@@ -112,8 +115,9 @@ export function Dialog({
     >
       <Surface
         as="section"
+        flat
         radius="var(--radius-3xl)"
-        className={size === "wide" ? `${styles.panel} ${styles.wide}` : styles.panel}
+        className={size === "md" ? styles.panel : `${styles.panel} ${styles[size]}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

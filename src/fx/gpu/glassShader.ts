@@ -9,6 +9,7 @@
 // Round 3b: a shape may be rotated (uX: cos, sin) and softened; stacked shapes (cards of the fan
 // and of the deck) come last, back to front, each drawn over the ones before it, never merged.
 
+import { FLOAT_RHYTHM } from "../../design/motion/tokens5";
 import { MAX_POSTERS } from "./posterTextures";
 
 export const MAX_SHAPES = 24;
@@ -76,7 +77,7 @@ uniform vec4 uSheen;       // glossy veil: position 0–1 (< 0: none), intensity
 uniform vec4 uSheenBox;    // selected card: centre x, y, half width, half height
 uniform vec4 uPo[MAXS];    // poster per shape: texture slot (< 0: none), picture w / h, opacity, inset
 uniform vec2 uPosterK;     // poster: refraction (× the rim's), reflection on the rim
-uniform vec4 uX[MAXS];     // per shape: cos, sin of its angle, edge softness (px), stack order
+uniform vec4 uX[MAXS];     // per shape: cos, sin of its angle, edge softness (px), stack order + floating height (fract)
 uniform int uNS;           // shapes [0, uNS) are merged; [uNS, uN) are stacked, back to front
 uniform vec2 uHov;         // hovered card of the fan: shape index (< 0 none), level (deeper shadow)
 uniform vec4 uIVeil;       // opening, variant C: open circle x, y, radius (CSS px), veil opacity
@@ -160,8 +161,11 @@ vec3 shade(vec3 under, vec2 p, float depth, float px, float D, vec2 N, vec4 KA, 
   float reach = 48.0 + soft * 2.0 + 40.0 * hv;
   if (A <= 0.0 || D > reach) return under;
   // Soft shadow, a little lower than the shape, faded out to zero before the reach (no edge).
+  // A floating card (round 5): the higher it rises, the tighter and paler its ground shadow.
+  float el = B >= 0 ? fract(uX[B].w) : 0.0;
   float Ds = max(D - (6.0 + 6.0 * hv) * N.y, 0.0);
-  float sh = KB.z * A * 0.5 * (1.0 + 0.4 * hv) * exp(-Ds / (16.0 + soft + 10.0 * hv));
+  float sh = KB.z * A * 0.5 * (1.0 + 0.4 * hv) * (1.0 - ${(1 - FLOAT_RHYTHM.shadowAlpha).toFixed(4)} * el)
+    * exp(-Ds / ((16.0 + soft + 10.0 * hv) * (1.0 - ${(1 - FLOAT_RHYTHM.shadowScale).toFixed(4)} * el)));
   sh *= 1.0 - smoothstep(reach * 0.55, reach, D);
   vec3 c0 = under * (1.0 - sh * step(0.0, D));
   float cover = clamp(0.5 - D / (px + soft * 2.0), 0.0, 1.0) * A;

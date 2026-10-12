@@ -105,70 +105,73 @@ export function AppCard({
       data-hidden={hidden ? "" : undefined}
     >
       {stage && <span className={styles.glow} data-glow="" aria-hidden="true" />}
-      <button
-        ref={setCard}
-        id={domId}
-        type="button"
-        role="option"
-        aria-selected={active}
-        className={styles.card}
-        aria-label={running ? `${app.name}, ${t("home.running")}` : app.name}
-        // Read by the glass engine: it may draw this poster as a texture (round 2b).
-        data-poster={poster ?? undefined}
-        data-stage={stage ? "" : undefined}
-        tabIndex={-1}
-        onClick={onClick}
-        {...cardTilt}
-      >
-        {poster ? (
-          <>
-            {/* Decorative: the button's own label already names the app (empty alt, not text). */}
+      {/* Floating box (round 5, carouselFloat.ts): the card and its edit button rise together. */}
+      <div className={styles.float} data-float={stage ? "" : undefined}>
+        <button
+          ref={setCard}
+          id={domId}
+          type="button"
+          role="option"
+          aria-selected={active}
+          className={styles.card}
+          aria-label={running ? `${app.name}, ${t("home.running")}` : app.name}
+          // Read by the glass engine: it may draw this poster as a texture (round 2b).
+          data-poster={poster ?? undefined}
+          data-stage={stage ? "" : undefined}
+          tabIndex={-1}
+          onClick={onClick}
+          {...cardTilt}
+        >
+          {poster ? (
+            <>
+              {/* Decorative: the button's own label already names the app (empty alt, not text). */}
+              <img
+                className={styles.poster}
+                src={poster}
+                alt={""}
+                draggable={false}
+                decoding="async"
+              />
+              <span className={styles.posterShade} />
+            </>
+          ) : null}
+          {stage && <span className={styles.veil} aria-hidden="true" />}
+          {!poster && icon && (
+            // Decorative like the poster: the button's label names the app.
             <img
-              className={styles.poster}
-              src={poster}
+              className={styles.icon}
+              data-face=""
+              src={icon}
               alt={""}
               draggable={false}
               decoding="async"
             />
-            <span className={styles.posterShade} />
-          </>
-        ) : null}
-        {stage && <span className={styles.veil} aria-hidden="true" />}
-        {!poster && icon && (
-          // Decorative like the poster: the button's label names the app.
-          <img
-            className={styles.icon}
-            data-face=""
-            src={icon}
-            alt={""}
-            draggable={false}
-            decoding="async"
-          />
-        )}
-        {!poster && !icon && (
-          <span className={styles.letter} data-face="" aria-hidden="true">
-            {monogram(app.name)}
+          )}
+          {!poster && !icon && (
+            <span className={styles.letter} data-face="" aria-hidden="true">
+              {monogram(app.name)}
+            </span>
+          )}
+          <span className={styles.sheen} data-pointer-sheen="" aria-hidden="true" />
+          {shine && active && stage && <Shine />}
+          {sheen && active && stage && <SheenVeil duration={Number(sheen.duration) || 1800} />}
+          {running && <span className={styles.running} aria-hidden="true" />}
+          <span className={fail.ring} data-on={failed ? "" : undefined} aria-hidden="true" />
+          <span className={styles.plate} data-face="">
+            {app.name}
           </span>
-        )}
-        <span className={styles.sheen} data-pointer-sheen="" aria-hidden="true" />
-        {shine && active && stage && <Shine />}
-        {sheen && active && stage && <SheenVeil duration={Number(sheen.duration) || 1800} />}
-        {running && <span className={styles.running} aria-hidden="true" />}
-        <span className={fail.ring} data-on={failed ? "" : undefined} aria-hidden="true" />
-        <span className={styles.plate} data-face="">
-          {app.name}
-        </span>
-      </button>
-      {/* Mouse shortcut; the keyboard has F2 and the context-menu key (see HomeScreen). */}
-      <button
-        type="button"
-        className={styles.edit}
-        data-edit-app={app.id}
-        tabIndex={-1}
-        aria-label={t("home.menu.editButton", { name: app.name })}
-      >
-        <EditIcon size={16} />
-      </button>
+        </button>
+        {/* Mouse shortcut; the keyboard has F2 and the context-menu key (see HomeScreen). */}
+        <button
+          type="button"
+          className={styles.edit}
+          data-edit-app={app.id}
+          tabIndex={-1}
+          aria-label={t("home.menu.editButton", { name: app.name })}
+        >
+          <EditIcon size={16} />
+        </button>
+      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from "react";
 import type { AppEntry, AppRunState } from "../../ipc/bindings";
 import { targetOf, useFxTarget } from "../../fx";
 import { t } from "../../i18n";
+import { useDa } from "../../design/da";
 import { AppCard } from "./AppCard";
 import styles from "./AppGrid.module.css";
 
@@ -49,6 +50,7 @@ export function AppGrid({ apps, focus, running, onColumns, onFocus, onLaunch }: 
     [activeDomId],
   );
 
+  const hoverOff = useDa((s) => s.values.cardHover?.style === "none");
   return (
     <div className={styles.scroller}>
       <div
@@ -60,6 +62,8 @@ export function AppGrid({ apps, focus, running, onColumns, onFocus, onLaunch }: 
         aria-activedescendant={activeDomId}
         // The cells enter in a cascade (level 2, motion.css).
         data-cascade=""
+        // « Survol des cartes : Aucun » (round 5): no lift.
+        data-hover-off={hoverOff ? "" : undefined}
       >
         {apps.map((app, i) => (
           <AppCard

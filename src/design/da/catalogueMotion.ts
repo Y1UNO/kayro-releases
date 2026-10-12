@@ -10,7 +10,8 @@ import {
   OPENING_VEIL_RENDERS,
   WIDGET_MOTIONS,
 } from "../motion/tokens4b";
-import { NONE, range, select, toggle, type DaElement } from "./daParams";
+import { NONE, range, select, toggle, userSelect, type DaElement } from "./daParams";
+import { FLOAT_NAMES, MOTION_STYLES } from "../motion/tokens5";
 
 const CURVES = Object.keys(EASES);
 
@@ -62,11 +63,14 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       range("cardLift", 0, 24, 1, M.cardLift, "px"),
       range("cardGrow", 1, 1.08, 0.005, M.cardGrow),
       // Round 4b: widget panel, empty category.
-      select("widgetMotion", WIDGET_MOTIONS, M.widgetMotion),
-      select("widgetSpring", UNROLL_SPRINGS, M.widgetSpring),
+      // Round 5: chosen in Réglages › Visuel (userDa.ts), no longer in the workshop.
+      userSelect("widgetMotion", WIDGET_MOTIONS, M.widgetMotion),
+      userSelect("widgetSpring", UNROLL_SPRINGS, M.widgetSpring),
       toggle("widgetHalo", true),
       toggle("widgetSheen", true),
       range("emptyFloat", 0, 8, 0.5, M.emptyFloat, "px"),
+      // Round 5, « Mouvement » of the settings: complete / lively (validated) / crisp.
+      userSelect("style", MOTION_STYLES, "lively"),
     ],
     css: (v) => (v.on ? motionCss(motionTokens(v)) : NONE),
   },
@@ -96,7 +100,8 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       // Round 4b (validated 2026-10-12): variant C's pulse in the opaque opening (the page is
       // seen only in the ring, darkened around; the ringOut sends a wave and opens it in a
       // circle). "v1a" = the opening without it, for comparison.
-      select("pulse", OPENING_PULSES, "c"),
+      // Round 5: « Ouverture au lancement » of the settings picks it (userDa.ts).
+      userSelect("pulse", OPENING_PULSES, "c"),
       range("veil", 0, 0.8, 0.02, OPENING_C.veil),
       range("wave", 0, 1, 0.05, OPENING_C.wave),
       // Review C: the veil drawn by the engine (no full-screen gradient repainted each frame of
@@ -155,9 +160,9 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       range("threadGlow", 0, 1, 0.05, 0.7),
       range("sparks", 0, 12, 1, 12),
       range("sparkSize", 0.8, 5, 0.1, 2.4, "px"),
-      range("floatRest", 0, 8, 0.5, 2.5, "px"),
+      // Round 5: « Flottaison des cartes » of the settings (levels in tokens5.ts, fan and carousel).
+      userSelect("float", FLOAT_NAMES, "visible"),
       range("floatHover", 0, 12, 0.5, 6, "px"),
-      range("floatPeriod", 3, 16, 0.5, 7, "s"),
       // Hovered card: slow pivot left / right (vertical axis), within the 3° tilt.
       range("sway", 0, 3, 0.1, 2, "°"),
       range("swayPeriod", 1.5, 8, 0.1, 3.6, "s"),

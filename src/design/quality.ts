@@ -13,3 +13,8 @@ export const QUALITY_LABELS: Record<Quality, string> = {
 export function applyQuality(quality: Quality): void {
   document.documentElement.dataset.quality = quality;
 }
+
+/** The level drawn for a saved quality: « Auto » (round 5) = high, with the engine's fallback. */
+export function effectiveQuality(q: Quality | "auto" | null | undefined): Quality {
+  return q === "auto" ? "high" : (q ?? "balanced");
+}

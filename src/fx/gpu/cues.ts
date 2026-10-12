@@ -89,6 +89,8 @@ export interface GlassPose {
   soft: number;
   /** Stack order (≥ 1, back to front): stacked cards overlap without merging. 0 = merged as usual. */
   z: number;
+  /** Floating height (round 5), 0–1: its ground shadow tightens and pales as the card rises. */
+  elev?: number;
 }
 
 /**

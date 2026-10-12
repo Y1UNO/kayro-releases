@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   FanMotion,
-  floatAt,
   hoverConfig,
   MAX_SPARKS,
   pathPoint,
@@ -29,14 +28,15 @@ describe("fan hover and floating (round 3b, part B)", () => {
     expect(threadPhase(1234, 0.5, true)).toBe(threadPhase(99999, 0.5, true));
   });
 
-  it("each card floats on its own rhythm, within its amplitude", () => {
-    let max = 0;
-    const at = (i: number, t: number) => floatAt(i, t, 3, 7000);
-    for (let t = 0; t < 20000; t += 37) max = Math.max(max, Math.abs(at(0, t).dy));
-    expect(max).toBeGreaterThan(1);
-    expect(max).toBeLessThanOrEqual(3 * 1.25 + 1e-9);
-    expect(at(0, 1000).dy).not.toBeCloseTo(at(1, 1000).dy, 3);
-    expect(floatAt(0, 1000, 0, 7000)).toEqual({ dx: 0, dy: 0, rot: 0 });
+  it("floats at the level of the settings (Visible by default, Légère = the old values)", () => {
+    expect(hoverConfig(undefined, false, false)).toMatchObject({ floatRest: 7, floatTilt: 0.8 });
+    expect(hoverConfig({ on: true, float: "light" }, false, false)).toMatchObject({
+      floatRest: 2.5,
+      floatPeriod: 7000,
+    });
+    expect(hoverConfig({ on: true, float: "none" }, false, false).floatRest).toBe(0);
+    // Eco floats as before (only the sparks are halved).
+    expect(hoverConfig({ on: true, float: "strong" }, true, false).floatRest).toBe(12);
   });
 
   it("rim points follow the offset-path: on the edge, clockwise from the top", () => {
@@ -83,10 +83,12 @@ describe("fan hover and floating (round 3b, part B)", () => {
 
   it("hover level eases in over hoverMs, the pointer tilt follows, the loop can stop", () => {
     const m = new FanMotion(
-      hoverConfig({ on: true, floatRest: 0, floatHover: 0, sway: 0 }, false, false),
+      hoverConfig({ on: true, float: "none", floatHover: 0, sway: 0 }, false, false),
     );
     expect(m.busy(0)).toBe(false);
+    expect(m.floatingOnly(0)).toBe(true);
     m.setHover(2, true, 0);
+    expect(m.floatingOnly(0)).toBe(false);
     m.setPointer(2, 1, 0);
     expect(m.level(2, 0)).toBe(0);
     expect(m.level(2, 350)).toBe(1);

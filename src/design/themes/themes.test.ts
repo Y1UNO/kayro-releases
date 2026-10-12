@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { themeVariables } from "../applyTheme";
 import { parseTheme } from "../theme";
-import { BUILTIN_THEMES, DEFAULT_THEME } from "./index";
+import { BUILTIN_THEMES, DEFAULT_THEME, PICKER_THEMES, resolveTheme } from "./index";
 import boreale from "./boreale.json";
 
 describe("built-in themes", () => {
-  it("are the 6 logo themes then the 5 older ones, Lavande-pêche first", () => {
+  it("are the 6 logo themes then the 5 older ones, Bleu-gris first", () => {
     expect(BUILTIN_THEMES.map((t) => t.id)).toEqual([
-      "lavande-peche",
-      "mauve",
-      "sakura",
       "bleu-gris",
+      "lavande-peche",
+      "encre",
+      "sakura",
       "opale",
       "cuivre",
       "crepuscule",
@@ -19,7 +19,22 @@ describe("built-in themes", () => {
       "rose",
       "graphite",
     ]);
-    expect(DEFAULT_THEME.id).toBe("lavande-peche");
+    expect(DEFAULT_THEME.id).toBe("bleu-gris");
+    expect(PICKER_THEMES.map((t) => t.id)).toEqual([
+      "bleu-gris",
+      "lavande-peche",
+      "encre",
+      "sakura",
+      "opale",
+      "cuivre",
+    ]);
+  });
+
+  it("resolve renamed and unknown ids", () => {
+    expect(resolveTheme("mauve").id).toBe("encre");
+    expect(resolveTheme("opale").id).toBe("opale");
+    expect(resolveTheme("nope").id).toBe("bleu-gris");
+    expect(resolveTheme(undefined).id).toBe("bleu-gris");
   });
 
   it("have unique ids and a variable for every field", () => {

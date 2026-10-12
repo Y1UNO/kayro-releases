@@ -1,0 +1,119 @@
+{
+  "settings": {
+    "title": "Réglages",
+    "close": "Fermer",
+    "nav": {
+      "label": "Catégories des réglages",
+      "general": "Général",
+      "visual": "Visuel",
+      "themes": "Thèmes"
+    },
+    "general": {
+      "hotkey": {
+        "label": "Raccourci pour afficher ou cacher {app}",
+        "failedAtStart": "Le raccourci {hotkey} est déjà utilisé par une autre application. {app} reste accessible par la zone de notification : choisissez un autre raccourci.",
+        "saved": "Raccourci enregistré."
+      },
+      "economy": {
+        "label": "Mode économe",
+        "help": "La fenêtre est détruite quand elle est cachée : moins de mémoire utilisée, mais environ 0,4 s pour la rouvrir. Désactivé, {app} reste chargé et apparaît en un instant."
+      },
+      "hideOnEscape": "Échap cache {app}",
+      "hideOnBlur": "Cliquer ailleurs cache {app}",
+      "autostart": {
+        "label": "Démarrer avec Windows",
+        "help": "{app} démarre sans fenêtre, dans la zone de notification.",
+        "failed": "Impossible de modifier le démarrage avec Windows."
+      }
+    },
+    "visual": {
+      "quality": {
+        "label": "Qualité",
+        "help": "Auto : qualité élevée, qui baisse d’un cran si l’image devient lente.",
+        "auto": "Auto",
+        "eco": "Éco",
+        "balanced": "Équilibré",
+        "high": "Élevé",
+        "ultra": "Ultra"
+      },
+      "atmosphere": {
+        "label": "Atmosphère",
+        "help": "Lumière, brume et particules du fond.",
+        "soft": "Douce",
+        "normal": "Normale",
+        "strong": "Forte"
+      },
+      "motion": {
+        "label": "Mouvement",
+        "help": "Vivant : la magie au survol des cartes et au lancement d’une app. Complet : partout, même en fenêtre. Net : sans rebond ni effet.",
+        "complete": "Complet",
+        "lively": "Vivant",
+        "crisp": "Net"
+      },
+      "followSystem": {
+        "label": "Suivre Windows",
+        "help": "Respecte « Effets d’animation » de Windows. Désactivé, {app} anime toujours."
+      },
+      "launch": {
+        "label": "Affichage au lancement",
+        "help": "Immersif : sans bordure, à la taille de l’écran. Fenêtre : classique. Widget : une barre en haut de l’écran, toujours au premier plan."
+      },
+      "screen": {
+        "label": "Écran du mode immersif",
+        "item": "{name} · {width}×{height}"
+      },
+      "advanced": {
+        "label": "Personnalisation avancée",
+        "float": {
+          "label": "Flottaison des cartes",
+          "none": "Aucune",
+          "light": "Légère",
+          "visible": "Visible",
+          "strong": "Marquée"
+        },
+        "opening": {
+          "label": "Ouverture au lancement",
+          "pulse": "Pulsation",
+          "classic": "Classique",
+          "none": "Aucune"
+        },
+        "themeChange": {
+          "label": "Changement de thème",
+          "wave": "Onde",
+          "fade": "Fondu",
+          "direct": "Direct"
+        },
+        "widgetUnroll": {
+          "label": "Dépliage du widget",
+          "unroll": "Déroulé",
+          "sober": "Sobre"
+        },
+        "widgetSpring": {
+          "label": "Élasticité du widget",
+          "soft": "Douce",
+          "normal": "Normale",
+          "strong": "Forte"
+        },
+        "cardHover": {
+          "label": "Survol des cartes",
+          "full": "Complet",
+          "simple": "Simple",
+          "none": "Aucun"
+        },
+        "bokeh": "Bokeh du fond",
+        "particles": "Particules",
+        "cursorLight": "Lumière du curseur"
+      },
+      "reset": {
+        "label": "Revenir aux réglages par défaut",
+        "done": "Réglages par défaut rétablis.",
+        "undo": "Annuler"
+      }
+    },
+    "themes": {
+      "label": "Thème",
+      "active": "actif",
+      "apply": "Thème {name}"
+    }
+  }
+}

@@ -109,3 +109,24 @@ export function chainOpacity(chain: readonly Pick<CSSStyleDeclaration, "opacity"
   }
   return a;
 }
+
+/** A floating card (round 5): its rocking (rad) and its height for the ground shadow (0–1). */
+export interface GlassFloat {
+  rot: number;
+  elev: number;
+}
+
+const floats = new WeakMap<Element, GlassFloat>();
+
+/**
+ * The carousel's floating cards are measured, not posed: the engine reads here how much the card
+ * is rocked (to measure its true size inside its bounding box) and how high it floats.
+ */
+export function setGlassFloat(el: Element, f: GlassFloat | null): void {
+  if (f) floats.set(el, f);
+  else floats.delete(el);
+}
+
+export function glassFloatOf(el: Element): GlassFloat | undefined {
+  return floats.get(el);
+}

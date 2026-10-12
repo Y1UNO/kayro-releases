@@ -86,6 +86,7 @@ export function renderFan(
       a,
       soft: blur,
       z: FAN_Z + z,
+      elev: m?.elev ?? 0,
     };
     poses.set(el.card, pose);
     if (h > 0) hover = { el: el.card, h };

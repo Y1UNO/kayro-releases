@@ -1,9 +1,9 @@
 /**
  * Hover and floating of the category fan (art direction round 3b, `categoryHover`).
  *
- * - Floating: each of the five cards drifts very slowly on its own rhythm (two slow sines with a
- *   phase and a period of its own, from a fixed seed: the same at every start). More on the card
- *   under the pointer. None with reduced motion.
+ * - Floating (round 5, ../float/cardFloat.ts): each of the five cards rises and falls on its own
+ *   rhythm, at the level of the settings (« Flottaison des cartes »). More on the card under the
+ *   pointer. None with reduced motion.
  * - Hover: the card lifts, grows a little and tilts towards the pointer (DOM); the glass engine
  *   draws two crisp light threads running round its rim in opposite directions and a few sparks
  *   leaving them (cues.ts). The level goes 0 → 1 in `hoverMs` with the spec's curve.
@@ -15,6 +15,7 @@ import type { ElementValues } from "../../../design/da/daParams";
 import { springAt, SPRINGS } from "../../../design/glass/pillMotion";
 import { curveOf, lerp } from "../../../design/motion/curve";
 import { EASES } from "../../../design/motion/eases";
+import { floatAt, floatLevel, seed } from "../float/cardFloat";
 import { FAN_SIZE } from "./fanTimeline";
 
 /** The hover-in's curve: the spec's, « premium » of the table. */
@@ -50,7 +51,9 @@ export interface HoverConfig {
   threadGlow: number;
   sparks: number;
   sparkSize: number;
+  /** Floating at rest (px, ±), its rocking (deg, ±) and period (ms): the settings' level. */
   floatRest: number;
+  floatTilt: number;
   floatHover: number;
   floatPeriod: number;
   /** Hovered card: slow pivot left / right round a vertical axis (deg, within the 3° tilt). */
@@ -69,6 +72,7 @@ export function hoverConfig(
   reduced: boolean,
 ): HoverConfig {
   const off = v?.on === false;
+  const level = floatLevel(v?.float);
   const sparks = Math.min(MAX_SPARKS, Math.max(0, Math.round(num(v, "sparks", 12))));
   return {
     hoverMs: reduced ? 0 : num(v, "hoverMs", 240),
@@ -86,34 +90,13 @@ export function hoverConfig(
     // Eco: half the sparks (30 images/s already).
     sparks: off || reduced ? 0 : eco ? Math.ceil(sparks / 2) : sparks,
     sparkSize: num(v, "sparkSize", 2.4),
-    floatRest: off || reduced ? 0 : num(v, "floatRest", 2.5),
+    floatRest: off || reduced ? 0 : level.fan,
+    floatTilt: level.tilt,
     floatHover: off || reduced ? 0 : num(v, "floatHover", 6),
-    floatPeriod: Math.max(1, num(v, "floatPeriod", 7)) * 1000,
+    floatPeriod: level.period,
     sway: off || reduced ? 0 : Math.min(3, num(v, "sway", 2)),
     swayPeriod: Math.max(1, num(v, "swayPeriod", 3.6)) * 1000,
     reduced,
-  };
-}
-
-/** Fixed pseudo-random numbers in [0, 1) for card i (same at every start). */
-function seed(i: number, k: number): number {
-  const x = Math.sin((i + 1) * 12.9898 + k * 78.233) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-/** Floating offset of card i at time t (ms): dx, dy (px), rotation (deg), for an amplitude. */
-export function floatAt(i: number, t: number, amp: number, period: number) {
-  if (amp <= 0) return { dx: 0, dy: 0, rot: 0 };
-  const p = period * (0.8 + 0.45 * seed(i, 1));
-  const tau = 2 * Math.PI;
-  const a = tau * (t / p + seed(i, 2));
-  const b = tau * (t / (p * 1.7) + seed(i, 3));
-  const c = tau * (t / (p * 1.3) + seed(i, 4));
-  const k = amp * (0.75 + 0.5 * seed(i, 5));
-  return {
-    dx: k * 0.3 * Math.sin(c),
-    dy: k * (0.65 * Math.sin(a) + 0.35 * Math.sin(b)),
-    rot: k * 0.04 * Math.sin(b + 1),
   };
 }
 
@@ -218,6 +201,8 @@ export interface FanMotionSample {
   rot: number;
   /** Hover level 0–1. */
   h: number;
+  /** Floating height for the ground shadow, 0–1 (cardFloat.ts). */
+  elev: number;
   lift: number;
   grow: number;
   tiltX: number;
@@ -306,6 +291,17 @@ export class FanMotion {
     return false;
   }
 
+  /** Only the floating moves: nothing hovered or easing, the tilt settled (round 5: 30 i/s). */
+  floatingOnly(now: number): boolean {
+    for (let i = 0; i < FAN_SIZE; i++) {
+      const tw = this.levels[i]!;
+      if (tw.to > 0 || now - tw.start < this.config.hoverMs) return false;
+      const t = this.tilt[i]!;
+      if (Math.abs(t.x - t.tx) > 1e-3 || Math.abs(t.y - t.ty) > 1e-3) return false;
+    }
+    return true;
+  }
+
   /** Advances the pointer tilt (smoothed) to `now`. */
   step(now: number): void {
     const dt = this.last < 0 ? 0 : Math.min(100, now - this.last);
@@ -320,18 +316,22 @@ export class FanMotion {
   sample(i: number, now: number): FanMotionSample {
     const c = this.config;
     const h = this.level(i, now);
-    const f = floatAt(i, now, lerp(c.floatRest, c.floatHover, h), c.floatPeriod);
+    const amp = lerp(c.floatRest, Math.max(c.floatRest, c.floatHover), h);
+    const f = floatAt(i, now, amp, c.floatTilt, c.floatPeriod);
     const t = this.tilt[i]!;
     // Hovered, the card floats: it pivots slowly left and right round a vertical axis, rocks a
     // hair, and drifts a little more sideways. The pointer tilt adds up, never past 3°.
     const w = (2 * Math.PI * now) / c.swayPeriod;
     const sway = c.sway * h * Math.sin(w + seed(i, 6) * 6.28);
     const clamp3 = (x: number) => Math.max(-3, Math.min(3, x));
+    // Hovered, it also drifts a little sideways (round 3b), on a slower rhythm of its own.
+    const drift = 0.66 * c.floatHover * h * Math.sin((w * 0.5) / 1.3 + seed(i, 4) * 6.28);
     return {
-      dx: f.dx * (1 + 1.2 * h),
+      dx: drift,
       dy: f.dy,
       rot: f.rot + c.sway * 0.15 * h * Math.sin(w * 0.77 + 1.1),
       h,
+      elev: f.elev,
       lift: c.lift * h,
       grow: c.grow * h,
       // The side under the pointer goes slightly back (like the carousel cards).

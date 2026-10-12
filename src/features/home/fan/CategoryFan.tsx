@@ -118,6 +118,7 @@ function FanCard({
   const face = (
     <>
       <span className={styles.fill} />
+      <span className={styles.shade} />
       <span className={styles.content}>
         <span className={styles.letter}>{name.slice(0, 1)}</span>
         <span className={styles.foot}>

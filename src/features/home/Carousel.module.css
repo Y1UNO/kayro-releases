@@ -41,7 +41,8 @@
   --card-leave-dur: calc(var(--m3-court) * var(--m-out));
 }
 
-/* Window mode: levels 1 and 2 only (the "liaison" spring, no veil, no threads). */
+/* Window mode, or « Survol des cartes : Simple » (round 5): levels 1 and 2 only (the "liaison"
+   spring, no veil, no threads). */
 .stage[data-motion-cap] {
   --card-hover-dur: var(--m2-court);
   --card-hover-ease: var(--m-ease-move);
@@ -53,7 +54,8 @@
   --lift-ease: var(--m-ease-in);
 }
 
-.stage:not([data-seq]):not([data-fast]) [data-d]:has(> [data-stage]:hover) {
+/* « Survol des cartes : Aucun » (round 5): `data-hover-off`, no lift at all. */
+.stage:not([data-seq]):not([data-fast]):not([data-hover-off]) [data-d]:has([data-stage]:hover) {
   --lift-dur: var(--card-hover-dur);
   --lift-ease: var(--card-hover-ease);
   translate: 0 calc(var(--m-card-lift) * -1 * var(--m-rm));

@@ -7,15 +7,17 @@ import { RingLayer } from "./css/ringFx";
 import { ParticlesLayer } from "./canvas/particles";
 import { GlassEngine, type EngineState } from "./gpu/engine";
 import { frameLoop } from "./loop";
+import { onReducedMotionChange } from "./motionPref";
 
 /** Fade before a pause / after a resume (ARCHITECTURE.md §5: « Atténué », 400 ms). */
 export const FADE_MS = 400;
 
 export const INTENSITY_MIN = 0.3;
-export const INTENSITY_MAX = 1;
+/** « Forte » (round 5); « Normale » = 1, the validated look. */
+export const INTENSITY_MAX = 1.3;
 
 export function clampIntensity(v: number | null | undefined): number {
-  if (v == null || !Number.isFinite(v)) return INTENSITY_MAX;
+  if (v == null || !Number.isFinite(v)) return 1;
   return Math.min(INTENSITY_MAX, Math.max(INTENSITY_MIN, v));
 }
 
@@ -63,8 +65,7 @@ export function createFx(
   let fadeTimer = 0;
   let paused = false;
   let quality: Quality = "balanced";
-  const motion =
-    typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+  let offMotion: (() => void) | null = null;
   const onMotion = () => fx.setQuality(quality);
 
   const fx: FxLayer = {
@@ -74,7 +75,7 @@ export function createFx(
       host.setAttribute("aria-hidden", "true");
       parent.appendChild(host);
       for (const l of layers) l.mount(host);
-      motion?.addEventListener("change", onMotion);
+      offMotion = onReducedMotionChange(onMotion);
     },
     setQuality(q) {
       quality = q;
@@ -115,7 +116,8 @@ export function createFx(
       window.clearTimeout(fadeTimer);
       if (paused) frameLoop().resume(); // the loop is shared: never leave it stopped behind us
       paused = false;
-      motion?.removeEventListener("change", onMotion);
+      offMotion?.();
+      offMotion = null;
       for (const l of layers) l.dispose();
       host?.remove();
       host = null;

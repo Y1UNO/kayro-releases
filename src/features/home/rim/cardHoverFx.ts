@@ -67,7 +67,11 @@ export function cardHoverConfig(
   t: MotionTokens,
   ctx: HoverContext,
 ): CardHoverConfig {
-  const magic = t.levels[2] && !ctx.windowMode && !ctx.reduced && card?.on !== false;
+  // Round 5: « Survol des cartes » (full / simple / none) and « Mouvement » (complete: the magic
+  // also in window mode; crisp: none) of the settings.
+  const full = (card?.style ?? "full") === "full" && t.style !== "crisp";
+  const windowCut = ctx.windowMode && t.style !== "complete";
+  const magic = t.levels[2] && full && !windowCut && !ctx.reduced && card?.on !== false;
   const fanLook = hoverConfig(fan, false, ctx.reduced);
   const sparks = Math.min(CARD_SPARKS, Math.max(0, Math.round(num(card, "sparks", CARD_SPARKS))));
   const threads = magic && !ctx.eco && fanLook.threads;

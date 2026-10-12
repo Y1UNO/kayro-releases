@@ -1,6 +1,7 @@
 import {
   chainOpacity,
   glassEntries,
+  glassFloatOf,
   MAX_GLASS,
   parseRadius,
   radiusPx,
@@ -157,17 +158,28 @@ export class GlassFrame {
     const opacity = chainOpacity(e.chain);
     if (opacity <= 0.005) return;
     let cx: number, cy: number, hw: number, hh: number, radius: number, scale: number;
+    const float = pose ? undefined : glassFloatOf(e.el);
     if (pose) {
       ({ x: cx, y: cy, hw, hh, r: radius } = pose);
       scale = e.el.offsetWidth > 0 ? (2 * hw) / e.el.offsetWidth : 1;
     } else {
       const r = e.el.getBoundingClientRect();
       if (r.width < 1 || r.height < 1) return;
+      cx = r.left + r.width / 2;
+      cy = r.top + r.height / 2;
+      const ow = e.el.offsetWidth;
       hw = r.width / 2;
       hh = r.height / 2;
-      cx = r.left + hw;
-      cy = r.top + hh;
-      scale = e.el.offsetWidth > 0 ? r.width / e.el.offsetWidth : 1;
+      scale = ow > 0 ? r.width / ow : 1;
+      // A rocked card (round 5): its box is its bounding box; its true size, from its proportions.
+      const oh = e.el.offsetHeight;
+      if (float && ow > 0 && oh > 0) {
+        const c = Math.abs(Math.cos(float.rot));
+        const sn = Math.abs(Math.sin(float.rot));
+        scale = r.width / (ow * c + oh * sn);
+        hw = (ow * scale) / 2;
+        hh = (oh * scale) / 2;
+      }
       radius = radiusPx(e.radius, hw, hh, scale);
     }
     if (hw < 0.5 || hh < 0.5) return;
@@ -175,7 +187,10 @@ export class GlassFrame {
     this.R.set([cx, cy, hw, hh], o);
     this.S.set([radius, KIND_INDEX[e.kind], opacity, e.depth], o);
     this.T.set([e.tint[0], e.tint[1], e.tint[2], tint(e.kind)], o);
-    this.X.set(pose ? [Math.cos(pose.a), Math.sin(pose.a), pose.soft, pose.z] : [1, 0, 0, 0], o);
+    // .w: stack order + the floating height (round 5) in its fraction (the shader reads `fract`).
+    const elev = Math.min(0.99, Math.max(0, pose?.elev ?? float?.elev ?? 0));
+    const a = pose?.a ?? float?.rot ?? 0;
+    this.X.set([Math.cos(a), Math.sin(a), pose?.soft ?? 0, (pose?.z ?? 0) + elev], o);
     let clip: DOMRect | undefined;
     if (e.clip) {
       clip = this.clips.get(e.clip);

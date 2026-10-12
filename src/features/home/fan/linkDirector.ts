@@ -35,6 +35,8 @@ function centre(el: HTMLElement | null): { x: number; y: number } {
 
 /** Cadence of the fan's floating and hover (decision round 3: 60 images/s, 30 in Eco). */
 const FLOAT_FPS = 60;
+/** Round 5: the floating alone (a slow sine) at 30 images/s; full cadence once anything else moves. */
+const FLOAT_ONLY_FPS = ECO_MAX_FPS;
 
 /**
  * Plays the category sequences on the DOM (transform / opacity written straight on the elements,
@@ -79,6 +81,7 @@ export class LinkDirector {
   // ---- Floating and hover of the fan (round 3b, part B) ----
   private motion: FanMotion | null = null;
   private motionOff: (() => void) | null = null;
+  private motionFps = 0;
   private eco = false;
 
   setMotion(m: FanMotion | null, eco: boolean, config?: HoverConfig): void {
@@ -97,6 +100,19 @@ export class LinkDirector {
     const now = performance.now();
     m.setHover(i, on, now);
     if (on) m.setPointer(i, nx, ny);
+    if (this.motionOff && this.fpsFor(now) !== this.motionFps) this.restartMotion();
+    this.wake();
+  }
+
+  /** 30 images/s while only the floating moves (no hover, no sequence), else the full cadence. */
+  private fpsFor(now: number): number {
+    if (this.eco) return ECO_MAX_FPS;
+    return this.motion?.floatingOnly(now) && !this.choreo.active ? FLOAT_ONLY_FPS : FLOAT_FPS;
+  }
+
+  private restartMotion(): void {
+    this.motionOff?.();
+    this.motionOff = null;
     this.wake();
   }
 
@@ -111,25 +127,25 @@ export class LinkDirector {
 
   /**
    * The fan's own frame loop: only while the fan is on screen and something moves (floating,
-   * hover, threads), at 60 images/s (30 in Eco); stopped otherwise. A running sequence draws
+   * hover, threads), at 60 images/s (30 in Eco, and 30 for the floating alone: round 5); stopped
+   * otherwise. A running sequence draws
    * the fan itself (same values, floating included).
    */
   wake(): void {
     if (this.motionOff || !this.motion || !this.cards.some((c) => c)) return;
-    this.motionOff = frameLoop().subscribe(
-      (_dt, now) => {
-        const m = this.motion;
-        const shown = this.cards.some((c) => c);
-        if (!m || !shown || !m.busy(now)) {
-          this.motionOff?.();
-          this.motionOff = null;
-          if (shown && !this.choreo.active) this.render(this.values, this.phase);
-          return;
-        }
-        if (!this.choreo.active) this.render(this.values, this.phase);
-      },
-      this.eco ? ECO_MAX_FPS : FLOAT_FPS,
-    );
+    this.motionFps = this.fpsFor(performance.now());
+    this.motionOff = frameLoop().subscribe((_dt, now) => {
+      const m = this.motion;
+      const shown = this.cards.some((c) => c);
+      if (!m || !shown || !m.busy(now)) {
+        this.motionOff?.();
+        this.motionOff = null;
+        if (shown && !this.choreo.active) this.render(this.values, this.phase);
+        return;
+      }
+      if (!this.choreo.active) this.render(this.values, this.phase);
+      if (this.fpsFor(now) !== this.motionFps) this.restartMotion();
+    }, this.motionFps);
   }
 
   /** Shows `phase` at once (start-up, shortcut recall, reduced motion). */

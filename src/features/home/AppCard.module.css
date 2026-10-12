@@ -49,6 +49,13 @@
   aspect-ratio: 172 / 246;
 }
 
+/* The card and its edit button (round 5): the carousel's floating moves this box only. */
+.float {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .card {
   position: absolute;
   inset: 0;
@@ -83,7 +90,8 @@
     border-color var(--dur-card) ease;
 }
 
-.cell .card:hover {
+/* Not with « Survol des cartes : Aucun » (round 5, `data-hover-off` on the grid). */
+.cell .card:hover:not([data-hover-off] *) {
   translate: 0 calc(var(--da-hover-lift, -3px) * var(--m-rm));
 }
 
@@ -180,7 +188,7 @@
 
 /* The engine draws the poster (round 2b): the canvas is under the DOM, so the pool of light would
    veil it. Its padding makes its content box the card's box, cut out (rounded) from the mask. */
-.slot:has(> .card[data-glass-poster="gpu"]) .glow {
+.slot:has(.card[data-glass-poster="gpu"]) .glow {
   padding: 40px 70px 110px;
   mask-image:
     linear-gradient(#000, #000),

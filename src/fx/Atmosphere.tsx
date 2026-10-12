@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Backdrop, themeGradient, useTheme, type Quality, type Theme } from "../design";
+import { effectiveQuality } from "../design/quality";
 import { useDa } from "../design/da";
 import { parseColor } from "../lib/color";
 import { useHub } from "../store";
@@ -37,7 +38,7 @@ export function Atmosphere({ quality, intensity, layers }: Props) {
   const { theme } = useTheme();
   const savedQuality = useHub((s) => s.settings?.quality);
   const savedIntensity = useHub((s) => s.settings?.atmosphereIntensity);
-  const q = quality ?? savedQuality ?? "balanced";
+  const q = quality ?? effectiveQuality(savedQuality);
   const k = intensity ?? savedIntensity ?? 1;
   const params = useDa((s) => s.values);
 

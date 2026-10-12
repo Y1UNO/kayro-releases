@@ -30,6 +30,16 @@ export const MODEL = {
   field: 0.22,
   navActive: 0.22,
   tooltip: "rgba(20,14,28,.94)",
+  /** Dialog panel (round 5, `--panel-bg`): the theme's middle background at this opacity. */
+  panelMix: 0.92,
+  /**
+   * Face of a category card (CategoryFan.module.css), at the top-left of its name (round 5): the
+   * A → B colour darkened by the face's gradient there (× 0.37), the fill opacity, then the foot
+   * shade (black at .29 at that height).
+   */
+  faceGradAtName: 0.37,
+  faceFill: 0.85,
+  faceShadeAtName: 0.29,
 } as const;
 
 const WHITE = (a: number): Rgba => ({ r: 255, g: 255, b: 255, a });
@@ -49,6 +59,12 @@ export interface Surfaces {
   softButton: Rgba;
   tooltip: Rgba;
   accent: Rgba;
+  /** Dialog panel over the page (round 5), pessimistic white .12 like the glass. */
+  panel: Rgba;
+  /** Lightest face of the category fan under a card's name (round 5). */
+  fanFace: Rgba;
+  /** Bottom of a theme card in the settings (its name), with the same foot shade. */
+  themeCardFoot: Rgba;
 }
 
 /**
@@ -87,7 +103,19 @@ export function surfacesOf(theme: Theme): Surfaces {
     softButton: flatten([glass, WHITE(MODEL.fillSoft)]),
     tooltip: flatten([page, mustParse(MODEL.tooltip)]),
     accent: mustParse(theme.accent),
+    panel: flatten([page, { ...mid, a: MODEL.panelMix }, WHITE(MODEL.glassWhiteUnderText)]),
+    fanFace: fanFaceOf(theme, glass),
+    themeCardFoot: flatten([mustParse(theme.bg[2]), BLACK(MODEL.faceShadeAtName)]),
   };
+}
+
+/** The lighter of the gradient's two ends, darkened as under a fan card's name, over the glass. */
+function fanFaceOf(theme: Theme, glass: Rgba): Rgba {
+  const ends = (theme.gradient ?? [theme.accent, theme.accent]).map(mustParse);
+  const light = ends.reduce((a, b) => (luminance(b) > luminance(a) ? b : a));
+  const k = MODEL.faceGradAtName;
+  const face: Rgba = { r: light.r * k, g: light.g * k, b: light.b * k, a: MODEL.faceFill };
+  return flatten([glass, face, BLACK(MODEL.faceShadeAtName)]);
 }
 
 export interface ContrastPair {
@@ -128,6 +156,11 @@ export function contrastPairs(theme: Theme): ContrastPair[] {
     { name: "accent-light on active nav item", fg: accentLight(s.accent), bg: s.field },
     { name: "text on accent (primary button)", fg: mustParse(MODEL.textOnAccent), bg: s.accent },
     { name: "text on tooltip", fg: text, bg: s.tooltip },
+    { name: "text-2 on dialog panel", fg: text2, bg: s.panel },
+    { name: "text-3 on dialog panel", fg: text3, bg: s.panel },
+    { name: "name on a category card face", fg: active, bg: s.fanFace },
+    { name: "text-2 on a category card face", fg: text2, bg: s.fanFace },
+    { name: "name on a theme card", fg: active, bg: s.themeCardFoot },
   ];
 }
 

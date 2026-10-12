@@ -7,13 +7,15 @@ import { StrictMode, Suspense, lazy } from "react";
 import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { ThemeProvider, applyQuality } from "./design";
+import { installUserPrefs } from "./app/userPrefs";
+import { ThemeProvider } from "./design";
 import { installDa } from "./design/da";
 import { applyDefaultLogoColours } from "./brand";
 import { Atmosphere } from "./fx";
 import { WidgetApp } from "./features/widget/WidgetApp";
 import { desktopStore, hubStore, sceneStore } from "./store";
 import "./index.css";
+import "./design/themeSwap.css";
 
 applyDefaultLogoColours();
 installDa();
@@ -101,6 +103,7 @@ if (DevPage) {
     sceneStore.getState().init(),
     desktopStore.getState().init(),
   ]).finally(() => {
+    installUserPrefs({ quality: false });
     appRoot.render(
       <StrictMode>
         <ThemeProvider initialThemeId={hubStore.getState().settings?.themeId}>
@@ -117,12 +120,7 @@ if (DevPage) {
     .init()
     .finally(() => {
       const settings = hubStore.getState().settings;
-      if (settings) applyQuality(settings.quality);
-      hubStore.subscribe((s, prev) => {
-        if (s.settings && s.settings.quality !== prev.settings?.quality) {
-          applyQuality(s.settings.quality);
-        }
-      });
+      installUserPrefs({ quality: true });
       appRoot.render(
         <StrictMode>
           <ThemeProvider

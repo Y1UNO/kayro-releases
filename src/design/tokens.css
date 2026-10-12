@@ -3,86 +3,86 @@
 /*
  * Theme colours are registered custom properties: the browser can then interpolate them,
  * which gives the 0.9 s cross-fade when the theme changes (see `transition` on :root below).
- * Initial values = Crépuscule (the default theme), so first paint needs no JS.
+ * Initial values = Bleu-gris (the default theme since R5), so first paint needs no JS.
  */
 @property --bg-top {
   syntax: "<color>";
   inherits: true;
-  initial-value: #171021;
+  initial-value: #141a30;
 }
 @property --bg-mid {
   syntax: "<color>";
   inherits: true;
-  initial-value: #0f0a16;
+  initial-value: #0b0f1e;
 }
 @property --bg-bottom {
   syntax: "<color>";
   inherits: true;
-  initial-value: #09060d;
+  initial-value: #05070f;
 }
 @property --accent {
   syntax: "<color>";
   inherits: true;
-  initial-value: #ffb98a;
+  initial-value: #a3b0de;
 }
 @property --glow {
   syntax: "<color>";
   inherits: true;
-  initial-value: rgba(255, 170, 120, 0.35);
+  initial-value: rgba(114, 130, 188, 0.35);
 }
 @property --fog-a {
   syntax: "<color>";
   inherits: true;
-  initial-value: rgba(160, 104, 214, 0.42);
+  initial-value: rgba(163, 176, 222, 0.34);
 }
 @property --fog-b {
   syntax: "<color>";
   inherits: true;
-  initial-value: rgba(255, 150, 100, 0.3);
+  initial-value: rgba(163, 176, 222, 0.16);
 }
 @property --fog-c {
   syntax: "<color>";
   inherits: true;
-  initial-value: rgba(255, 205, 170, 0.14);
+  initial-value: rgba(114, 130, 188, 0.14);
 }
 @property --card {
   syntax: "<color>";
   inherits: true;
-  initial-value: rgb(190, 120, 170);
+  initial-value: rgb(163, 176, 222);
 }
 @property --beam {
   syntax: "<color>";
   inherits: true;
-  initial-value: rgb(255, 190, 140);
+  initial-value: rgb(114, 130, 188);
 }
 @property --grad-a {
   syntax: "<color>";
   inherits: true;
-  initial-value: rgb(160, 104, 214);
+  initial-value: rgb(163, 176, 222);
 }
 @property --grad-b {
   syntax: "<color>";
   inherits: true;
-  initial-value: rgb(255, 190, 140);
+  initial-value: rgb(114, 130, 188);
 }
 
 :root {
   color-scheme: dark;
 
   /* Theme (overwritten by ThemeProvider; same defaults as the @property block). */
-  --bg-top: #171021;
-  --bg-mid: #0f0a16;
-  --bg-bottom: #09060d;
-  --accent: #ffb98a;
-  --glow: rgba(255, 170, 120, 0.35);
-  --fog-a: rgba(160, 104, 214, 0.42);
-  --fog-b: rgba(255, 150, 100, 0.3);
-  --fog-c: rgba(255, 205, 170, 0.14);
-  --card: rgb(190, 120, 170);
-  --beam: rgb(255, 190, 140);
+  --bg-top: #141a30;
+  --bg-mid: #0b0f1e;
+  --bg-bottom: #05070f;
+  --accent: #a3b0de;
+  --glow: rgba(114, 130, 188, 0.35);
+  --fog-a: rgba(163, 176, 222, 0.34);
+  --fog-b: rgba(163, 176, 222, 0.16);
+  --fog-c: rgba(114, 130, 188, 0.14);
+  --card: rgb(163, 176, 222);
+  --beam: rgb(114, 130, 188);
   /* Logo gradient A → B and soft label colour (step 12b; derived for the older themes). */
-  --grad-a: rgb(160, 104, 214);
-  --grad-b: rgb(255, 190, 140);
+  --grad-a: rgb(163, 176, 222);
+  --grad-b: rgb(114, 130, 188);
   --text-soft: var(--accent-light);
 
   /* Derived from the accent (the mock-ups use a lighter tint for fills and active labels). */
@@ -138,6 +138,9 @@
     rgba(255, 255, 255, 0.3),
     rgba(255, 255, 255, 0) 46%
   );
+  /* One panel for every dialog (round 5, proposal 3): the theme's own night, nearly opaque, no
+     backdrop-filter; the screen behind never competes with the text. */
+  --panel-bg: var(--glass-highlight), color-mix(in srgb, var(--bg-mid) 92%, transparent);
 
   /* Radii */
   --radius-xs: 10px;
@@ -214,7 +217,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root {
+  :root:not([data-rm-ignore]) {
     --dur-beam: 0.15s;
     --dur-color: 0.15s;
     --dur-theme: 0.15s;

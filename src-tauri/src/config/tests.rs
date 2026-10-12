@@ -140,7 +140,7 @@ fn settings_patch_is_validated_and_persisted() {
         (out.quality, out.color_mode),
         (Quality::Ultra, ColorMode::Off)
     );
-    assert_eq!(out.theme_id, "lavande-peche", "untouched fields stay");
+    assert_eq!(out.theme_id, "bleu-gris", "untouched fields stay");
 
     let e = s
         .set_settings(SettingsPatch {

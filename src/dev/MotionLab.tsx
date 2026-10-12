@@ -35,6 +35,8 @@ import { hubStore } from "../store";
 import { runBench, type BenchResult } from "./bench";
 import { MotionLab4b } from "./MotionLab4b";
 import styles from "./MotionLab.module.css";
+import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
+import { effectiveQuality } from "../design/quality";
 
 const NAMES = ["Riot Client", "Minecraft", "Steam", "Epic Games", "Battle.net", "OBS Studio"];
 const APPS: AppEntry[] = NAMES.map((name, i) => ({
@@ -55,7 +57,8 @@ function seedStore(params: URLSearchParams): true {
     status: "ready",
     apps: APPS,
     settings: {
-      schemaVersion: 1,
+      ...VISUAL_DEFAULTS,
+      schemaVersion: 2,
       themeId: params.get("theme") ?? ACTIVE_THEME_ID,
       quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
       colorMode: "light",
@@ -69,7 +72,7 @@ function seedStore(params: URLSearchParams): true {
       economyMode: false,
     },
   });
-  applyQuality(hubStore.getState().settings?.quality ?? "high");
+  applyQuality(effectiveQuality(hubStore.getState().settings?.quality ?? "high"));
   return true;
 }
 

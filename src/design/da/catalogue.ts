@@ -11,7 +11,8 @@
  */
 
 import { EASES } from "../motion/eases";
-import { color, n, NONE, px, range, select, toggle, type DaElement } from "./daParams";
+import { color, n, NONE, px, range, select, toggle, userSelect, type DaElement } from "./daParams";
+import { CARD_HOVER_STYLES } from "../motion/tokens5";
 import { AIR_ELEMENTS } from "./catalogueAir";
 import { GLASS_ELEMENTS } from "./catalogueGlass";
 import { MOTION_ELEMENTS } from "./catalogueMotion";
@@ -213,6 +214,8 @@ export const CATALOGUE: readonly DaElement[] = [
       range("sparks", 0, 4, 1, 4),
       range("launchFlash", 0.5, 3, 0.1, 1.6),
       toggle("pointerSheen", false),
+      // Round 5, « Survol des cartes » of the settings: full (veil + threads) / simple (lift) / none.
+      userSelect("style", CARD_HOVER_STYLES, "full"),
     ],
     css: (v) => ({
       "--da-hover-tilt": String(v.on ? n(v, "tilt") : 0),

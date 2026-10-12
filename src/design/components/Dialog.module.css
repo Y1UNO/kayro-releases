@@ -1,4 +1,4 @@
-/* Scrim: plain veil, no backdrop-filter (the panel is the one blurred surface). */
+/* Scrim: plain veil, no backdrop-filter (round 5: no blur at all, the panel is nearly opaque). */
 .scrim {
   position: fixed;
   inset: 0;
@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-6);
-  background: rgba(4, 2, 8, 0.55);
+  background: rgba(4, 2, 8, 0.62);
   /* Level 2 (motion.css): in "moyen", out in 0.7 × without the cascade. */
   animation: scrim-in var(--m2-moyen) var(--m-ease-in) both;
 }
@@ -17,9 +17,19 @@
   animation: scrim-out var(--m2-moyen-out) var(--m-ease-out) both;
 }
 
+/* One panel for every dialog (round 5): `--panel-bg`, never blurred (the Surface is flat), a height
+   that always fits the screen, the header fixed and the body scrolling. */
 .panel {
   width: min(480px, 100%);
+  max-height: calc(100vh - 2 * var(--space-14));
+  display: flex;
+  flex-direction: column;
   animation: panel-in var(--m2-moyen) var(--m-ease-in) both;
+}
+
+/* Two classes: wins over the Surface's own background whatever the order of the stylesheets. */
+.scrim .panel {
+  --_bg: var(--panel-bg);
 }
 
 .scrim[data-closing] .panel {
@@ -32,27 +42,18 @@
   height: min(640px, 100%);
 }
 
-/* Dense content (lists, forms): nearly opaque, so the screen behind never competes with the text. */
-.panel.wide,
-.panel.wide[data-blur] {
-  --_bg: var(--glass-highlight), rgba(18, 13, 28, 0.92);
-}
-
-.wide .inner {
-  height: 100%;
-  box-sizing: border-box;
-  min-height: 0;
-}
-
-.wide .body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+/* Settings (round 5): a side column of categories and a body that scrolls; fixed height so that
+   switching category never resizes the panel. */
+.settings {
+  width: min(1040px, 100%);
+  height: min(720px, 100%);
 }
 
 .inner {
   outline: none;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -74,9 +75,22 @@
 }
 
 .body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
   color: var(--text-2);
   font-size: var(--fs-15);
   line-height: 1.5;
+}
+
+/* Wide and settings dialogs lay their own scrolling out (a list, a column of categories). */
+.wide .body,
+.settings .body {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes scrim-in {

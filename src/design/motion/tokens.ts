@@ -16,6 +16,7 @@
 import type { ElementValues } from "../da/daParams";
 import { SPRINGS } from "../glass/pillMotion";
 import { EASES } from "./eases";
+import { MOTION_STYLES, type MotionStyle } from "./tokens5";
 import {
   chainTokens,
   stateTokens,
@@ -78,6 +79,8 @@ export type DurKey = "micro" | "court" | "moyen" | "long";
 export type Level = 1 | 2 | 3;
 
 export interface MotionTokens {
+  /** Round 5, « Mouvement » of the settings: complete / lively (validated) / crisp. */
+  style: MotionStyle;
   speed: number;
   /** Levels 1, 2, 3 switched on. */
   levels: readonly [boolean, boolean, boolean];
@@ -124,14 +127,20 @@ export function motionTokens(v: ElementValues | undefined): MotionTokens {
   };
   const speed = Math.max(0.1, Number(use?.speed ?? 1) || 1);
   const ms = (k: DurKey) => num(k) / speed;
+  // Round 5, « Mouvement : Net »: no bounce anywhere (the moves take the entrance curve).
+  const style: MotionStyle = (MOTION_STYLES as readonly unknown[]).includes(use?.style)
+    ? (use?.style as MotionStyle)
+    : "lively";
+  const crisp = style === "crisp";
   const names = {
     in: curve("easeIn"),
     out: curve("easeOut"),
-    move: curve("easeMove"),
-    bounce: curve("easeBounce"),
+    move: crisp ? curve("easeIn") : curve("easeMove"),
+    bounce: crisp ? curve("easeIn") : curve("easeBounce"),
   };
   return {
     speed,
+    style,
     levels: [use?.level1 !== false, use?.level2 !== false, use?.level3 !== false],
     dur: { micro: ms("micro"), court: ms("court"), moyen: ms("moyen"), long: ms("long") },
     outShare: num("outShare"),

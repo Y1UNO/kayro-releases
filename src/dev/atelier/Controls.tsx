@@ -121,15 +121,18 @@ export function Controls({ values, onChange, onReset }: Props) {
                   </span>
                 </summary>
                 <p className={styles.role}>{label?.role}</p>
-                {el.params.map((p) => (
-                  <ParamRow
-                    key={p.key}
-                    param={p}
-                    label={label?.params?.[p.key] ?? p.key}
-                    value={v[p.key] ?? p.default}
-                    onChange={(nv) => onChange(el.id, p.key, nv)}
-                  />
-                ))}
+                {/* Round 5: what the user picks in Réglages › Visuel is not tuned here. */}
+                {el.params
+                  .filter((p) => !(p.kind === "select" && p.user))
+                  .map((p) => (
+                    <ParamRow
+                      key={p.key}
+                      param={p}
+                      label={label?.params?.[p.key] ?? p.key}
+                      value={v[p.key] ?? p.default}
+                      onChange={(nv) => onChange(el.id, p.key, nv)}
+                    />
+                  ))}
                 <button type="button" className={styles.small} onClick={() => onReset(el.id)}>
                   Réinitialiser
                 </button>

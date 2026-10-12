@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { registerGlass } from "../../design/glass/glassRegistry";
+import { registerGlass, setGlassFloat } from "../../design/glass/glassRegistry";
 import { setStageCue, stageCue, sameRing, cueVersion, type GlassPose } from "./cues";
 import { GlassFrame } from "./glassFrame";
 import { GLASS_FRAGMENT } from "./glassShader";
@@ -119,6 +119,29 @@ describe("glass engine, round 3b: posed and stacked shapes", () => {
     expect(sameRing({ poses: new Map(), ring: [1, 1, 1] }, null)).toBe(false);
     setStageCue(null);
     expect(stageCue()).toBeNull();
+  });
+
+  it("a rocked floating card is measured at its true size, its height for the shadow (round 5)", () => {
+    const a = 1.4 * (Math.PI / 180);
+    const [w, h] = [240, 336];
+    const bw = w * Math.cos(a) + h * Math.sin(a);
+    const bh = w * Math.sin(a) + h * Math.cos(a);
+    const box = fakeEl(100 - bw / 2, 200 - bh / 2, bw, bh);
+    const el = { ...box, offsetWidth: w, offsetHeight: h } as HTMLElement;
+    offs.push(registerGlass(el, "card"));
+    setGlassFloat(el, { rot: a, elev: 0.4 });
+    const f = new GlassFrame();
+    f.measure(
+      () => true,
+      () => 0.2,
+    );
+    expect(f.R[0]).toBeCloseTo(100, 6);
+    expect(f.R[1]).toBeCloseTo(200, 6);
+    expect(f.R[2]).toBeCloseTo(w / 2, 6);
+    expect(f.R[3]).toBeCloseTo(h / 2, 6);
+    expect(f.X[0]).toBeCloseTo(Math.cos(a), 6);
+    expect(f.X[3]).toBeCloseTo(0.4, 6); // not stacked: the height alone
+    setGlassFloat(el, null);
   });
 
   it("the glass pass stays within WebGL2's minimum of 224 fragment uniform vectors", () => {

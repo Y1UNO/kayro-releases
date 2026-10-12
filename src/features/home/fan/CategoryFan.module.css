@@ -100,6 +100,15 @@
   opacity: var(--fan-fill, 0.85);
 }
 
+/* Foot shade under the name (round 5): white text ≥ 4.5:1 on every theme (contrast.ts), without
+   touching the colours. */
+.shade {
+  position: absolute;
+  inset: var(--da-poster-inset, 3px);
+  border-radius: max(0px, calc(24px - var(--da-poster-inset, 3px)));
+  background: linear-gradient(180deg, transparent 55%, rgba(8, 5, 12, 0.55));
+}
+
 .content {
   position: absolute;
   inset: 0;

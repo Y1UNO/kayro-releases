@@ -1,8 +1,6 @@
 import type { PointerEvent } from "react";
 import { daStore } from "../../design/da";
-
-const reduced =
-  typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+import { prefersReducedMotion } from "../../fx/motionPref";
 
 /**
  * Hover of the cards (art direction `cardHover`): a 3D tilt of at most a few degrees towards the
@@ -22,7 +20,7 @@ export const cardTilt = {
     const hover = daStore.getState().values.cardHover;
     const max = hover?.on ? (hover.tilt as number) : 0;
     const mag = Math.min(1, Math.hypot(nx, ny));
-    if (max <= 0 || mag < 0.01 || reduced?.matches) {
+    if (max <= 0 || mag < 0.01 || prefersReducedMotion()) {
       tilt(el, "");
       return;
     }

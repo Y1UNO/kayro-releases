@@ -831,6 +831,117 @@ Relecture en lecture seule, corrigée en trois paquets (arrêt après chacun, pa
 - **Fenêtre d'ouverture transparente, environnement WebView2 partagé** (4b-3.0 bis) : elle n'a échoué que de peu. Mémoire à 30 s : **+68 / +72 Mo**, pour une limite de 50 Mo. Le reste passait : premier affichage 753 / 759 ms, relève sans saut. Le surplus est dans le processus GPU commun de WebView2.
 - **À remesurer à la finition**, si une version de WebView2 libère mieux la mémoire de ce processus. Même protocole : release, PC libre, 2 essais alternés avec la base opaque, mémoire par type de processus à 30 s. Le code du spike est à reprendre dans l'historique de la conversation : il n'a jamais été commité.
 
+## Ronde 5 — 2026-10-13 (dernière avant le gel ; trois paquets, arrêt après chacun)
+**Sources** (font foi) : `reference/animations/R5-notes/r5-notes/R5-Reglages-Themes.txt`, `R5-Flottaison.txt`, `R5-Personnalisation.txt` ; base : `docs/PROPOSITIONS-DA.md` (Fable). Plan validé (copie : `C:\Users\tomca\.claude\plans\r-ponds-moi-toujours-en-fran-ais-glowing-pixel.md`).
+**Tes décisions** :
+- Mouvement : **Vivant = l'actuel** (défaut) ; Complet = la magie aussi en mode fenêtre et au clavier ; Net = sans rebond ni magie.
+- Atmosphère : Douce 0,6 · **Normale 1,0** (rendu actuel) · Forte 1,3.
+- Sélecteur de mode : bouton rond + petit menu (paquet 2).
+- « Sous-catégories » = les cartes d'apps du carrousel : même réglage de flottaison (±2 / ±5 / ±8 px).
+- Grille des thèmes : Bleu-gris, Lavande-pêche, Encre, Sakura, Opale, Cuivre. Migration v2 : mauve → encre, les 5 anciens → bleu-gris.
+- « Couleurs du jeu » masqué tant qu'il n'a aucun effet (valeur gardée dans le schéma).
+
+### Paquet 1 — Réglages, thèmes, personnalisation (2026-10-13)
+**Fait** :
+- **Schéma Rust** (`config/schema.rs`, nouveau `config/visual.rs`) :
+  - `Quality::Auto` ;
+  - `motionStyle`, `followSystemMotion`, `cardFloat`, `openingStyle`, `themeTransition`, `widgetUnroll`, `widgetSpring`, `cardHover`, `bokeh`, `particles`, `cursorLight` ;
+  - thème par défaut `bleu-gris` ; atmosphère bornée à 0,3–1,3.
+  - **Migration v1 → v2** : mauve → encre, crepuscule / boreale / ocean / rose / graphite → bleu-gris, `.bak` écrit. Les champs absents prennent leur défaut.
+  - Tests : `config/settings_r5_tests.rs` (5).
+- **Réglages → DA** (`design/da/userDa.ts`, installé par `app/userPrefs.ts` dans les deux fenêtres) : chaque choix surcharge l'élément du catalogue concerné.
+  - `opening.on/pulse`, `motion.widgetMotion/widgetSpring/style`, `categoryHover.float`, `cardHover.style`, `bokeh/embers/stars/cursorLight.on`.
+  - Un réglage peut éteindre un élément, jamais l'allumer.
+  - Ces sélecteurs sont marqués `user` et ne s'affichent plus dans l'atelier (pas de doublon).
+- **Suivre Windows** : `fx/motionPref.ts` (surcharge + abonnement) ; les media queries de `motion.css` / `tokens.css` gardées par `:root:not([data-rm-ignore])` ; `MotionConfig` de l'accueil suit le hook.
+- **Mouvement** :
+  - Net : courbes « déplacement » et « rebond » = courbe d'apparition (`tokens.ts`), pas de niveau 3.
+  - Complet : niveau 3 aussi en mode fenêtre, et la carte choisie au clavier s'allume.
+  - Survol des cartes : Simple = soulèvement seul (ressort liaison), Aucun = rien (carrousel et grille).
+- **Dialogue unique** (proposition 3) : jeton `--panel-bg` (bg-mid du thème à 92 %), plus de `backdrop-filter`, hauteur bornée, corps défilant, scrim 0,62, taille `settings` (1 040 × 720). Modèle de contraste mis à jour (+5 paires).
+- **Réglages** (`features/settings/`) :
+  - Général · Visuel · Thèmes en onglets verticaux (flèches, Début / Fin) ; le dernier onglet est retenu tant que l'app tourne.
+  - Visuel : Qualité, Atmosphère, Mouvement, Suivre Windows, Affichage au lancement (+ écran), puis « Personnalisation avancée », puis « Revenir aux réglages par défaut ». Le bouton remet tout Visuel sauf l'affichage et l'écran, avec « Annuler » tant que le dialogue est ouvert.
+  - Textes : `i18n/fr-settings.json`. Les scènes passent dans `fr-scenes.json` : `fr.json` 504 → 258 lignes.
+- **Menu déroulant rebondissant** (`advancedUnroll.ts`, pur, testé) :
+  - coque sur les ressorts du widget (vertical 5 % / 680 ms, latéral 2,5 % / 560 ms), chevron 180° sur le même ressort ;
+  - lignes en cascade de 45 ms (−10 px, opacité 260 ms), halo sauf en Éco ;
+  - ce qui suit glisse avec (FLIP) ;
+  - fermeture en 220 ms sur la courbe de disparition ; réduire les animations = direct.
+- **Thèmes** :
+  - `encre.json` remplace `mauve.json` (valeurs de Fable) ; Bleu-gris en premier et par défaut (`themes/index.ts`, `tokens.css`, `schema.rs`) ; alias mauve → encre (`resolveTheme`).
+  - Cartes 240 × 150 en CSS pur aux variables du thème (`ThemeCard.tsx`).
+  - **Ombre de pied** sous le nom des cartes de l'éventail.
+- **Onde de changement de thème** (`themeSwap.ts` pur + `useThemeSwap.ts`, jetons `THEME_SWAP` dans `tokens5.ts`) :
+  - La carte elle-même :
+    - survol ×1,03, appui ×1,05 ;
+    - −8 px ×1,10, puis +2 px ×0,93 (impact à 380 ms), puis retour sur la liaison ;
+    - profondeur en `drop-shadow` ; reflet à 60 ms ; lune à 370 ms ;
+    - onde de choc (`box-shadow`) et 12 étincelles à 380 ms ;
+    - cadre redessiné à 400 ms ; coche à 620 ms.
+  - **View Transitions** lancées à l'impact seulement :
+    - la carte est nommée avant la capture, son image ancienne masquée : une seule carte, vivante, rien posé dessus ;
+    - nouvelle vue révélée en `clip-path: circle()` depuis la lune (850 ms, `standard`) ;
+    - onde de la pulsation C dans son propre groupe, sous la carte, pleine jusqu'à 80 % ;
+    - recul ×0,993 de la page centré sur la carte ;
+    - moteur relu dans une micro-tâche (thème instantané, `ThemeProvider.setThemeId(id, {instant})`).
+  - Fondu (réglage, Éco, pas d'API, moteur en repli) : la carte grandit et s'écrase, puis fondu de 0,9 s. Direct / réduire les animations : changement immédiat. Re-clic ignoré 1,25 s.
+- **Flottaison** (`features/home/float/cardFloat.ts`, pur) : un sinus par carte, période × 0,90–1,07, départs décalés de 0,6–0,7 s, bascule alternée.
+  - Niveaux (`FLOAT_LEVELS`) :
+
+    | Niveau | Éventail | Carrousel | Bascule | Période |
+    |---|---|---|---|---|
+    | Légère (= les vraies valeurs d'avant) | 2,5 px | 2 px | 0,1° | 7 s |
+    | Visible (défaut) | 7 px | 5 px | 0,8° | 4,4 s |
+    | Marquée | 12 px | 8 px | 1,4° | 4,8 s |
+
+  - Éventail : `fanFloat.ts` (dérive latérale au survol gardée).
+  - **Carrousel** : `carouselFloat.ts` sur une nouvelle boîte `[data-float]` (carte + crayon) ; en pause (retour en douceur, 240 ms) au survol, molette, défilement rapide, glisser ; immédiate pendant une séquence ; boucle seulement si le niveau n'est pas « Aucune ».
+  - **Ombre au sol** dans le moteur : la hauteur passe dans la partie fractionnaire de `uX.w` (aucun nouvel uniforme) ; l'ombre pâlit (× 0,58) et se resserre (× 0,9) à « Marquée » ; le cadre de verre d'une carte basculée est mesuré à sa vraie taille (`setGlassFloat`).
+
+**Testé** :
+- tsc, eslint, prettier (mes fichiers), clippy, `cargo fmt` (seulement les 3 écarts connus).
+- **vitest 604/604** (+ `settings.test.ts`, `userDa.test.ts`, `cardFloat.test.ts`, `carouselFloat.test.ts`, verre basculé, contraste ≥ 4,5:1 des nouvelles paires sur les 11 thèmes).
+- **cargo test 195**.
+- Exe reconstruit (79 s).
+- **Dans l'exe** (WebView2 en débogage local, pour ce seul lancement) :
+  - tes réglages migrés en v2 (`.bak` présent, Lavande-pêche gardé) ;
+  - onde vérifiée par captures CDP : ancien thème hors du cercle, nouveau dedans, onde à la couleur A du nouveau thème, thème appliqué vers 380–450 ms ;
+  - ton thème Lavande-pêche remis, exe fermé par `--quit`.
+
+**Non testé / limites** :
+- **Une image anormale** : au tout premier changement de la session, l'ancienne vue est sortie **blanche** dans la capture CDP. Ce premier clic venait 0,9 s après l'ouverture de l'onglet Thèmes. Non reproduit sur les 2 changements suivants capturés, ni sur 7 transitions témoins ; cause non établie (première capture du canvas WebGL ? fenêtre derrière ta vidéo ? cascade de l'onglet encore en cours ?). Si tu la vois, le réglage « Fondu » l'évite.
+- Pas de rafale à l'écran : ta vidéo était au premier plan, et je n'ai plus relancé l'exe par-dessus.
+- **Mesures : à mesurer à l'étape 13**. Le PC était occupé (vidéo en lecture) ; or la flottaison du carrousel fait redessiner le moteur au repos (60 i/s, 30 en Éco), comme l'éventail déjà.
+- Le volet du navigateur ne rend pas quand il est masqué : le menu déroulant et les cartes n'ont été vus qu'à l'arrêt.
+- La grille de plus de 8 cartes n'a toujours pas de niveau 3, même en « Complet » (aucun niveau 3 n'existe dans la grille).
+- L'onde garde le dessin de la pulsation C : son halo est de 5,5 % du rayon, pas un halo fixe de 40 px.
+- « Couleurs du jeu » : masqué, sans effet. « Qualité Auto » = Élevé avec le repli existant du moteur. L'ombre au sol ne change pas sans moteur (repli CSS).
+- Le trou du halo sous la carte active ne suit pas la flottaison : un fin liseré est possible, seulement avec une affiche en texture.
+
+**Ton retour (paquet 1)** : validé dans l'exe. Deux suites avant le commit :
+- **Cadence de la flottaison seule** :
+  - quand seule la flottaison bouge (éventail ou carrousel au repos), ses boucles tournent à **30 i/s** au lieu de 60 ;
+  - elles repassent à pleine cadence dès qu'autre chose bouge : survol, molette, pause qui s'amortit ; la liaison a sa propre boucle (`Choreo`) ;
+  - code : `FanMotion.floatingOnly` + `LinkDirector.fpsFor`, `CarouselFloat` (`idleFps`) ; testé (`carouselFloat.test.ts`, `fanFloat.test.ts`).
+  - **Pour la mesure de l'étape 13** : le moteur, lui, dessine encore à 60 i/s en Élevé et en Équilibré, parce que les braises et les étoiles sont animées à la cadence d'ambiance (60, depuis la 2a). Le gain n'apparaît donc que particules coupées (réglage « Particules : Non ») ; en Éco, tout était déjà à 30.
+  - Cas à mesurer : éventail au repos et carrousel au repos, particules oui / non, Élevée et Éco, CPU et GPU.
+- **Point ouvert, à reproduire à l'étape 13 : l'image blanche** au premier changement de thème.
+  - **Constat** : une seule fois, dans la capture CDP à 472 ms du tout premier changement de la session, la zone hors du cercle (l'ancienne vue) était blanche. Non revue sur 2 changements capturés ensuite ni sur 7 transitions témoins ; tu ne l'as pas signalée dans l'exe.
+  - **Hypothèse principale** : un artefact de ma mesure. C'est la seule fois où une capture CDP (`Page.captureScreenshot`, lancée à 331 ms) chevauchait l'instant où la View Transition capture l'ancienne vue (≈ 380–400 ms).
+  - **Autres pistes** : première capture du canvas WebGL dans la vie de la page ; cascade de l'onglet Thèmes encore en cours (clic 0,9 s après l'onglet) ; fenêtre masquée par la vidéo.
+  - **Protocole** : exe relancé, PC libre ; ouvrir Réglages › Thèmes, attendre 0,9 s puis 3 s, cliquer une carte. Une fois avec une rafale d'écran Windows seulement (aucune capture CDP), une fois avec une capture CDP à 330–400 ms. Si l'image blanche ne vient qu'avec la capture CDP, le point est clos.
+
+### Plus tard (hors ronde 5, à ne pas faire dans cette ronde)
+- Gestion des apps qui démarrent avec Windows au premier lancement.
+- Design propre à chaque carte de catégorie.
+- Affiches en production.
+- Icônes dans le carrousel (extraction pour Steam, UWP, palette).
+- Fil lumineux pendant la détection.
+- Échap dans l'éditeur.
+- « Créer mon thème » et import / export de thèmes.
+- Hors liste des propositions, non faits : petit texte secondaire unifié (`--fs-13`), carte vide 176 × 246, éventail descendu de 60 px, ligne d'aide « Entrée · Échap ».
+
 ## Éléments du catalogue
 | Élément | État | Remarque |
 |---|---|---|
@@ -858,3 +969,7 @@ Relecture en lecture seule, corrigée en trois paquets (arrêt après chacun, pa
 | États : catégorie vide, échec de lancement, nouvelle scène (`motion.emptyFloat`) | à l'essai (4b-1b) | carte pointillée qui flotte 4 px ; tremblement + bord `--fail` + message unique « Corriger » ; dialogue à trois départs |
 | Pulsation C dans l'ouverture opaque (`opening.pulse`) | validée (4b-3), par défaut | voile 42 % autour de l'anneau, l'onde (0,55) et le cercle s'ouvrent au ringOut ; « actuelle (V1-A) » pour comparer |
 | Passages entre modes (fondu) | à l'essai (4b-2) | sortie micro, retour moyen + cascade des cartes, widget ×0,96 → 1 ; fenêtres opaques (spike 4b-2.0) ; bouton ↗ du widget |
+| Réglages Visuel → DA (`userDa.ts`) | à l'essai (R5-1) | ouverture, widget, flottaison, survol, mouvement, bokeh, particules, lumière du curseur ; sélecteurs `user` retirés de l'atelier |
+| Flottaison des cartes (`categoryHover.float`) | à l'essai (R5-1) | Visible par défaut ; éventail + carrousel ; ombre au sol dans le moteur |
+| Onde de changement de thème | à l'essai (R5-1) | View Transitions à l'impact, carte vivante nommée, onde de la pulsation C ; fondu en Éco |
+| Thèmes du logo | à l'essai (R5-1) | Encre remplace Mauve, Bleu-gris par défaut ; 5 anciens gardés pour l'atelier |

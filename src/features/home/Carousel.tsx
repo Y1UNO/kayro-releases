@@ -12,6 +12,7 @@ import { CardHoverFx, cardHoverConfig, periodicGlide } from "./rim/cardHoverFx";
 import { geometryVars, mountedRange, type Geometry } from "./carouselGeometry";
 import { inheritKeys } from "./deckKeys";
 import { cssVars } from "./cssVars";
+import { useCarouselFloat } from "./float/useCarouselFloat";
 import styles from "./Carousel.module.css";
 
 interface Props {
@@ -99,9 +100,11 @@ export function Carousel({
   useEffect(() => {
     if (fx.current) fx.current.dragging = dragging;
   }, [dragging]);
+  // Round 5: the cards float at the settings' level (paused on hover, wheel, fast scroll, drag).
+  const float = useCarouselFloat(stage, dragging);
   const cardOf = (app: AppEntry) =>
     stage.current?.querySelector<HTMLElement>(
-      `[data-app-id="${CSS.escape(app.id)}"] > [data-stage]`,
+      `[data-app-id="${CSS.escape(app.id)}"] [data-stage]`,
     ) ?? null;
 
   // The active card always sits at the centre of the stage: the light stays there while the
@@ -136,8 +139,19 @@ export function Carousel({
     return () => window.clearTimeout(state.timer);
   }, []);
 
+  // « Mouvement : Complet » (round 5): the card chosen with the keyboard lights up as if hovered.
+  const complete = motion.style === "complete";
+  useEffect(() => {
+    const st = stage.current;
+    if (!complete || !st || !active || document.activeElement !== st || st.matches(":hover"))
+      return;
+    fx.current?.pointer(cardOf(active));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- on a new selection only
+  }, [focus, complete]);
+
   function onWheel(e: WheelEvent) {
     fx.current?.wheel();
+    float.current?.wheel();
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     const w = wheel.current;
     if (Math.sign(delta) !== Math.sign(w.acc)) w.acc = 0;
@@ -185,13 +199,26 @@ export function Carousel({
       aria-label={t("home.apps")}
       aria-orientation="horizontal"
       aria-activedescendant={active ? `${listId}-${active.id}` : undefined}
-      data-motion-cap={windowMode ? "2" : undefined}
+      data-motion-cap={
+        (windowMode && motion.style !== "complete") || cardHover?.style === "simple"
+          ? "2"
+          : undefined
+      }
+      data-hover-off={cardHover?.style === "none" ? "" : undefined}
       data-no-pointer-sheen={hoverCfg.magic && cardHover?.pointerSheen !== true ? "" : undefined}
       onWheel={onWheel}
-      onPointerOver={(e) =>
-        fx.current?.pointer((e.target as Element).closest<HTMLElement>("[data-stage]"))
-      }
-      onPointerLeave={() => fx.current?.pointer(null)}
+      onPointerOver={(e) => {
+        const card = (e.target as Element).closest<HTMLElement>("[data-stage]");
+        fx.current?.pointer(card);
+        float.current?.hover(card);
+      }}
+      onPointerLeave={() => {
+        fx.current?.pointer(null);
+        float.current?.hover(null);
+      }}
+      onBlur={() => {
+        if (complete && !stage.current?.matches(":hover")) fx.current?.pointer(null);
+      }}
     >
       {mounted.map((app, k) => {
         const i = from + k;

@@ -33,6 +33,8 @@ const DEV_POSTERS = ["140406", "140411", "140423"].map(
 );
 import { ACTIVE_THEME_ID } from "../design/da";
 import type { CategoryId } from "../features/home/categories";
+import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
+import { effectiveQuality } from "../design/quality";
 
 /** The category journey, as exposed by useCategoryLink.ts in development builds. */
 interface LinkDev {
@@ -150,7 +152,8 @@ export default function HomeDev() {
       status: "ready",
       apps,
       settings: {
-        schemaVersion: 1,
+        ...VISUAL_DEFAULTS,
+        schemaVersion: 2,
         themeId: params.get("theme") ?? ACTIVE_THEME_ID,
         quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
         colorMode: "light",
@@ -175,7 +178,7 @@ export default function HomeDev() {
       },
     });
     if (params.has("addmock")) installAddAppsMock(() => hubStore.getState().apps);
-    applyQuality(hubStore.getState().settings?.quality ?? "high");
+    applyQuality(effectiveQuality(hubStore.getState().settings?.quality ?? "high"));
     if (params.has("running")) {
       const first = apps[2];
       if (first)

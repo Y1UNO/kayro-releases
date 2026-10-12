@@ -3,9 +3,11 @@ import type { AppEntry, AppError, NewApp, Settings } from "../ipc/bindings";
 import type { Ipc, Outcome } from "../ipc/commands";
 import type { EventSource } from "../ipc/events";
 import { createHubStore } from "./hubStore";
+import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
 
 const SETTINGS: Settings = {
-  schemaVersion: 1,
+  ...VISUAL_DEFAULTS,
+  schemaVersion: 2,
   themeId: "crepuscule",
   quality: "balanced",
   colorMode: "light",

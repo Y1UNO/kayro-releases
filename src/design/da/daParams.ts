@@ -26,6 +26,11 @@ export interface SelectParam {
   key: string;
   options: readonly string[];
   default: string;
+  /**
+   * Chosen by the user in Réglages › Visuel (R5), not in the workshop: hidden there (no duplicate),
+   * set from the settings by `userDa.ts`.
+   */
+  user?: true;
 }
 /** `""` = the theme's colour; otherwise `#rrggbb`. */
 export interface ColorParam {
@@ -68,6 +73,11 @@ export const select = (key: string, options: readonly string[], def: string): Se
   key,
   options,
   default: def,
+});
+/** A select the user picks in the settings (R5), hidden from the workshop. */
+export const userSelect = (key: string, options: readonly string[], def: string): SelectParam => ({
+  ...select(key, options, def),
+  user: true,
 });
 export const color = (key: string, def = ""): ColorParam => ({ kind: "color", key, default: def });
 

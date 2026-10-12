@@ -1,5 +1,10 @@
 import { APP_NAME } from "../app/appName";
-import fr from "./fr.json";
+import base from "./fr.json";
+import scenes from "./fr-scenes.json";
+import settings from "./fr-settings.json";
+
+/** The catalogue, in several files to keep each one short (round 5: scenes and settings apart). */
+const fr = { ...base, ...scenes, ...settings };
 
 type Flatten<T, Prefix extends string = ""> = {
   [K in keyof T & string]: T[K] extends string ? `${Prefix}${K}` : Flatten<T[K], `${Prefix}${K}.`>;
