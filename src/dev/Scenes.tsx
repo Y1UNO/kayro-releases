@@ -2,11 +2,13 @@
 // Fake apps, and the scene store's actions replaced by in-memory ones, so the dock, the list and
 // both editors can be tried in a plain browser (nothing is saved, nothing is started).
 //   ?empty=1 (no scene)   ?screen=scenes|editor|home   ?theme=…
+//   ?fail=n (round 4b: step n fails during a test, and stops the scene like a required step)
 import { useState } from "react";
 import { ThemeProvider } from "../design";
 import { ACTIVE_THEME_ID } from "../design/da";
 import { Atmosphere } from "../fx";
 import { HomeScreen } from "../features/home/HomeScreen";
+import type { NewSceneSeed } from "../features/scenes/draft";
 import { SceneEditor } from "../features/scenes/SceneEditor";
 import { ScenesScreen } from "../features/scenes/ScenesScreen";
 import { SceneToast } from "../features/scenes/SceneToast";
@@ -69,6 +71,7 @@ const SCENES: SceneFile[] = [
 const SLOTS = { messagerie: "discord", "plateforme-jeux": "steam", musique: "spotify", obs: "obs" };
 
 let runId = 0;
+const FAIL_AT = Number(new URLSearchParams(location.search).get("fail")) - 1;
 /** Plays a scene on a timer, with the same events as the core. */
 function fakePlay(id: string) {
   const scene = sceneStore.getState().scenes.find((s) => s.id === id);
@@ -80,6 +83,13 @@ function fakePlay(id: string) {
   let i = 0;
   const tick = () => {
     if (sceneStore.getState().run?.runId !== me) return;
+    if (i > 0 && i - 1 === FAIL_AT) {
+      push({ kind: "step", index: i - 1, state: "failed", reason: "launchNotFound" });
+      for (let k = i; k < scene.steps.length; k++) {
+        push({ kind: "step", index: k, state: "skipped", reason: null });
+      }
+      return push({ kind: "finished", status: "failed" });
+    }
     if (i > 0) push({ kind: "step", index: i - 1, state: "ok", reason: null });
     if (i === scene.steps.length) return push({ kind: "finished", status: "completed" });
     push({ kind: "step", index: i, state: "running", reason: null });
@@ -125,7 +135,9 @@ function install(params: URLSearchParams) {
 export default function ScenesDev() {
   const params = new URLSearchParams(location.search);
   useState(() => install(params)); // once, before the first render
-  const [screen, setScreen] = useState<"home" | "scenes" | { editor: string | null }>(
+  const [screen, setScreen] = useState<
+    "home" | "scenes" | { editor: string | null; seed?: NewSceneSeed }
+  >(
     params.get("screen") === "editor"
       ? { editor: SCENES[0]?.id ?? null }
       : ((params.get("screen") as "home" | "scenes" | null) ?? "scenes"),
@@ -135,12 +147,16 @@ export default function ScenesDev() {
       <Atmosphere />
       {screen === "home" && <HomeScreen onOpenScenes={() => setScreen("scenes")} />}
       {screen === "scenes" && (
-        <ScenesScreen onBack={() => setScreen("home")} onEdit={(id) => setScreen({ editor: id })} />
+        <ScenesScreen
+          onBack={() => setScreen("home")}
+          onEdit={(id, seed) => setScreen({ editor: id, seed })}
+        />
       )}
       {typeof screen === "object" && (
         <SceneEditor
           key={screen.editor ?? "new"}
           sceneId={screen.editor}
+          seed={screen.seed}
           onBack={() => setScreen("scenes")}
         />
       )}

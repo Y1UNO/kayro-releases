@@ -112,6 +112,8 @@
   --field-inset: inset 0 1px 3px rgba(0, 0, 0, 0.35);
   --track: rgba(0, 0, 0, 0.3);
   --separator: rgba(255, 255, 255, 0.22);
+  /* Soft red of a failure (round 4b, R4b-Etats): only on an edge or a point, never a surface. */
+  --fail: #f08c8c;
 
   /* Liquid glass (.lg recipe) */
   /* Smoked tint under the white gradient (not in the mock-ups): keeps text >= 4.5:1 on bright fog. */

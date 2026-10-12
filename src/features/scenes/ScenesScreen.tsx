@@ -17,15 +17,17 @@ import type { SceneFile } from "../../ipc/bindings";
 import { sceneStore, useHub, useScenes } from "../../store";
 import { Notice } from "../home/Overlays";
 import { ConfirmDialog } from "./ConfirmDialog";
+import type { NewSceneSeed } from "./draft";
 import { ImportDialog } from "./ImportDialog";
+import { NewSceneDialog } from "./NewSceneDialog";
 import { slotsOf } from "./model";
 import { usePlayScene } from "./usePlayScene";
 import styles from "./Editor.module.css";
 
 interface Props {
   onBack: () => void;
-  /** null = a new scene. */
-  onEdit: (id: string | null) => void;
+  /** null = a new scene (with how it starts). */
+  onEdit: (id: string | null, seed?: NewSceneSeed) => void;
 }
 
 /** All scenes: play, edit, export, delete, import. */
@@ -37,6 +39,7 @@ export function ScenesScreen({ onBack, onEdit }: Props) {
   const { request, dialog } = usePlayScene();
   const [deleting, setDeleting] = useState<SceneFile | null>(null);
   const [importing, setImporting] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const busy = run !== null && run.status === null;
 
@@ -63,7 +66,7 @@ export function ScenesScreen({ onBack, onEdit }: Props) {
           <UploadIcon size={16} />
           {t("scenes.list.import")}
         </Button>
-        <Button variant="primary" onClick={() => onEdit(null)}>
+        <Button variant="primary" onClick={() => setCreating(true)}>
           <PlusIcon size={16} />
           {t("scenes.list.new")}
         </Button>
@@ -151,6 +154,19 @@ export function ScenesScreen({ onBack, onEdit }: Props) {
       >
         <p>{t("scenes.list.deleteText")}</p>
       </ConfirmDialog>
+      <NewSceneDialog
+        open={creating}
+        scenes={scenes}
+        onClose={() => setCreating(false)}
+        onCreate={(seed) => {
+          setCreating(false);
+          onEdit(null, seed);
+        }}
+        onImport={() => {
+          setCreating(false);
+          setImporting(true);
+        }}
+      />
       <ImportDialog
         open={importing}
         apps={apps}

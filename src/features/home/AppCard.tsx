@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, type Ref } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, type Ref } from "react";
 import type { AppEntry } from "../../ipc/bindings";
 import { t } from "../../i18n";
 import { EditIcon, useGlass } from "../../design";
@@ -6,12 +6,17 @@ import { markGlassDirtyFor } from "../../design/glass/glassRegistry";
 import { posterUrl } from "./art";
 import { monogram, shadeOf } from "./cardLook";
 import { useDa } from "../../design/da";
+import { currentMotion } from "../../design/motion/current";
+import { durOf } from "../../design/motion/tokens";
+import { prefersReducedMotion } from "../../fx/motionPref";
+import { useHub } from "../../store";
 import { DEFAULT_GEOMETRY, isVisible, slotOffset, type Geometry } from "./carouselGeometry";
 import { cssVars } from "./cssVars";
 import { SheenVeil } from "./SheenVeil";
 import { Shine } from "./Shine";
 import { useAppIcon } from "./useAppIcon";
 import { cardTilt } from "./cardTilt";
+import fail from "./LaunchFail.module.css";
 import styles from "./AppCard.module.css";
 
 /** Forwards an element to a ref received as a prop (callback or object). */
@@ -65,6 +70,20 @@ export function AppCard({
     },
     [buttonRef],
   );
+  // Round 4b: its launch failed. It shakes once (5 px, then 3 px), its edge stays soft red while
+  // the message is shown; with "reduce motion", only the edge.
+  const failed = useHub((s) => (s.failedApp === app.id ? s.lastError : null));
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!failed || !el) return;
+    const t = currentMotion();
+    const ms = durOf(t, 2, "court", prefersReducedMotion()) && t.states.shakeMs;
+    if (ms <= 0) return;
+    const [a, b] = t.states.shake;
+    const x = (px: number) => ({ transform: `translateX(${px}px)` });
+    // Added to the card's own transform (the carousel's scale stays).
+    el.animate([x(0), x(-a), x(a), x(-b), x(b), x(0)], { duration: ms, composite: "add" });
+  }, [failed]);
   const poster = posterUrl(app);
   const shine = useDa((s) => s.values.shine?.on === true);
   const sheen = useDa((s) => (s.values.cardSheen?.on === true ? s.values.cardSheen : null));
@@ -135,6 +154,7 @@ export function AppCard({
         {shine && active && stage && <Shine />}
         {sheen && active && stage && <SheenVeil duration={Number(sheen.duration) || 1800} />}
         {running && <span className={styles.running} aria-hidden="true" />}
+        <span className={fail.ring} data-on={failed ? "" : undefined} aria-hidden="true" />
         <span className={styles.plate} data-face="">
           {app.name}
         </span>

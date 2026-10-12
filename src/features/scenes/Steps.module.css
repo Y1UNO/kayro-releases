@@ -52,17 +52,7 @@
   list-style: none;
 }
 
-/* The line that joins the numbers. */
-.steps::before {
-  content: "";
-  position: absolute;
-  left: 35px;
-  top: 30px;
-  bottom: 30px;
-  width: 2px;
-  background: var(--separator);
-  opacity: 0.7;
-}
+/* The thread that joins the points is drawn per step (chain/Chain.module.css, round 4b). */
 
 .step {
   position: relative;
@@ -84,28 +74,6 @@
 
 .step[data-selected] {
   border-color: var(--accent-light);
-}
-
-.step[data-dragging] {
-  opacity: 0.35;
-}
-
-/* Where the dragged step would land. */
-.step[data-drop-before]::before,
-.dropEnd {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -8px;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--accent);
-}
-
-.dropEnd {
-  position: relative;
-  top: 0;
 }
 
 .stepMain {
@@ -296,36 +264,13 @@
 }
 
 .mark[data-state="failed"] {
-  color: #ffb3a8;
+  color: var(--fail);
 }
 
 .markText {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.spinner {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid var(--separator);
-  border-top-color: var(--accent-light);
-  animation: spin 0.9s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation: none;
-    border-top-color: var(--accent-light);
-    border-right-color: var(--accent-light);
-  }
 }
 
 @media (max-width: 900px) {

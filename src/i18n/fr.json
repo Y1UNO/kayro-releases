@@ -46,7 +46,8 @@
         "title": "Rien dans cette catégorie",
         "text": "Aucune application n’est classée ici pour l’instant."
       },
-      "add": "Ajouter des apps"
+      "add": "Ajouter des apps",
+      "addCard": "Ajouter une app"
     },
     "dock": {
       "label": "Scènes",
@@ -91,7 +92,16 @@
       "appsNone": "Aucune app",
       "list": "Catégories"
     },
-    "allCategories": "Toutes les catégories"
+    "allCategories": "Toutes les catégories",
+    "launchFail": {
+      "title": "{name} ne s’est pas lancé.",
+      "launchNotFound": "Le chemin n’existe plus.",
+      "launchDenied": "Windows a refusé de le lancer.",
+      "elevationRequired": "Il demande les droits administrateur.",
+      "elevationCancelled": "La demande d’autorisation administrateur a été refusée.",
+      "launchFailed": "Windows n’a pas pu le démarrer.",
+      "fix": "Corriger"
+    }
   },
   "errors": {
     "validation": "Ces informations ne sont pas valides.",
@@ -274,7 +284,7 @@
     },
     "step": {
       "move": "Déplacer l’étape {n}",
-      "moveHelp": "Glisse avec la souris, ou utilise les flèches haut et bas pour déplacer.",
+      "moveHelp": "Glisse avec la souris, ou Alt + flèches haut et bas pour déplacer (les flèches seules suffisent sur la poignée).",
       "moved": "Étape {n} déplacée en position {to} sur {total}.",
       "slot": "Emplacement",
       "delay": "Délai (secondes)",
@@ -285,7 +295,7 @@
     "steps": {
       "label": "Étapes",
       "title": "Étapes · {count}",
-      "empty": "Aucune étape pour l’instant : ajoute-en depuis la liste à droite.",
+      "empty": "Aucune étape · ajoute la première",
       "add": "Ajouter une étape"
     },
     "palette": {
@@ -412,6 +422,22 @@
       "other": "Autre fichier",
       "go": "Importer",
       "done": "« {name} » importée."
+    },
+    "newScene": {
+      "title": "Nouvelle scène",
+      "name": "Nom de la scène",
+      "start": "Pour commencer",
+      "empty": "Vide",
+      "emptyText": "Une chaîne sans étape, à remplir.",
+      "from": "Depuis une scène existante",
+      "fromText": "Reprend ses étapes, sous un nouveau nom.",
+      "fromPick": "Scène de départ",
+      "noScene": "Aucune scène pour l’instant.",
+      "import": "Importer",
+      "importText": "Un fichier .hubscene : seulement des noms d’emplacements, jamais de chemins.",
+      "create": "Créer",
+      "cancel": "Annuler",
+      "nameNeeded": "Donne un nom à la scène."
     }
   },
   "widget": {

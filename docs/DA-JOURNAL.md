@@ -407,9 +407,75 @@ Pas de commit sans ta demande. Tag prévu : `da-r4b-1`, puis `-2`, `-3`. Exclusi
 - la marge basse de 28 px (halo) capte les clics tant que le panneau est déplié ;
 - `widgetModel.ts` n'est pas au format prettier : c'est antérieur, je ne l'ai pas touché.
 
+**Ton retour (4b-1a)** : widget validé à l'œil en vrai. Commité (`4c732c6`), tag `da-r4b-1a`.
+
+### 4b-1b — Chaîne de points, états, nouvelle scène
+**Fait** :
+- **Chaîne de points** (éditeur avancé, niveau 2, `src/features/scenes/chain/`) :
+  - Chaque étape a son **point** (le numéro) et son **segment** de fil vers la suivante. Ils remplacent la ligne fixe `.steps::before`.
+  - Couleurs du thème : point rempli A→B ; en attente pendant un test = bord A à 70 % ; échec = `--fail` (#F08C8C, nouveau jeton de `tokens.css`).
+  - `useListMotion.ts` (animations Web seulement, `transform` / `opacity` / `translate`) :
+
+    | Geste | Animation |
+    |---|---|
+    | ajout | la carte monte de 14 px et apparaît (moyen, apparition) ; son point ×0,4 → 1 sur liaison (court) 120 ms après ; le segment précédent se prolonge (`scaleY`, moyen) |
+    | retrait | la ligne retirée par React revient en « fantôme » à sa place et s'efface en 252 ms ; le segment se raccourcit ; les suivantes remontent |
+    | changement de place | FLIP sur liaison (moyen), depuis la position **vue** (un glissement en cours compris) : réordonner, Alt+flèches, une étape qui ouvre ses réglages… |
+
+  - Glisser-déposer : la carte saisie suit le pointeur (`translate`) et les voisines s'écartent d'une case (transition `translate`, moyen, liaison). Au relâchement, la carte se pose sur le même ressort. Plus de trait d'insertion ni de fantôme pour les étapes.
+  - Clavier : **Alt + ↑ / ↓** depuis la ligne (pas dans ses champs) ; les flèches seules restent sur la poignée. Annonce « Étape 1 déplacée en position 2 sur 5. ».
+  - Le mode simple a les mêmes ajout / retrait / changement de place, plus Alt + flèches.
+- **Test de la chaîne** (`chainState.ts`, pur) : il suit les vrais événements `scene-progress`.
+  - Point en cours : ×1,18, halo plus fort, bord de la carte éclairé.
+  - Le fil se remplit jusqu'au point suivant quand l'étape suivante démarre, donc il s'arrête là où la scène s'arrête.
+  - **Règle du moteur gardée** : seule une étape « obligatoire » qui échoue arrête la scène.
+- **Plus de roue** : `RunMark` affiche un **fil lumineux qui glisse** (`GlideThread`). Nouveau `useAmbientLoop` : boucle d'images commune à 60 i/s, seulement pendant une étape en cours ; fixe en Éco et en réduit.
+- **Catégorie vide** (`EmptyState`) :
+  - titre et texte gardés, plus une carte pointillée de 150×180 « Ajouter une app » avec un « + » en dégradé A→B ;
+  - flottaison de 4 px sur 5 s (`useAmbientLoop`, réglage d'atelier `emptyFloat`), coupée en Éco et en réduit ;
+  - survol : bord plus clair (court) ; appui ×0,94.
+- **Lancement qui échoue** :
+  - `hubStore.failedApp` dit quelle app a échoué (`AppError` ne le porte pas).
+  - La carte tremble **une fois** (5 puis 3 px, 240 ms, animation Web ajoutée au `transform` de la carte, donc l'échelle du carrousel reste), et son bord passe en rouge doux tant que le message est là. En réduit : le bord seulement.
+  - Nouveau **message unique** (`home/Message.tsx`, utilisé par `LaunchToast` et `SceneToast`) : il monte de 14 px sur liaison en moyen, reste 6 s, sort en 252 ms ; le suivant le remplace.
+  - Texte : « Steam ne s'est pas lancé. Le chemin n'existe plus. » avec **« Corriger »**, qui ouvre la fiche de l'app. Pas d'action pour un refus d'autorisation.
+- **Nouvelle scène** (`NewSceneDialog`, panneau moyen, lignes en cascade de 45 ms) :
+  - le champ du nom a le focus tout de suite (halo en micro) ;
+  - trois départs : Vide / Depuis une scène existante (copie des étapes, nouvelles clés, sans raccourci : `seededDraft`) / Importer (le dialogue `.hubscene` existant) ;
+  - « Créer » ouvre l'éditeur prérempli ;
+  - chaîne vide : le bouton pointillé devient « Aucune étape · ajoute la première » ;
+  - une scène qui apparaît pour la première fois dans le dock y entre sur liaison (animée dans `SceneDock.tsx` ; **`SceneDock.module.css` pas touché**).
+- **Atelier** : `/dev/motion` gagne une section « 4b » (`src/dev/MotionLab4b.tsx`) : la vraie chaîne de l'éditeur avancé (Ajouter, Retirer, Échanger 2 et 3, Tester, Tester avec échec ; rythme 520 / 900 ms), la carte vide, et « Simuler l'échec de la carte centrale ». Nouveau `?cycle=fail:ms`. `/dev/scenes?fail=n` : l'étape n échoue pendant le faux test.
+
+**Testé** :
+- tsc, eslint, prettier (fichiers touchés), vitest **492/492**. Nouveaux tests : `chain.test.ts` (états des points, fil qui s'arrête, échec non obligatoire, lecture des décalages, jetons) ; `draft.test.ts` (nouvelle scène vide ou copiée) ; `hubStore.test.ts` (`failedApp`).
+- Build de production : aucun code de dev (grep).
+- Volet du navigateur :
+  - test avec échec : point 1 rempli et fil rempli, point 2 rouge, 3 et 4 ignorés ;
+  - animations relevées en les figeant : échange (FLIP ±86 px, liaison 360 ms), ajout (segment `scaleY`, montée de 14 px, point ×0,4 à +120 ms), retrait (fantôme 252 ms retiré à l'image suivante, segment qui se raccourcit) ;
+  - échec de lancement : tremblement (240 ms, `composite: add`), bord rouge, message avec « Corriger » ;
+  - nouvelle scène « Depuis une scène existante » : éditeur avec le nom et les 5 étapes ;
+  - Alt+↓ : étape déplacée et annoncée ;
+  - carte vide affichée.
+
+**Non testé** :
+- l'app réelle (Tauri) ;
+- le glisser-déposer à la vraie souris (voisines qui s'écartent, pose sur ressort) ;
+- le vrai « Tester » d'une scène ;
+- l'entrée d'une scène dans le dock ;
+- la flottaison et le fil qui glisse en mouvement (le volet masqué ne dessine pas) ;
+- « réduire les animations » réel.
+
+**Mesures** : **à mesurer** (étape 13). Cases ajoutées : « éditeur : réordonner / test de la chaîne », « catégorie vide (flottaison) ».
+**Limites connues** :
+- dans le mode simple, glisser garde le trait d'insertion (pas de voisines qui s'écartent) ;
+- widget : un lancement raté n'y affiche pas de message (il faudrait agrandir sa fenêtre) ;
+- le texte « Chargement de vos données… » reste du texte (pas de fil) ;
+- page masquée : un fantôme de retrait reste jusqu'à l'image suivante.
+
 ### Reste à faire
 - **4a** : commit après ton feu vert, puis tag `da-r4a`. Mesures : voir ci-dessus (vérification globale).
-- **4b** : voir la ronde 4b ci-dessus (4b-1a fait, arrêt ; ensuite 4b-1b, 4b-2, 4b-3). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
+- **4b** : voir la ronde 4b ci-dessus (4b-1a commité `da-r4b-1a` ; 4b-1b fait, arrêt ; ensuite 4b-2, 4b-3). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
 - Remesurer l'ouverture (CPU/GPU, repli CSS) PC libre.
 
 ## Éléments du catalogue
@@ -435,3 +501,5 @@ Pas de commit sans ta demande. Tag prévu : `da-r4b-1`, puis `-2`, `-3`. Exclusi
 | Jetons de mouvement (`motion`) | à l'essai (4a) | table unique, niveaux 1 / 2 / 3, vitesse ; remplace l'ancien `motion` |
 | Survol niveau 3 du carrousel (`cardHover`) | à l'essai (4a) | voile + filets après 120 ms, 4 étincelles, éclat au lancement ; reflet souris coupé (`pointerSheen`) |
 | Widget qui se déroule (`motion.widget*`) | à l'essai (4b-1a) | ressorts `linear()` normale 5 % / 2,5 %, halo allumé tant que déplié, reflet une fois ; « sobre » pour comparer |
+| Chaîne de points de l'éditeur | à l'essai (4b-1b) | ajout / retrait / FLIP sur liaison, voisines qui s'écartent au glisser, test qui allume les points, fil lumineux au lieu de la roue |
+| États : catégorie vide, échec de lancement, nouvelle scène (`motion.emptyFloat`) | à l'essai (4b-1b) | carte pointillée qui flotte 4 px ; tremblement + bord `--fail` + message unique « Corriger » ; dialogue à trois départs |

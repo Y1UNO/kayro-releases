@@ -23,6 +23,8 @@ export interface HubState {
   running: Record<string, AppRunState>;
   /** Last refused or failed operation (the optimistic change has already been rolled back). */
   lastError: AppError | null;
+  /** The app whose launch `lastError` is about (null for any other error). */
+  failedApp: string | null;
 
   init: () => Promise<void>;
   addApp: (app: NewApp) => Promise<Outcome<AppEntry>>;
@@ -53,7 +55,7 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
       inFlight += 1;
       try {
         const result = await call();
-        if (!result.ok) set({ lastError: result.error });
+        if (!result.ok) set({ lastError: result.error, failedApp: null });
         return result;
       } finally {
         inFlight -= 1;
@@ -66,6 +68,7 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
       apps: [],
       running: {},
       lastError: null,
+      failedApp: null,
 
       async init() {
         if (get().status === "loading" || get().status === "ready") return;
@@ -161,18 +164,18 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
 
       async launchApp(id) {
         const result = await ipc.appLaunch(id);
-        if (!result.ok) set({ lastError: result.error });
+        if (!result.ok) set({ lastError: result.error, failedApp: id });
         return result;
       },
 
       async focusApp(id) {
         const result = await ipc.appFocus(id);
-        if (!result.ok) set({ lastError: result.error });
+        if (!result.ok) set({ lastError: result.error, failedApp: null });
         return result;
       },
 
       clearError() {
-        set({ lastError: null });
+        set({ lastError: null, failedApp: null });
       },
     };
   });

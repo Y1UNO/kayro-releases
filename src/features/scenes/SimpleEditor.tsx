@@ -9,6 +9,7 @@ import { DragGhost } from "../home/Overlays";
 import { stepSentence } from "./describe";
 import { resolved, type Action, type EditorDraft } from "./draft";
 import { RunMark } from "./RunMark";
+import { useListMotion } from "./chain/useListMotion";
 import { MAX_SIMPLE_ITEMS, type Sequence } from "./simple";
 import { useDrag } from "./useDrag";
 import styles from "./Simple.module.css";
@@ -64,6 +65,9 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
     return q ? apps.filter((a) => a.name.toLowerCase().includes(q)) : apps;
   }, [apps, query]);
 
+  // Apps that come, go and change places move on the "liaison" spring (round 4b).
+  useListMotion(list, drag !== null);
+
   const { steps, links } = resolved(draft, apps);
   const link = { apps, links };
 
@@ -77,8 +81,12 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
     );
   }
 
-  function onGripKey(e: KeyboardEvent, i: number) {
+  // Arrows on the grip, or Alt + arrows anywhere on the row except its list of modes.
+  function onRowKey(e: KeyboardEvent, i: number) {
     if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    const onGrip = e.target instanceof Element && e.target.closest("[data-grip]") !== null;
+    if (!onGrip && !e.altKey) return;
+    if (e.target instanceof Element && e.target.closest("select, input")) return;
     e.preventDefault();
     nudge(i, e.key === "ArrowUp" ? -1 : 1);
   }
@@ -165,6 +173,8 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
                 key={item.appId}
                 className={styles.item}
                 data-item-row
+                data-row-key={item.appId}
+                onKeyDown={(e) => onRowKey(e, i)}
                 data-drop-before={drag?.index === i || undefined}
                 data-dragging={
                   (drag?.payload.kind === "move" && drag.payload.from === i) || undefined
@@ -195,7 +205,6 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
                   aria-label={t("scenes.step.move", { n: i + 1 })}
                   aria-describedby="scenes-move-help"
                   onPointerDown={(e) => begin(e, { kind: "move", from: i })}
-                  onKeyDown={(e) => onGripKey(e, i)}
                 >
                   <GripIcon size={18} />
                 </button>

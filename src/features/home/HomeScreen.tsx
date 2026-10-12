@@ -364,7 +364,7 @@ export function HomeScreen({
         )}
         {drag && <DragGhost name={drag.app.name} x={drag.x} y={drag.y} />}
         {notice && <Notice text={notice} />}
-        <LaunchToast />
+        <LaunchToast onFix={(app) => setEditing({ app, remove: false })} />
       </MotionConfig>
     </LazyMotion>
   );

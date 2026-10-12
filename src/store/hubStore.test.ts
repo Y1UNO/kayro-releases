@@ -249,6 +249,20 @@ describe("launching and run state", () => {
     const r = await failing.getState().launchApp("one");
     expect(r.ok).toBe(false);
     expect(failing.getState().lastError).toEqual(REFUSED);
+    // Round 4b: the message names the app and its card shakes.
+    expect(failing.getState().failedApp).toBe("one");
+    failing.getState().clearError();
+    expect(failing.getState().failedApp).toBeNull();
+  });
+
+  it("an error that is not a launch is about no app", async () => {
+    const store = await ready({
+      appLaunch: async () => refused(),
+      appFocus: async () => refused(),
+    });
+    await store.getState().launchApp("one");
+    await store.getState().focusApp("one");
+    expect(store.getState().failedApp).toBeNull();
   });
 
   it("focus goes through the core too", async () => {

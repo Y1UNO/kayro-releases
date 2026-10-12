@@ -4,6 +4,7 @@ import { HomeScreen } from "./features/home/HomeScreen";
 import { SceneEditor } from "./features/scenes/SceneEditor";
 import { ScenesScreen } from "./features/scenes/ScenesScreen";
 import { SceneToast } from "./features/scenes/SceneToast";
+import type { NewSceneSeed } from "./features/scenes/draft";
 import { t } from "./i18n";
 import { errorText } from "./ipc/errors";
 import { desktopStore, sceneStore, useHub } from "./store";
@@ -14,7 +15,10 @@ import { Opening } from "./features/opening/Opening";
 import { useOpening } from "./features/opening/useOpening";
 
 /** Where the user is: the home screen, the list of scenes, or the editor of one scene. */
-type Screen = { name: "home" } | { name: "scenes" } | { name: "editor"; sceneId: string | null };
+type Screen =
+  | { name: "home" }
+  | { name: "scenes" }
+  | { name: "editor"; sceneId: string | null; seed?: NewSceneSeed };
 
 export function App() {
   const status = useHub((s) => s.status);
@@ -68,11 +72,16 @@ export function App() {
         {screen.name === "scenes" && (
           <ScenesScreen
             onBack={() => setScreen({ name: "home" })}
-            onEdit={(sceneId) => setScreen({ name: "editor", sceneId })}
+            onEdit={(sceneId, seed) => setScreen({ name: "editor", sceneId, seed })}
           />
         )}
         {screen.name === "editor" && (
-          <SceneEditor key={screen.sceneId ?? "new"} sceneId={screen.sceneId} onBack={toScenes} />
+          <SceneEditor
+            key={screen.sceneId ?? "new"}
+            sceneId={screen.sceneId}
+            seed={screen.seed}
+            onBack={toScenes}
+          />
         )}
       </div>
       {opening.play && <Opening under={under} onDone={opening.finish} />}

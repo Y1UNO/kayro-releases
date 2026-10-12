@@ -3,7 +3,7 @@
 // interaction of the three levels, live with the `motion` tokens of the workshop. Texts are not
 // translated on purpose (dev page).
 //   ?theme=<id>   ?atelier=A|B (workshop preview)   ?fx=eco|balanced|high|ultra
-//   ?cycle=panel|toggle|tab|notice:ms (repeats that interaction every ms, for the bench)
+//   ?cycle=panel|toggle|tab|notice|fail:ms (repeats that interaction every ms, for the bench)
 //   ?bench=idle (frame times over 10 s, result in #bench and window.__bench)
 import { useEffect, useId, useState } from "react";
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
@@ -26,12 +26,14 @@ import { Carousel } from "../features/home/Carousel";
 import { CategoryTabs } from "../features/home/CategoryTabs";
 import type { CategoryId } from "../features/home/categories";
 import { CommandPalette } from "../features/home/CommandPalette";
+import { LaunchToast } from "../features/home/LaunchToast";
 import type { HomeView } from "../features/home/homeState";
 import { Notice } from "../features/home/Overlays";
 import type { AppEntry } from "../ipc/bindings";
 import { ipc } from "../ipc/commands";
 import { hubStore } from "../store";
 import { runBench, type BenchResult } from "./bench";
+import { MotionLab4b } from "./MotionLab4b";
 import styles from "./MotionLab.module.css";
 
 const NAMES = ["Riot Client", "Minecraft", "Steam", "Epic Games", "Battle.net", "OBS Studio"];
@@ -105,6 +107,11 @@ export default function MotionLab() {
     toggle: () => setToggles((t) => [!t[0], t[1]!, t[2]!]),
     tab: () => setCategory((c) => CATS[(CATS.indexOf(c) + 1) % CATS.length]!),
     notice: () => setNotice((n) => n + 1),
+    fail: () =>
+      hubStore.setState({
+        lastError: { code: "launchNotFound", message: "", field: null },
+        failedApp: APPS[focus]?.id ?? null,
+      }),
   });
 
   useEffect(() => {
@@ -218,6 +225,8 @@ export default function MotionLab() {
                 onLaunch={() => setNotice((n) => n + 1)}
               />
             </section>
+
+            <MotionLab4b apps={APPS} failingApp={APPS[focus]?.id ?? ""} />
           </main>
 
           <Dialog open={panel} onClose={() => setPanel(false)} title="Réglages (démo)">
@@ -244,6 +253,7 @@ export default function MotionLab() {
             onPickCategory={setCategory}
           />
           {notice > 0 && <Notice key={notice} text="Steam : notification de démonstration" />}
+          <LaunchToast onFix={() => setPanel(true)} />
           {bench && (
             <pre id="bench" className={styles.bench}>
               {JSON.stringify(bench, (_, v) =>

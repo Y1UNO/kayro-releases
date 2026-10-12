@@ -8,6 +8,7 @@ import {
   panelSlots,
   reduce,
   resolved,
+  seededDraft,
   snapshot,
   toScene,
   trySimple,
@@ -203,5 +204,32 @@ describe("names", () => {
     expect(slugifySlot("???")).toBe("");
     expect(slugifySlot("x".repeat(80))).toHaveLength(40);
     expect(slotLabel("plateforme-de-jeux")).toBe("Plateforme de jeux");
+  });
+});
+
+describe("a new scene (round 4b)", () => {
+  const apps = [app("discord"), app("steam")];
+  const scene: SceneFile = {
+    schemaVersion: 1,
+    id: "soir",
+    name: "Soirée",
+    hotkey: "Ctrl+Alt+1",
+    steps: [
+      { type: "launch", slot: "a" },
+      { type: "focus", slot: "a" },
+    ],
+  };
+
+  it("starts empty with its name", () => {
+    const d = seededDraft({ name: "Travail", from: null }, [scene], { a: "discord" }, apps);
+    expect([d.id, d.name, d.steps.length]).toEqual([null, "Travail", 0]);
+  });
+
+  it("or takes another scene's steps, new keys, no id and no shortcut", () => {
+    const old = draftFromScene(scene, { a: "discord" }, apps);
+    const d = seededDraft({ name: "Copie", from: "soir" }, [scene], { a: "discord" }, apps);
+    expect([d.id, d.name, d.hotkey]).toEqual([null, "Copie", null]);
+    expect(d.steps.map((s) => s.step)).toEqual(scene.steps);
+    expect(d.steps.map((s) => s.key)).not.toEqual(old.steps.map((s) => s.key));
   });
 });

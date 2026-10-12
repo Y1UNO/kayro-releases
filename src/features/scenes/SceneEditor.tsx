@@ -17,11 +17,13 @@ import {
   isSaveable,
   newDraft,
   reduce,
+  seededDraft,
   resolved,
   snapshot,
   toScene,
   trySimple,
   type EditorMode,
+  type NewSceneSeed,
 } from "./draft";
 import { HotkeyField } from "./HotkeyField";
 import { slotLabel, slotsOf } from "./model";
@@ -33,13 +35,15 @@ import styles from "./Editor.module.css";
 interface Props {
   /** null = a new scene. */
   sceneId: string | null;
+  /** A new scene's name and starting steps (« Nouvelle scène »). */
+  seed?: NewSceneSeed;
   onBack: () => void;
 }
 
 type Ask = null | { kind: "leave" } | { kind: "slot"; slot: string; steps: number };
 
 /** Editor of one scene, in simple mode (drop apps) or advanced mode (the steps themselves). */
-export function SceneEditor({ sceneId, onBack }: Props) {
+export function SceneEditor({ sceneId, seed, onBack }: Props) {
   const apps = useHub((s) => s.apps);
   const settingsHotkey = useHub((s) => s.settings?.hotkey);
   const scenes = useScenes((s) => s.scenes);
@@ -50,7 +54,9 @@ export function SceneEditor({ sceneId, onBack }: Props) {
   const [draft, dispatch] = useReducer(reduce, undefined, () => {
     const { scenes: all, slots } = sceneStore.getState();
     const scene = sceneId ? all.find((s) => s.id === sceneId) : undefined;
-    return scene ? draftFromScene(scene, slots, hubStore.getState().apps) : newDraft({ ...slots });
+    const apps = hubStore.getState().apps;
+    if (scene) return draftFromScene(scene, slots, apps);
+    return seed ? seededDraft(seed, all, slots, apps) : newDraft({ ...slots });
   });
   const [savedId, setSavedId] = useState<string | null>(draft.id);
   // The saved shortcut of this scene is refused by Windows (another program owns it).
