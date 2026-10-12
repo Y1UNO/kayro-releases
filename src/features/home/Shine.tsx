@@ -1,4 +1,7 @@
 import { useEffect, useRef } from "react";
+import { useWindowVisible } from "../../app/windowVisible";
+import { EASES } from "../../design/motion/eases";
+import { useReducedMotion } from "../../fx/useReducedMotion";
 import styles from "./Shine.module.css";
 
 /** One sweep every 6 s (mock-up), first one a moment after the card became active. */
@@ -20,15 +23,18 @@ const END = "translateX(500%) skewX(-14deg)";
  */
 export function Shine() {
   const band = useRef<HTMLSpanElement>(null);
+  const shown = useWindowVisible();
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     const el = band.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Hidden window or reduced motion: no timer at all.
+    if (!el || reduced || !shown) return;
     let timer = 0;
     const play = () => {
       el.animate([{ transform: REST }, { transform: END }], {
         duration: SWEEP_MS,
-        easing: "ease-in-out",
+        easing: EASES.glisse!,
       });
       timer = window.setTimeout(play, PERIOD_MS);
     };
@@ -37,7 +43,7 @@ export function Shine() {
       window.clearTimeout(timer);
       for (const animation of el.getAnimations()) animation.cancel();
     };
-  }, []);
+  }, [shown, reduced]);
 
   return (
     <span className={styles.shineClip} aria-hidden="true">

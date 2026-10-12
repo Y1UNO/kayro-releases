@@ -6,7 +6,7 @@
   },
   "opening": {
     "subtitle": "Lanceur d’applications",
-    "skip": "Animation d’ouverture : appuie sur une touche ou clique pour passer"
+    "skip": "Animation d’ouverture : Échap, Entrée, Espace ou clic pour passer"
   },
   "home": {
     "search": {

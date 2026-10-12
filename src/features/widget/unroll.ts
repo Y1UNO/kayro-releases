@@ -225,8 +225,3 @@ export function foldDuration(t: MotionTokens): number {
   const w = t.widget;
   return w.motion === "sobre" ? w.sober.foldMs : w.foldAt + w.foldMs;
 }
-
-/** End of the last step (ms). */
-export function stepsEnd(steps: readonly Step[]): number {
-  return steps.reduce((m, s) => Math.max(m, s.options.delay + s.options.duration), 0);
-}

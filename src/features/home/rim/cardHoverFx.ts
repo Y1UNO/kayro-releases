@@ -9,8 +9,9 @@
  * sequence; not for the keyboard focus (pointer only); window mode: levels 1–2 only (no veil, no
  * threads, no flash); Eco: lift + veil only; reduced motion: nothing.
  */
-import { curveOf } from "../../../design/motion/curve";
-import type { MotionTokens } from "../../../design/motion/tokens";
+import { curveOf, type Curve } from "../../../design/motion/curve";
+import { EASES } from "../../../design/motion/eases";
+import { MOTION_DEFAULTS, type MotionTokens } from "../../../design/motion/tokens";
 import type { ElementValues } from "../../../design/da/daParams";
 import { frameLoop, type FrameLoop } from "../../../fx/loop";
 import { sheenAt } from "../../../fx/gpu/sheen";
@@ -25,7 +26,8 @@ export const CARD_SPARKS = 4;
 const THREAD_FPS = 60;
 /** A wheel turn this recent counts as scrolling. */
 const WHEEL_QUIET_MS = 300;
-const EASE_IN = curveOf("cubic-bezier(.16,1,.3,1)");
+/** The table's appearance curve by default (`fadeCurve` of the config). */
+const APPEAR = curveOf(EASES[MOTION_DEFAULTS.easeIn]!);
 
 export interface CardHoverConfig {
   /** Presence of the pointer before the veil and the threads (ms). */
@@ -33,11 +35,14 @@ export interface CardHoverConfig {
   veil: boolean;
   veilMs: number;
   threads: boolean;
-  /** Threads fade in / out (ms). */
+  /** Threads fade in / out (ms), in on the table's appearance curve. */
   fadeIn: number;
   fadeOut: number;
+  fadeCurve: Curve;
   flash: boolean;
   flashMs: number;
+  /** Curve of the launch flash (CSS, from EASES). */
+  flashEase: string;
   /** Look of the threads: the fan's settings, sparks capped. */
   look: RimLook;
   threadSpeed: number;
@@ -73,8 +78,10 @@ export function cardHoverConfig(
     threads,
     fadeIn: t.dur.court,
     fadeOut: t.dur.court * t.outShare,
+    fadeCurve: curveOf(t.ease.in),
     flash: magic && !ctx.eco,
     flashMs: t.dur.long * num(card, "launchFlash", 1.6),
+    flashEase: EASES.detente!,
     look: { ...fanLook, threads, sparks: threads ? sparks : 0 },
     threadSpeed: fanLook.threadSpeed,
     magic,
@@ -98,13 +105,14 @@ export function hoverBlocked(stage: HTMLElement, dragging: boolean, sinceWheel: 
 export function threadLevel(
   now: number,
   enterAt: number,
-  c: Pick<CardHoverConfig, "delay" | "fadeIn" | "fadeOut">,
+  c: Pick<CardHoverConfig, "delay" | "fadeIn" | "fadeOut"> &
+    Partial<Pick<CardHoverConfig, "fadeCurve">>,
   leftAt = -1,
   from = 0,
 ): number {
   if (leftAt >= 0) return c.fadeOut <= 0 ? 0 : from * Math.max(0, 1 - (now - leftAt) / c.fadeOut);
   const u = c.fadeIn <= 0 ? 1 : (now - enterAt - c.delay) / c.fadeIn;
-  return u <= 0 ? 0 : EASE_IN(Math.min(1, u));
+  return u <= 0 ? 0 : (c.fadeCurve ?? APPEAR)(Math.min(1, u));
 }
 
 /** Drives the level 3 of one carousel (one per stage). */
@@ -129,8 +137,11 @@ export class CardHoverFx {
   constructor(
     private readonly stage: HTMLElement,
     public config: CardHoverConfig,
-    /** The periodic veil of the selected card glides now (rule 1: one decorative effect). */
-    private readonly periodicGlide: (card: HTMLElement, now: number) => boolean = () => false,
+    /**
+     * The periodic veil of the selected card glides now (rule 1: one decorative effect). Replaced
+     * when the `cardSheen` settings change (Carousel.tsx).
+     */
+    public periodicGlide: (card: HTMLElement, now: number) => boolean = () => false,
     private readonly loop: () => FrameLoop = frameLoop,
   ) {}
 
@@ -160,7 +171,7 @@ export class CardHoverFx {
         { opacity: 1, transform: "scale(1.02)", offset: 0.18 },
         { opacity: 0, transform: "scale(1.07)" },
       ],
-      { duration: c.flashMs, easing: "ease-out" },
+      { duration: c.flashMs, easing: c.flashEase },
     );
   }
 

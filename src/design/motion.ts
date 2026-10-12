@@ -1,7 +1,6 @@
 /**
- * Framer Motion constants kept for two places outside the round 4a token table
- * (src/design/motion/tokens.ts): the category title, part of the round 3 signature sequences, and
- * the widget's panel (reworked in round 3c with the same tokens). Everything else uses the table.
+ * The one Framer Motion constant left outside the motion token table (src/design/motion/tokens.ts):
+ * the spring of the category title's entrance, part of the round 3 signature sequences. The
+ * widget no longer uses Framer (round 4b: Web Animations, src/features/widget/unroll.ts).
  */
-export const EASE = [0.2, 0.8, 0.2, 1] as const;
 export const SPRING = { type: "spring", stiffness: 260, damping: 28 } as const;

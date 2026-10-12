@@ -1,7 +1,7 @@
 import { EASES } from "../../design/da/catalogue";
 import type { ElementValues } from "../../design/da/daParams";
 import { curveOf, lerp, seg } from "../../design/motion/curve";
-import { OPENING_C } from "../../design/motion/tokens";
+import { OPENING_C } from "../../design/motion/tokens4b";
 import type { IntroFrame } from "../../fx/gpu/cues";
 
 /**

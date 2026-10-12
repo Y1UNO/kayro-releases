@@ -6,7 +6,7 @@ import { t } from "../../i18n";
 import { AppCard } from "./AppCard";
 import { cardGeometry, daStore, useDa } from "../../design/da";
 import { useMotionTokens } from "../../design/motion/current";
-import { prefersReducedMotion } from "../../fx/motionPref";
+import { useReducedMotion } from "../../fx/useReducedMotion";
 import { useHub } from "../../store";
 import { CardHoverFx, cardHoverConfig, periodicGlide } from "./rim/cardHoverFx";
 import { geometryVars, mountedRange, type Geometry } from "./carouselGeometry";
@@ -68,14 +68,15 @@ export function Carousel({
   const sheen = useDa((s) => s.values.cardSheen);
   const eco = useHub((s) => s.settings?.quality === "eco");
   const windowMode = useHub((s) => s.settings?.displayMode === "window");
+  const reduced = useReducedMotion();
   const hoverCfg = useMemo(
     () =>
       cardHoverConfig(cardHover, fanHover, motion, {
         eco,
         windowMode,
-        reduced: prefersReducedMotion(),
+        reduced,
       }),
-    [cardHover, fanHover, motion, eco, windowMode],
+    [cardHover, fanHover, motion, eco, windowMode, reduced],
   );
   const fx = useRef<CardHoverFx | null>(null);
   useLayoutEffect(() => {
@@ -91,6 +92,10 @@ export function Carousel({
   useEffect(() => {
     if (fx.current) fx.current.config = hoverCfg;
   }, [hoverCfg]);
+  // The selected card's periodic veil follows its settings (review B5: it was read once).
+  useEffect(() => {
+    if (fx.current) fx.current.periodicGlide = periodicGlide(sheen);
+  }, [sheen]);
   useEffect(() => {
     if (fx.current) fx.current.dragging = dragging;
   }, [dragging]);

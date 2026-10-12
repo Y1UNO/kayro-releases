@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { linearCss, ROW_SPRING, SPRING_H, SPRING_V } from "../../design/motion/springCurves";
 import { motionTokens } from "../../design/motion/tokens";
-import { foldDuration, foldSteps, stepsEnd, unrollSteps, type Step, type Target } from "./unroll";
+import { foldDuration, foldSteps, unrollSteps, type Step, type Target } from "./unroll";
+
+/** End of the last step (ms). */
+function stepsEnd(steps: readonly Step[]): number {
+  return steps.reduce((m, s) => Math.max(m, s.options.delay + s.options.duration), 0);
+}
 
 const t = motionTokens(undefined);
 const shape = { rows: 4, chips: [0, 0, 2, 3], eco: false };

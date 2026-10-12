@@ -7,7 +7,7 @@ import { useMotionTokens } from "../../design/motion/current";
 import type { StepView } from "../../store";
 import { ActionPalette } from "./ActionPalette";
 import { chainState } from "./chain/chainState";
-import { useListMotion } from "./chain/useListMotion";
+import { ListMotionState, useListMotion } from "./chain/useListMotion";
 import { panelSlots, type Action, type EditorDraft } from "./draft";
 import { SlotsPanel } from "./SlotsPanel";
 import { StepRow } from "./StepRow";
@@ -42,6 +42,7 @@ export function AdvancedEditor({ draft, apps, dispatch, run, onDeleteSlot }: Pro
   // Where the drag started, and how far a neighbour moves to make room (the carried row + gap).
   const [carried, setCarried] = useState({ startY: 0, room: 0 });
 
+  const [listMotion] = useState(() => new ListMotionState());
   const { drag, begin } = useDrag<{ from: number }>({
     list,
     rows: "[data-step-row]",
@@ -50,9 +51,12 @@ export function AdvancedEditor({ draft, apps, dispatch, run, onDeleteSlot }: Pro
       const to = index > from ? index - 1 : index;
       if (to !== from) dispatch({ type: "moveStep", from, to });
     },
+    onEnd: () => listMotion.snapshot(),
   });
 
-  useListMotion(list, drag !== null);
+  // The rows move when steps come, go, change places, or when the step that opens changes.
+  const layoutKey = `${draft.steps.map((s) => s.key).join(" ")}|${draft.selected ?? ""}`;
+  useListMotion(list, listMotion, layoutKey, drag !== null);
 
   function nudge(from: number, delta: number, focus: "grip" | "body") {
     const to = from + delta;

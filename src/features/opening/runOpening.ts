@@ -1,7 +1,7 @@
 import { APP_NAME } from "../../app/appName";
 import { daStore } from "../../design/da";
 import { Choreo } from "../../design/motion/choreo";
-import { OPENING_C } from "../../design/motion/tokens";
+import { OPENING_C } from "../../design/motion/tokens4b";
 import { setIntroCue } from "../../fx/gpu/cues";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { hubStore } from "../../store";
@@ -16,10 +16,21 @@ import {
   type Part,
 } from "./openingTimeline";
 
-/** Reduced motion: the finished picture stays this long before the home screen (no fade). */
+/**
+ * Reduced motion: the finished picture stays this long before the home screen (no fade). Not
+ * tunable on purpose (review B9): an accessibility constant (time to read the name), not motion.
+ */
 const STILL_MS = 1200;
 
 export const LETTERS = Array.from(APP_NAME);
+
+/** Keys that skip the opening (with a click). Tab and the others pass (review B6). */
+const SKIP_KEYS = new Set(["Escape", "Enter", " "]);
+
+/** A pointer press, or one of SKIP_KEYS. */
+export function skipsOpening(e: { type: string; key?: string }): boolean {
+  return e.type === "pointerdown" || (e.type === "keydown" && SKIP_KEYS.has(e.key ?? ""));
+}
 
 /** The home screen's ring (centre, radius) from the art direction, for `ringGrow`. */
 function homeRing(): OpeningGeometry["homeRing"] {
@@ -188,7 +199,7 @@ export function runOpening(
   render(0);
 
   const skip = (e: Event) => {
-    if (seek !== null) return;
+    if (seek !== null || !skipsOpening(e as KeyboardEvent)) return;
     e.preventDefault();
     e.stopPropagation();
     finish();

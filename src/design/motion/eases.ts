@@ -18,4 +18,11 @@ export const EASES: Readonly<Record<string, string>> = {
   // Round 4a "rebond" = the "rebond" spring of SPRINGS (6.6 %), cards of the carousel only.
   rebond: "cubic-bezier(0.34, 1.45, 0.64, 1)",
   lineaire: "linear",
+  // Review B9 (2026-10-12): curves written in the code before, named here with their exact values.
+  // The glossy veil's glide, CSS and engine alike (CSS `ease-in-out`).
+  glisse: "cubic-bezier(0.42, 0, 0.58, 1)",
+  // The light along the category title's rule (Material's standard curve).
+  standard: "cubic-bezier(0.4, 0, 0.2, 1)",
+  // The launch flash of a carousel card (CSS `ease-out`).
+  detente: "cubic-bezier(0, 0, 0.58, 1)",
 };

@@ -117,6 +117,10 @@ function domIo(label: "main" | "widget"): PassageIo {
     frame,
     comeIn: (p, instant) => comeIn(label, p, instant),
     openingOwnsEntrance,
+    setInert: (on) => {
+      const root = document.getElementById("root");
+      if (root) root.inert = on;
+    },
   };
 }
 

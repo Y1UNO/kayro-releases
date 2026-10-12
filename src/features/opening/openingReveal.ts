@@ -1,5 +1,5 @@
 import { lerp } from "../../design/motion/curve";
-import { OPENING_C } from "../../design/motion/tokens";
+import { OPENING_C } from "../../design/motion/tokens4b";
 import { ringOutAt, type OpeningGeometry, type OpeningSettings } from "./openingTimeline";
 
 /**

@@ -3,6 +3,7 @@ import { CATALOGUE, defaultValues, parsePreset } from "../../design/da";
 import signature from "../../design/presets/v4-r3-signature.json";
 import { sameIntro } from "../../fx/gpu/cues";
 import { introUniforms, kindUniform } from "../../fx/gpu/uniforms";
+import { skipsOpening } from "./runOpening";
 import {
   letterOffsets,
   openingAt,
@@ -132,5 +133,14 @@ describe("opening in the catalogue and the engine", () => {
     expect(sameIntro(openingAt(5, S, G).intro, openingAt(5, S, G).intro)).toBe(true);
     expect(sameIntro(openingAt(5, S, G).intro, openingAt(600, S, G).intro)).toBe(false);
     expect(sameIntro(null, null)).toBe(true);
+  });
+
+  it("only a click, Escape, Enter or Space skips it: Tab and the other keys pass (review B6)", () => {
+    expect(skipsOpening({ type: "pointerdown" })).toBe(true);
+    for (const key of ["Escape", "Enter", " "])
+      expect(skipsOpening({ type: "keydown", key })).toBe(true);
+    for (const key of ["Tab", "Shift", "ArrowRight", "a"]) {
+      expect(skipsOpening({ type: "keydown", key })).toBe(false);
+    }
   });
 });

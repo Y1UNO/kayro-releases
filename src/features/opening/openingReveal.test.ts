@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defaultValues } from "../../design/da";
-import { OPENING_C } from "../../design/motion/tokens";
+import { OPENING_C } from "../../design/motion/tokens4b";
 import { revealAt } from "./openingReveal";
 import { openingAt, openingSettings, type OpeningGeometry } from "./openingTimeline";
 

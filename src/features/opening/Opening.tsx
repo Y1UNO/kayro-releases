@@ -18,7 +18,8 @@ interface Props {
  * Opening V1-A (art direction round 3), once per start of the program: the background fades in,
  * the ring hatches and the halo opens (drawn by the glass engine through a cue; plain CSS shapes
  * when the engine is off), the logo forms, slides left, and the letters of the name come out from
- * behind it. A click or any key skips it; reduced motion shows the finished picture at once.
+ * behind it. A click, Escape, Enter or Space skips it (Tab passes); reduced motion shows the
+ * finished picture at once.
  * Only transform and opacity move: blur is a cross-fade with a still blurred copy (none in Eco).
  * Round 4b (`pulse` "c", default): variant C's pulse, the page seen only in the ring until the
  * ringOut opens it in a circle with a wave (openingReveal.ts).
@@ -40,7 +41,9 @@ export function Opening({ under, onDone, seek = null }: Props) {
 
   return (
     <div ref={root} className={styles.root} role="presentation">
-      <span className={styles.hint}>{t("opening.skip")}</span>
+      <span className={styles.hint} role="status">
+        {t("opening.skip")}
+      </span>
       <div data-part="bg" className={styles.bg} aria-hidden="true">
         <div data-part="bg-light" className={styles.bgLight} />
       </div>

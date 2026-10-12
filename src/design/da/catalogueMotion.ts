@@ -3,15 +3,8 @@
 // cued by the screen itself (src/fx/gpu/cues.ts).
 import { EASES } from "../motion/eases";
 import { UNROLL_SPRINGS } from "../motion/springCurves";
-import {
-  MOTION_DEFAULTS as M,
-  motionCss,
-  motionTokens,
-  OPENING_C,
-  OPENING_PULSES,
-  SPEEDS,
-  WIDGET_MOTIONS,
-} from "../motion/tokens";
+import { MOTION_DEFAULTS as M, motionCss, motionTokens, SPEEDS } from "../motion/tokens";
+import { OPENING_C, OPENING_PULSES, WIDGET_MOTIONS } from "../motion/tokens4b";
 import { NONE, range, select, toggle, type DaElement } from "./daParams";
 
 const CURVES = Object.keys(EASES);

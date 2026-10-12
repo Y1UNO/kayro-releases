@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { daStore, useDa } from "../../../design/da";
 import { prefersReducedMotion } from "../../../fx/motionPref";
+import { useReducedMotion } from "../../../fx/useReducedMotion";
 import { onWindowVisibility } from "../../../ipc/events";
 import { useHub } from "../../../store";
 import { CATEGORY_IDS, type CategoryId } from "../categories";
@@ -57,9 +58,10 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
   const [motion] = useState(
     () => new FanMotion(hoverConfig(daStore.getState().values.categoryHover, false, false)),
   );
+  const reduced = useReducedMotion();
   useEffect(() => {
-    director.setMotion(motion, eco, hoverConfig(hoverValues, eco, prefersReducedMotion()));
-  }, [director, motion, hoverValues, eco]);
+    director.setMotion(motion, eco, hoverConfig(hoverValues, eco, reduced));
+  }, [director, motion, hoverValues, eco, reduced]);
   useLayoutEffect(() => {
     if (fanMounted) director.wake();
   }, [director, fanMounted]);

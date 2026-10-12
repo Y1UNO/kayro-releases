@@ -135,6 +135,8 @@ export class LinkDirector {
   /** Shows `phase` at once (start-up, shortcut recall, reduced motion). */
   rest(phase: Phase, cat: number, shuf: number): void {
     this.choreo.cancel();
+    // A sequence cut short leaves its layers promoted (title, buttons, tabs): released here.
+    this.promote(false);
     this.read(cat, shuf, true);
     this.phase = phase;
     this.values = restValues(phase, this.ctx, this.config);
@@ -207,6 +209,7 @@ export class LinkDirector {
     this.motionOff?.();
     this.motionOff = null;
     this.choreo.cancel();
+    this.promote(false);
     this.release();
     this.cueOn = false;
     setStageCue(null);

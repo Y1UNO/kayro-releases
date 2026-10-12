@@ -9,7 +9,7 @@ import { DragGhost } from "../home/Overlays";
 import { stepSentence } from "./describe";
 import { resolved, type Action, type EditorDraft } from "./draft";
 import { RunMark } from "./RunMark";
-import { useListMotion } from "./chain/useListMotion";
+import { ListMotionState, useListMotion } from "./chain/useListMotion";
 import { MAX_SIMPLE_ITEMS, type Sequence } from "./simple";
 import { useDrag } from "./useDrag";
 import styles from "./Simple.module.css";
@@ -47,6 +47,7 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
   const inScene = new Set(items.map((i) => i.appId));
   const full = items.length >= MAX_SIMPLE_ITEMS;
 
+  const [listMotion] = useState(() => new ListMotionState());
   const { drag, begin, ignoreClick } = useDrag<Payload>({
     list: zone,
     rows: "[data-item-row]",
@@ -58,6 +59,7 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
         if (to !== payload.from) dispatch({ type: "moveItem", from: payload.from, to });
       }
     },
+    onEnd: () => listMotion.snapshot(),
   });
 
   const shown = useMemo(() => {
@@ -66,7 +68,7 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
   }, [apps, query]);
 
   // Apps that come, go and change places move on the "liaison" spring (round 4b).
-  useListMotion(list, drag !== null);
+  useListMotion(list, listMotion, items.map((i) => i.appId).join(" "), drag !== null);
 
   const { steps, links } = resolved(draft, apps);
   const link = { apps, links };

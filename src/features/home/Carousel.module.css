@@ -32,7 +32,9 @@
 
 /* Hover of an app card (level 3 of the motion table, round 4a): the slot lifts and grows on the
    "rebond" spring, so the card, its light threads (CardHoverFx), its glow and the engine's glass
-   all follow; back to rest without a bounce. Not during a category sequence. */
+   all follow; back to rest without a bounce. Not during a category sequence, nor while the
+   selection scrolls fast (`data-fast`: the card passing under a still pointer would lift for
+   30 ms, a spring nobody sees). */
 .stage {
   --card-hover-dur: var(--m3-court);
   --card-hover-ease: var(--m-ease-bounce);
@@ -51,7 +53,7 @@
   --lift-ease: var(--m-ease-in);
 }
 
-.stage:not([data-seq]) [data-d]:has(> [data-stage]:hover) {
+.stage:not([data-seq]):not([data-fast]) [data-d]:has(> [data-stage]:hover) {
   --lift-dur: var(--card-hover-dur);
   --lift-ease: var(--card-hover-ease);
   translate: 0 calc(var(--m-card-lift) * -1 * var(--m-rm));

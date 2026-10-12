@@ -14,13 +14,19 @@
 import type { ElementValues } from "../../../design/da/daParams";
 import { springAt, SPRINGS } from "../../../design/glass/pillMotion";
 import { curveOf, lerp } from "../../../design/motion/curve";
+import { EASES } from "../../../design/motion/eases";
 import { FAN_SIZE } from "./fanTimeline";
 
-const HOVER_EASE = curveOf("cubic-bezier(.22,1,.36,1)");
-/** The tilt follows the pointer closely (round 3b, "more reactive"). */
+/** The hover-in's curve: the spec's, « premium » of the table. */
+const HOVER_EASE = curveOf(EASES.premium!);
+// Physical constants of the hover (round 3b), not tunable on purpose (review B9): they set how
+// the threads and sparks behave, not a duration or a curve of the motion language. The tunable
+// part is the `categoryHover` element of the catalogue.
+/** The tilt follows the pointer closely (round 3b, "more reactive"): time constant (ms). */
 const TILT_TAU_MS = 55;
 /** Hover-in burst: a flash on the rim, the threads whip round, the sparks fly further. */
 const BURST_TAU_MS = 260;
+/** Spark budget of one rim (the carousel's cards take 4 of them). */
 export const MAX_SPARKS = 12;
 /** Life of a spark (ms). */
 const SPARK_LIFE = 750;

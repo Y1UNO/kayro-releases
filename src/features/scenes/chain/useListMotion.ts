@@ -1,8 +1,35 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import type { RefObject } from "react";
 import { currentMotion } from "../../../design/motion/current";
 import { durOf } from "../../../design/motion/tokens";
 import { prefersReducedMotion } from "../../../fx/motionPref";
+
+/**
+ * Where the rows of a list were last seen, kept between renders (one per list, `useState`). An
+ * event handler records them with `snapshot()` just before a change it causes: the end of a drag
+ * (useDrag's `onEnd`), while the rows still show the drag's shifts.
+ */
+export class ListMotionState {
+  private prev: Map<string, Row> | null = null;
+  private list: HTMLElement | null = null;
+
+  /** The list `ol` was laid out anew: where its rows were seen before, and where they are now. */
+  next(ol: HTMLElement): { before: Map<string, Row> | null; now: Map<string, Row> } {
+    this.list = ol;
+    const before = this.prev;
+    this.prev = measureRows(ol);
+    return { before, now: this.prev };
+  }
+
+  /** Rows resized without a change of layout key: measured again, no motion. */
+  refresh(ol: HTMLElement): void {
+    if (this.list === ol) this.prev = measureRows(ol);
+  }
+
+  snapshot(): void {
+    if (this.list) this.prev = measureRows(this.list);
+  }
+}
 
 /**
  * Motion of a list whose rows are added, removed and reordered (art direction round 4b,
@@ -13,26 +40,26 @@ import { prefersReducedMotion } from "../../../fx/motionPref";
  * - a row whose place changes slides there on the "liaison" spring (FLIP, moyen), from where it
  *   is seen: the end of a drag, a keyboard move, a step that opens its settings…
  *
- * Rows are the list's direct children with `data-row-key`. Inside a row, `data-chain-point` is
- * its point and `data-chain-seg` the thread to the next row. The list must be positioned. While
- * `frozen` (a drag shifts the rows itself) positions are only recorded.
+ * Measured only when `layoutKey` (the rows' keys, and whatever else moves them: the step whose
+ * settings are open) or `frozen` changes, never at a mere render (review B3). Rows that change
+ * size meanwhile (a field that wraps, the window's width) are measured again by a ResizeObserver,
+ * without motion. Rows are the list's direct children with `data-row-key`. Inside a row,
+ * `data-chain-point` is its point and `data-chain-seg` the thread to the next row. The list must
+ * be positioned. While `frozen` (a drag shifts the rows itself) positions are only recorded.
  */
-export function useListMotion(list: RefObject<HTMLElement | null>, frozen = false): void {
-  const prev = useRef<Map<string, Row> | null>(null);
-
+export function useListMotion(
+  list: RefObject<HTMLElement | null>,
+  state: ListMotionState,
+  layoutKey: string,
+  frozen = false,
+): void {
   useLayoutEffect(() => {
     const ol = list.current;
     if (!ol) return;
     const t = currentMotion();
     const reduced = prefersReducedMotion();
     const move = durOf(t, 2, "moyen", reduced);
-    const before = prev.current;
-    const now = new Map<string, Row>();
-    for (const el of ol.querySelectorAll<HTMLElement>(":scope > [data-row-key]")) {
-      // Where it is seen right now: a slide in progress counts (it goes on from there).
-      const flipping = translateOf(getComputedStyle(el).transform);
-      now.set(el.dataset.rowKey!, { el, ...measure(el), flipping });
-    }
+    const { before, now } = state.next(ol);
     if (before && move > 0 && !frozen) {
       for (const [key, was] of before) if (!now.has(key)) leave(ol, was, t, reduced);
       for (const [key, row] of now) {
@@ -48,8 +75,27 @@ export function useListMotion(list: RefObject<HTMLElement | null>, frozen = fals
         if (!row.seg && was.seg) shrink(row.el, was.seg, t, reduced);
       }
     }
-    prev.current = now;
-  });
+  }, [list, state, layoutKey, frozen]);
+
+  useEffect(() => {
+    const ol = list.current;
+    if (!ol || typeof ResizeObserver !== "function") return;
+    const ro = new ResizeObserver(() => state.refresh(ol));
+    ro.observe(ol);
+    for (const row of ol.querySelectorAll(":scope > [data-row-key]")) ro.observe(row);
+    return () => ro.disconnect();
+  }, [list, state, layoutKey]);
+}
+
+/** Every row of the list: where it is laid out, its shift, and a slide in progress. */
+function measureRows(ol: HTMLElement): Map<string, Row> {
+  const rows = new Map<string, Row>();
+  for (const el of ol.querySelectorAll<HTMLElement>(":scope > [data-row-key]")) {
+    // Where it is seen right now: a slide in progress counts (it goes on from there).
+    const flipping = translateOf(getComputedStyle(el).transform);
+    rows.set(el.dataset.rowKey!, { el, ...measure(el), flipping });
+  }
+  return rows;
 }
 
 interface Row {

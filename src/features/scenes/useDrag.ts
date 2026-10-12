@@ -18,6 +18,9 @@ interface Options<P> {
   /** CSS selector of the rows inside `list`. */
   rows: string;
   onDrop: (payload: P, index: number | null) => void;
+  /** The drag ends (dropped or cancelled), before the drop changes anything: the rows still show
+   *  the drag's shifts (useListMotion's `snapshot`). */
+  onEnd?: () => void;
 }
 
 const THRESHOLD = 5;
@@ -39,13 +42,15 @@ export function insertionIndex(
   return middles.filter((m) => m < y).length;
 }
 
-export function useDrag<P>({ list, rows, onDrop }: Options<P>) {
+export function useDrag<P>({ list, rows, onDrop, onEnd }: Options<P>) {
   const [drag, setDrag] = useState<DragState<P> | null>(null);
   const clickBlocked = useRef(false);
   const stop = useRef<(() => void) | null>(null);
   const drop = useRef(onDrop);
+  const ending = useRef(onEnd);
   useEffect(() => {
     drop.current = onDrop;
+    ending.current = onEnd;
   });
   useEffect(() => () => stop.current?.(), []);
 
@@ -81,6 +86,7 @@ export function useDrag<P>({ list, rows, onDrop }: Options<P>) {
         });
       };
       const end = (ev: PointerEvent | null) => {
+        ending.current?.();
         cleanup();
         if (active) {
           clickBlocked.current = true;

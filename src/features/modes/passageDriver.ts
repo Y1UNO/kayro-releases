@@ -26,6 +26,8 @@ export interface PassageIo {
   comeIn(p: PassagePlan, instant: boolean): void;
   /** The opening plays (or is about to) at this window's first show: it brings the page in. */
   openingOwnsEntrance(): boolean;
+  /** The page takes no input (faded out, its window changing): keyboard and pointer go nowhere. */
+  setInert(on: boolean): void;
 }
 
 /** Resolves on the next `resize` of `target` or after `ms`, and removes its listener either way. */
@@ -83,6 +85,8 @@ export class PassageDriver {
       this.size = this.io.size();
       clearTimeout(this.back);
       if (p.instant) return this.io.faded(e.id, null);
+      // Nothing to click or type into while the page is away (review B8).
+      this.io.setInert(true);
       void this.io.fadeOut(p).then((veil) => this.io.faded(e.id, veil));
       this.back = setTimeout(() => this.come(this.io.plan(), false), ENTER_FALLBACK_MS);
       return;
@@ -104,11 +108,13 @@ export class PassageDriver {
   dispose(): void {
     this.live = false;
     clearTimeout(this.back);
+    this.io.setInert(false);
   }
 
   private come(p: PassagePlan, instant: boolean): void {
     if (!this.live) return;
     this.lastOut = -1;
+    this.io.setInert(false);
     this.io.comeIn(p, instant);
   }
 }

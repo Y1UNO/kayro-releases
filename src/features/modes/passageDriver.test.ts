@@ -15,6 +15,7 @@ const animated = passagePlan(motionTokens(undefined), false, false);
 /** A page whose effects are recorded; fade-outs and waits resolve at once. */
 function fakeIo(opening = false) {
   const log: string[] = [];
+  const page = { inert: false };
   const io: PassageIo = {
     plan: () => animated,
     size: () => ({ w: 1280, h: 760 }),
@@ -24,8 +25,9 @@ function fakeIo(opening = false) {
     frame: async () => {},
     comeIn: (_p, instant) => void log.push(instant ? "in at once" : "in"),
     openingOwnsEntrance: () => opening,
+    setInert: (on) => void (page.inert = on),
   };
-  return { io, log };
+  return { io, log, page };
 }
 
 const ev = (id: number, step: "out" | "in", resized = false): ModePassage => ({
@@ -110,6 +112,55 @@ describe("passage driver (review A4–A6)", () => {
     const d = new PassageDriver("main", io, true);
     await vi.advanceTimersByTimeAsync(ENTER_FALLBACK_MS);
     expect(log).toEqual(["in"]);
+    d.dispose();
+  });
+});
+
+describe("passage driver: no input while away, fallbacks (review B8, B12)", () => {
+  it("the page is inert from « out » until it comes back", async () => {
+    const { io, page } = fakeIo();
+    const d = new PassageDriver("main", io, false);
+    d.onPassage(ev(7, "out"));
+    expect(page.inert).toBe(true);
+    await flush();
+    expect(page.inert).toBe(true); // faded out, the window is changing
+    d.onPassage(ev(7, "in"));
+    await flush();
+    expect(page.inert).toBe(false);
+    d.dispose();
+  });
+
+  it("an instant change never makes the page inert; the fallback and unmounting release it", async () => {
+    const instant = fakeIo();
+    instant.io.plan = () => ({ ...animated, instant: true });
+    const d1 = new PassageDriver("main", instant.io, false);
+    d1.onPassage(ev(8, "out"));
+    expect(instant.page.inert).toBe(false);
+    d1.dispose();
+
+    const lost = fakeIo();
+    const d2 = new PassageDriver("main", lost.io, false);
+    d2.onPassage(ev(9, "out"));
+    await vi.advanceTimersByTimeAsync(ENTER_FALLBACK_MS);
+    expect(lost.page.inert).toBe(false); // the core's « in » never came
+    d2.onPassage(ev(10, "out"));
+    d2.dispose();
+    expect(lost.page.inert).toBe(false);
+    // Unmounted: its timers are gone, nothing comes in later.
+    await vi.advanceTimersByTimeAsync(ENTER_FALLBACK_MS);
+    expect(lost.log.filter((l) => l === "in")).toHaveLength(1);
+  });
+
+  it("an « out » during the fallback wait of a previous one restarts the wait", async () => {
+    const { io, log } = fakeIo();
+    const d = new PassageDriver("main", io, false);
+    d.onPassage(ev(11, "out"));
+    await vi.advanceTimersByTimeAsync(ENTER_FALLBACK_MS - 100);
+    d.onPassage(ev(12, "out"));
+    await vi.advanceTimersByTimeAsync(200);
+    expect(log).not.toContain("in"); // the first fallback was cancelled
+    await vi.advanceTimersByTimeAsync(ENTER_FALLBACK_MS);
+    expect(log.filter((l) => l === "in")).toHaveLength(1);
     d.dispose();
   });
 });

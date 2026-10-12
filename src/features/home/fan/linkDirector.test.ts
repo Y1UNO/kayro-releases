@@ -59,6 +59,21 @@ describe("category director: the carousel at rest is measured again by the engin
     d.dispose();
   });
 
+  it("a sequence cut short leaves no layer promoted (review B1)", () => {
+    const d = new LinkDirector(linkConfig(undefined));
+    const { area } = fakeCarousel();
+    const title = { style: style() } as unknown as HTMLElement;
+    d.bind.area(area);
+    d.bind.title(title);
+    d.seek("tab", 1, 1, 200);
+    expect(title.style.willChange).not.toBe("");
+    d.rest("spread", 1, 1);
+    expect(title.style.willChange).toBe("");
+    d.seek("tab", 1, 1, 200);
+    d.dispose();
+    expect(title.style.willChange).toBe("");
+  });
+
   it("no pose is left behind after a tab sequence (reduced motion: ends at once)", async () => {
     const d = new LinkDirector(linkConfig(undefined));
     const { area } = fakeCarousel();
