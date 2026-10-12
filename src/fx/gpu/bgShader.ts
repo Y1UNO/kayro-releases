@@ -285,7 +285,8 @@ void main() {
     a = core + 0.6 * exp(-r * r * 5.0) * (1.0 - r);
     col = mix(vC.rgb, uStar, core);
   } else {
-    a = smoothstep(1.0, 0.86, r) * (0.55 + 0.45 * smoothstep(0.55, 0.95, r));
+    // Bokeh (round 5): a soft disc and a thin ring, like a real lens bokeh (no hard rim).
+    a = 0.55 * exp(-r * r * 2.2) + 0.45 * smoothstep(0.80, 0.93, r) * (1.0 - smoothstep(0.95, 1.0, r));
   }
   a *= vA;
   outColor = vec4(col * a, a);

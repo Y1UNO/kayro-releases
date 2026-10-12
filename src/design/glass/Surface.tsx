@@ -8,7 +8,7 @@ type Tag = "div" | "span" | "section" | "nav" | "header" | "footer" | "aside";
 
 interface Props extends HTMLAttributes<HTMLElement> {
   as?: Tag;
-  /** CSS radius, default `var(--radius-2xl)`. */
+  /** CSS radius, default `var(--radius-panel)`. */
   radius?: string;
   /** Never use backdrop-filter (small or nested surfaces); same look as the Eco variant. */
   flat?: boolean;

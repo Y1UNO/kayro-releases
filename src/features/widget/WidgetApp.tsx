@@ -40,7 +40,6 @@ export function WidgetApp() {
     if (themeId) setThemeId(themeId);
   }, [themeId, setThemeId]);
 
-  const style = settings?.widgetStyle ?? "brume";
   const hideOnEscape = settings?.hideOnEscape ?? true;
   const eco = settings?.quality === "eco";
   const motion = useMotionTokens().widget;
@@ -115,12 +114,7 @@ export function WidgetApp() {
 
   return (
     <>
-      <div
-        ref={shell}
-        className={styles.shell}
-        data-style={style}
-        data-panel={presence !== null || undefined}
-      >
+      <div ref={shell} className={styles.shell} data-panel={presence !== null || undefined}>
         <WidgetBar
           barRef={bar}
           category={category}

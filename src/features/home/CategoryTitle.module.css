@@ -1,4 +1,5 @@
-/* Mock-up: label 13/600 tracking .22em in the accent colour, title 92/300 with a soft glow. */
+/* Label: the small capitals title of the system (`--eyebrow`, round 5); title 92/300 with a soft
+   glow. */
 .block {
   margin-top: var(--space-2);
   display: flex;
@@ -8,11 +9,10 @@
 }
 
 .label {
-  font-size: var(--fs-13);
-  font-weight: 600;
-  letter-spacing: var(--da-label-tracking, 0.22em);
+  font: var(--eyebrow);
+  letter-spacing: var(--eyebrow-tracking);
   text-transform: uppercase;
-  color: var(--da-label-color, var(--accent));
+  color: var(--eyebrow-color);
 }
 
 /* Fixed box: titles are stacked in it while they cross-fade, so nothing around moves. */

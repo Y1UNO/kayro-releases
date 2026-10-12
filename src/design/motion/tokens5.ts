@@ -50,8 +50,10 @@ export const FLOAT_RHYTHM = {
   shadowScale: 0.9,
   /** Peak-to-peak height (px) at which the shadow change is complete (« Marquée » on the fan). */
   shadowFullAt: 24,
-  /** A carousel card pauses / resumes its floating (hover, fast scroll) over this (ms). */
+  /** A carousel card pauses its floating (hover, fast scroll) over this (ms)… */
   pauseMs: 240,
+  /** …and comes back to it slowly (after a category sequence, a hover): no jolt (ms, ≈ 95 %). */
+  resumeMs: 1200,
 } as const;
 
 /**

@@ -133,7 +133,7 @@ function Palette({ apps, onClose, onPickApp, onPickCategory }: Props) {
       >
         <Surface
           as="section"
-          radius="var(--radius-3xl)"
+          radius="var(--radius-panel)"
           className={styles.panel}
           role="dialog"
           aria-modal="true"

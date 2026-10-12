@@ -9,7 +9,7 @@
   position: relative;
   isolation: isolate; /* the highlight sits behind the content, above the glass */
   box-sizing: border-box;
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-panel);
   background: var(--_bg);
   /* Unprefixed only: WebView2 is Chromium. With both forms, the production CSS minifier merged the two
      identical declarations into the `-webkit-` one, which Chromium ignores (no blur in release builds). */

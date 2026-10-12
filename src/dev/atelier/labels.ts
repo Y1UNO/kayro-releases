@@ -295,13 +295,11 @@ export const ELEMENT_LABELS: Record<string, ElementLabel> = {
       size: "Taille",
       weight: "Graisse",
       tracking: "Approche",
-      labelTracking: "Approche de l'étiquette",
       underline: "Filet dessous",
       underlineH: "Épaisseur du filet",
       underlineGlow: "Lueur du filet",
       underlineShine: "Reflet sur le filet, toutes les (0 = aucun)",
       underlineW: "Largeur du filet",
-      softLabel: "Étiquette en texte doux",
     },
   },
   typography: {

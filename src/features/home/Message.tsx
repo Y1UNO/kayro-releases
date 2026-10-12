@@ -47,7 +47,7 @@ export function Message({
     <Surface
       key={keyOf(shown.id)}
       flat
-      radius="var(--radius-xl)"
+      radius="var(--radius-panel)"
       className={styles.toast}
       role="alert"
       data-closing={presence === "out" || undefined}

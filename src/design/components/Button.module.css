@@ -60,13 +60,13 @@
 
 .md {
   padding: 13px 26px;
-  border-radius: 28px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-15);
 }
 
 .sm {
   padding: 9px 14px;
-  border-radius: 18px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-13);
 }
 

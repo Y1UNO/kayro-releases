@@ -2,13 +2,13 @@
 // main.tsx). The real widget page (bar + panel whose glass unrolls) with fake apps, scenes and
 // recents, over a fake desktop drawn in CSS (dev only), so it can be tried in a plain browser and
 // in the workshop. Texts are not translated on purpose (dev page).
-//   ?theme=<id>   ?style=brume|aurore|sillage|orbe   ?fx=eco|balanced|high|ultra
+//   ?theme=<id>   ?fx=eco|balanced|high|ultra
 //   ?atelier=A|B (workshop preview)   ?open=1 (opens once at load)   ?cycle=ms (opens / folds)
 import { useEffect, useState } from "react";
 import { QUALITIES, ThemeProvider } from "../design";
 import { ACTIVE_THEME_ID } from "../design/da";
 import { WidgetApp } from "../features/widget/WidgetApp";
-import type { AppEntry, SceneFile, WidgetStyle } from "../ipc/bindings";
+import type { AppEntry, SceneFile } from "../ipc/bindings";
 import { desktopStore, hubStore, sceneStore } from "../store";
 import styles from "./Widget.module.css";
 import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
@@ -31,11 +31,9 @@ const SCENES: SceneFile[] = ["Soirée gaming", "Stream", "Travail"].map((name, i
   name,
   steps: [{ type: "launch", slot: "a" }],
 }));
-const STYLES: readonly WidgetStyle[] = ["brume", "aurore", "sillage", "orbe"];
 
 function install(params: URLSearchParams): true {
   document.documentElement.dataset.window = "widget";
-  const style = STYLES.find((s) => s === params.get("style")) ?? "brume";
   hubStore.setState({
     status: "ready",
     apps: APPS,
@@ -53,7 +51,7 @@ function install(params: URLSearchParams): true {
       language: "fr",
       atmosphereIntensity: 1,
       displayMode: "widget",
-      widgetStyle: style,
+      widgetStyle: "brume", // ignored since round 5 (the widget follows the theme)
       hideOnEscape: true,
       hideOnBlur: false,
       economyMode: false,

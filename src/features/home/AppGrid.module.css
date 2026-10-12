@@ -17,7 +17,8 @@
   outline: none;
 }
 
-.grid:focus-visible [data-active] > button {
+/* The card is in a box since round 5 (role="option"; not the edit button). */
+.grid:focus-visible [data-active] [role="option"] {
   outline: none;
   box-shadow: var(--m-focus);
 }

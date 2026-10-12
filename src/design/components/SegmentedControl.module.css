@@ -9,13 +9,13 @@
 }
 
 .md {
-  border-radius: 19px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-13);
   font-weight: 600;
 }
 
 .sm {
-  border-radius: 16px;
+  border-radius: var(--radius-pill);
   --_track: var(--track);
   font-size: var(--fs-12);
   font-weight: 700;
@@ -49,12 +49,12 @@
 
 .md .segment {
   padding: 7px 14px;
-  border-radius: 16px;
+  border-radius: var(--radius-pill);
 }
 
 .sm .segment {
   padding: 6px 10px;
-  border-radius: 13px;
+  border-radius: var(--radius-pill);
 }
 
 /* Vertical hit area reaches 44 px. */

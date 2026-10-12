@@ -12,9 +12,10 @@
   width: 24px;
   height: 1.2px;
   border-radius: 1px;
-  background: color-mix(in srgb, var(--tc), #fff 35%);
+  /* Round 5 (proposal 7): a white core (55 %) and a halo of the colour, seen on any face. */
+  background: color-mix(in srgb, var(--tc), #fff 55%);
   box-shadow: 0 0 5px var(--tc);
-  offset-path: inset(0 round var(--rim-r, 24px));
+  offset-path: inset(0 round var(--rim-r, var(--radius-fan)));
   offset-rotate: auto;
   opacity: 0;
   pointer-events: none;
@@ -24,7 +25,7 @@
 .flash {
   position: absolute;
   inset: 0;
-  border-radius: var(--rim-r, 24px);
+  border-radius: var(--rim-r, var(--radius-fan));
   box-shadow:
     0 0 0 1.5px color-mix(in srgb, var(--grad-a), #fff 55%),
     0 0 22px color-mix(in srgb, var(--grad-a) 70%, transparent),
@@ -72,13 +73,14 @@
 }
 
 /* Carousel (round 4a): the spans of the hovered card live in this layer, a sibling of the card in
-   its slot, shaped and moved like it (same scale and timing, tilt copied by cardTilt.ts). One
-   layer, moved from card to card (CardHoverFx). Not clipped: the sparks leave the rim. */
+   its floating box (round 5), shaped and moved like it (same scale and timing, tilt copied by
+   cardTilt.ts). One layer, moved from card to card (CardHoverFx). Not clipped: the sparks leave
+   the rim. */
 .layer {
   position: absolute;
   inset: 0;
   z-index: 2;
-  border-radius: var(--rim-r, 30px);
+  border-radius: var(--rim-r, var(--radius-card));
   pointer-events: none;
   transform: scale(var(--side-scale, 0.7414));
   transition:
@@ -86,7 +88,8 @@
     rotate var(--m1-court) var(--m-ease-in);
 }
 
-:global([data-active]) > .layer {
+/* The active slot is the layer's grandparent since the floating box (round 5): not `>`. */
+:global([data-active]) .layer {
   transform: scale(1);
 }
 

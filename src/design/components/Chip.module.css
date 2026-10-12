@@ -3,7 +3,7 @@
   border: 0;
   cursor: pointer;
   padding: 10px 22px;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--text-2);
   font-size: var(--fs-15);

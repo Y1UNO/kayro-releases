@@ -166,11 +166,11 @@
     },
     "bokeh": {
       "on": true,
-      "count": 12,
-      "size": 56,
-      "intensity": 0.14,
-      "zoneTop": 18,
-      "zoneH": 60
+      "count": 7,
+      "size": 120,
+      "intensity": 0.09,
+      "zoneTop": 8,
+      "zoneH": 80
     },
     "cursorLight": {
       "on": true,
@@ -271,11 +271,11 @@
       "tilt": 3,
       "grow": 0.03,
       "threads": true,
-      "threadIntensity": 1.4,
-      "threadLength": 0.14,
+      "threadIntensity": 1.8,
+      "threadLength": 0.2,
       "threadSpeed": 0.25,
-      "threadWidth": 1.8,
-      "threadGlow": 0.7,
+      "threadWidth": 2.2,
+      "threadGlow": 0.9,
       "sparks": 12,
       "sparkSize": 2.4,
       "floatRest": 2.5,

@@ -52,7 +52,7 @@ export function CategoryTabs({
       <div className={styles.group}>
         <Surface
           glassKind="bar"
-          radius="var(--da-bar-radius, var(--radius-3xl))"
+          radius="var(--da-bar-radius, var(--radius-pill))"
           className={styles.tabs}
         >
           <div
@@ -86,17 +86,17 @@ export function CategoryTabs({
               );
             })}
           </div>
+          {/* Round 5: the grid button sits in the pill, after a separator (like the dock). */}
+          <span className={styles.separator} aria-hidden="true" />
+          <IconButton
+            label={view === "grid" ? t("home.view.toCarousel") : t("home.view.toGrid")}
+            size="sm"
+            glass
+            onClick={() => onView(view === "grid" ? "carousel" : "grid")}
+          >
+            {view === "grid" ? <RowsIcon /> : <GridIcon />}
+          </IconButton>
         </Surface>
-        {/* Beside the tabs (not in them): the tabs stay centred like in the mock-up. */}
-        <IconButton
-          label={view === "grid" ? t("home.view.toCarousel") : t("home.view.toGrid")}
-          size="sm"
-          glass
-          className={styles.viewToggle}
-          onClick={() => onView(view === "grid" ? "carousel" : "grid")}
-        >
-          {view === "grid" ? <RowsIcon /> : <GridIcon />}
-        </IconButton>
       </div>
     </div>
   );

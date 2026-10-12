@@ -152,12 +152,13 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       range("tilt", 0, 3, 0.1, 3, "°"),
       range("grow", 0, 0.08, 0.005, 0.03),
       toggle("threads", true),
-      range("threadIntensity", 0, 2, 0.05, 1.4),
-      range("threadLength", 0.04, 0.4, 0.01, 0.14),
+      // Round 5 (proposal 7): seen on every face (white core in Rim.module.css).
+      range("threadIntensity", 0, 2, 0.05, 1.8),
+      range("threadLength", 0.04, 0.4, 0.01, 0.2),
       range("threadSpeed", 0.05, 1.5, 0.01, 0.25, "tr/s"),
-      range("threadWidth", 0.5, 3, 0.1, 1.8, "px"),
+      range("threadWidth", 0.5, 3, 0.1, 2.2, "px"),
       // Halo at the head of each thread, pulsing gently (0 = none).
-      range("threadGlow", 0, 1, 0.05, 0.7),
+      range("threadGlow", 0, 1, 0.05, 0.9),
       range("sparks", 0, 12, 1, 12),
       range("sparkSize", 0.8, 5, 0.1, 2.4, "px"),
       // Round 5: « Flottaison des cartes » of the settings (levels in tokens5.ts, fan and carousel).

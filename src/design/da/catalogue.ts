@@ -258,14 +258,12 @@ export const CATALOGUE: readonly DaElement[] = [
       range("size", 48, 140, 1, 96, "px"),
       range("weight", 300, 700, 10, 300),
       range("tracking", -0.06, 0.04, 0.005, -0.02, "em"),
-      range("labelTracking", 0, 0.5, 0.01, 0.32, "em"),
       toggle("underline", true),
       range("underlineW", 40, 400, 5, 220, "px"),
       // Round 3b: a brighter rule (thickness, glow) and a light that glides along it now and then.
       range("underlineH", 0.5, 3, 0.1, 1.5, "px"),
       range("underlineGlow", 0, 1, 0.05, 0.6),
       range("underlineShine", 0, 20, 0.5, 7, "s"),
-      toggle("softLabel", true),
     ],
     css: (v) =>
       v.on
@@ -273,11 +271,9 @@ export const CATALOGUE: readonly DaElement[] = [
             "--fs-title-xl": px(v, "size"),
             "--da-title-weight": String(n(v, "weight")),
             "--tracking-title": `${n(v, "tracking")}em`,
-            "--da-label-tracking": `${n(v, "labelTracking")}em`,
             "--da-underline": v.underline ? px(v, "underlineW") : "0px",
             "--da-underline-h": px(v, "underlineH"),
             "--da-underline-glow": String(n(v, "underlineGlow")),
-            ...(v.softLabel ? { "--da-label-color": "var(--text-soft)" } : {}),
           }
         : NONE,
   },

@@ -116,7 +116,7 @@ export function Dialog({
       <Surface
         as="section"
         flat
-        radius="var(--radius-3xl)"
+        radius="var(--radius-panel)"
         className={size === "md" ? styles.panel : `${styles.panel} ${styles[size]}`}
         role="dialog"
         aria-modal="true"

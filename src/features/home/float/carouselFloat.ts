@@ -125,7 +125,9 @@ export class CarouselFloat {
     }
     const paused =
       st.dataset.fast !== undefined || this.dragging || now - this.wheelAt < WHEEL_PAUSE_MS;
-    const k = 1 - Math.exp(-dt / (R.pauseMs / 3));
+    // Fast to rest, slow back to floating (a category sequence ends on still cards: no jolt).
+    const kDown = 1 - Math.exp(-dt / (R.pauseMs / 3));
+    const kUp = 1 - Math.exp(-dt / (R.resumeMs / 3));
     const c = this.config;
     let settled = !paused && this.hovered === null;
     for (const b of this.boxes) {
@@ -134,8 +136,9 @@ export class CarouselFloat {
         continue;
       }
       const target = paused || b.card === this.hovered ? 0 : 1;
-      b.gain += (target - b.gain) * k;
-      if (Math.abs(target - b.gain) > 0.002) settled = false;
+      b.gain += (target - b.gain) * (target > b.gain ? kUp : kDown);
+      // The last 2 % of a slow resume do not show: the slow cadence may come back.
+      if (Math.abs(target - b.gain) > 0.02) settled = false;
       if (b.gain < 0.002 && target === 0) {
         if (b.el.style.transform) this.rest(b);
         continue;

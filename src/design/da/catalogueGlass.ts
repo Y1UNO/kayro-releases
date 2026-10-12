@@ -160,11 +160,12 @@ export const GLASS_ELEMENTS: readonly DaElement[] = [
     defaultOn: true,
     fx: true,
     params: [
-      range("count", 0, 24, 1, 12),
-      range("size", 10, 140, 1, 56, "px"),
-      range("intensity", 0, 0.5, 0.01, 0.14),
-      range("zoneTop", 0, 100, 1, 18, "%"),
-      range("zoneH", 10, 100, 1, 60, "%"),
+      // Round 5 (proposal 1): fewer, bigger, softer discs over a taller band.
+      range("count", 0, 24, 1, 7),
+      range("size", 10, 140, 1, 120, "px"),
+      range("intensity", 0, 0.5, 0.01, 0.09),
+      range("zoneTop", 0, 100, 1, 8, "%"),
+      range("zoneH", 10, 100, 1, 80, "%"),
     ],
   },
   {

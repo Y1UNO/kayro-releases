@@ -79,7 +79,7 @@
   height: 46px;
   box-sizing: border-box;
   padding: 0 16px;
-  border-radius: 23px;
+  border-radius: var(--radius-pill);
   background: var(--w-field-bg);
   box-shadow: var(--field-inset);
   color: var(--text-2);
@@ -123,14 +123,13 @@
   flex-grow: 1;
 }
 
+/* The system's small capitals title (`--eyebrow`, round 5). */
 .heading {
   margin: 0;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font: var(--eyebrow);
+  letter-spacing: var(--eyebrow-tracking);
   text-transform: uppercase;
-  color: var(--w-heading-fg);
+  color: var(--eyebrow-color);
 }
 
 .empty {
@@ -146,7 +145,7 @@
   gap: 10px;
   padding: 13px 16px;
   border: 0;
-  border-radius: 18px;
+  border-radius: var(--radius-row);
   background: var(--w-soft-bg);
   color: var(--text);
   font-size: var(--fs-15);
@@ -175,7 +174,7 @@
   height: 48px;
   box-sizing: border-box;
   padding: 0 12px;
-  border-radius: 16px;
+  border-radius: var(--radius-row);
   background: var(--w-row-bg);
 }
 
@@ -186,13 +185,14 @@
   flex-shrink: 0;
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: var(--radius-row);
   overflow: hidden;
   font-family: var(--font-title);
   font-size: 17px;
   font-weight: 500;
-  color: #fff;
-  background: linear-gradient(160deg, #b98a9a, #3a2a3e);
+  color: var(--text-active);
+  /* The face of a card without a poster: the theme's A → B (round 5). */
+  background: linear-gradient(160deg, var(--grad-a), color-mix(in srgb, var(--grad-b), #000 55%));
 }
 
 .avatar img {
@@ -223,7 +223,7 @@
 .dot {
   width: 8px;
   height: 8px;
-  border-radius: 4px;
+  border-radius: 50%;
   background: var(--w-accent-light);
   box-shadow: 0 0 8px var(--w-accent-light);
 }
@@ -231,7 +231,7 @@
 .front {
   padding: 7px 12px;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-pill);
   background: var(--w-soft-bg);
   color: var(--text);
   font-size: 12px;
@@ -259,7 +259,7 @@
   box-sizing: border-box;
   padding: 0 12px;
   border: 0;
-  border-radius: 16px;
+  border-radius: var(--radius-row);
   background: var(--w-row-bg);
   color: var(--text);
   font-size: 13px;
@@ -271,7 +271,7 @@
 .tile .avatar {
   width: 30px;
   height: 30px;
-  border-radius: 9px;
+  border-radius: var(--radius-row);
   font-size: 16px;
 }
 
@@ -300,7 +300,7 @@
   box-sizing: border-box;
   padding: 0 12px;
   border: 0;
-  border-radius: 16px;
+  border-radius: var(--radius-row);
   background: var(--w-row-bg);
   color: var(--text);
   text-align: left;

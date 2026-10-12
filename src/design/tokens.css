@@ -152,6 +152,23 @@
   --radius-3xl: 30px;
   --radius-4xl: 36px;
   --radius-pill: 999px;
+  /* Round 5 (proposal 2): four families of radii, nothing else. Pill for anything 46 px high or
+     less (buttons, segments, switches, selects, badges, round numbers); then: */
+  --radius-row: var(--radius-md); /* rows, fields, tiles, the name plate */
+  --radius-panel: var(--radius-2xl); /* dialogs, palette, menus, notices, side panels, steps */
+  --radius-card: var(--da-card-radius, 30px); /* app cards */
+  --radius-fan: 24px; /* category cards (210 px wide) and the empty card */
+
+  /* Round 5: the carousel (and the fan, same centre for the category link) sits this much lower,
+     so that the active card lifted by its hover (10 px, ×1.03) keeps ≥ 12 px of air under the
+     longest descender of a category title (« Logiciels », 96 px: measured 14.3 px). */
+  --stage-drop: 22px;
+
+  /* Round 5 (proposal 2): one style of small capitals title (« CATÉGORIE », « ÉTAPES »…), Manrope
+     12 / 700 / .24em in the soft colour; only the opening's subtitle keeps its .32em (signature). */
+  --eyebrow: 700 var(--fs-12) / 1.3 var(--font-ui);
+  --eyebrow-tracking: 0.24em;
+  --eyebrow-color: var(--text-soft);
 
   /* Spacing (screen margins are 24–56) */
   --space-1: 4px;

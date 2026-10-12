@@ -1,0 +1,95 @@
+/*
+ * What a card shows inside its glass (split from AppCard.module.css): the poster, or — for the
+ * apps without one, that is all of them in production today — a face in the theme's gradient with
+ * the program's icon or its monogram. `data-mode` (stage / grid) and `data-glass` (the engine draws
+ * the glass) come from AppCard.tsx and the glass registry.
+ */
+
+/* Round 5 (proposal 7): the face of a card without a poster is the category fan's: the theme's
+   A → B (where between A and B: a draw per app, cardLook.ts), 0.85, inset in the glass, whose rim
+   alone stays. The ring and the cursor light no longer cross the card. */
+.face {
+  --f1: color-mix(in srgb, var(--grad-a), var(--grad-b) var(--mix, 50%));
+  --f2: rgb(from var(--f1) calc(r * 0.2) calc(g * 0.2) calc(b * 0.2));
+  position: absolute;
+  inset: var(--da-poster-inset, 3px);
+  border-radius: max(0px, calc(var(--radius-card) - var(--da-poster-inset, 3px)));
+  /* Top to bottom: the foot shade under the name plate (as the fan's faces), the highlight, the
+     gradient. */
+  background:
+    linear-gradient(180deg, transparent 55%, rgba(8, 5, 12, 0.55)),
+    radial-gradient(120% 70% at 20% 0%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(165deg, var(--f1), var(--f2) 85%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Big serif monogram, 100 px (74 px once scaled on a side card). */
+.letter {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  font-family: var(--font-title);
+  font-size: 100px;
+  font-weight: 300;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+/* Program icon in place of the monogram (same corner, about the same weight). */
+.icon {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+}
+
+[data-mode="grid"] .icon {
+  left: 14px;
+  top: 14px;
+  width: 54px;
+  height: 54px;
+}
+
+[data-mode="grid"] .letter {
+  font-size: 56px;
+}
+
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Keeps the name plate readable on any poster. */
+.posterShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(8, 5, 12, 0.6));
+}
+
+[data-glass="gpu"] > .poster,
+[data-glass="gpu"] > .posterShade {
+  inset: var(--da-poster-inset, 7px);
+  width: calc(100% - 2 * var(--da-poster-inset, 7px));
+  height: calc(100% - 2 * var(--da-poster-inset, 7px));
+  border-radius: max(0px, calc(var(--radius-card) - var(--da-poster-inset, 3px)));
+}
+
+[data-mode="stage"] [data-glass="gpu"] > .poster {
+  opacity: var(--da-poster-opacity, 0.8);
+}
+
+[data-mode="grid"] [data-glass="gpu"] > .poster {
+  opacity: var(--da-grid-poster-opacity, 0.85);
+}
+
+/* The engine draws this poster as a texture (refracted and reflected by the glass, round 2b): the
+   DOM picture stays loaded but hidden; it comes back at once if the engine stops drawing it. */
+[data-glass-poster="gpu"] > .poster {
+  visibility: hidden;
+}

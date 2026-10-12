@@ -57,6 +57,21 @@ describe("carousel floating (round 5)", () => {
     expect(glassFloatOf(a!.card)).toBeUndefined();
   });
 
+  it("comes back to floating slowly after a pause (no jolt), rests fast", () => {
+    const { loop } = fakeLoop();
+    const { stage, boxes } = fakeStage(["steam"]);
+    const f = new CarouselFloat(stage, CONFIG, () => loop);
+    f.refresh();
+    const dy = () =>
+      Math.abs(Number(/translateY\((-?[\d.]+)px/.exec(boxes[0]!.el.style.transform)?.[1] ?? 0));
+    let max200 = 0;
+    for (let t = 0; t <= 200; t += 16) {
+      f.tick(16, t);
+      max200 = Math.max(max200, dy());
+    }
+    expect(max200).toBeLessThan(CONFIG.amp * 0.45); // well under half the amplitude at 200 ms
+  });
+
   it("eases the hovered card to rest, and every card at once for a sequence", () => {
     const { loop } = fakeLoop();
     const { stage, boxes } = fakeStage(["steam", "discord"]);
@@ -77,16 +92,18 @@ describe("carousel floating (round 5)", () => {
     const { stage, boxes } = fakeStage(["steam", "discord"]);
     const f = new CarouselFloat(stage, CONFIG, () => loop);
     f.refresh();
-    expect(f.fps).toBe(60); // the cards ease in first
-    for (let t = 0; t <= 2000; t += 16) f.tick(16, t);
+    expect(f.fps).toBe(60); // the cards ease in first (slowly: no jolt)
+    for (let t = 0; t <= 1000; t += 16) f.tick(16, t);
+    expect(f.fps).toBe(60);
+    for (let t = 1016; t <= 2600; t += 16) f.tick(16, t);
     expect(f.fps).toBe(30);
     expect(ticks.size).toBe(1);
     f.hover(boxes[0]!.card);
     expect(f.fps).toBe(60);
     f.hover(null);
-    for (let t = 2016; t <= 4000; t += 16) f.tick(16, t);
+    for (let t = 2616; t <= 5000; t += 16) f.tick(16, t);
     expect(f.fps).toBe(30);
-    f.wheel(4000);
+    f.wheel(5000);
     expect(f.fps).toBe(60);
     expect(ticks.size).toBe(1);
   });

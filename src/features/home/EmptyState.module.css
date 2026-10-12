@@ -36,7 +36,7 @@
   width: 150px;
   height: 180px;
   box-sizing: border-box;
-  border-radius: 24px;
+  border-radius: var(--radius-fan);
   border: 2px dashed color-mix(in srgb, var(--text) 30%, transparent);
   background: color-mix(in srgb, var(--text) 4%, transparent);
   color: var(--text);

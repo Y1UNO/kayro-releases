@@ -21,7 +21,11 @@
   cursor: grabbing;
 }
 
+/* The brand: the logo (22 px) and « Kayro » in the title face, as on the home screen. */
 .mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex-shrink: 0;
   margin-right: var(--w-mark-gap);
   font-family: var(--font-title);
@@ -29,32 +33,6 @@
   font-weight: 500;
   color: var(--text);
   pointer-events: none;
-}
-
-/* Non-wordmark marks: a small shape (provisional, the logo comes with the art direction). */
-[data-style="aurore"] .mark,
-[data-style="sillage"] .mark,
-[data-style="orbe"] .mark {
-  width: 22px;
-  height: 22px;
-  font-size: 0;
-}
-
-[data-style="aurore"] .mark {
-  border-radius: 8px;
-  background: linear-gradient(135deg, #a79bff, #4be0d3);
-}
-
-[data-style="sillage"] .mark {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  background: #3ddc97;
-}
-
-[data-style="orbe"] .mark {
-  border-radius: 50%;
-  background: radial-gradient(circle at 34% 28%, #fff, #5a6cff 60%, #161a55);
 }
 
 .tabs {
@@ -84,13 +62,6 @@
 .tab[aria-selected="true"] {
   background: var(--w-tab-active-bg);
   color: var(--w-tab-active-fg);
-}
-
-[data-style="orbe"] .tab[aria-selected="true"]::before {
-  content: "";
-  width: 18px;
-  height: 2px;
-  background: #8a98ff;
 }
 
 .grow {

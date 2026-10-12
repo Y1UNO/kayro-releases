@@ -2,12 +2,14 @@
 .stage {
   position: relative;
   width: 100%;
+  margin-top: var(--stage-drop, 0px);
   height: max(340px, calc(var(--slot-h, 328px) + 12px));
   flex-shrink: 0;
   outline: none;
 }
 
-.stage:focus-visible [data-active] > button {
+/* The card is in a floating box since round 5: `[data-stage]`, not `> button` (the edit button). */
+.stage:focus-visible [data-active] [data-stage] {
   outline: none;
   box-shadow: var(--m-focus);
 }

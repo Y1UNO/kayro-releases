@@ -1,11 +1,11 @@
 /*
- * Widget window: the box whose size the window takes, and the four styles. The bar is in
+ * Widget window: the box whose size the window takes, and its one style. The bar is in
  * WidgetBar.module.css, the panel (glass shell + content) in WidgetPanel.module.css.
  * Bar: reference/Widget.dc.html; panel: reference/WidgetOuvert.dc.html.
- * PROVISIONAL LOOK: the art direction is settled in step 12b. Every visual value is a `--w-*`
- * variable below, so a style is replaced by changing its block, never the rules further down.
- * The window is transparent and there is nothing behind the page to blur, so surfaces are
- * semi-opaque colours (PLAN.md §6.1), not glass.
+ * Round 5 (proposal 5): one « Kayro » style taken from the theme's tokens, the same as the home
+ * screen (the four provisional styles and their fixed colours are gone). Every visual value is a
+ * `--w-*` variable below. The window is transparent and there is nothing behind the page to blur,
+ * so surfaces are near-opaque colours of the theme (PLAN.md §6.1), not glass.
  */
 
 .shell {
@@ -21,116 +21,38 @@
   color: var(--text);
   user-select: none;
 
-  /* ── style « brume » (default; DM Sans, warm) ── */
   --w-bar-h: 62px;
-  --w-bar-radius: 31px;
-  --w-bar-bg: rgba(30, 20, 38, 0.9);
-  --w-bar-border: rgba(255, 255, 255, 0.16);
+  --w-bar-radius: var(--radius-pill);
+  --w-bar-bg: color-mix(in srgb, var(--bg-mid) 88%, transparent);
+  --w-bar-border: var(--glass-border);
   --w-bar-shadow: 0 6px 14px rgba(0, 0, 0, 0.32);
-  --w-tab-fg: rgba(246, 239, 232, 0.86);
-  --w-tab-radius: 20px;
-  --w-tab-active-bg: rgba(255, 185, 138, 0.2);
-  --w-tab-active-fg: #ffd2b0;
+  --w-tab-fg: var(--text-2);
+  --w-tab-radius: var(--radius-pill);
+  --w-tab-active-bg: var(--fill-tab-active);
+  --w-tab-active-fg: var(--text-active);
   --w-tab-weight: 600;
   --w-icon-size: 40px;
-  --w-icon-radius: 20px;
-  --w-icon-bg: rgba(255, 255, 255, 0.1);
+  --w-icon-radius: var(--radius-pill);
+  --w-icon-bg: var(--fill-soft);
   --w-icon-border: transparent;
-  --w-icon-fg: #f6efe8;
-  --w-cta-radius: 24px;
-  --w-cta-bg: #ffb98a;
-  --w-cta-fg: #1a1020;
+  --w-icon-fg: var(--text);
+  --w-cta-radius: var(--radius-pill);
+  --w-cta-bg: var(--accent);
+  --w-cta-fg: var(--text-on-accent);
   --w-cta-weight: 700;
-  --w-mark-gap: 14px;
+  --w-mark-gap: 12px;
 
   /* Panel */
-  --w-panel-radius: 32px;
-  --w-panel-bg:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 55%),
-    rgba(34, 24, 48, 0.94);
-  --w-panel-border: rgba(255, 255, 255, 0.2);
+  --w-panel-radius: var(--radius-panel);
+  --w-panel-bg: var(--panel-bg);
+  --w-panel-border: var(--glass-border);
   --w-panel-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
-  --w-field-bg: rgba(0, 0, 0, 0.25);
-  --w-row-bg: rgba(0, 0, 0, 0.22);
-  --w-soft-bg: rgba(255, 255, 255, 0.14);
-  --w-heading-fg: rgba(246, 239, 232, 0.78);
-  --w-accent: #ffb98a;
-  --w-accent-fg: #1a1020;
-  --w-accent-light: #ffd2b0;
-}
-
-.shell[data-style="aurore"] {
-  --w-bar-radius: 32px;
-  --w-bar-bg: rgba(60, 54, 104, 0.88);
-  --w-bar-border: rgba(255, 255, 255, 0.24);
-  --w-tab-fg: rgba(255, 255, 255, 0.86);
-  --w-tab-active-bg: rgba(255, 255, 255, 0.2);
-  --w-tab-active-fg: #fff;
-  --w-icon-bg: rgba(255, 255, 255, 0.12);
-  --w-icon-fg: #fff;
-  --w-cta-bg: #9d92ff;
-  --w-cta-fg: #0a0b10;
-  --w-cta-radius: 22px;
-  --w-mark-gap: 10px;
-  --w-panel-bg:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 55%),
-    rgba(44, 40, 86, 0.94);
-  --w-accent: #9d92ff;
-  --w-accent-fg: #0a0b10;
-  --w-accent-light: #cfc9ff;
-}
-
-.shell[data-style="sillage"] {
-  --w-bar-radius: 18px;
-  --w-bar-bg: #14161a;
-  --w-bar-border: #2a2e35;
-  --w-tab-fg: #b4bac4;
-  --w-tab-radius: 12px;
-  --w-tab-active-bg: #1f3a2f;
-  --w-tab-active-fg: #3ddc97;
-  --w-tab-weight: 700;
-  --w-icon-radius: 12px;
-  --w-icon-bg: #1b1e23;
-  --w-icon-border: #2a2e35;
-  --w-icon-fg: #eef0f3;
-  --w-cta-radius: 12px;
-  --w-cta-bg: #3ddc97;
-  --w-cta-fg: #0b1a12;
-  --w-cta-weight: 800;
-  --w-mark-gap: 10px;
-  --w-panel-radius: 22px;
-  --w-panel-bg: #14161a;
-  --w-panel-border: #2a2e35;
-  --w-field-bg: #0d0f12;
-  --w-row-bg: #1b1e23;
-  --w-soft-bg: #1f2329;
-  --w-accent: #3ddc97;
-  --w-accent-fg: #0b1a12;
-  --w-accent-light: #3ddc97;
-}
-
-.shell[data-style="orbe"] {
-  --w-bar-bg: #07080b;
-  --w-bar-border: rgba(255, 255, 255, 0.18);
-  --w-tab-fg: rgba(242, 244, 248, 0.78);
-  --w-tab-weight: 500;
-  --w-tab-active-bg: transparent;
-  --w-tab-active-fg: #fff;
-  --w-icon-bg: transparent;
-  --w-icon-border: rgba(255, 255, 255, 0.16);
-  --w-icon-fg: #f2f4f8;
-  --w-cta-bg: #f2f4f8;
-  --w-cta-fg: #07080b;
-  --w-cta-weight: 600;
-  --w-mark-gap: 12px;
-  --w-panel-bg: #0b0c10;
-  --w-panel-border: rgba(255, 255, 255, 0.18);
-  --w-field-bg: #050609;
-  --w-row-bg: #12141a;
-  --w-soft-bg: #1a1d25;
-  --w-accent: #f2f4f8;
-  --w-accent-fg: #07080b;
-  --w-accent-light: #8a98ff;
+  --w-field-bg: var(--field);
+  --w-row-bg: var(--field);
+  --w-soft-bg: var(--fill-soft);
+  --w-accent: var(--accent);
+  --w-accent-fg: var(--text-on-accent);
+  --w-accent-light: var(--accent-light);
 }
 
 /* While the panel is there (open, or folding): room under it for its halo (round 4b). The window

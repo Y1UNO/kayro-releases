@@ -229,7 +229,7 @@ export class CardHoverFx {
     if (c.threads) this.run();
   }
 
-  /** Moves the layer into the card's slot (after the card), sized like it. */
+  /** Moves the layer next to the card (in its floating box, round 5), sized like it. */
   private attach(card: HTMLElement): void {
     const slot = card.parentElement;
     if (!slot) return;
@@ -292,7 +292,9 @@ export class CardHoverFx {
 /** The selected card's own periodic veil (2b, `cardSheen`) glides at `now` (engine or CSS). */
 export function periodicGlide(sheen: ElementValues | undefined) {
   return (card: HTMLElement, now: number): boolean => {
-    if (sheen?.on !== true || card.parentElement?.dataset.active === undefined) return false;
+    // The card's slot (its floating box sits in between since round 5).
+    const slot = card.closest?.<HTMLElement>("[data-app-id]") ?? card.parentElement;
+    if (sheen?.on !== true || slot?.dataset.active === undefined) return false;
     const css = card.querySelector(`.${CSS.escape(sheenBandClass)}`);
     if (css && css.getAnimations().length > 0) return true;
     return sheenAt(now, Number(sheen.duration) || 1800) >= 0;

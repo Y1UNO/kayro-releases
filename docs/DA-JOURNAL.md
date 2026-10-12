@@ -932,6 +932,70 @@ Relecture en lecture seule, corrigée en trois paquets (arrêt après chacun, pa
   - **Autres pistes** : première capture du canvas WebGL dans la vie de la page ; cascade de l'onglet Thèmes encore en cours (clic 0,9 s après l'onglet) ; fenêtre masquée par la vidéo.
   - **Protocole** : exe relancé, PC libre ; ouvrir Réglages › Thèmes, attendre 0,9 s puis 3 s, cliquer une carte. Une fois avec une rafale d'écran Windows seulement (aucune capture CDP), une fois avec une capture CDP à 330–400 ms. Si l'image blanche ne vient qu'avec la capture CDP, le point est clos.
 
+**Commit** : `bc8a7a3`, tag `da-r5-1` (avec `docs/PROPOSITIONS-DA.md`).
+
+### Paquet 2 — Cohérence visuelle (2026-10-13)
+**Fait** :
+- **1. Bokeh** (moteur seulement) :
+  - sprite en disque doux + anneau fin : `a = .55·exp(−r²·2,2) + .45·smoothstep(.80, .93, r)·(1 − smoothstep(.95, 1, r))` (`bgShader.ts`) ;
+  - couleur A→B éclaircie de 35 % vers le blanc (`scene.ts`) ;
+  - défauts du catalogue : 7 × 120 px, intensité 0,09, zone 8 / 80 ; le bloc d'`actif.json` est aligné ;
+  - Éco : 4 au plus ;
+  - testé (`bokeh.test.ts`).
+- **2. Rayons et petits titres** :
+  - Quatre familles dans `tokens.css` : `--radius-pill`, `--radius-row` (16), `--radius-panel` (26), `--radius-card` (30, `cards.radius`) et `--radius-fan` (24 : éventail, carte vide). Tous les rayons de l'app y sont rangés : boutons, segments, interrupteurs, sélecteurs, badges et numéros ronds en pilule ; lignes, champs et tuiles en 16 ; dialogues, palette, menus, notifications, panneaux latéraux et étapes en 26.
+  - Les anciens `xs` / `sm` / `lg` / `xl` / `3xl` / `4xl` ne sont plus utilisés dans l'app (gardés dans les jetons, pour l'atelier).
+  - Restent hors familles : traits de 1–2 px, case à cocher, piste du curseur, logo de la marque (23,6), mini-cartes des cartes de thème.
+  - **Jeton `--eyebrow`** (Manrope 12 / 700, `--eyebrow-tracking` 0,24 em, `--eyebrow-color` = `--text-soft`) pour CATÉGORIE, CHOISIS UN UNIVERS, les titres de l'éditeur (fini Cormorant), la légende de la nouvelle scène et les titres du widget. Le sous-titre de l'ouverture garde 0,32 em.
+  - Paramètres `labelTracking` / `softLabel` et CSS mort `Editor.module.css .label` retirés.
+  - Paires de contraste du libellé et du panneau passées à `--text-soft`.
+- **5. Widget au thème** :
+  - un seul style dérivé des jetons (`Widget.module.css`) : barre `bg-mid` 88 % en pilule, logo 22 px + « Kayro », onglet `--fill-tab-active`, bouton principal `--accent`, pastille « Ouvert » `--accent-light`, panneau `--panel-bg` en 26, lignes en 16, avatars en dégradé A→B ;
+  - les 4 styles et leurs couleurs en dur sont retirés ;
+  - `widgetStyle` est ignoré (gardé dans le schéma), `?style=` est retiré de `/dev/widget` ;
+  - le mouvement (`unroll.ts`) est inchangé.
+- **6. Barre et dock** :
+  - micro et mains **cachés** derrière `app/features.ts` (`voice` / `hands` à `false`), code gardé ;
+  - sélecteur de mode = bouton rond (nouvelle icône `DisplayModeIcon`) qui ouvre un petit menu (`PopMenu.tsx`, menu générique dont `AppMenu` se sert aussi : choix coché, flèches, Échap) ;
+  - crayon : visible seulement au survol de la carte active ou au focus clavier du carrousel ;
+  - bouton grille **dans** la pilule d'onglets, après un séparateur.
+- **7. Cartes sans affiche** :
+  - face = celle de l'éventail : A→B du thème, mélange tiré par app (`faceMixOf`, même tirage que `--k`), 0,85, retrait 3 px, ombre de pied, icône du cache sinon la lettre ;
+  - styles de la face, de l'affiche, de l'icône et de la lettre sortis dans `AppCardFace.module.css` (`AppCard.module.css` : 392 → 322 lignes) ;
+  - **filets** : cœur blanc à 55 %, largeur 2,2, intensité 1,8, halo 0,9, longueur 0,2 (éventail compris) ;
+  - **bug corrigé** : la tête A des filets prenait la couleur B dans le carrousel (`--k` du slot) ;
+  - nouvelle paire de contraste « plaque de nom sur une face », testée sur les 11 thèmes.
+
+**Testé** :
+- tsc, eslint, prettier, clippy, **vitest 630/630**, **cargo test 195**.
+- Volet du navigateur, à l'arrêt :
+  - accueil Lavande-pêche et Encre (faces A→B, barre, pilule avec la grille, dock sans micro, crayon caché, bokeh) ;
+  - menu « mode » (aligné à droite, Immersif coché, Échap ferme) ;
+  - widget Bleu-gris déplié ;
+  - éditeur (titres en Manrope, badges en pilule, étapes en 26).
+- Exe reconstruit.
+
+**Non testé / limites** :
+- Le rendu en mouvement (filets plus visibles, bokeh qui respire) : le volet ne dessine pas les animations.
+- Les apps de Steam / Epic n'ont pas d'icône : elles gardent la lettre (« icônes dans le carrousel » : plus tard).
+- La carte vide reste en 150 × 180 (hors liste).
+- **Mesures** : à l'étape 13 (aucun coût par image attendu : un sprite, du CSS).
+
+**Ton retour (paquet 2, capture)** : deux défauts.
+- **Les filets du carrousel étaient dessinés à l'intérieur de la carte active.**
+  - Cause : depuis la boîte de flottaison du paquet 1, la couche des filets n'est plus un enfant direct de l'emplacement. La règle `[data-active] > .layer` ne s'appliquait plus, donc la couche gardait l'échelle des cartes latérales (×0,74).
+  - Correctif : la règle devient `[data-active] .layer` (`Rim.module.css`).
+  - Le test du voile périodique, qui regardait le parent de la carte, cherche maintenant son emplacement (`closest("[data-app-id]")`).
+- **À-coup de la flottaison quand on ouvre une catégorie.**
+  - Cause : pendant la liaison, la flottaison du carrousel est coupée net (les cartes sont posées par la séquence), puis elle repartait en ~240 ms.
+  - Correctif : elle s'arrête toujours vite (240 ms) mais repart lentement, en ~1,2 s (`FLOAT_RHYTHM.resumeMs`), au retour d'une pause comme d'un survol. Testé.
+
+**Correctifs validés dans l'exe.** Puis :
+- **Le carrousel descend de 22 px** (`--stage-drop` dans `tokens.css`).
+  - Mesuré à 1707 × 960 sur le titre de 96 px : avant, la carte active soulevée au survol (10 px, ×1,03, valeurs inchangées) chevauchait de 8,6 px le jambage du « g » de « Logiciels » (27 px sous la ligne de base). Il reste maintenant **14,3 px** d'air (« Logiciels ») et 17,3 px (« Jeux »).
+  - L'éventail descend avec lui : la liaison place les deux autour du même centre (409,9 px, vérifié), sa chronologie est intacte.
+- **Régression de la boîte de flottaison corrigée** : l'anneau de focus clavier de la carte choisie (`[data-active] > button`, carrousel et grille) ne s'appliquait plus ; il vise maintenant la carte elle-même.
+
 ### Plus tard (hors ronde 5, à ne pas faire dans cette ronde)
 - Gestion des apps qui démarrent avec Windows au premier lancement.
 - Design propre à chaque carte de catégorie.

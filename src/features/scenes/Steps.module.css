@@ -1,12 +1,12 @@
 /* Advanced editor: numbered steps, action palette and slots panel. */
 
+/* Small capitals title (`--eyebrow`, round 5): Manrope, not the serif of h1–h3. */
 .label {
   margin: 0;
-  font-size: var(--fs-12);
-  font-weight: 700;
-  letter-spacing: var(--tracking-label);
+  font: var(--eyebrow);
+  letter-spacing: var(--eyebrow-tracking);
   text-transform: uppercase;
-  color: var(--text-2);
+  color: var(--eyebrow-color);
 }
 
 .muted {
@@ -57,7 +57,7 @@
 .step {
   position: relative;
   box-sizing: border-box;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-panel);
   background: var(--glass-bg-eco);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
@@ -91,7 +91,7 @@
   flex: none;
   width: 34px;
   height: 34px;
-  border-radius: 17px;
+  border-radius: var(--radius-pill);
   display: grid;
   place-items: center;
   background: var(--track);
@@ -118,7 +118,7 @@
 .badge {
   flex: none;
   padding: 5px 11px;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-pill);
   font-size: var(--fs-11);
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -165,7 +165,7 @@
   width: 36px;
   height: 44px;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   background: none;
   color: var(--text-2);
   cursor: grab;
@@ -211,7 +211,7 @@
   width: 100%;
   min-height: 40px;
   padding: 8px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   border: 1px solid transparent;
   background: var(--field);
   box-shadow: var(--field-inset);
@@ -232,7 +232,7 @@
   justify-content: center;
   gap: 10px;
   min-height: 56px;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-panel);
   border: 2px dashed rgba(255, 255, 255, 0.28);
   background: transparent;
   color: var(--text-2);

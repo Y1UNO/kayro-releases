@@ -13,8 +13,12 @@
 }
 
 .item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-row);
   padding: 10px 14px;
   background: transparent;
   color: var(--text);
@@ -33,6 +37,12 @@
 
 .item:focus-visible {
   box-shadow: inset 0 0 0 2px var(--accent-light);
+}
+
+/* The checked choice of a menu of choices (the display mode, round 5). */
+.check {
+  flex-shrink: 0;
+  color: var(--accent-light);
 }
 
 @keyframes menu-in {

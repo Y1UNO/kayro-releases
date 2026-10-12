@@ -132,7 +132,7 @@ export function SceneEditor({ sceneId, seed, onBack }: Props) {
 
   return (
     <main className={styles.screen}>
-      <Surface as="header" radius="32px" className={styles.bar}>
+      <Surface as="header" radius="var(--da-bar-radius, var(--radius-pill))" className={styles.bar}>
         <Button size="sm" onClick={leave}>
           <ChevronLeftIcon size={16} />
           {t("scenes.back")}

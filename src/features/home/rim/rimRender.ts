@@ -141,7 +141,8 @@ export function createRimEls(parent: HTMLElement, sparks: number): RimEls {
     span(rimClass.thread, (k % SEGMENTS) / SEGMENTS),
   );
   const flash = span(rimClass.flash);
-  const heads = [span(rimClass.threadHead), span(rimClass.threadHead, 1)];
+  // Head A says its colour too: on a carousel card the slot's own `--k` (its shade) would leak in.
+  const heads = [span(rimClass.threadHead, 0), span(rimClass.threadHead, 1)];
   const n = Math.max(1, sparks);
   const sp = Array.from({ length: sparks }, (_, k) => span(rimClass.spark, k / Math.max(1, n - 1)));
   return { threads, sparks: sp, heads, flash };

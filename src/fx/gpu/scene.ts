@@ -19,6 +19,10 @@ import type { FxPalette, FxParams } from "../FxLayer";
  * piece of glass refracts them.
  */
 export const MAX_BOKEH = 24;
+/** Eco draws at most this many bokeh discs (round 5). */
+const ECO_BOKEH = 4;
+/** The bokeh's colour is lightened this far towards white (round 5). */
+const BOKEH_LIFT = 0.35;
 export const MAX_SPRITES = 2 * MAX_PARTICLES + MAX_BOKEH;
 /** Per sprite: x, y, size, alpha, r, g, b, kind (0 ember, 1 star, 2 bokeh). */
 export const SPRITE_FLOATS = 8;
@@ -64,7 +68,8 @@ export class Scene {
       ? Math.min(MAX_PARTICLES, params.stars?.on === true ? num(params.stars, "count", 0) : 0)
       : share(params.stars);
     const bk = params.bokeh;
-    this.nBokeh = bk?.on === true ? Math.min(MAX_BOKEH, Math.round(num(bk, "count", 0))) : 0;
+    const nBokeh = bk?.on === true ? Math.min(MAX_BOKEH, Math.round(num(bk, "count", 0))) : 0;
+    this.nBokeh = quality === "eco" ? Math.min(ECO_BOKEH, nBokeh) : nBokeh;
     seedEmbers(this.embers, this.nEmbers, params.embers);
     seedStars(this.stars, this.nStars, params.stars);
     this.drifting = b.fog === "animated";
@@ -119,10 +124,10 @@ export class Scene {
       put(this.stars[o]! * W, this.stars[o + 1]! * H, size, 0.15 + 0.8 * u, glowA, 1);
     }
     const bk = params.bokeh;
-    const top = num(bk, "zoneTop", 18) / 100;
-    const zh = num(bk, "zoneH", 60) / 100;
-    const bs = num(bk, "size", 56);
-    const bi = num(bk, "intensity", 0.14);
+    const top = num(bk, "zoneTop", 8) / 100;
+    const zh = num(bk, "zoneH", 80) / 100;
+    const bs = num(bk, "size", 120);
+    const bi = num(bk, "intensity", 0.09);
     const ca = palette.a;
     const cb = palette.b;
     for (let i = 0; i < this.nBokeh; i++) {
@@ -132,7 +137,10 @@ export class Scene {
       const ph = this.time / (40000 + 30000 * c) + a;
       const x = (0.04 + 0.92 * a) * W + Math.sin(ph * 2 * Math.PI) * 30;
       const y = (top + b * zh) * H + Math.cos(ph * 2 * Math.PI) * 14;
-      const mix = [0, 1, 2].map((j) => (ca[j]! + (cb[j]! - ca[j]!) * c) / 255);
+      // A → B lightened towards white (round 5): at a low additive alpha a plain mix turns grey.
+      const mix = [0, 1, 2].map(
+        (j) => ((ca[j]! + (cb[j]! - ca[j]!) * c) / 255) * (1 - BOKEH_LIFT) + BOKEH_LIFT,
+      );
       const breathe = 0.75 + 0.25 * Math.sin((ph * 3 + b) * 2 * Math.PI);
       put(x, y, bs * (0.5 + a), bi * (0.5 + 0.5 * b) * breathe, mix, 2);
     }

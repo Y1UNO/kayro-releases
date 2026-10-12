@@ -4,7 +4,7 @@ import { t } from "../../i18n";
 import { EditIcon, useGlass } from "../../design";
 import { markGlassDirtyFor } from "../../design/glass/glassRegistry";
 import { posterUrl } from "./art";
-import { monogram, shadeOf } from "./cardLook";
+import { faceMixOf, monogram, shadeOf } from "./cardLook";
 import { useDa } from "../../design/da";
 import { currentMotion } from "../../design/motion/current";
 import { durOf } from "../../design/motion/tokens";
@@ -18,6 +18,7 @@ import { useAppIcon } from "./useAppIcon";
 import { cardTilt } from "./cardTilt";
 import fail from "./LaunchFail.module.css";
 import styles from "./AppCard.module.css";
+import face from "./AppCardFace.module.css";
 
 /** Forwards an element to a ref received as a prop (callback or object). */
 function assignRef<T>(ref: Ref<T> | undefined, value: T): void {
@@ -100,6 +101,7 @@ export function AppCard({
       className={stage ? styles.slot : styles.cell}
       style={vars}
       data-app-id={app.id}
+      data-mode={mode}
       data-d={stage ? d : undefined}
       data-active={active || undefined}
       data-hidden={hidden ? "" : undefined}
@@ -126,20 +128,23 @@ export function AppCard({
             <>
               {/* Decorative: the button's own label already names the app (empty alt, not text). */}
               <img
-                className={styles.poster}
+                className={face.poster}
                 src={poster}
                 alt={""}
                 draggable={false}
                 decoding="async"
               />
-              <span className={styles.posterShade} />
+              <span className={face.posterShade} />
             </>
-          ) : null}
+          ) : (
+            // Round 5: the theme's A → B face; where between A and B: a draw per app.
+            <span className={face.face} style={cssVars({ "--mix": `${faceMixOf(app.id)}%` })} />
+          )}
           {stage && <span className={styles.veil} aria-hidden="true" />}
           {!poster && icon && (
             // Decorative like the poster: the button's label names the app.
             <img
-              className={styles.icon}
+              className={face.icon}
               data-face=""
               src={icon}
               alt={""}
@@ -148,7 +153,7 @@ export function AppCard({
             />
           )}
           {!poster && !icon && (
-            <span className={styles.letter} data-face="" aria-hidden="true">
+            <span className={face.letter} data-face="" aria-hidden="true">
               {monogram(app.name)}
             </span>
           )}

@@ -1,5 +1,6 @@
 import type { PointerEvent, RefObject } from "react";
 import { APP_NAME } from "../../app/appName";
+import { Logo } from "../../brand";
 import { ChevronDownIcon, ExpandIcon, PlayIcon, SearchIcon } from "../../design";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
@@ -51,7 +52,10 @@ export function WidgetBar({
       onPointerDown={startDrag}
       aria-label={t("widget.bar")}
     >
-      <span className={styles.mark}>{APP_NAME}</span>
+      <span className={styles.mark}>
+        <Logo size={22} />
+        {APP_NAME}
+      </span>
       <div className={styles.tabs} role="tablist" aria-label={t("home.categoriesNav")}>
         {CATEGORY_IDS.map((id) => (
           <button
