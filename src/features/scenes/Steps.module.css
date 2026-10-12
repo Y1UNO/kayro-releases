@@ -83,7 +83,8 @@
   align-items: center;
   gap: 14px;
   min-height: 72px;
-  padding: 0 18px;
+  /* The handle comes first (round 5): a narrow start, 8 px between it and the number. */
+  padding: 0 18px 0 6px;
   box-sizing: border-box;
 }
 
@@ -160,6 +161,7 @@
 
 .grip {
   flex: none;
+  margin-right: -6px;
   display: grid;
   place-items: center;
   width: 36px;

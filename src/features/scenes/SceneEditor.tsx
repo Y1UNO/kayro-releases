@@ -1,12 +1,5 @@
 import { useMemo, useReducer, useRef, useState } from "react";
-import {
-  Button,
-  ChevronLeftIcon,
-  PlayIcon,
-  SegmentedControl,
-  StopIcon,
-  Surface,
-} from "../../design";
+import { Button, PlayIcon, SegmentedControl, StopIcon } from "../../design";
 import { t } from "../../i18n";
 import { errorText } from "../../ipc/errors";
 import { hubStore, sceneStore, useDesktop, useHub, useScenes } from "../../store";
@@ -30,7 +23,10 @@ import { slotLabel, slotsOf } from "./model";
 import { SimpleEditor } from "./SimpleEditor";
 import { usePlayScene } from "./usePlayScene";
 import { Notice } from "../home/Overlays";
+import { BarBack, TopBarShell } from "../home/TopBarShell";
+import { ScreenTitle } from "./ScreenTitle";
 import styles from "./Editor.module.css";
+import screens from "./Screens.module.css";
 
 interface Props {
   /** null = a new scene. */
@@ -131,70 +127,88 @@ export function SceneEditor({ sceneId, seed, onBack }: Props) {
   }
 
   return (
-    <main className={styles.screen}>
-      <Surface as="header" radius="var(--da-bar-radius, var(--radius-pill))" className={styles.bar}>
-        <Button size="sm" onClick={leave}>
-          <ChevronLeftIcon size={16} />
-          {t("scenes.back")}
-        </Button>
-        <input
-          className={styles.name}
-          value={draft.name}
-          maxLength={80}
-          placeholder={t("scenes.editor.namePlaceholder")}
-          aria-label={t("scenes.editor.name")}
-          onChange={(e) => dispatch({ type: "name", name: e.target.value })}
-        />
-        <HotkeyField
-          value={draft.hotkey}
-          unregistered={unregistered}
-          taken={[...scenes.filter((s) => s.id !== savedId).map((s) => s.hotkey), settingsHotkey]}
-          onChange={(hotkey) => dispatch({ type: "hotkey", hotkey })}
-        />
-        <div className={styles.spacer} />
-        <SegmentedControl<EditorMode>
-          label={t("scenes.editor.mode")}
-          size="sm"
-          value={draft.mode}
-          onChange={setMode}
-          options={[
-            { value: "simple", label: t("scenes.editor.simple") },
-            { value: "advanced", label: t("scenes.editor.advanced") },
-          ]}
-        />
-        {playing ? (
-          <Button onClick={() => void sceneStore.getState().cancel()}>
-            <StopIcon />
-            {t("scenes.editor.cancel")}
-          </Button>
-        ) : (
-          <Button disabled={!saveable} onClick={() => void test()}>
-            <PlayIcon />
-            {t("scenes.editor.test")}
-          </Button>
-        )}
-        <Button variant="primary" disabled={!saveable || !dirty} onClick={() => void save()}>
-          {t("scenes.editor.save")}
-        </Button>
-      </Surface>
-
-      {problem && (
-        <p className={styles.problem} role="alert">
-          {problem}
-        </p>
-      )}
-      {draft.mode === "simple" ? (
-        <SimpleEditor draft={draft} apps={apps} dispatch={dispatch} run={mine?.steps} />
-      ) : (
-        <AdvancedEditor
-          draft={draft}
-          apps={apps}
-          dispatch={dispatch}
-          run={mine?.steps}
-          onDeleteSlot={askDeleteSlot}
-        />
-      )}
-      <p className={styles.testNote}>{t("scenes.editor.testNote")}</p>
+    <main className={screens.screen}>
+      <TopBarShell
+        left={<BarBack label={t("scenes.back")} onClick={leave} />}
+        right={
+          <>
+            <SegmentedControl<EditorMode>
+              label={t("scenes.editor.mode")}
+              size="sm"
+              value={draft.mode}
+              onChange={setMode}
+              options={[
+                { value: "simple", label: t("scenes.editor.simple") },
+                { value: "advanced", label: t("scenes.editor.advanced") },
+              ]}
+            />
+            {playing ? (
+              <Button size="sm" onClick={() => void sceneStore.getState().cancel()}>
+                <StopIcon />
+                {t("scenes.editor.cancel")}
+              </Button>
+            ) : (
+              <Button size="sm" disabled={!saveable} onClick={() => void test()}>
+                <PlayIcon />
+                {t("scenes.editor.test")}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={!saveable || !dirty}
+              onClick={() => void save()}
+            >
+              {t("scenes.editor.save")}
+            </Button>
+          </>
+        }
+      />
+      <div className={screens.scroll}>
+        <div className={screens.frame}>
+          {/* Round 5: the scene's name is the title (signature of the home screen), editable. */}
+          <ScreenTitle
+            eyebrow={t("scenes.editor.eyebrow")}
+            under={
+              <HotkeyField
+                value={draft.hotkey}
+                unregistered={unregistered}
+                taken={[
+                  ...scenes.filter((s) => s.id !== savedId).map((s) => s.hotkey),
+                  settingsHotkey,
+                ]}
+                onChange={(hotkey) => dispatch({ type: "hotkey", hotkey })}
+              />
+            }
+          >
+            <input
+              className={`${screens.title} ${screens.titleInput}`}
+              value={draft.name}
+              maxLength={80}
+              placeholder={t("scenes.editor.namePlaceholder")}
+              aria-label={t("scenes.editor.name")}
+              onChange={(e) => dispatch({ type: "name", name: e.target.value })}
+            />
+          </ScreenTitle>
+          {problem && (
+            <p className={styles.problem} role="alert">
+              {problem}
+            </p>
+          )}
+          {draft.mode === "simple" ? (
+            <SimpleEditor draft={draft} apps={apps} dispatch={dispatch} run={mine?.steps} />
+          ) : (
+            <AdvancedEditor
+              draft={draft}
+              apps={apps}
+              dispatch={dispatch}
+              run={mine?.steps}
+              onDeleteSlot={askDeleteSlot}
+            />
+          )}
+          <p className={styles.testNote}>{t("scenes.editor.testNote")}</p>
+        </div>
+      </div>
 
       <ConfirmDialog
         open={ask?.kind === "leave"}

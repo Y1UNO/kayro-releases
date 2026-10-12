@@ -213,6 +213,10 @@
   font-size: 118px;
   font-weight: 300;
   line-height: 1;
+  /* Round 5: nothing of a letter shows left of the logo's right edge (the row's 30 px gap): they
+     really come out from behind it. Fixed, never animated; room above, right and below for the
+     blurred copies. */
+  clip-path: inset(-48px -48px -48px -30px);
 }
 
 .slot {

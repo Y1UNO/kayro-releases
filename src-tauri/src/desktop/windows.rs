@@ -14,8 +14,9 @@ use crate::platform::own_window;
 
 pub const MAIN: &str = "main";
 pub const WIDGET: &str = "widget";
-/// Same as `--bg-deep`: what shows before the first paint (no white flash).
-const BACKGROUND: Color = Color(23, 16, 33, 255);
+/// What shows before the first paint (no white flash): the near black every theme's
+/// `--bg-bottom` is, the colour the opening fades from (round 5; it was the old default's purple).
+const BACKGROUND: Color = Color(6, 6, 12, 255);
 
 pub fn label_for(mode: DisplayMode) -> &'static str {
     match mode {
@@ -130,6 +131,9 @@ pub fn configure_main<R: Runtime>(
     saved: &Placement,
 ) -> Rect {
     let immersive = mode == DisplayMode::Immersive;
+    if let Ok(hwnd) = window.hwnd() {
+        own_window::set_show_animation(hwnd.0 as isize, !immersive);
+    }
     let rect = if immersive {
         geometry::immersive_rect(screen)
     } else {

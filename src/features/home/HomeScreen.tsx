@@ -20,7 +20,7 @@ import { CategoryTabs } from "./CategoryTabs";
 import { CategoryTitle } from "./CategoryTitle";
 import { CommandPalette } from "./CommandPalette";
 import { EmptyState } from "./EmptyState";
-import { homeReducer, initialHomeState } from "./homeState";
+import { homeLeft, homeReducer, initialHomeState, rememberHome } from "./homeState";
 import { LaunchToast } from "./LaunchToast";
 import { DragGhost, Notice } from "./Overlays";
 import { SceneDock } from "./SceneDock";
@@ -67,14 +67,18 @@ export function HomeScreen({
   const reduced = useReducedMotion();
   const groups = useMemo(() => groupByCategory(apps), [apps]);
 
-  const [state, dispatch] = useReducer(homeReducer, groups, (g) =>
-    initialHomeState(
-      CATEGORY_IDS.find((id) => g[id].length > 0) ?? "jeux",
-      Object.fromEntries(CATEGORY_IDS.map((id) => [id, g[id].length])) as Record<
-        CategoryId,
-        number
-      >,
-    ),
+  const [state, dispatch] = useReducer(
+    homeReducer,
+    groups,
+    (g) =>
+      homeLeft() ??
+      initialHomeState(
+        CATEGORY_IDS.find((id) => g[id].length > 0) ?? "jeux",
+        Object.fromEntries(CATEGORY_IDS.map((id) => [id, g[id].length])) as Record<
+          CategoryId,
+          number
+        >,
+      ),
   );
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -90,6 +94,7 @@ export function HomeScreen({
   const count = list.length;
   const focus = Math.min(state.focus[state.category], Math.max(0, count - 1));
   const grid = state.view === "grid";
+  useEffect(() => rememberHome(state), [state]);
 
   // The confirmation disappears by itself; the timer exists only while one is shown.
   useEffect(() => {

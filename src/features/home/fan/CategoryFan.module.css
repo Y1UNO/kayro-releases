@@ -119,6 +119,17 @@
   justify-content: space-between;
 }
 
+/* Round 5: the cards right of the centre mirror their face (labels at the right, the gradient's
+   light at the top right): the fan reads symmetric and no label hides under the card in front. */
+.card[data-side="end"] .content {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.card[data-side="end"] .fill {
+  transform: scaleX(-1);
+}
+
 .letter {
   font-family: var(--font-title);
   font-size: 76px;

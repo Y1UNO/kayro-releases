@@ -16,6 +16,7 @@ import { EASES } from "../../../design/da/catalogue";
 import type { ElementValues } from "../../../design/da/daParams";
 import { springAt, SPRINGS } from "../../../design/glass/pillMotion";
 import { curveOf, lerp, type Curve } from "../../../design/motion/curve";
+import { MOTION_DEFAULTS as M } from "../../../design/motion/tokens";
 
 export type Phase = "choose" | "turn" | "deck" | "spread" | "close";
 export const FAN_SIZE = 5;
@@ -30,7 +31,20 @@ const BACK_STAGGER = 35;
 const EASE_CSS = curveOf("ease");
 const SOFT = curveOf("cubic-bezier(.4,0,.2,1)");
 const CARD_EASE = curveOf("cubic-bezier(.22,1,.36,1)");
-const FADE_EASE = curveOf("cubic-bezier(.2,.9,.2,1)");
+/**
+ * Titles of the link (round 5): the leaving title goes first (0.7 × « court », the leaving curve,
+ * −20 px up or +14 px down), the arriving one comes 120 ms later (« moyen », the entrance curve,
+ * from those offsets): never both readable at once. The same both ways (link and back).
+ */
+const TITLE = {
+  out: M.court * M.outShare,
+  outEase: curveOf(EASES[M.easeOut]!),
+  in: M.moyen,
+  inEase: curveOf(EASES[M.easeIn]!),
+  inAfter: 120,
+  askAway: -20,
+  catAway: 14,
+} as const;
 
 export interface LinkConfig {
   speed: number;
@@ -147,10 +161,12 @@ export function phaseTargets(phase: Phase, ctx: LinkContext, c: LinkConfig): Tar
       m.set(`a${k}.f`, tg(off === 2 ? 1 : 0, 200, EASE_CSS));
     }
   }
-  m.set("ask.o", tg(choose ? 1 : 0, 450, EASE_CSS));
-  m.set("ask.y", tg(choose ? 0 : -20, 550, FADE_EASE));
-  m.set("cat.o", tg(choose ? 0 : 1, 450, EASE_CSS));
-  m.set("cat.y", tg(choose ? 20 : 0, 550, FADE_EASE));
+  const leave = (to: number) => tg(to, TITLE.out, TITLE.outEase);
+  const come = (to: number) => tg(to, TITLE.in, TITLE.inEase, TITLE.inAfter);
+  m.set("ask.o", choose ? come(1) : leave(0));
+  m.set("ask.y", choose ? come(0) : leave(TITLE.askAway));
+  m.set("cat.o", choose ? leave(0) : come(1));
+  m.set("cat.y", choose ? leave(TITLE.catAway) : come(0));
   m.set("back.o", tg(choose ? 0 : 1, 450, EASE_CSS));
   m.set("tabs.o", tg(inside ? 1 : 0, 450, EASE_CSS));
   m.set("body.o", tg(inside ? 1 : 0, 450, EASE_CSS));

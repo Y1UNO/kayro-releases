@@ -78,6 +78,17 @@ export function StepRow(p: Props) {
         </span>
       )}
       <div className={styles.stepMain}>
+        {/* Round 5 (proposal 4): the handle on the left of the number. */}
+        <button
+          type="button"
+          className={styles.grip}
+          aria-label={t("scenes.step.move", { n: p.index + 1 })}
+          aria-describedby="scenes-move-help"
+          onPointerDown={p.onGripDown}
+          onKeyDown={onGripKey}
+        >
+          <GripIcon size={18} />
+        </button>
         <span
           className={`${styles.stepNumber} ${chainStyles.point}`}
           data-chain-point
@@ -103,16 +114,6 @@ export function StepRow(p: Props) {
           </span>
         </button>
         <RunMark view={p.view} />
-        <button
-          type="button"
-          className={styles.grip}
-          aria-label={t("scenes.step.move", { n: p.index + 1 })}
-          aria-describedby="scenes-move-help"
-          onPointerDown={p.onGripDown}
-          onKeyDown={onGripKey}
-        >
-          <GripIcon size={18} />
-        </button>
       </div>
       {p.selected && (
         <div className={styles.details}>

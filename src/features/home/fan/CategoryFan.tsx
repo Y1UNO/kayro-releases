@@ -3,6 +3,7 @@ import { useGlass } from "../../../design";
 import { t } from "../../../i18n";
 import { CATEGORY_IDS, CATEGORY_LABELS, type CategoryId } from "../categories";
 import { MAX_SPARKS } from "./fanFloat";
+import { FAN_SIZE } from "./fanTimeline";
 import type { FanCardEls } from "./fanRender";
 import { rimClass, SEGMENTS } from "../rim/rimRender";
 import styles from "./CategoryFan.module.css";
@@ -143,6 +144,9 @@ function FanCard({
         style={{ "--mix": `${(i / 4) * 100}%` } as CSSProperties}
         aria-label={t("home.fan.open", { name })}
         data-fan-card={id}
+        // Round 5: right of the centre, the face is mirrored (its labels are never under the
+        // card in front: the fan's right cards lie behind their left neighbour).
+        data-side={i > (FAN_SIZE - 1) / 2 ? "end" : undefined}
         onClick={() => onPick(id)}
         onPointerEnter={(e) => onHover(i, true, ...pointerOf(e))}
         onPointerMove={(e) => onHover(i, true, ...pointerOf(e))}

@@ -58,3 +58,17 @@ export function homeReducer(state: HomeState, action: HomeAction): HomeState {
       return action.view === state.view ? state : { ...state, view: action.view };
   }
 }
+
+/**
+ * The home screen as it was left for the scenes (round 5): coming back shows that carousel, not
+ * the fan. Kept for the life of the page.
+ */
+let left: HomeState | null = null;
+
+export function rememberHome(state: HomeState): void {
+  left = state;
+}
+
+export function homeLeft(): HomeState | null {
+  return left;
+}

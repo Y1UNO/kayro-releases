@@ -109,6 +109,28 @@ describe("category link A: sequences", () => {
     expect(s.duration).toBeCloseTo(1070 + 2 * 70 + 700, 0);
   });
 
+  it("titles (round 5): the leaving one is gone before the arriving one shows, both ways", () => {
+    const link = new Sequence("link", ctx(1), c, fan, fan);
+    for (let t = 0; t <= 700; t += 4) {
+      const v = link.at(t);
+      // Never both half visible: the fan's title leaves in 168 ms, the category's comes at 120 ms.
+      expect(Math.min(v.get("ask.o")!, v.get("cat.o")!)).toBeLessThan(0.5);
+    }
+    near(link.at(168).get("ask.o"), 0);
+    near(link.at(120).get("cat.o"), 0);
+    near(link.at(480).get("cat.o"), 1);
+    near(link.at(480).get("cat.y"), 0);
+    near(link.at(168).get("ask.y"), -20);
+    const back = new Sequence("back", ctx(1), c, restValues("spread", ctx(1), c), fan);
+    for (let t = 380; t <= 1000; t += 4) {
+      const v = back.at(t);
+      expect(Math.min(v.get("ask.o")!, v.get("cat.o")!)).toBeLessThan(0.5);
+    }
+    near(back.at(380 + 168).get("cat.o"), 0);
+    near(back.at(380 + 168).get("cat.y"), 14);
+    near(back.at(380 + 480).get("ask.o"), 1);
+  });
+
   it("the unfolding passes its target by the 'liaison' spring (3.4 % of the travel)", () => {
     expect(SPRINGS.liaison).toBe(0.034);
     let peak = 0;

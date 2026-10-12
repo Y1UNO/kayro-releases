@@ -1,7 +1,5 @@
 import { useRef, useState } from "react";
-import { APP_NAME } from "../../app/appName";
 import { FEATURES } from "../../app/features";
-import { Logo } from "../../brand";
 import {
   ChevronLeftIcon,
   DisplayModeIcon,
@@ -12,12 +10,12 @@ import {
   PlusIcon,
   SearchIcon,
   SettingsIcon,
-  Surface,
 } from "../../design";
 import { t } from "../../i18n";
 import type { DisplayMode } from "../../ipc/bindings";
 import { hubStore, useHub } from "../../store";
 import { PopMenu } from "./PopMenu";
+import { TopBarShell } from "./TopBarShell";
 import styles from "./TopBar.module.css";
 
 const MODES: readonly DisplayMode[] = ["immersive", "window", "widget"];
@@ -92,17 +90,8 @@ export function TopBar({
   backRef,
 }: Props) {
   return (
-    <Surface
-      as="header"
-      glassKind="bar"
-      radius="var(--da-bar-radius, var(--radius-pill))"
-      className={styles.bar}
-    >
-      <div className={styles.left}>
-        <div className={styles.brand}>
-          <Logo size={30} className={styles.logo} />
-          <span>{APP_NAME}</span>
-        </div>
+    <TopBarShell
+      left={
         <button
           ref={backRef}
           type="button"
@@ -114,37 +103,41 @@ export function TopBar({
           <ChevronLeftIcon size={14} />
           {t("home.allCategories")}
         </button>
-      </div>
-      <button
-        type="button"
-        className={styles.search}
-        onClick={onSearch}
-        aria-label={t("home.search.open")}
-        aria-keyshortcuts="Control+K"
-      >
-        <SearchIcon size={16} />
-        <span className={styles.placeholder}>{t("home.search.placeholder")}</span>
-        <Pill tone="key">{t("home.search.shortcut")}</Pill>
-      </button>
-      <div className={styles.tools}>
-        <IconButton label={t("home.addApps.open")} size="sm" glass onClick={onAdd}>
-          <PlusIcon />
-        </IconButton>
-        <ModeButton />
-        <IconButton label={t("home.settings.open")} size="sm" glass onClick={onSettings}>
-          <SettingsIcon />
-        </IconButton>
-        {FEATURES.voice && (
-          <IconButton label={t("home.voice")} size="sm" glass>
-            <MicIcon />
+      }
+      center={
+        <button
+          type="button"
+          className={styles.search}
+          onClick={onSearch}
+          aria-label={t("home.search.open")}
+          aria-keyshortcuts="Control+K"
+        >
+          <SearchIcon size={16} />
+          <span className={styles.placeholder}>{t("home.search.placeholder")}</span>
+          <Pill tone="key">{t("home.search.shortcut")}</Pill>
+        </button>
+      }
+      right={
+        <>
+          <IconButton label={t("home.addApps.open")} size="sm" glass onClick={onAdd}>
+            <PlusIcon />
           </IconButton>
-        )}
-        {FEATURES.hands && (
-          <IconButton label={t("home.hands")} size="sm" glass>
-            <HandIcon />
+          <ModeButton />
+          <IconButton label={t("home.settings.open")} size="sm" glass onClick={onSettings}>
+            <SettingsIcon />
           </IconButton>
-        )}
-      </div>
-    </Surface>
+          {FEATURES.voice && (
+            <IconButton label={t("home.voice")} size="sm" glass>
+              <MicIcon />
+            </IconButton>
+          )}
+          {FEATURES.hands && (
+            <IconButton label={t("home.hands")} size="sm" glass>
+              <HandIcon />
+            </IconButton>
+          )}
+        </>
+      }
+    />
   );
 }

@@ -215,7 +215,8 @@
 
   font-family: var(--font-ui);
   color: var(--text);
-  background: var(--bg-mid);
+  /* The darkest theme colour (round 5): the first image is the opening's own starting colour. */
+  background: var(--bg-bottom);
 
   /* Cross-fade of the theme: every registered colour interpolates on :root, children inherit the animated value. */
   transition:

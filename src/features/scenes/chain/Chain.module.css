@@ -51,10 +51,11 @@
     0 0 26px color-mix(in srgb, var(--grad-a) 30%, transparent);
 }
 
-/* Thread from this point (centre 35 px, 36 px) to the next one, 12 px of gap below the card. */
+/* Thread from this point (centre 67 px, 36 px: after the handle since round 5) to the next one,
+   12 px of gap below the card. */
 .seg {
   position: absolute;
-  left: 34px;
+  left: 66px;
   top: 36px;
   width: 2px;
   height: calc(100% + 12px);

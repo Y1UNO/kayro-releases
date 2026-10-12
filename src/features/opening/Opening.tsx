@@ -71,8 +71,9 @@ export function Opening({ under, onDone, seek = null }: Props) {
         </div>
         <div className={styles.word}>
           <div className={styles.letters}>
+            {/* Round 5: the first letters stay on top (K over a…), the later ones slide under them. */}
             {LETTERS.map((c, i) => (
-              <span key={i} className={styles.slot}>
+              <span key={i} className={styles.slot} style={{ zIndex: LETTERS.length - i }}>
                 <span data-part="letter-blur" className={styles.blurred}>
                   {c}
                 </span>

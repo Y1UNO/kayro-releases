@@ -8,8 +8,10 @@ body,
   margin: 0;
 }
 
+/* Round 5: the darkest theme colour, the one the opening fades from (and the window's own colour
+   before the first paint, windows.rs): a single dark from the very first image. */
 body {
-  background: var(--bg-mid);
+  background: var(--bg-bottom);
   color: var(--text);
   font-family: var(--font-ui);
   font-size: var(--fs-15);

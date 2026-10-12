@@ -17,7 +17,7 @@ import { usePassage } from "./features/modes/usePassage";
 
 /** Where the user is: the home screen, the list of scenes, or the editor of one scene. */
 type Screen =
-  | { name: "home" }
+  | { name: "home"; back?: boolean }
   | { name: "scenes" }
   | { name: "editor"; sceneId: string | null; seed?: NewSceneSeed };
 
@@ -71,10 +71,13 @@ export function App() {
         className={opening.hidden ? styles.under : styles.screens}
         style={opening.hidden && !opening.play ? { opacity: 0 } : undefined}
       >
-        {screen.name === "home" && <HomeScreen onOpenScenes={toScenes} startOnFan={opening.fan} />}
+        {screen.name === "home" && (
+          // Back from the scenes (round 5): the carousel that was left, never the fan again.
+          <HomeScreen onOpenScenes={toScenes} startOnFan={opening.fan && !screen.back} />
+        )}
         {screen.name === "scenes" && (
           <ScenesScreen
-            onBack={() => setScreen({ name: "home" })}
+            onBack={() => setScreen({ name: "home", back: true })}
             onEdit={(sceneId, seed) => setScreen({ name: "editor", sceneId, seed })}
           />
         )}

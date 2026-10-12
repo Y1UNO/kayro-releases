@@ -6,7 +6,7 @@ Lu au début de chaque session de l'étape 12b. Permet de reprendre dans une con
 - Nom : **V4 Aéré lumineux** (`src/design/presets/v4-aere-lumineux.json`, thème Bleu-gris, ronde 2b) : base `v4-aere-bleu-gris` (2a) + fond aéré, particules éclairées, matière, voile brillant, affiches dans le verre, pastille « léger rebond ». `active.json` (défaut du catalogue) n'a pas été modifié : toujours V4 Verre liquide, lavande-pêche
 - 2a : **V4 Verre liquide** : moteur WebGL2 sur les cartes et les pastilles de sélection seulement, anneau liquide
 - Fichiers : `src/design/presets/v4-verre-liquide.json` ; comparaison : `v4-verre-liquide-complet.json` (tout en verre, anneau en tube : état du premier essai 2a), `v4-cristal.json` (V4 de la ronde 1, CSS, moteur coupé), `croquis-12.json` (étapes 3 à 12), `v4-cristal-gpu.json` (anneau seul dans le moteur, comme le spike)
-- Branche / tags : `step-12b-atelier-da` / `da-r1`, `da-r2a` (2a commitée le 2026-10-11, avec `v4-aere-bleu-gris`), ronde 2b commitée (`e497060`). Ronde 3a commitée (`7bb5f30`) ; préréglage `v4-r3-signature.json` = V4 Aéré lumineux + ouverture. Ronde 3b : `da-r3b` ; ronde 4a : `da-r4a` ; ronde 4b : `da-r4b-1a`, `da-r4b-1b`, `da-r4b-2`, `da-r4b-2b`, `da-r4b-3`
+- Branche / tags : `step-12b-atelier-da` / `da-r1`, `da-r2a` (2a commitée le 2026-10-11, avec `v4-aere-bleu-gris`), ronde 2b commitée (`e497060`). Ronde 3a commitée (`7bb5f30`) ; préréglage `v4-r3-signature.json` = V4 Aéré lumineux + ouverture. Ronde 3b : `da-r3b` ; ronde 4a : `da-r4a` ; ronde 4b : `da-r4b-1a`, `da-r4b-1b`, `da-r4b-2`, `da-r4b-2b`, `da-r4b-3` ; relecture : `da-fix-a`, `da-fix-b`, `da-fix-c` ; ronde 5 (dernière avant le gel) : `da-r5-1`, `da-r5-2`, `da-r5-3`
 
 ## Mode d'emploi
 - `npm run dev` puis `http://localhost:1420/dev/atelier` (navigateur) : réglages à gauche (générés depuis `src/design/da/catalogue.ts`), écrans réels à droite (Accueil, grille, ajout d'apps, scènes, éditeur, composants), 11 thèmes, qualité, comparaison A/B, Enregistrer / Charger / Historique, Exporter (→ `active.json` = DA de l'app), Mesurer (10 s).
@@ -995,6 +995,65 @@ Relecture en lecture seule, corrigée en trois paquets (arrêt après chacun, pa
   - Mesuré à 1707 × 960 sur le titre de 96 px : avant, la carte active soulevée au survol (10 px, ×1,03, valeurs inchangées) chevauchait de 8,6 px le jambage du « g » de « Logiciels » (27 px sous la ligne de base). Il reste maintenant **14,3 px** d'air (« Logiciels ») et 17,3 px (« Jeux »).
   - L'éventail descend avec lui : la liaison place les deux autour du même centre (409,9 px, vérifié), sa chronologie est intacte.
 - **Régression de la boîte de flottaison corrigée** : l'anneau de focus clavier de la carte choisie (`[data-active] > button`, carrousel et grille) ne s'appliquait plus ; il vise maintenant la carte elle-même.
+
+**Commit** : `4876751`, tag `da-r5-2`.
+
+### Paquet 3 — Écrans et finitions des signatures (2026-10-13)
+**Fait** :
+- **4. Scènes et éditeur dans le langage de l'accueil** :
+  - **Barre partagée** (`home/TopBarShell.tsx`) : même verre, même hauteur (58 px), même logo et mêmes marges (24 / 56) partout.
+    - Accueil : inchangé (passe par la coquille).
+    - Scènes : « ‹ Accueil », une recherche qui filtre les scènes, Importer, Nouvelle scène.
+    - Éditeur : « ‹ Scènes », Simple / Avancé, Tester, Enregistrer.
+  - **Colonne de 1 280 px centrée**, qui défile sous la barre (`scenes/Screens.module.css`).
+  - **Titre-signature** (`ScreenTitle.tsx`) : eyebrow, serif de 48 px, filet A→B. Écran Scènes : « SCÈNES / Tes scènes ». Éditeur : « SCÈNE » + le nom de la scène, modifiable sur place, avec le raccourci dessous.
+  - **Scènes en cartes** (`SceneCard.tsx`) :
+    - 176 × 246, rayon de carte × 176/240, verre du moteur (CSS en repli) ;
+    - face A→B tirée par scène ; icône ou lettre de la première app ; plaque nom + « N étapes » ;
+    - raccourci en haut à droite ;
+    - ▶ ✎ exporter supprimer au survol et au focus (toujours visibles pendant que la scène tourne) ;
+    - un clic sur la carte ouvre l'éditeur ; grille centrée.
+  - Étapes : la poignée est **à gauche** du numéro ; le fil de la chaîne est recalé (centre du point à 67 px, vérifié au pixel : 276,5 = 276,5).
+  - **Retour de Scènes** : le carrousel quitté (catégorie, carte, vue mémorisées : `homeState.ts`), jamais l'éventail une seconde fois.
+  - Le CSS de l'ancienne liste et de l'ancien en-tête est retiré d'`Editor.module.css` (243 → 117 lignes), ce qui supprime aussi le bug `stepSub` sans style.
+  - Au passage : l'exemple de chemin de l'import (`C:UsersmoiDownloads…`) avait perdu ses barres obliques inverses avant la ronde ; rétabli.
+- **8. Finitions** (chronologies inchangées) :
+  - **Lettres** : `z-index` décroissant (K au-dessus, o dessous) et `clip-path: inset(-48px -48px -48px -30px)` fixe sur `.letters`. Rien d'une lettre ne se voit à gauche du bord du logo, elles en sortent vraiment. Vu figé à 2 350 ms.
+  - **Étiquettes de l'éventail** : les cartes à droite du centre ont leur face en miroir (texte à droite, lumière du dégradé en haut à droite). « Logiciels » et « Autre » ne passent plus sous la carte de devant, et l'éventail est symétrique.
+  - **Titres de la liaison** (`fanTimeline.ts`) : le titre qui part sort d'abord (0,7 × court = 168 ms, courbe de sortie, −20 / +14 px), celui qui arrive entre à +120 ms (moyen 360 ms, apparition). Jamais tous deux à moitié visibles, dans les deux sens (testé).
+  - **Premier flash** :
+    - **Non vérifié en rafale** : tu jouais (Roblox), je n'ai pas lancé l'exe.
+    - Lecture du code : rien ne rend la page translucide au lancement. En revanche, la fenêtre immersive n'avait pas `DWMWA_TRANSITIONS_FORCEDISABLED`, donc Windows la montrait avec son propre fondu (~200 ms), ce qui laisse voir l'écran d'avant derrière un voile sombre. C'est le constat de Fable.
+    - Correctifs : ce fondu système est coupé pour la fenêtre immersive (`own_window::set_show_animation`, gardé pour une fenêtre normale) ; un seul sombre de l'image 0 à l'ouverture (fenêtre native `#06060C`, `html` / `body` en `--bg-bottom`, la couleur dont l'ouverture fond).
+
+**Testé** :
+- tsc, eslint, prettier, clippy, `cargo fmt` (3 écarts connus seulement), **vitest 632/632**, **cargo test 195**.
+- Volet du navigateur (1707 × 960) : écran Scènes (cartes, survol), éditeur (titre, poignée, chaîne), éventail (miroir), ouverture figée.
+- Exe reconstruit (priorité basse, non lancé).
+
+**Non testé** : le premier flash en rafale ; l'onde, les lettres et les titres en mouvement (le volet ne joue pas les animations) ; le retour de Scènes dans l'exe.
+
+**Ton retour (paquet 3)** : validé dans l'exe (lancement, lettres, titres de la liaison, éventail, scènes). Commit `feat: DA ronde 5 paquet 3 — …`, tag `da-r5-3`, sans fusion dans `main`.
+
+### Fin de la ronde 5 (2026-10-13)
+Les trois paquets ont été validés dans l'exe de production et commités sur `step-12b-atelier-da`, sans fusion dans `main`.
+
+| Paquet | Tag | Commit |
+|---|---|---|
+| 1. Réglages, thèmes, personnalisation | `da-r5-1` | `bc8a7a3` |
+| 2. Cohérence visuelle | `da-r5-2` | `4876751` |
+| 3. Écrans et finitions | `da-r5-3` | (celui-ci) |
+
+Les choix protégés sont inchangés par défaut (ouverture V1-A + pulsation C, liaison A, langage Vivant, widget déroulé, passages en fondu, voile natif). Ils sont devenus réglables dans « Personnalisation avancée ».
+
+**Points ouverts pour l'étape 13** (mesures en exe de production, PC libre, Élevée et Éco) :
+- **Flottaison**, éventail et carrousel au repos, particules oui / non : les boucles passent à 30 i/s, mais le moteur reste à 60 i/s tant que braises et étoiles sont animées.
+- **Coût de l'onde de changement de thème** : une image lente attendue à la capture, puis +0,5 à 1 ms par image.
+- **Image blanche** au premier changement de thème : à reproduire avec le protocole du paquet 1 ; hypothèse principale, un artefact de la capture CDP.
+- **Premier flash au lancement** : validé à l'œil ; rafale de captures toutes les 30 ms à faire pour confirmer.
+- **Repris des rondes précédentes** : le coût de la pulsation C (voile moteur contre CSS) et les mesures de la 4a.
+
+**Pour la suite** : le gel de la DA, quand tu le décides (« je fige la DA »). Il faudra alors écrire `docs/DESIGN.md` (DA officielle v1, qui primera sur `reference/`) et retirer ce qui reste en essai (5 anciens thèmes, éléments « historique » et « croquis » du catalogue, verre des barres / dock / boutons s'ils ne sont pas retenus).
 
 ### Plus tard (hors ronde 5, à ne pas faire dans cette ronde)
 - Gestion des apps qui démarrent avec Windows au premier lancement.
