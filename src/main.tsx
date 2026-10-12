@@ -52,6 +52,12 @@ const MotionDev: ComponentType | null =
     ? lazy(() => import("./dev/MotionLab"))
     : null;
 
+// The widget (art direction round 4b: its glass unrolls) with fake data. Dev only.
+const WidgetDev: ComponentType | null =
+  import.meta.env.DEV && location.pathname === "/dev/widget"
+    ? lazy(() => import("./dev/Widget"))
+    : null;
+
 // Preview of the art direction workshop (step 12b): live values from `/dev/atelier`, or a saved
 // preset with `?preset=<file name>` (bench in the Tauri window). Dev only.
 if (import.meta.env.DEV && /[?&](atelier|preset)=/.test(location.search)) {
@@ -69,7 +75,8 @@ const Atelier: ComponentType | null =
     : null;
 
 const appRoot = createRoot(root);
-const DevPage = Atelier ?? Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev ?? MotionDev;
+const DevPage =
+  Atelier ?? Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev;
 
 if (DevPage) {
   appRoot.render(

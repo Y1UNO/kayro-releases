@@ -318,9 +318,98 @@ Lecture : budget de 5,4 ms tenu partout, avec de la marge ; le survol coûte ~+2
 6. interrupteur (bascule toutes les 1,5 s).
 Outils : pages de dev `/dev/home?bench=idle` (cas 1–3, souris réelle par CDP), `/dev/home?cycle=1500&bench=transition` (cas 4), `/dev/motion?cycle=panel:1500&bench=idle` et `?cycle=toggle:1500` (cas 5–6) ; CPU / GPU avec `scripts/measure-cost.ps1`. Captures `docs/captures/da-r4a-*` à prendre au même moment. Aucune mesure 4a n'a encore été faite.
 
+## Ronde 4b — 2026-10-12 (widget, chaîne de points, états, passages de modes, ouverture transparente ; non commitée)
+**Specs** (font foi) : `reference/animations/R4b-notes-4b/r4b-notes/R4b-3c-Widget.txt`, `R4b-3c-Editeur.txt`, `R4b-Etats.txt`, `R4b-Modes.txt`, `R4b-Ouverture-Transparente.txt` (+ R4a). Départ : tag `da-r4a`. Plan validé (copie : `C:\Users\tomca\.claude\plans\contexte-projet-kayro-bubbly-wigderson.md`).
+**Découpage et arrêts** :
+- 4b-1a : widget qui se déroule. **Arrêt.**
+- 4b-1b : chaîne de points, états, nouvelle scène. **Arrêt.**
+- 4b-2 : passages entre modes. Spike 4b-2.0 d'abord, avec **mesure obligatoire** (PC libre, jeux fermés) de l'immersif au repos, transparent contre opaque. Rapport, puis **arrêt**.
+- 4b-3 : ouverture transparente C. Plan à reconfirmer avant de coder.
+
+Pas de commit sans ta demande. Tag prévu : `da-r4b-1`, puis `-2`, `-3`. Exclusions : `reference/`, `src/design/presets/history/`, `SceneDock.module.css` (fins de ligne seulement).
+**Tes décisions** :
+- Les voiles 42 / 16 % n'existent **que pendant un passage**. À l'arrivée, rien ne change : immersif = fond opaque, fenêtre = vraie fenêtre Windows.
+- Démarrage silencieux = **pas d'ouverture**. Aujourd'hui, l'ouverture joue au premier affichage : `opening_due` sera corrigé en 4b-3.
+- Ctrl+Alt+H garde « afficher / masquer », même en widget.
+- Halo du widget allumé tant que le panneau est déplié.
+- Ouverture C = chronologie V1-A **à l'identique** (`openingTimeline.ts`), avec la pulsation (ringOut, onde, révélation) à l'instant exact du ringOut : 1 750 ms, 850 ms.
+- Écarts acceptés : coins de 8 px (Windows 11) au lieu de 28 ; barre de titre native qui apparaît à l'arrivée d'un passage.
+- « Économie » = qualité Éco.
+
+**Ce que Tauri 2 permet** (sources tao 0.37.1 / tauri 2.12.2) :
+- La transparence se choisit à la construction d'une fenêtre seulement.
+- Les clics traversent seulement pour une fenêtre entière (`set_ignore_cursor_events`). Il n'y a pas de zones natives : on peut sonder la souris, ou utiliser `SetWindowRgn`.
+- **Retenu** : le widget reste une petite fenêtre ajustée à son contenu. Les clics autour passent, sans minuteur. La fenêtre change de taille avant d'agrandir et après avoir rétréci, jamais pendant.
+
+### 4b-1a — Widget : le verre se déroule
+**Fait** :
+- **Jetons** (`src/design/motion/tokens.ts`, toujours la seule table) :
+  - Sous-tables `widget` (`WIDGET_UNROLL`, toutes les valeurs de la note), `chain`, `states` et `sober` (la première proposition 3c). Les durées sont divisées par la vitesse.
+  - Les 6 ressorts `linear()` de la note sont dans `springCurves.ts` (données seulement ; table sœur de `SPRINGS`, plafond 8 %) :
+
+    | Ressort | douce | normale (défaut) | forte |
+    |---|---|---|---|
+    | vertical, 680 ms | 3,5 % | **5 %** | 7 % |
+    | horizontal, 560 ms | 1,5 % | **2,5 %** | 3,5 % |
+
+  - `curveOf()` lit maintenant `linear(…)` (il la jouait comme une droite).
+  - Nouvelles variables `--m-spring-v`, `--m-spring-h`, `--m-widget-chevron`, dans `motionCss()` et dans `motion.css`. `/* prettier-ignore */` les garde sur une ligne pour le test de parité.
+- **Atelier** (élément `motion`) :
+  - nouveaux réglages : `widgetMotion` (déroulé / sobre), `widgetSpring` (douce / normale / forte), `widgetHalo`, `widgetSheen` ; `emptyFloat` est préparé pour 4b-1b ;
+  - nouvel écran « Widget (dépliage) » = `/dev/widget?open=1`.
+- **Widget** (`src/features/widget/`) :
+  - Framer Motion est retiré du widget.
+  - Le panneau a deux couches : la **coque** (`hull` en `scaleX`, `hullInner` en `translateY` + `scaleY`, ancrées en haut au centre, qui portent le fond, le bord, l'ombre et le reflet) et le **contenu**, jamais mis à l'échelle.
+  - `unroll.ts` (pur, testé) décrit chaque animation Web. `useUnroll.ts` la joue avec `element.animate()`, donc composée, sans script par image.
+  - **Déplier** :
+
+    | Instant | Ce qui bouge |
+    |---|---|
+    | 0 | coque, sur les deux ressorts (opacité en 60 ms) ; barre ×1,02 (460 ms) ; chevron 180° sur le ressort vertical en 520 ms (transition CSS) |
+    | 80 ms | halo (700 ms), qui **reste allumé** jusqu'au repli |
+    | 50 / 110 / 170 / 230 ms | lignes (recherche, scènes, en cours, récents) : −10 px sur le ressort 3,5 % en 520 ms, opacité 260 ms |
+    | +50 ms, toutes les 35 ms | pastilles « Ouvert » et icônes des récents, ×0,7 → 1 |
+    | 380 ms | reflet (950 ms) |
+
+  - **Replier** : contenu en 100 ms ; coque à 70 ms pendant 240 ms (courbe de disparition) ; effacée sur les 90 dernières ms. Total 310 ms.
+  - Un re-clic pendant le repli repart de l'état courant (styles calculés lus, puis animation depuis là).
+  - **Fenêtre jamais redimensionnée pendant l'animation** :
+    - à l'ouverture : le panneau monte invisible (`data-phase="pre"`), `fitNow()` attend la fin du redimensionnement (il attend aussi celui déjà en cours), une image, puis le déroulé ;
+    - au repli : le panneau reste monté pendant 310 ms (`usePresence`), puis la fenêtre rétrécit (observateur de taille) ;
+    - la marge basse passe à 28 px tant que le panneau est là, pour le halo.
+  - Éco : ni halo ni reflet ; les ressorts restent. « Réduire les animations » ou niveau 2 coupé : état final direct.
+  - `Widget.module.css` (553 lignes) est découpé en `Widget.module.css` (fenêtre et styles `--w-*`, 140 lignes), `WidgetBar.module.css` (157) et `WidgetPanel.module.css` (320).
+- **Page de dev** `/dev/widget` (`src/dev/Widget.tsx`) : faux bureau en CSS, fausses données. Paramètres : `?theme=`, `?style=brume|aurore|sillage|orbe`, `?fx=eco`, `?open=1`, `?cycle=ms`.
+
+**Testé** :
+- tsc, eslint, prettier (fichiers touchés), vitest **483/483**. Nouveaux tests : `springCurves.test.ts` (pics = pourcentages annoncés, ≤ 8 %, lecture de `linear()`, jetons, vitesse) et `unroll.test.ts` (instants de la note, Éco, repli de 310 ms, reprise depuis l'état courant, sobre).
+- Build de production : aucun code de dev (grep), ressorts présents.
+- Volet du navigateur, animations figées à 0 / 30 / 150 / 330 / 500 / 700 / 1 400 ms (le volet masqué ne dessine pas) :
+
+  | Instant | Coque (scaleX / scaleY / y / opacité) | Le reste |
+  |---|---|---|
+  | 0 ms | 0,86 / 0,04 / −12 px / 0 | — |
+  | 150 ms | 0,96 / 0,80 / — / 1 | lignes 1-2 à 0,93 / 0,66 |
+  | 330 ms | 1,003 / **1,044** (dépassement) / — / — | pastilles à 0,95 |
+  | 700 ms | état final | reflet en cours |
+
+- Éco vérifié : ni halo ni reflet, chevron sur `linear()` à 520 ms.
+
+**Non testé** :
+- **le vrai mode widget dans Tauri** (je n'ai pas lancé l'app : redimensionnement avant le déroulé, rendu de `linear()` dans WebView2, coins de la coque pendant le `scale`) ;
+- l'atelier en direct ;
+- « réduire les animations » réel ;
+- les styles aurore, sillage et orbe en mouvement.
+
+**Mesures** : **à mesurer** (aucune mesure en vraie fenêtre). Cases ajoutées à la vérification globale : « repos widget », « widget qui se déplie / se replie ».
+**Limites connues** :
+- le rayon des coins se déforme un peu pendant le `scale` (accepté par la note ; passer à `clip-path` si ça se voit) ;
+- la marge basse de 28 px (halo) capte les clics tant que le panneau est déplié ;
+- `widgetModel.ts` n'est pas au format prettier : c'est antérieur, je ne l'ai pas touché.
+
 ### Reste à faire
 - **4a** : commit après ton feu vert, puis tag `da-r4a`. Mesures : voir ci-dessus (vérification globale).
-- **3c** (petite ronde suivante, accepté en principe) : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
+- **4b** : voir la ronde 4b ci-dessus (4b-1a fait, arrêt ; ensuite 4b-1b, 4b-2, 4b-3). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
 - Remesurer l'ouverture (CPU/GPU, repli CSS) PC libre.
 
 ## Éléments du catalogue
@@ -345,3 +434,4 @@ Outils : pages de dev `/dev/home?bench=idle` (cas 1–3, souris réelle par CDP)
 | Ouverture V1-A (`opening`) | à l'essai (3a) | activée par défaut ; `ringGrow` désactivé |
 | Jetons de mouvement (`motion`) | à l'essai (4a) | table unique, niveaux 1 / 2 / 3, vitesse ; remplace l'ancien `motion` |
 | Survol niveau 3 du carrousel (`cardHover`) | à l'essai (4a) | voile + filets après 120 ms, 4 étincelles, éclat au lancement ; reflet souris coupé (`pointerSheen`) |
+| Widget qui se déroule (`motion.widget*`) | à l'essai (4b-1a) | ressorts `linear()` normale 5 % / 2,5 %, halo allumé tant que déplié, reflet une fois ; « sobre » pour comparer |

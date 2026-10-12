@@ -1,7 +1,8 @@
 /**
  * Timing curves of the scripted sequences (art direction round 3): the CSS `cubic-bezier()`
  * curves of the mock-ups, evaluated in script so that a sequence is a pure function of time
- * (seekable, testable). Springs stay in `springAt` (src/design/glass/pillMotion.ts, SPRINGS table).
+ * (seekable, testable). Springs stay in `springAt` (src/design/glass/pillMotion.ts, SPRINGS table)
+ * or, written as CSS `linear()` (round 4b), in springCurves.ts.
  */
 
 export type Curve = (t: number) => number;
@@ -53,9 +54,23 @@ const NAMED: Readonly<Record<string, [number, number, number, number]>> = {
   "ease-in-out": [0.42, 0, 0.58, 1],
 };
 
+/** CSS `linear(v0, v1, …, vn)` with evenly spaced points (no `%` stops): piecewise linear. */
+export function linearPoints(points: readonly number[]): Curve {
+  const n = points.length - 1;
+  if (n < 1) return linear;
+  return (t) => {
+    const u = clamp01(t) * n;
+    const i = Math.min(n - 1, Math.floor(u));
+    return points[i]! + (points[i + 1]! - points[i]!) * (u - i);
+  };
+}
+
 const cache = new Map<string, Curve>();
 
-/** A CSS timing function (`cubic-bezier(…)`, `ease`…, `linear`) as a curve; unknown → linear. */
+/**
+ * A CSS timing function (`cubic-bezier(…)`, `linear(…)` with evenly spaced points, `ease`…,
+ * `linear`) as a curve; unknown → linear.
+ */
 export function curveOf(css: string): Curve {
   const key = css.replace(/\s+/g, "");
   const hit = cache.get(key);
@@ -63,10 +78,14 @@ export function curveOf(css: string): Curve {
   let c: Curve = linear;
   const named = NAMED[key];
   const m = /^cubic-bezier\(([^)]+)\)$/.exec(key);
+  const l = /^linear\(([^)]+)\)$/.exec(key);
   if (named) c = cubicBezier(...named);
   else if (m) {
     const v = m[1]!.split(",").map(Number);
     if (v.length === 4 && v.every(Number.isFinite)) c = cubicBezier(v[0]!, v[1]!, v[2]!, v[3]!);
+  } else if (l) {
+    const v = l[1]!.split(",").map(Number);
+    if (v.length >= 2 && v.every(Number.isFinite)) c = linearPoints(v);
   }
   cache.set(key, c);
   return c;

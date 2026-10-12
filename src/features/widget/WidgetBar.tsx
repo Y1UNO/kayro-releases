@@ -1,10 +1,10 @@
-import type { PointerEvent } from "react";
+import type { PointerEvent, RefObject } from "react";
 import { APP_NAME } from "../../app/appName";
 import { ChevronDownIcon, PlayIcon, SearchIcon } from "../../design";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
 import { CATEGORY_IDS, CATEGORY_LABELS, type CategoryId } from "../home/categories";
-import styles from "./Widget.module.css";
+import styles from "./WidgetBar.module.css";
 
 interface Props {
   /** Category whose panel is open (null when the panel shows the default view). */
@@ -18,6 +18,8 @@ interface Props {
   onToggle: () => void;
   onSearch: () => void;
   onScene: () => void;
+  /** The bar breathes a little when the panel unrolls (useUnroll). */
+  barRef?: RefObject<HTMLElement | null>;
 }
 
 /** Grabbing the bar anywhere that is not a control moves the window. */
@@ -37,9 +39,15 @@ export function WidgetBar({
   onToggle,
   onSearch,
   onScene,
+  barRef,
 }: Props) {
   return (
-    <header className={styles.bar} onPointerDown={startDrag} aria-label={t("widget.bar")}>
+    <header
+      ref={barRef}
+      className={styles.bar}
+      onPointerDown={startDrag}
+      aria-label={t("widget.bar")}
+    >
       <span className={styles.mark}>{APP_NAME}</span>
       <div className={styles.tabs} role="tablist" aria-label={t("home.categoriesNav")}>
         {CATEGORY_IDS.map((id) => (

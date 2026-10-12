@@ -2,7 +2,14 @@
 // screens through the store (no CSS variable, no FxLayer); the engine's part of an animation is
 // cued by the screen itself (src/fx/gpu/cues.ts).
 import { EASES } from "../motion/eases";
-import { MOTION_DEFAULTS as M, motionCss, motionTokens, SPEEDS } from "../motion/tokens";
+import { UNROLL_SPRINGS } from "../motion/springCurves";
+import {
+  MOTION_DEFAULTS as M,
+  motionCss,
+  motionTokens,
+  SPEEDS,
+  WIDGET_MOTIONS,
+} from "../motion/tokens";
 import { NONE, range, select, toggle, type DaElement } from "./daParams";
 
 const CURVES = Object.keys(EASES);
@@ -54,6 +61,12 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       range("focusHaloAlpha", 0, 1, 0.05, M.focusHaloAlpha),
       range("cardLift", 0, 24, 1, M.cardLift, "px"),
       range("cardGrow", 1, 1.08, 0.005, M.cardGrow),
+      // Round 4b: widget panel, empty category.
+      select("widgetMotion", WIDGET_MOTIONS, M.widgetMotion),
+      select("widgetSpring", UNROLL_SPRINGS, M.widgetSpring),
+      toggle("widgetHalo", true),
+      toggle("widgetSheen", true),
+      range("emptyFloat", 0, 8, 0.5, M.emptyFloat, "px"),
     ],
     css: (v) => (v.on ? motionCss(motionTokens(v)) : NONE),
   },

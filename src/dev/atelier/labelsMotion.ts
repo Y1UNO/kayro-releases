@@ -31,6 +31,11 @@ export const MOTION_LABELS = {
       focusHaloAlpha: "Focus : opacité du halo",
       cardLift: "Carte survolée : soulèvement",
       cardGrow: "Carte survolée : grossissement",
+      widgetMotion: "Widget : ouverture du panneau",
+      widgetSpring: "Widget : élasticité du déroulé",
+      widgetHalo: "Widget : halo sous le panneau",
+      widgetSheen: "Widget : reflet qui balaie le verre",
+      emptyFloat: "Catégorie vide : flottaison de la carte",
     },
   },
   opening: {

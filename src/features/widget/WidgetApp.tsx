@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, LazyMotion, MotionConfig, domAnimation, m } from "motion/react";
 import { announceReady, useWindowShown } from "../../app/useWindowShown";
-import { EASE, useTheme } from "../../design";
+import { useTheme } from "../../design";
+import { useMotionTokens } from "../../design/motion/current";
 import type { AppEntry, SceneFile } from "../../ipc/bindings";
 import { desktopIpc } from "../../ipc/commands";
 import { doneCount, hubStore, useDesktop, useHub, useScenes } from "../../store";
@@ -10,10 +10,9 @@ import { usePlayScene } from "../scenes/usePlayScene";
 import { useSceneHotkey } from "../scenes/useSceneHotkey";
 import { WidgetBar } from "./WidgetBar";
 import { WidgetPanel } from "./WidgetPanel";
+import { useUnroll } from "./useUnroll";
 import { useWidgetFit } from "./useWidgetFit";
 import styles from "./Widget.module.css";
-
-const PANEL_FADE = 0.16;
 
 /** The widget window's whole page: the bar, and the panel that unfolds under it. */
 export function WidgetApp() {
@@ -25,6 +24,8 @@ export function WidgetApp() {
   const recents = useDesktop((s) => s.recents);
 
   const shell = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLElement>(null);
+  const bar = useRef<HTMLElement>(null);
   const { fitNow } = useWidgetFit(shell);
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<CategoryId | null>(null);
@@ -40,6 +41,10 @@ export function WidgetApp() {
 
   const style = settings?.widgetStyle ?? "brume";
   const hideOnEscape = settings?.hideOnEscape ?? true;
+  const eco = settings?.quality === "eco";
+  const motion = useMotionTokens().widget;
+  // Round 4b: the glass unrolls when the panel opens; it stays mounted while it folds.
+  const presence = useUnroll(open, { panel, bar }, fitNow, eco);
 
   // First reveal: measure with the real fonts, give the window that size, then say we are ready.
   useEffect(() => {
@@ -106,54 +111,55 @@ export function WidgetApp() {
       : null;
 
   return (
-    <LazyMotion features={domAnimation} strict>
-      <MotionConfig reducedMotion="user">
-        <div ref={shell} className={styles.shell} data-style={style}>
-          <WidgetBar
+    <>
+      <div
+        ref={shell}
+        className={styles.shell}
+        data-style={style}
+        data-panel={presence !== null || undefined}
+      >
+        <WidgetBar
+          barRef={bar}
+          category={category}
+          open={open}
+          sceneName={first?.name ?? null}
+          sceneProgress={progress}
+          onCategory={(id) => {
+            if (open && category === id) fold();
+            else {
+              setCategory(id);
+              setOpen(true);
+            }
+          }}
+          onToggle={() => (open ? fold() : setOpen(true))}
+          onSearch={() => setOpen(true)}
+          onScene={() => {
+            if (first) playScene(first);
+          }}
+        />
+        {presence !== null && (
+          <WidgetPanel
+            panelRef={panel}
+            glow={{
+              halo: motion.halo && !eco,
+              sheen: motion.sheen && !eco,
+              haloAlpha: motion.haloAlpha,
+            }}
+            apps={apps}
+            running={running}
+            scenes={scenes}
+            recents={recents}
             category={category}
-            open={open}
-            sceneName={first?.name ?? null}
-            sceneProgress={progress}
-            onCategory={(id) => {
-              if (open && category === id) fold();
-              else {
-                setCategory(id);
-                setOpen(true);
-              }
-            }}
-            onToggle={() => (open ? fold() : setOpen(true))}
-            onSearch={() => setOpen(true)}
-            onScene={() => {
-              if (first) playScene(first);
-            }}
+            query={query}
+            run={run}
+            onQuery={setQuery}
+            onLaunch={launch}
+            onFront={(app) => void hubStore.getState().focusApp(app.id)}
+            onScene={playScene}
           />
-          <AnimatePresence initial={false}>
-            {open && (
-              <m.div
-                key="panel"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0, transition: { duration: PANEL_FADE, ease: EASE } }}
-                exit={{ opacity: 0, y: -6, transition: { duration: PANEL_FADE, ease: EASE } }}
-              >
-                <WidgetPanel
-                  apps={apps}
-                  running={running}
-                  scenes={scenes}
-                  recents={recents}
-                  category={category}
-                  query={query}
-                  run={run}
-                  onQuery={setQuery}
-                  onLaunch={launch}
-                  onFront={(app) => void hubStore.getState().focusApp(app.id)}
-                  onScene={playScene}
-                />
-              </m.div>
-            )}
-          </AnimatePresence>
-        </div>
-        {dialog}
-      </MotionConfig>
-    </LazyMotion>
+        )}
+      </div>
+      {dialog}
+    </>
   );
 }

@@ -1,0 +1,157 @@
+/* The widget's bar (reference/Widget.dc.html). Values: the `--w-*` variables of the style
+   (Widget.module.css), set on the window's box. */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--w-bar-h);
+  box-sizing: border-box;
+  padding: 0 12px 0 22px;
+  border-radius: var(--w-bar-radius);
+  background: var(--w-bar-bg);
+  border: 1px solid var(--w-bar-border);
+  box-shadow: var(--w-bar-shadow);
+  font-size: var(--fs-14);
+  font-weight: var(--w-tab-weight);
+  cursor: grab;
+}
+
+.bar:active {
+  cursor: grabbing;
+}
+
+.mark {
+  flex-shrink: 0;
+  margin-right: var(--w-mark-gap);
+  font-family: var(--font-title);
+  font-size: var(--fs-title-md);
+  font-weight: 500;
+  color: var(--text);
+  pointer-events: none;
+}
+
+/* Non-wordmark marks: a small shape (provisional, the logo comes with the art direction). */
+[data-style="aurore"] .mark,
+[data-style="sillage"] .mark,
+[data-style="orbe"] .mark {
+  width: 22px;
+  height: 22px;
+  font-size: 0;
+}
+
+[data-style="aurore"] .mark {
+  border-radius: 8px;
+  background: linear-gradient(135deg, #a79bff, #4be0d3);
+}
+
+[data-style="sillage"] .mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: #3ddc97;
+}
+
+[data-style="orbe"] .mark {
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fff, #5a6cff 60%, #161a55);
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: var(--w-tab-radius);
+  background: transparent;
+  color: var(--w-tab-fg);
+  font-size: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-selected="true"] {
+  background: var(--w-tab-active-bg);
+  color: var(--w-tab-active-fg);
+}
+
+[data-style="orbe"] .tab[aria-selected="true"]::before {
+  content: "";
+  width: 18px;
+  height: 2px;
+  background: #8a98ff;
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--w-icon-size);
+  height: var(--w-icon-size);
+  border: 1px solid var(--w-icon-border);
+  border-radius: var(--w-icon-radius);
+  background: var(--w-icon-bg);
+  color: var(--w-icon-fg);
+  cursor: pointer;
+}
+
+.icon:first-of-type {
+  margin-left: 8px;
+}
+
+.icon:hover {
+  filter: brightness(1.2);
+}
+
+.cta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: var(--w-cta-radius);
+  background: var(--w-cta-bg);
+  color: var(--w-cta-fg);
+  font-size: var(--fs-14);
+  font-weight: var(--w-cta-weight);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cta:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.chevron {
+  /* Folding: fast, no bounce. */
+  transition: transform var(--m2-court-out) var(--m-ease-out);
+}
+
+/* Unfolding: the chevron turns on the glass's vertical spring (round 4b). */
+.chevron[data-open="true"] {
+  transform: rotate(180deg);
+  transition: transform calc(var(--m-widget-chevron) * var(--m-k2)) var(--m-spring-v);
+}
+
+.bar button:focus-visible {
+  outline: 2px solid var(--w-accent-light);
+  outline-offset: 2px;
+}

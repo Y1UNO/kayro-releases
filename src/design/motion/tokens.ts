@@ -16,6 +16,14 @@
 import type { ElementValues } from "../da/daParams";
 import { SPRINGS } from "../glass/pillMotion";
 import { EASES } from "./eases";
+import {
+  linearCss,
+  ROW_SPRING,
+  SPRING_H,
+  SPRING_V,
+  UNROLL_SPRINGS,
+  type UnrollSpring,
+} from "./springCurves";
 
 export const MOTION_DEFAULTS = {
   /** Durations of an appearance (ms); a disappearance lasts `outShare` × as long. */
@@ -47,6 +55,83 @@ export const MOTION_DEFAULTS = {
   /** Level 3: hovered card of the carousel. */
   cardLift: 10,
   cardGrow: 1.03,
+  /** Round 4b: the widget's panel unrolls ("deroule") or fades in ("sobre", to compare). */
+  widgetMotion: "deroule",
+  /** Elasticity of the unrolling: douce / normale / forte (springCurves.ts). */
+  widgetSpring: "normale",
+  /** Round 4b: float of the empty category's card (px). */
+  emptyFloat: 4,
+} as const;
+
+/** Ways the widget's panel opens (workshop): the validated unrolling, or the first proposal. */
+export const WIDGET_MOTIONS = ["deroule", "sobre"] as const;
+export type WidgetMotion = (typeof WIDGET_MOTIONS)[number];
+
+/**
+ * Round 4b — the widget's panel unrolls (R4b-3c-Widget.txt): the glass shell unrolls downwards
+ * (vertical spring) and widens (horizontal spring), the rows come one by one behind its edge.
+ * Times in ms at speed 1. The only "level 3"-like motion of the widget, played as level 2.
+ */
+export const WIDGET_UNROLL = {
+  /** Start pose of the shell: a thin band under the bar. */
+  fromScaleY: 0.04,
+  fromY: -12,
+  fromScaleX: 0.86,
+  vMs: 680,
+  hMs: 560,
+  /** The shell fades in fast (the band is not seen before it moves). */
+  hullFade: 60,
+  chevronMs: 520,
+  breath: 1.02,
+  breathMs: 460,
+  /** Soft halo under the panel (colour A): lit while the panel is open. */
+  haloAt: 80,
+  haloMs: 700,
+  haloAlpha: 0.3,
+  /** Rows (search, scenes, running, recents): 50 / 110 / 170 / 230 ms. */
+  rowAt: 50,
+  rowStep: 60,
+  rowRise: 10,
+  rowFade: 260,
+  rowMs: 520,
+  /** Pills of « En cours » and icons of « Récents », one by one after their row. */
+  chipAfter: 50,
+  chipStep: 35,
+  chipFrom: 0.7,
+  chipMs: 460,
+  /** A light band sweeps the glass once. */
+  sheenAt: 380,
+  sheenMs: 950,
+  /** Folding: fast, no bounce. */
+  foldFade: 100,
+  foldAt: 70,
+  foldMs: 240,
+  foldVanish: 90,
+} as const;
+
+/** The first proposal of 3c ("sobre"): content 0.94 → 1 with a fade, rows 30 ms apart. */
+export const WIDGET_SOBER = { from: 0.94, ms: 240, rowStep: 30, foldMs: 180 } as const;
+
+/** Round 4b — the scene editor's chain of points (R4b-3c-Editeur.txt). Times in ms. */
+export const CHAIN = {
+  /** A new point grows from × 0.4, a little after its card. */
+  pointFrom: 0.4,
+  pointDelay: 120,
+  /** The running step's point. */
+  active: 1.18,
+  /** Demo pace of the workshop (a real test follows the real steps). */
+  demoLaunch: 520,
+  demoWait: 900,
+} as const;
+
+/** Round 4b — empty states and errors (R4b-Etats.txt). Times in ms. */
+export const STATES = {
+  floatPeriod: 5000,
+  /** A card whose app did not launch shakes once: 5 px, then 3 px. */
+  shake: [5, 3] as const,
+  shakeMs: 240,
+  /** How long the message stays. */
+  noticeMs: 6000,
 } as const;
 
 /** Speed multiplier of the workshop: durations are divided by it (as `opening.speed`). */
@@ -80,6 +165,80 @@ export interface MotionTokens {
   };
   cardLift: number;
   cardGrow: number;
+  widget: WidgetTokens;
+  chain: { [K in keyof typeof CHAIN]: number };
+  states: {
+    floatPeriod: number;
+    shake: readonly [number, number];
+    shakeMs: number;
+    noticeMs: number;
+    /** Float of the empty category's card (px). */
+    emptyFloat: number;
+  };
+}
+
+type Unroll = typeof WIDGET_UNROLL;
+export type WidgetTokens = { [K in keyof Unroll]: number } & {
+  motion: WidgetMotion;
+  spring: UnrollSpring;
+  /** CSS `linear()` of the vertical and horizontal springs, and of the rows (3.5 %). */
+  springV: string;
+  springH: string;
+  rowSpring: string;
+  halo: boolean;
+  sheen: boolean;
+  sober: { [K in keyof typeof WIDGET_SOBER]: number };
+};
+
+/** Keys of WIDGET_UNROLL that are times (divided by the speed). */
+const UNROLL_TIMES = new Set<string>([
+  "vMs",
+  "hMs",
+  "hullFade",
+  "chevronMs",
+  "breathMs",
+  "haloAt",
+  "haloMs",
+  "rowAt",
+  "rowStep",
+  "rowFade",
+  "rowMs",
+  "chipAfter",
+  "chipStep",
+  "chipMs",
+  "sheenAt",
+  "sheenMs",
+  "foldFade",
+  "foldAt",
+  "foldMs",
+  "foldVanish",
+]);
+
+function widgetTokens(use: ElementValues | undefined, speed: number): WidgetTokens {
+  const pick = <T extends string>(k: string, all: readonly T[], d: T): T => {
+    const x = use?.[k];
+    return typeof x === "string" && (all as readonly string[]).includes(x) ? (x as T) : d;
+  };
+  const spring = pick("widgetSpring", UNROLL_SPRINGS, D.widgetSpring);
+  const unroll = Object.fromEntries(
+    Object.entries(WIDGET_UNROLL).map(([k, v]) => [k, UNROLL_TIMES.has(k) ? v / speed : v]),
+  ) as { [K in keyof Unroll]: number };
+  return {
+    ...unroll,
+    motion: pick("widgetMotion", WIDGET_MOTIONS, D.widgetMotion),
+    spring,
+    springV: linearCss(SPRING_V[spring]),
+    springH: linearCss(SPRING_H[spring]),
+    rowSpring: linearCss(ROW_SPRING),
+    halo: use?.widgetHalo !== false,
+    sheen: use?.widgetSheen !== false,
+    sober: {
+      from: WIDGET_SOBER.from,
+      ms: WIDGET_SOBER.ms / speed,
+      rowStep: WIDGET_SOBER.rowStep / speed,
+      foldMs: WIDGET_SOBER.foldMs / speed,
+    },
+  };
 }
 
 const D = MOTION_DEFAULTS;
@@ -130,6 +289,20 @@ export function motionTokens(v: ElementValues | undefined): MotionTokens {
     },
     cardLift: num("cardLift"),
     cardGrow: num("cardGrow"),
+    widget: widgetTokens(use, speed),
+    chain: {
+      ...CHAIN,
+      pointDelay: CHAIN.pointDelay / speed,
+      demoLaunch: CHAIN.demoLaunch / speed,
+      demoWait: CHAIN.demoWait / speed,
+    },
+    states: {
+      ...STATES,
+      floatPeriod: STATES.floatPeriod / speed,
+      shakeMs: STATES.shakeMs / speed,
+      noticeMs: STATES.noticeMs,
+      emptyFloat: num("emptyFloat"),
+    },
   };
 }
 
@@ -169,6 +342,9 @@ export function motionCss(t: MotionTokens): Record<string, string> {
     "--m-focus": focusShadow(t.focus),
     "--m-card-lift": `${t.cardLift}px`,
     "--m-card-grow": String(t.cardGrow),
+    "--m-spring-v": t.widget.springV,
+    "--m-spring-h": t.widget.springH,
+    "--m-widget-chevron": ms(t.widget.chevronMs),
   };
 }
 
