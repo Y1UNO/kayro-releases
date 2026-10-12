@@ -328,6 +328,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_desktop::autostart_set::<tauri::Wry>,
             ipc_desktop::recents_get,
             ipc_desktop::opening_due::<tauri::Wry>,
+            ipc_desktop::passage_faded::<tauri::Wry>,
         ])
         .events(collect_events![
             SettingsChanged,
@@ -336,6 +337,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             AppStateChanged,
             ipc_scenes::SceneProgress,
             crate::desktop::WindowVisibility,
+            crate::desktop::passage::ModePassage,
             crate::desktop::SceneHotkey,
             crate::desktop::hotkeys::HotkeysChanged,
             ipc_desktop::RecentsChanged

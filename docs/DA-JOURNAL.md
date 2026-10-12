@@ -473,9 +473,117 @@ Pas de commit sans ta demande. Tag prévu : `da-r4b-1`, puis `-2`, `-3`. Exclusi
 - le texte « Chargement de vos données… » reste du texte (pas de fil) ;
 - page masquée : un fantôme de retrait reste jusqu'à l'image suivante.
 
+**Ton retour (4b-1b)** : validé à l'œil. Commité (`445b3fe`), tag `da-r4b-1b`.
+
+### 4b-2.0 — Spike : `main` transparente ? (2026-10-12, PC libre)
+**Méthode** :
+- Vraie fenêtre WebView2, build de dev, 2560×1440 (1707×960 CSS à 150 %), 278 Hz.
+- `/dev/home?bench=idle&preset=actif&theme=lavande-peche`, 10 s sans saisie, en Élevée et en Éco.
+- Comparaison : `main` construite **transparente** contre **opaque** (même code ; interrupteur de debug le temps du spike).
+- Coût de l'app : `measure-cost.ps1`. GPU du **compositeur de Windows (dwm)** : nouveau relevé hors dépôt, 5 échantillons. C'est lui que la transparence charge, et l'app ne le voit pas.
+- `Get-Process` : aucun jeu. Steam et le client Riot étaient ouverts mais au repos ; le navigateur Comet prenait ~19 % du CPU de la machine en fond, pareil dans les deux cas (mesures alternées).
+
+| Repos, immersif | Qualité | p95 | Images perdues | CPU app | GPU 3D app | **GPU dwm** | GPU 3D machine |
+|---|---|---|---|---|---|---|---|
+| opaque (2-3 essais) | Élevée | 3,7 ms ✅ | 1 / 0 | 3,0 / 2,8 % | 4,5 / 4,4 % | **1,4–1,5 %** | 7,7–7,8 % |
+| transparente (2-3 essais) | Élevée | 3,7 ms ✅ | 0 / 0 | 2,2 / 2,6 % | 4,6 / 4,5 % | **4,2 %** (×2,8) | 10,6–10,7 % |
+| opaque | Éco | 3,7 ms ✅ | 0 / 0 | 1,6 / 1,3 % | 1,2 / 1,1 % | **0,8 %** | 3,6–3,7 % |
+| transparente | Éco | 3,7 ms ✅ | 0 / 1 (7,2 ms) | 1,3 / 1,5 % | 1,3 / 1,3 % | **2,4 %** (×3) | 5,3–5,4 % |
+
+**Lecture** :
+- Le p95 ne bouge pas : 3,7 ms, l'intervalle d'une image à 278 Hz.
+- Le coût de l'app non plus.
+- En revanche, **dwm passe de 1,5 à 4,2 % en Élevée, et de 0,8 à 2,4 % en Éco**, soit +2,7 et +1,6 points, ou +39 à +44 % du GPU de toute la machine. Une fenêtre plein écran opaque est affichée directement par Windows (« flip » direct). Transparente, elle doit être recomposée à chaque image, **en permanence tant que Kayro est affiché**, pour un effet qui dure ~0,5 s par changement de mode.
+- Valeurs très stables (relevés dwm répétés à ±0,06 point).
+
+**S1 (captures plein écran, supprimées après la séance)** :
+- Immersif transparent : identique à l'opaque à l'œil.
+- Avec un découpage de la page en rectangle arrondi, le bureau se voit autour ; le fond fixe (Backdrop) et le canvas du moteur sont bien découpés avec la page (le `clip-path` sur `#root` les prend).
+- Mode fenêtre transparent : barre de titre native, coins arrondis et liseré de Windows 11 corrects.
+- En opaque, le même découpage montre un fond gris (contrôle).
+- **Non vérifiés** : Alt+Tab et l'image du premier affichage.
+
+**S3 (rafales de captures toutes les ~35–40 ms pendant le basculement immersif ↔ fenêtre actuel)** :
+- Au redimensionnement de la fenêtre, **2 à 3 captures (~70–120 ms) montrent l'ancienne image**, rognée ou collée en haut à gauche sur un fond sombre, avant la nouvelle mise en page.
+- **Pareil en opaque et en transparent** : le défaut existe déjà aujourd'hui (build de dev), il vient du redimensionnement lui-même.
+- Pour les passages animés, il aurait fallu masquer ces ~100 ms (fenêtre « cloakée », donc un clignement du bureau) ou les cacher sous un contenu effacé.
+
+**S4** (cadre + `zoom`) : non fait, devenu sans objet avec la décision.
+
+**Décision (règle fixée avant la séance : GPU qui monte nettement → repli)** : **repli**.
+- `main` reste **opaque** ; le code du spike est retiré (fenêtre et outil de dev Ctrl+Alt+F9).
+- 4b-2 = **passages en fondu, sans bureau visible** :
+  - le contenu s'efface sur le fond opaque, la fenêtre change de taille pendant qu'il est effacé (le défaut S3 se perd dans le noir), puis le contenu revient en cascade ;
+  - le widget reste sa petite fenêtre transparente.
+- 4b-3 = **ouverture opaque actuelle (V1-A)**.
+- **Piste pour plus tard, non chiffrée** : une fenêtre transparente **dédiée et éphémère**, construite seulement le temps de l'ouverture ou d'un passage, puis détruite. Le coût dwm n'existerait que pendant l'animation, mais il faut une WebView de plus au démarrage (~0,4 s, mémoire).
+
+**Mesures à ajouter à l'étape 13** : « repos fenêtre », « repos widget », « pendant un passage » ; le GPU de dwm en plus de celui de l'app.
+
+**Ton accord (après le spike)** : repli pour les passages entre modes. 4b-2 se fait en fondu ; pour 4b-3, tu veux d'abord un plan chiffré de la piste « fenêtre transparente dédiée, le temps de l'ouverture » avant de décider.
+
+### 4b-2 — Passages entre modes, en fondu (2026-10-12)
+**Principe** :
+- Les fenêtres restent **opaques**.
+- Un passage efface toute la page sur son fond opaque. La fenêtre change ensuite de taille, ou de fenêtre, pendant que rien ne se voit : l'image figée de ~100 ms mesurée en S3 tombe dans le noir.
+- Puis la page revient, et les cartes remontent en cascade.
+- Le widget garde sa fenêtre transparente : quand il s'efface, on voit le bureau.
+- Durées de la table de mouvement : sortie en micro (140 ms, courbe de disparition) ; retour en moyen (360 ms, apparition) ; cartes +14 px → 0 en cascade de 45 ms sur liaison (12 au plus) ; widget en court, ×0,96 → 1.
+- « Réduire les animations », niveau 2 coupé ou qualité Éco : changement direct, comme avant.
+
+**Rust** :
+- `desktop/mod.rs` (413 lignes) est découpé en `modes.rs` (changements de mode et mode économie) et `passage.rs`. `mod.rs` fait maintenant 345 lignes.
+- Protocole :
+  - événement `ModePassage {id, step: out|in, label}` ;
+  - commande `passage_faded(id)` ;
+  - le cœur attend la page **600 ms au plus**, puis continue seul ;
+  - un passage plus récent libère tout de suite le précédent.
+- Immersif ⇄ fenêtre : « out » à `main` → reconfiguration (taille, cadre, zoom) → « in ». C'est le dernier mode demandé qui l'emporte.
+- Avec le widget :
+  - la nouvelle fenêtre est construite cachée avec `?enter=1` (sa page part effacée) ;
+  - quand elle a peint, l'ancienne fenêtre reçoit « out » ; une fois effacée, la nouvelle est affichée et l'ancienne détruite (`swap_after_fade`, mécanisme `retire` existant) ;
+  - la nouvelle page entre en fondu à son premier affichage.
+- Fenêtre cachée : rien ne change.
+
+**Page** :
+- `src/features/modes/passage.ts` (plan pur, testé) et `usePassage.ts`, branchés dans `App.tsx` et `WidgetApp.tsx`. `main.tsx` met la page à opacité 0 si `?enter=1`.
+- Le fondu porte sur `body` : la page entière, dialogues compris (ils sont rendus hors de `#root`).
+- Sécurités :
+  - après un « out », si le « in » n'arrive pas en 2,5 s, la page revient seule ;
+  - une page construite pour un passage revient de même si elle n'est jamais affichée.
+- **Bouton ↗ « Ouvrir en fenêtre »** dans la barre du widget (nouvelle icône `ExpandIcon`, texte `widget.toWindow`) : passage widget → fenêtre. Ctrl+Alt+H garde son rôle (ta décision).
+
+**Testé** :
+- tsc, eslint, prettier, vitest **496/496** (+ `passage.test.ts`) ; cargo test **177** (+ `passage.rs` : libération par son id, un passage récent libère l'ancien ; `windows.rs` : adresses `?enter=1`) ; clippy propre ; types régénérés ; build de production sans code de dev.
+- En vraie fenêtre (app de banc, build de dev, PC sans jeu), mesuré **dans la page** à chaque image, sans capture d'écran :
+
+  | Passage | Ce qui a été relevé |
+  |---|---|
+  | fenêtre → immersif | opacité 0 à **167 ms** ; changement de taille entre **228 et 260 ms**, page invisible (une largeur intermédiaire passe pendant le zoom) ; retour **274 → 512 ms** ; cartes remontées à **623 ms** |
+  | immersif → fenêtre | même profil, fini à 620 ms |
+  | immersif → widget | le widget est construit (~0,2 s), `main` s'efface, puis le widget est affiché et entre en fondu (0 → 1 en ~360 ms, de 0,84 à 1,2 s après le clic) ; `main` détruite |
+  | widget → fenêtre (bouton ↗) | `main` construite cachée (~0,7 s en dev) ; le widget s'efface **de 707 à 847 ms** ; puis `main` est affichée et entre en fondu, cartes en cascade ; widget détruit |
+
+- Ton réglage d'affichage a été remis sur « immersive » après les essais.
+
+**Non testé** :
+- **le rendu à l'œil** : je n'ai pas fait de captures, celles-ci n'étaient autorisées que pour S1 et S3 ;
+- la zone de notification et le dialogue des réglages comme sources du changement (même chemin Rust, non lancés) ;
+- le démarrage en mode widget suivi de ↗ (qui jouera l'ouverture, une fois par processus) ;
+- 60 Hz et le build de production.
+
+**Limites connues** :
+- Le fondu se fait vers le fond **opaque** (sombre) : le bureau n'apparaît pas.
+- Entre une fenêtre `main` et le widget, l'écran sombre de `main` laisse place au bureau d'un coup quand `main` est détruite.
+- Changer de fenêtre garde sa latence actuelle : il faut construire la nouvelle fenêtre (~0,2 à 0,7 s en dev) avant que le fondu commence.
+- Les zones découvertes par un agrandissement prennent un instant la couleur de fond native de la fenêtre (#171021), proche de `--bg-mid` sans être identique.
+- `cargo fmt --check` signale des écarts antérieurs dans `scene_ops.rs`, `share.rs` et `platform/mod.rs` (fichiers non touchés).
+
+**Mesures** : à faire à l'étape 13, « pendant un passage » (information seulement).
+
 ### Reste à faire
 - **4a** : commit après ton feu vert, puis tag `da-r4a`. Mesures : voir ci-dessus (vérification globale).
-- **4b** : voir la ronde 4b ci-dessus (4b-1a commité `da-r4b-1a` ; 4b-1b fait, arrêt ; ensuite 4b-2, 4b-3). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
+- **4b** : voir la ronde 4b ci-dessus (4b-1a `da-r4b-1a`, 4b-1b `da-r4b-1b` ; spike 4b-2.0 fait → **repli** ; 4b-2 en fondu fait, arrêt pour ton œil ; ensuite plan court de la fenêtre d'ouverture transparente dédiée, puis ta décision pour 4b-3). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
 - Remesurer l'ouverture (CPU/GPU, repli CSS) PC libre.
 
 ## Éléments du catalogue
@@ -503,3 +611,4 @@ Pas de commit sans ta demande. Tag prévu : `da-r4b-1`, puis `-2`, `-3`. Exclusi
 | Widget qui se déroule (`motion.widget*`) | à l'essai (4b-1a) | ressorts `linear()` normale 5 % / 2,5 %, halo allumé tant que déplié, reflet une fois ; « sobre » pour comparer |
 | Chaîne de points de l'éditeur | à l'essai (4b-1b) | ajout / retrait / FLIP sur liaison, voisines qui s'écartent au glisser, test qui allume les points, fil lumineux au lieu de la roue |
 | États : catégorie vide, échec de lancement, nouvelle scène (`motion.emptyFloat`) | à l'essai (4b-1b) | carte pointillée qui flotte 4 px ; tremblement + bord `--fail` + message unique « Corriger » ; dialogue à trois départs |
+| Passages entre modes (fondu) | à l'essai (4b-2) | sortie micro, retour moyen + cascade des cartes, widget ×0,96 → 1 ; fenêtres opaques (spike 4b-2.0) ; bouton ↗ du widget |

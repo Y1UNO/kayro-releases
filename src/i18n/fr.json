@@ -463,7 +463,8 @@
     "noRecents": "Les apps que vous lancez apparaîtront ici.",
     "category": "{category}",
     "noneInCategory": "Aucune application dans cette catégorie.",
-    "launch": "Lancer {name}"
+    "launch": "Lancer {name}",
+    "toWindow": "Ouvrir en fenêtre"
   },
   "displaySettings": {
     "title": "Affichage et raccourci",

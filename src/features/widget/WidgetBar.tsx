@@ -1,6 +1,6 @@
 import type { PointerEvent, RefObject } from "react";
 import { APP_NAME } from "../../app/appName";
-import { ChevronDownIcon, PlayIcon, SearchIcon } from "../../design";
+import { ChevronDownIcon, ExpandIcon, PlayIcon, SearchIcon } from "../../design";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
 import { CATEGORY_IDS, CATEGORY_LABELS, type CategoryId } from "../home/categories";
@@ -18,6 +18,8 @@ interface Props {
   onToggle: () => void;
   onSearch: () => void;
   onScene: () => void;
+  /** « ↗ »: leave the widget for the window mode (round 4b, a passage). */
+  onWindow: () => void;
   /** The bar breathes a little when the panel unrolls (useUnroll). */
   barRef?: RefObject<HTMLElement | null>;
 }
@@ -39,6 +41,7 @@ export function WidgetBar({
   onToggle,
   onSearch,
   onScene,
+  onWindow,
   barRef,
 }: Props) {
   return (
@@ -71,6 +74,15 @@ export function WidgetBar({
         onClick={onSearch}
       >
         <SearchIcon />
+      </button>
+      <button
+        type="button"
+        className={styles.icon}
+        aria-label={t("widget.toWindow")}
+        title={t("widget.toWindow")}
+        onClick={onWindow}
+      >
+        <ExpandIcon size={17} />
       </button>
       <button
         type="button"

@@ -124,6 +124,8 @@ export const desktopIpc = {
   recents: (): Promise<Outcome<string[]>> => plain(commands.recentsGet()),
   /** Once per run of the program, at the first show: the opening animation (round 3). */
   openingDue: (): Promise<Outcome<OpeningDue>> => plain(commands.openingDue()),
+  /** The page has faded out for a passage between modes (round 4b): the core goes on. */
+  passageFaded: (id: number): Promise<Outcome<void>> => plain(commands.passageFaded(id)),
 };
 
 export type DesktopIpc = typeof desktopIpc;

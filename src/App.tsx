@@ -13,6 +13,7 @@ import { usePlayScene } from "./features/scenes/usePlayScene";
 import { useSceneHotkey } from "./features/scenes/useSceneHotkey";
 import { Opening } from "./features/opening/Opening";
 import { useOpening } from "./features/opening/useOpening";
+import { usePassage } from "./features/modes/usePassage";
 
 /** Where the user is: the home screen, the list of scenes, or the editor of one scene. */
 type Screen =
@@ -45,6 +46,8 @@ export function App() {
 
   // Reports the paint time when a measurement is running; confirms a scene a shortcut asked for.
   useWindowShown();
+  // Round 4b: a change of display mode on screen fades the page out and back in.
+  usePassage("main");
   const { request, dialog } = usePlayScene();
   useSceneHotkey(request);
 

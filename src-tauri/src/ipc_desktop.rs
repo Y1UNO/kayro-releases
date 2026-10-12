@@ -80,6 +80,14 @@ pub async fn window_hide<R: Runtime>(app: AppHandle<R>) {
     crate::desktop::hide(&app);
 }
 
+/// The page has faded out for passage `id` (round 4b: a change of display mode on screen); the
+/// core goes on with the window.
+#[tauri::command]
+#[specta::specta]
+pub fn passage_faded<R: Runtime>(app: AppHandle<R>, id: u32) {
+    crate::desktop::passage::faded(&app, id);
+}
+
 /// Starts moving the calling window with the mouse (the widget has no title bar).
 #[tauri::command]
 #[specta::specta]

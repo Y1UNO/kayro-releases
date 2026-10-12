@@ -105,6 +105,11 @@ export const commands = {
 	autostartSet: (enabled: boolean) => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_set", { enabled })),
 	recentsGet: () => __TAURI_INVOKE<string[]>("recents_get"),
 	openingDue: () => __TAURI_INVOKE<OpeningDue>("opening_due"),
+	/**
+	 *  The page has faded out for passage `id` (round 4b: a change of display mode on screen); the
+	 *  core goes on with the window.
+	 */
+	passageFaded: (id: number) => __TAURI_INVOKE<void>("passage_faded", { id }),
 };
 
 /** Events */
@@ -113,6 +118,7 @@ export const events = {
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
+	modePassage: makeEvent<ModePassage>("mode-passage"),
 	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
 	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
@@ -308,6 +314,13 @@ export type MatchRule = {
 	exe: string | null,
 };
 
+/**  A step of a passage, for the page of window `label`. */
+export type ModePassage = {
+	id: number,
+	step: PassageStep,
+	label: string,
+};
+
 export type MonitorInfo = {
 	name: string,
 	width: number,
@@ -338,6 +351,12 @@ export type OpeningDue =
 "now" | 
 /**  Not played yet but the window is hidden: ask again when it is shown. */
 "later" | "no";
+
+export type PassageStep = 
+/**  Fade your content out, then call `passage_faded(id)`. */
+"out" | 
+/**  The window is ready (new size, or shown): bring your content back. */
+"in";
 
 /**  Payload of the `scene_progress` event. */
 export type ProgressEvent = {

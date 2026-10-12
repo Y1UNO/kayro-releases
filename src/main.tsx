@@ -75,6 +75,13 @@ const Atelier: ComponentType | null =
     : null;
 
 const appRoot = createRoot(root);
+
+// A window built for a passage between display modes (round 4b, `?enter=1`): the page starts
+// faded out and comes in on its first show (src/features/modes/usePassage.ts).
+if (new URLSearchParams(location.search).get("enter") === "1") {
+  document.documentElement.dataset.entering = "";
+  document.body.style.opacity = "0";
+}
 const DevPage =
   Atelier ?? Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev;
 

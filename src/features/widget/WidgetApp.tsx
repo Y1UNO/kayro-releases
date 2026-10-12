@@ -10,6 +10,7 @@ import { usePlayScene } from "../scenes/usePlayScene";
 import { useSceneHotkey } from "../scenes/useSceneHotkey";
 import { WidgetBar } from "./WidgetBar";
 import { WidgetPanel } from "./WidgetPanel";
+import { usePassage } from "../modes/usePassage";
 import { useUnroll } from "./useUnroll";
 import { useWidgetFit } from "./useWidgetFit";
 import styles from "./Widget.module.css";
@@ -45,6 +46,8 @@ export function WidgetApp() {
   const motion = useMotionTokens().widget;
   // Round 4b: the glass unrolls when the panel opens; it stays mounted while it folds.
   const presence = useUnroll(open, { panel, bar }, fitNow, eco);
+  // Round 4b: leaving or entering the widget mode fades the widget out or in.
+  usePassage("widget");
 
   // First reveal: measure with the real fonts, give the window that size, then say we are ready.
   useEffect(() => {
@@ -136,6 +139,7 @@ export function WidgetApp() {
           onScene={() => {
             if (first) playScene(first);
           }}
+          onWindow={() => void hubStore.getState().setSettings({ displayMode: "window" })}
         />
         {presence !== null && (
           <WidgetPanel

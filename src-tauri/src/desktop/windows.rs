@@ -148,14 +148,30 @@ pub fn configure_main<R: Runtime>(
     }
 }
 
+/// The page of a window; `entering` = built for a passage between modes (round 4b): the page
+/// starts faded out and comes in on its first show.
+fn page(query: &str, entering: bool) -> WebviewUrl {
+    let mut url = String::from("index.html");
+    let parts: Vec<&str> = [query, if entering { "enter=1" } else { "" }]
+        .into_iter()
+        .filter(|p| !p.is_empty())
+        .collect();
+    if !parts.is_empty() {
+        url.push('?');
+        url.push_str(&parts.join("&"));
+    }
+    WebviewUrl::App(url.into())
+}
+
 /// A hidden `main` window, ready for `mode`. The page asks to be revealed once painted.
 pub fn create_main<R: Runtime>(
     app: &AppHandle<R>,
     mode: DisplayMode,
     screen: &Screen,
     saved: &Placement,
+    entering: bool,
 ) -> tauri::Result<WebviewWindow<R>> {
-    let window = WebviewWindowBuilder::new(app, MAIN, WebviewUrl::App("index.html".into()))
+    let window = WebviewWindowBuilder::new(app, MAIN, page("", entering))
         .title(&app.package_info().name)
         .visible(false)
         .decorations(mode == DisplayMode::Window)
@@ -175,18 +191,18 @@ pub fn create_widget<R: Runtime>(
     app: &AppHandle<R>,
     screen: &Screen,
     saved: &Placement,
+    entering: bool,
 ) -> tauri::Result<WebviewWindow<R>> {
-    let window =
-        WebviewWindowBuilder::new(app, WIDGET, WebviewUrl::App("index.html?w=widget".into()))
-            .title(&app.package_info().name)
-            .visible(false)
-            .decorations(false)
-            .transparent(true)
-            .shadow(false)
-            .resizable(false)
-            .always_on_top(true)
-            .skip_taskbar(true)
-            .build()?;
+    let window = WebviewWindowBuilder::new(app, WIDGET, page("w=widget", entering))
+        .title(&app.package_info().name)
+        .visible(false)
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .resizable(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .build()?;
     if let Ok(hwnd) = window.hwnd() {
         own_window::set_tool_window(hwnd.0 as isize);
     }
@@ -196,4 +212,24 @@ pub fn create_widget<R: Runtime>(
     );
     put(&window, geometry::widget_rect(saved, screen, size));
     Ok(window)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn url(u: WebviewUrl) -> String {
+        match u {
+            WebviewUrl::App(p) => p.to_string_lossy().into_owned(),
+            _ => String::new(),
+        }
+    }
+
+    #[test]
+    fn a_window_built_for_a_passage_says_so_to_its_page() {
+        assert_eq!(url(page("", false)), "index.html");
+        assert_eq!(url(page("", true)), "index.html?enter=1");
+        assert_eq!(url(page("w=widget", false)), "index.html?w=widget");
+        assert_eq!(url(page("w=widget", true)), "index.html?w=widget&enter=1");
+    }
 }
