@@ -46,6 +46,7 @@ export const GLASS_UNIFORMS = [
   "uX",
   "uNS",
   "uHov",
+  "uIVeil",
   ...Array.from({ length: MAX_POSTERS }, (_, i) => `uP${i}`),
 ] as const;
 
@@ -78,6 +79,7 @@ uniform vec2 uPosterK;     // poster: refraction (× the rim's), reflection on t
 uniform vec4 uX[MAXS];     // per shape: cos, sin of its angle, edge softness (px), stack order
 uniform int uNS;           // shapes [0, uNS) are merged; [uNS, uN) are stacked, back to front
 uniform vec2 uHov;         // hovered card of the fan: shape index (< 0 none), level (deeper shadow)
+uniform vec4 uIVeil;       // opening, variant C: open circle x, y, radius (CSS px), veil opacity
 ${POSTER_SAMPLERS}
 
 // Samplers cannot be indexed by a variable in GLSL ES 3.00: one constant branch per texture unit.
@@ -276,6 +278,9 @@ void main() {
     if (uN > uNS) col = stacked(col, p, px);
     if (uNested > 0) col = layer(col, p, 1.0, px);
   }
+  // Variant C's veil: black over everything drawn, outside the open circle; the same 1 px edge as
+  // the CSS gradient it replaces (transparent at r, black at r + 1).
+  if (uIVeil.w > 0.0) col *= 1.0 - uIVeil.w * clamp(length(p - uIVeil.xy) - uIVeil.z, 0.0, 1.0);
   outColor = vec4(col, 1.0);
 }
 `;

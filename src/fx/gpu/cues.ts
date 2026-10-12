@@ -19,6 +19,11 @@ export interface IntroFrame {
   ring: [number, number, number, number];
   /** Drawn fraction of the ring (from the top, clockwise), glint angle (rad), glint opacity, scale. */
   draw: [number, number, number, number];
+  /**
+   * Variant C's veil (round 4b, review C): black at this opacity over everything the engine draws,
+   * outside the open circle (centre x, y, radius, opacity; absent or 0 = none).
+   */
+  veil?: [number, number, number, number];
 }
 
 export type IntroSampler = (now: number) => IntroFrame | null;
@@ -56,8 +61,14 @@ export function sameIntro(a: IntroFrame | null, b: IntroFrame | null): boolean {
     a.ring[3] === b.ring[3] &&
     a.draw[0] === b.draw[0] &&
     a.draw[1] === b.draw[1] &&
-    a.draw[2] === b.draw[2]
+    a.draw[2] === b.draw[2] &&
+    sameVeil(a.veil, b.veil)
   );
+}
+
+function sameVeil(a: IntroFrame["veil"], b: IntroFrame["veil"]): boolean {
+  if (!a || !b) return (a?.[3] ?? 0) === (b?.[3] ?? 0);
+  return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
 }
 
 /**

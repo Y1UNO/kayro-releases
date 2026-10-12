@@ -94,6 +94,11 @@ export const STATES = {
 
 /** Round 4b — opening variant C in the opaque opening (R4b-Ouverture-Transparente.txt). */
 export const OPENING_PULSES = ["v1a", "c"] as const;
+/**
+ * Who draws variant C's veil (review C): the glass engine (default; the CSS layer stays as its
+ * fallback without the engine), or the CSS layer always (workshop, to compare).
+ */
+export const OPENING_VEIL_RENDERS = ["moteur", "css"] as const;
 export const OPENING_C = {
   /** Darkening around the ring until the pulse (as the passages' veil). */
   veil: 0.42,

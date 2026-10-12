@@ -57,6 +57,7 @@ export const MOTION_LABELS = {
       pulse: "Pulsation (4b)",
       veil: "Variante C : voile autour de l'anneau",
       wave: "Variante C : intensité de l'onde",
+      veilRender: "Variante C : voile dessiné par",
     },
   },
   categoryLink: {

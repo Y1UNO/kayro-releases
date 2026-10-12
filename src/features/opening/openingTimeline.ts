@@ -28,6 +28,8 @@ export interface OpeningSettings {
   pulse: string;
   veil: number;
   wave: number;
+  /** Review C: "moteur" = the engine draws the veil (CSS as fallback), "css" = the CSS layer. */
+  veilRender: string;
 }
 
 export function openingSettings(v: ElementValues | undefined): OpeningSettings {
@@ -49,6 +51,7 @@ export function openingSettings(v: ElementValues | undefined): OpeningSettings {
     pulse: str("pulse", "c"),
     veil: num("veil", OPENING_C.veil),
     wave: num("wave", OPENING_C.wave),
+    veilRender: str("veilRender", "moteur"),
   };
 }
 

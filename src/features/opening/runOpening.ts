@@ -5,7 +5,7 @@ import { OPENING_C } from "../../design/motion/tokens4b";
 import { setIntroCue } from "../../fx/gpu/cues";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { hubStore } from "../../store";
-import { revealAt, type RevealFrame } from "./openingReveal";
+import { engineDrawsVeil, revealAt, veilUniform, type RevealFrame } from "./openingReveal";
 import {
   letterOffsets,
   openingAt,
@@ -110,11 +110,18 @@ export function runOpening(
     hole: "",
   };
 
-  /** Variant C (round 4b trial): the veil's hole follows the open circle, the wave its edge. */
-  const reveal = (rv: RevealFrame) => {
-    write(veil, rv.veil.toFixed(3), null);
+  const view = () => ({ w: innerWidth, h: innerHeight });
+  const engineOn = () => document.documentElement.dataset.glassEngine !== undefined;
+
+  /**
+   * Variant C (round 4b): the veil's hole follows the open circle, the wave its edge. The engine
+   * draws the veil when it runs (review C, the cue below); the CSS layer, a full-screen gradient
+   * repainted at every frame of the ringOut, then stays at 0 and is only the fallback.
+   */
+  const reveal = (rv: RevealFrame, byEngine: boolean) => {
+    write(veil, byEngine ? "0" : rv.veil.toFixed(3), null);
     const hole = `${rv.x.toFixed(1)} ${rv.y.toFixed(1)} ${rv.r.toFixed(1)}`;
-    if (veil && rv.veil > 0 && hole !== state.hole) {
+    if (veil && !byEngine && rv.veil > 0 && hole !== state.hole) {
       state.hole = hole;
       veil.style.setProperty("--hole-x", `${rv.x.toFixed(1)}px`);
       veil.style.setProperty("--hole-y", `${rv.y.toFixed(1)}px`);
@@ -164,8 +171,8 @@ export function runOpening(
       (fb * f.intro.ring[3] * f.intro.draw[0]).toFixed(3),
       `scale(${(f.intro.ring[2] / s.ringRadius).toFixed(4)})`,
     );
-    const rv = revealAt(time, s, state.geo, { w: innerWidth, h: innerHeight }, eco);
-    if (rv) reveal(rv);
+    const rv = revealAt(time, s, state.geo, view(), eco);
+    if (rv) reveal(rv, engineDrawsVeil(s, fb === 0));
   };
 
   const finish = () => {
@@ -195,7 +202,12 @@ export function runOpening(
   };
 
   // From the first frame the engine waits (dark page, no home layers) until the sequence starts.
-  setIntroCue((now) => openingAt(choreo.time(now), s, state.geo).intro);
+  setIntroCue((now) => {
+    const t = choreo.time(now);
+    const intro = openingAt(t, s, state.geo).intro;
+    if (!engineDrawsVeil(s, engineOn())) return intro;
+    return { ...intro, veil: veilUniform(revealAt(t, s, state.geo, view(), eco)) };
+  });
   render(0);
 
   const skip = (e: Event) => {

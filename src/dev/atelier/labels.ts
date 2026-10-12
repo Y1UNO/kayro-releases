@@ -373,6 +373,8 @@ export const OPTION_LABELS: Record<string, string> = {
   sobre: "sobre (fondu, première proposition)",
   v1a: "actuelle (V1-A)",
   c: "variante C : la pulsation ouvre la page (retenue)",
+  moteur: "le moteur (WebGL2, CSS en repli)",
+  css: "le CSS (dégradé repeint)",
   "0.7": "× 0,7 (plus lent)",
   "1.5": "× 1,5 (plus vif)",
   kayro: "Cormorant + Manrope",

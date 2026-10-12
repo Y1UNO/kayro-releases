@@ -802,12 +802,30 @@ Relecture en lecture seule, corrigée en trois paquets (arrêt après chacun, pa
 
 **Testé** : vitest **522/522** ; tsc, eslint, prettier (sur mes fichiers) ; volet du navigateur sans erreur (accueil, éditeur : ajouter une étape anime la nouvelle et fait glisser les voisines, ouvrir une étape fait glisser les suivantes ; atelier : les trois courbes dans les choix). **Exe reconstruit** (1 min 16 s) : ouverture C toujours jouée au lancement, `#root` non inerte ensuite, `will-change` vide sur le titre. Aucun changement Rust dans ce paquet.
 **Non testé** : le rendu à l'œil (courbes, sortie du titre, reflets) ; « réduire les animations » basculé en direct dans Windows ; la pause des reflets fenêtre masquée mesurée (logique seulement) ; le glisser-déposer réel de l'éditeur dans l'exe.
+**Ton retour (paquet B)** : validé avec l'exe. Commit `68f885f`, tag `da-fix-b`.
+
+**Paquet C — le voile de la pulsation C dans le moteur** :
+- Avant : un `radial-gradient` plein écran (2560×1440) repeint à chaque image pendant les 850 ms du ringOut.
+- Maintenant : le cue d'ouverture porte `veil` = [centre x, y, rayon, opacité] (`IntroFrame`, comparé dans `sameIntro`) ; la passe de verre (`glassShader.ts`, uniforme `uIVeil`) assombrit en dernier tout ce que le moteur dessine (fond, halo, anneau, particules) hors du cercle, avec le même bord de 1 px que le dégradé : `col *= 1 − a · clamp(|p − c| − r, 0, 1)` en px CSS.
+- Choix à chaque image (`engineDrawsVeil`) : moteur demandé **et** moteur actif → le calque CSS reste à 0 sans recevoir son trou (plus de repeinture) ; sinon (réglage « CSS », pas de moteur, contexte perdu en cours) le calque CSS d'avant.
+- Atelier : `opening.veilRender` = « le moteur (WebGL2, CSS en repli) » (défaut) / « le CSS (dégradé repeint) », comparable en A/B sur l'écran « Ouverture (rejouable) ». L'onde reste en CSS (`transform` et `opacity` seulement).
+- **Identité vérifiée au pixel** : le vrai shader de verre compilé dans WebGL2, fond gris 128 : 128 dans le trou, **101** à r + 0,5 px, **74** dehors ; le calque CSS donne 128 / 101 / 74 (noir à 42 %). Branchement vérifié dans la page de dev (instant figé 2 050 ms) : moteur → calque CSS à 0, cue [640 ; 299,5 ; 494,9 ; 0,42] ; « CSS » ou sans moteur → calque CSS 0,42, trou de 494,9 px.
+- Écart possible à l'œil : la tuile de grain CSS (0,09, au-dessus du canvas) n'est plus assombrie hors du cercle. La vignette, elle, donne le même résultat (deux voiles noirs qui se multiplient).
+- **Mesure du coût : non faite.** PC occupé (Hades II en cours, dernière saisie il y a 0 à 2 s). **À mesurer à l'étape 13** : intervalles d'images pendant le ringOut, CSS contre moteur, Élevée et Éco, exe de production.
+- Testé : vitest **525/525** (+ choix moteur / CSS, uniforme, `sameIntro`), tsc, eslint, prettier, cargo test 190 ; exe reconstruit (en priorité basse, 1 min 33 s). **Non testé** : l'animation jouée en vrai (le volet du navigateur est masqué, et je n'ai pas lancé l'exe pendant ton jeu).
+
+**Ton retour (paquet C)** : validé avec l'exe. Commit `perf: relecture DA paquet C — …`, tag `da-fix-c`.
+
+**Fin des correctifs de relecture (2026-10-12)** : paquets A, B et C validés avec l'exe de production (tags `da-fix-a`, `da-fix-b`, `da-fix-c`), sans fusion dans `main`. Restent ouverts :
+- la mesure du coût du voile (moteur contre CSS), à faire à l'étape 13 ;
+- l'écart de la tuile de grain, qui n'est plus assombrie autour de l'anneau. Rien n'a été relevé au test à l'œil.
+
 **Incident** : un `prettier --write` lancé sur des dossiers entiers a converti les fins de ligne de ~40 fichiers non touchés et reformaté `widgetModel.ts` (écart antérieur) : tout remis dans l'état du dépôt ; `SceneDock.module.css` laissé intact (son contenu égale le dépôt). Prettier ne passe plus que sur mes fichiers.
 
 ### Reste à faire
 - **4a** : commit après ton feu vert, puis tag `da-r4a`. Mesures : voir ci-dessus (vérification globale).
 - **4b** : voir la ronde 4b ci-dessus (4b-1a `da-r4b-1a`, 4b-1b `da-r4b-1b` ; spike 4b-2.0 fait → **repli** ; 4b-2 `da-r4b-2` ; voile `da-r4b-2b` ; ouverture transparente **abandonnée** après la dernière tentative (mémoire +68/+72 Mo à 30 s en environnement partagé, environnement propre trop lent) : code du spike retiré, 4b-3 garde l'ouverture opaque ; démarrage silencieux sans ouverture et pulsation C dans l'ouverture opaque **faits, validés** (`da-r4b-3`) ; coût par image de la pulsation **à mesurer** à l'étape 13). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
-- Remesurer l'ouverture (CPU/GPU, repli CSS) PC libre.
+- Remesurer l'ouverture (CPU/GPU, repli CSS) PC libre, dont le voile de la pulsation C : moteur contre CSS (`opening.veilRender`), intervalles d'images pendant le ringOut, Élevée et Éco.
 
 ### À retenter plus tard
 - **Fenêtre d'ouverture transparente, environnement WebView2 partagé** (4b-3.0 bis) : elle n'a échoué que de peu. Mémoire à 30 s : **+68 / +72 Mo**, pour une limite de 50 Mo. Le reste passait : premier affichage 753 / 759 ms, relève sans saut. Le surplus est dans le processus GPU commun de WebView2.

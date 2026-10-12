@@ -4,7 +4,12 @@
 import { EASES } from "../motion/eases";
 import { UNROLL_SPRINGS } from "../motion/springCurves";
 import { MOTION_DEFAULTS as M, motionCss, motionTokens, SPEEDS } from "../motion/tokens";
-import { OPENING_C, OPENING_PULSES, WIDGET_MOTIONS } from "../motion/tokens4b";
+import {
+  OPENING_C,
+  OPENING_PULSES,
+  OPENING_VEIL_RENDERS,
+  WIDGET_MOTIONS,
+} from "../motion/tokens4b";
 import { NONE, range, select, toggle, type DaElement } from "./daParams";
 
 const CURVES = Object.keys(EASES);
@@ -94,6 +99,9 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       select("pulse", OPENING_PULSES, "c"),
       range("veil", 0, 0.8, 0.02, OPENING_C.veil),
       range("wave", 0, 1, 0.05, OPENING_C.wave),
+      // Review C: the veil drawn by the engine (no full-screen gradient repainted each frame of
+      // the ringOut), or by the CSS layer to compare.
+      select("veilRender", OPENING_VEIL_RENDERS, "moteur"),
     ],
   },
   {

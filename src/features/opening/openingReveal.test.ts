@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { defaultValues } from "../../design/da";
 import { OPENING_C } from "../../design/motion/tokens4b";
-import { revealAt } from "./openingReveal";
+import { sameIntro } from "../../fx/gpu/cues";
+import { introVeilUniform } from "../../fx/gpu/uniforms";
+import { engineDrawsVeil, revealAt, veilUniform } from "./openingReveal";
 import { openingAt, openingSettings, type OpeningGeometry } from "./openingTimeline";
 
 const C = openingSettings(defaultValues().opening);
@@ -72,5 +74,31 @@ describe("opening variant C in the opaque opening (round 4b)", () => {
     const fast = { ...C, speed: 2 };
     expect(revealAt(2600 / 2, fast, G, VIEW, false)!.veil).toBe(0);
     expect(revealAt(1749 / 2, fast, G, VIEW, false)!.r).toBe(216);
+  });
+});
+
+describe("variant C's veil drawn by the engine (review C)", () => {
+  it("the engine draws it by default when it runs; the CSS layer otherwise, or when asked", () => {
+    expect(C.veilRender).toBe("moteur");
+    expect(engineDrawsVeil(C, true)).toBe(true);
+    expect(engineDrawsVeil(C, false)).toBe(false); // no engine: the CSS fallback
+    expect(engineDrawsVeil({ ...C, veilRender: "css" }, true)).toBe(false);
+  });
+
+  it("the uniform is the CSS layer's circle and opacity, none once the page is whole", () => {
+    const rv = revealAt(2050, C, G, VIEW, false)!;
+    expect(veilUniform(rv)).toEqual([rv.x, rv.y, rv.r, OPENING_C.veil]);
+    expect(veilUniform(revealAt(2600, C, G, VIEW, false))).toEqual([0, 0, 0, 0]);
+    expect(veilUniform(revealAt(2000, V1A, G, VIEW, false))).toEqual([0, 0, 0, 0]);
+    expect(introVeilUniform(null)).toEqual({ uIVeil: [0, 0, 0, 0] });
+  });
+
+  it("the engine draws a new frame when only the veil's circle changes", () => {
+    const intro = openingAt(2050, C, G).intro;
+    const a = { ...intro, veil: veilUniform(revealAt(2050, C, G, VIEW, false)) };
+    const b = { ...intro, veil: veilUniform(revealAt(2100, C, G, VIEW, false)) };
+    expect(sameIntro(a, { ...a })).toBe(true);
+    expect(sameIntro(a, b)).toBe(false);
+    expect(sameIntro(intro, { ...intro, veil: [0, 0, 0, 0] })).toBe(true);
   });
 });

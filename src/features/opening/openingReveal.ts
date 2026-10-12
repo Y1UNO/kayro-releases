@@ -20,6 +20,16 @@ export interface RevealFrame {
   wave: number;
 }
 
+/** The engine draws the veil: asked for, and the engine runs (else the CSS layer, its fallback). */
+export function engineDrawsVeil(s: OpeningSettings, engineOn: boolean): boolean {
+  return engineOn && s.veilRender !== "css";
+}
+
+/** The engine's veil uniform for a moment of the pulse (open circle, opacity; 0 = none). */
+export function veilUniform(rv: RevealFrame | null): [number, number, number, number] {
+  return rv && rv.veil > 0 ? [rv.x, rv.y, rv.r, rv.veil] : [0, 0, 0, 0];
+}
+
 export function revealAt(
   time: number,
   s: OpeningSettings,

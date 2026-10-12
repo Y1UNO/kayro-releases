@@ -162,6 +162,11 @@ export function introUniforms(intro: IntroFrame | null): Uniforms {
   return { uIntro: intro.fade, uIHalo: intro.halo, uIRing: intro.ring, uIRing2: intro.draw };
 }
 
+/** Variant C's veil of the opening, drawn at the end of the glass pass (none when absent). */
+export function introVeilUniform(intro: IntroFrame | null): Uniforms {
+  return { uIVeil: intro?.veil ?? [0, 0, 0, 0] };
+}
+
 /** Opacity of the embers, stars and bokeh (the opening fades them in; 1 otherwise). */
 export function kindUniform(intro: IntroFrame | null): number[] {
   return intro ? [intro.embers, intro.fade, intro.fade * intro.home] : [1, 1, 1];

@@ -24,6 +24,7 @@ import { Scene } from "./scene";
 import {
   bgUniforms,
   glassUniforms,
+  introVeilUniform,
   kindOn,
   kindUniform,
   kindTint,
@@ -375,6 +376,7 @@ export class GlassEngine implements FxLayer {
         ...glassUniforms(p, light, palette, v),
         ...sheenUniforms(p, this.sheen, f.hasSel ? f.sel : null, this.reduced),
         ...shapeUniforms(f, p, this.stage),
+        ...introVeilUniform(intro),
       },
       this.posters ? () => this.posters!.bind() : null,
     );
