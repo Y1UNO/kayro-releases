@@ -349,14 +349,19 @@ export type NewApp = {
 
 /**
  *  Whether the opening animation plays now: once per run of the program, at the first time the
- *  main window is on screen (a silent start waits for the first show; in economy mode the window
- *  is built again at every show, so the page cannot remember it itself).
+ *  main window is on screen (in economy mode the window is built again at every show, so the page
+ *  cannot remember it itself). A silent start (Windows login) plays none (round 4b).
  */
 export type OpeningDue = 
 /**  Play it now (asked once: the next answers are `No`). */
 "now" | 
 /**  Not played yet but the window is hidden: ask again when it is shown. */
-"later" | "no";
+"later" | 
+/**
+ *  Silent start: no opening, but it is still the program's start (asked once, at once, even
+ *  hidden, so that the home screen is ready under the first show).
+ */
+"quiet" | "no";
 
 export type PassageStep = 
 /**  Fade your content out, then call `passage_faded(id)`. */

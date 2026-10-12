@@ -1,9 +1,11 @@
 import { APP_NAME } from "../../app/appName";
 import { daStore } from "../../design/da";
 import { Choreo } from "../../design/motion/choreo";
+import { OPENING_C } from "../../design/motion/tokens";
 import { setIntroCue } from "../../fx/gpu/cues";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { hubStore } from "../../store";
+import { revealAt, type RevealFrame } from "./openingReveal";
 import {
   letterOffsets,
   openingAt,
@@ -69,6 +71,8 @@ export function runOpening(
   const bgLight = part("bg-light");
   const halo = part("halo");
   const ring = part("ring");
+  const veil = part("veil");
+  const wave = part("wave");
 
   const s = openingSettings(daStore.getState().values.opening);
   const eco = hubStore.getState().settings?.quality === "eco";
@@ -77,6 +81,8 @@ export function runOpening(
   const total = openingDuration(s);
   host.style.setProperty("--opening-blur", `${s.letterBlur}px`);
   host.style.setProperty("--opening-r", `${s.ringRadius}px`);
+  host.style.setProperty("--opening-wave", `${OPENING_C.waveFrom}px`);
+  host.style.setProperty("--opening-band", String(OPENING_C.waveBand));
   if (eco) host.dataset.eco = "";
   const haloBase = 340 * (s.ringRadius / 200);
   const state = {
@@ -90,6 +96,27 @@ export function runOpening(
     home: -1, // last opacity written on the two big layers (no style change while it stays)
     alive: true,
     still: 0,
+    hole: "",
+  };
+
+  /** Variant C (round 4b trial): the veil's hole follows the open circle, the wave its edge. */
+  const reveal = (rv: RevealFrame) => {
+    write(veil, rv.veil.toFixed(3), null);
+    const hole = `${rv.x.toFixed(1)} ${rv.y.toFixed(1)} ${rv.r.toFixed(1)}`;
+    if (veil && rv.veil > 0 && hole !== state.hole) {
+      state.hole = hole;
+      veil.style.setProperty("--hole-x", `${rv.x.toFixed(1)}px`);
+      veil.style.setProperty("--hole-y", `${rv.y.toFixed(1)}px`);
+      veil.style.setProperty("--hole-r", `${rv.r.toFixed(1)}px`);
+    }
+    const k = rv.r / (OPENING_C.waveFrom / 2);
+    write(
+      wave,
+      rv.wave.toFixed(3),
+      rv.wave > 0
+        ? `translate(${rv.x.toFixed(1)}px, ${rv.y.toFixed(1)}px) scale(${k.toFixed(4)})`
+        : null,
+    );
   };
 
   const render = (time: number) => {
@@ -126,6 +153,8 @@ export function runOpening(
       (fb * f.intro.ring[3] * f.intro.draw[0]).toFixed(3),
       `scale(${(f.intro.ring[2] / s.ringRadius).toFixed(4)})`,
     );
+    const rv = revealAt(time, s, state.geo, { w: innerWidth, h: innerHeight }, eco);
+    if (rv) reveal(rv);
   };
 
   const finish = () => {

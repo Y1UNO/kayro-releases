@@ -98,6 +98,42 @@
   border: 1px solid color-mix(in srgb, var(--grad-b) 70%, transparent);
 }
 
+/*
+ * Round 4b, variant C: until the ringOut the page is seen only inside the ring, darkened
+ * around (repainted only while the circle opens); the wave is a 400 px circle grown by `scale`,
+ * only its outer glow drawn (inside, the page is open).
+ */
+.veil {
+  --hole-x: 50%;
+  --hole-y: 41.6%;
+  --hole-r: 216px;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--hole-x) var(--hole-y),
+    transparent var(--hole-r),
+    #000 calc(var(--hole-r) + 1px)
+  );
+  opacity: 0;
+}
+
+.wave {
+  --w: calc(var(--opening-wave) / 2);
+  position: absolute;
+  left: calc(var(--w) * -1.2);
+  top: calc(var(--w) * -1.2);
+  width: calc(var(--w) * 2.4);
+  height: calc(var(--w) * 2.4);
+  background: radial-gradient(
+    circle closest-side,
+    transparent var(--w),
+    var(--grad-a) calc(var(--w) + 1px),
+    transparent calc(var(--w) * (1 + var(--opening-band)))
+  );
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
 .row {
   position: absolute;
   left: 0;

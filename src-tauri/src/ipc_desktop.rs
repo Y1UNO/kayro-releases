@@ -33,11 +33,9 @@ pub fn note_recent<R: Runtime>(app: &AppHandle<R>, config: &ConfigState, id: &st
     }
 }
 
-static OPENING_PLAYED: AtomicBool = AtomicBool::new(false);
-
 /// Whether the opening animation plays now: once per run of the program, at the first time the
-/// main window is on screen (a silent start waits for the first show; in economy mode the window
-/// is built again at every show, so the page cannot remember it itself).
+/// main window is on screen (in economy mode the window is built again at every show, so the page
+/// cannot remember it itself). A silent start (Windows login) plays none (round 4b).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub enum OpeningDue {
@@ -45,25 +43,50 @@ pub enum OpeningDue {
     Now,
     /// Not played yet but the window is hidden: ask again when it is shown.
     Later,
+    /// Silent start: no opening, but it is still the program's start (asked once, at once, even
+    /// hidden, so that the home screen is ready under the first show).
+    Quiet,
     No,
 }
 
-fn opening_due_for(visible: bool) -> OpeningDue {
-    if OPENING_PLAYED.load(Ordering::SeqCst) {
-        OpeningDue::No
-    } else if !visible {
-        OpeningDue::Later
-    } else if OPENING_PLAYED.swap(true, Ordering::SeqCst) {
-        OpeningDue::No
-    } else {
-        OpeningDue::Now
+/// The opening's once-per-run state.
+pub struct OpeningOnce {
+    asked: AtomicBool,
+    silent: AtomicBool,
+}
+
+impl OpeningOnce {
+    const fn new() -> Self {
+        Self {
+            asked: AtomicBool::new(false),
+            silent: AtomicBool::new(false),
+        }
+    }
+
+    /// The program was started silently: no opening in this run.
+    pub fn silent_start(&self) {
+        self.silent.store(true, Ordering::SeqCst);
+    }
+
+    fn due(&self, visible: bool) -> OpeningDue {
+        let quiet = self.silent.load(Ordering::SeqCst);
+        if !quiet && !visible && !self.asked.load(Ordering::SeqCst) {
+            return OpeningDue::Later;
+        }
+        match (self.asked.swap(true, Ordering::SeqCst), quiet) {
+            (true, _) => OpeningDue::No,
+            (false, true) => OpeningDue::Quiet,
+            (false, false) => OpeningDue::Now,
+        }
     }
 }
+
+pub static OPENING: OpeningOnce = OpeningOnce::new();
 
 #[tauri::command]
 #[specta::specta]
 pub fn opening_due<R: Runtime>(window: WebviewWindow<R>) -> OpeningDue {
-    opening_due_for(window.is_visible().unwrap_or(true))
+    OPENING.due(window.is_visible().unwrap_or(true))
 }
 
 #[tauri::command]
@@ -216,14 +239,29 @@ pub fn autostart_set<R: Runtime>(app: AppHandle<R>, enabled: bool) -> Result<boo
 
 #[cfg(test)]
 mod tests {
-    use super::{opening_due_for, OpeningDue};
+    use super::{OpeningDue, OpeningOnce};
 
     #[test]
     fn the_opening_is_due_once_per_run_at_the_first_show() {
-        assert_eq!(opening_due_for(false), OpeningDue::Later);
-        assert_eq!(opening_due_for(false), OpeningDue::Later);
-        assert_eq!(opening_due_for(true), OpeningDue::Now);
-        assert_eq!(opening_due_for(true), OpeningDue::No);
-        assert_eq!(opening_due_for(false), OpeningDue::No);
+        let o = OpeningOnce::new();
+        assert_eq!(o.due(false), OpeningDue::Later);
+        assert_eq!(o.due(false), OpeningDue::Later);
+        assert_eq!(o.due(true), OpeningDue::Now);
+        assert_eq!(o.due(true), OpeningDue::No);
+        assert_eq!(o.due(false), OpeningDue::No);
+    }
+
+    #[test]
+    fn a_silent_start_plays_no_opening() {
+        // Window built hidden at login: answered at once, nothing waits for the first show.
+        let o = OpeningOnce::new();
+        o.silent_start();
+        assert_eq!(o.due(false), OpeningDue::Quiet);
+        assert_eq!(o.due(true), OpeningDue::No);
+        // Economy mode: no window at login, the first one is built at the first show.
+        let o = OpeningOnce::new();
+        o.silent_start();
+        assert_eq!(o.due(true), OpeningDue::Quiet);
+        assert_eq!(o.due(true), OpeningDue::No);
     }
 }

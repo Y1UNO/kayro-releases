@@ -86,9 +86,12 @@ fn settings<R: Runtime>(app: &AppHandle<R>) -> Settings {
 // ───────────────────────────── start-up and windows ─────────────────────────────
 
 /// Called once from `setup`, after the notification-area icon exists. A silent start (Windows
-/// login) creates the window hidden, or nothing at all in economy mode.
+/// login) creates the window hidden, or nothing at all in economy mode, and plays no opening.
 pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
     hotkeys::init(app);
+    if silent {
+        crate::ipc_desktop::OPENING.silent_start();
+    }
     let s = settings(app);
     if silent && s.economy_mode {
         tracing::info!("silent start, economy mode: no window yet");

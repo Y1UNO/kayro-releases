@@ -368,6 +368,8 @@ export const OPTION_LABELS: Record<string, string> = {
   forte: "forte (7 % / 3,5 %)",
   deroule: "le verre se déroule (retenu)",
   sobre: "sobre (fondu, première proposition)",
+  v1a: "actuelle (V1-A)",
+  c: "variante C : la pulsation ouvre la page (retenue)",
   "0.7": "× 0,7 (plus lent)",
   "1.5": "× 1,5 (plus vif)",
   kayro: "Cormorant + Manrope",

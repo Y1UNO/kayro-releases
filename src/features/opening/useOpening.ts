@@ -16,8 +16,10 @@ const WAITING: IntroFrame = {
 
 /**
  * When the opening plays (art direction round 3): once per run of the program, the first time the
- * main window is on screen (the core keeps the count, see `opening_due`). A silent start keeps the
- * home screen hidden and the page dark until the first show, so nothing flashes before it.
+ * main window is on screen (the core keeps the count, see `opening_due`). A window built hidden
+ * keeps the home screen hidden and the page dark until the first show, so nothing flashes before
+ * it. A silent start (Windows login, round 4b) plays none: answered `quiet` at once, the home
+ * screen is ready under the first show (still on the fan: it is the program's start).
  *
  * `hidden`: keep the home screen hidden (opening playing or waiting). `play`: mount <Opening>.
  * `fan` (round 3b): this is the program's start (first show), the home screen opens on the

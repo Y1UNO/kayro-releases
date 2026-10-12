@@ -134,6 +134,20 @@ export const STATES = {
   noticeMs: 6000,
 } as const;
 
+/** Round 4b — opening variant C in the opaque opening (R4b-Ouverture-Transparente.txt). */
+export const OPENING_PULSES = ["v1a", "c"] as const;
+export const OPENING_C = {
+  /** Darkening around the ring until the pulse (as the passages' veil). */
+  veil: 0.42,
+  /** Margin of the open circle around the ring: its strokes and its glint stay inside. */
+  ringMargin: 16,
+  /** Wave: a 400 px circle scaled on the circle's edge, full until 80 %, outer glow 5.5 % of r. */
+  waveFrom: 400,
+  waveFull: 0.8,
+  waveBand: 0.055,
+  wave: 0.55,
+} as const;
+
 /** Speed multiplier of the workshop: durations are divided by it (as `opening.speed`). */
 export const SPEEDS = ["0.7", "1", "1.5"] as const;
 

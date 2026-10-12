@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { Logo } from "../../brand";
+import { daStore } from "../../design/da";
 import { t } from "../../i18n";
+import { openingSettings } from "./openingTimeline";
 import { LETTERS, runOpening } from "./runOpening";
 import styles from "./Opening.module.css";
 
@@ -18,11 +20,14 @@ interface Props {
  * when the engine is off), the logo forms, slides left, and the letters of the name come out from
  * behind it. A click or any key skips it; reduced motion shows the finished picture at once.
  * Only transform and opacity move: blur is a cross-fade with a still blurred copy (none in Eco).
+ * Round 4b (`pulse` "c", default): variant C's pulse, the page seen only in the ring until the
+ * ringOut opens it in a circle with a wave (openingReveal.ts).
  * The sequence itself: runOpening.ts (pure timing: openingTimeline.ts).
  */
 export function Opening({ under, onDone, seek = null }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const done = useRef(onDone);
+  const pulseC = openingSettings(daStore.getState().values.opening).pulse === "c";
   useEffect(() => {
     done.current = onDone;
   });
@@ -43,6 +48,12 @@ export function Opening({ under, onDone, seek = null }: Props) {
         <div data-part="halo" className={styles.halo} />
         <div data-part="ring" className={styles.ring} />
       </div>
+      {pulseC && (
+        <>
+          <div data-part="veil" className={styles.veil} aria-hidden="true" />
+          <div data-part="wave" className={styles.wave} aria-hidden="true" />
+        </>
+      )}
       <div className={styles.row} aria-hidden="true">
         <div className={styles.logoBox}>
           <div data-part="logo-blur" className={`${styles.logo} ${styles.soft}`}>

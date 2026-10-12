@@ -1,6 +1,7 @@
 import { EASES } from "../../design/da/catalogue";
 import type { ElementValues } from "../../design/da/daParams";
 import { curveOf, lerp, seg } from "../../design/motion/curve";
+import { OPENING_C } from "../../design/motion/tokens";
 import type { IntroFrame } from "../../fx/gpu/cues";
 
 /**
@@ -23,6 +24,10 @@ export interface OpeningSettings {
   ringGrow: boolean;
   hold: number;
   handoff: number;
+  /** Round 4b: "c" = variant C's pulse (openingReveal.ts, default), "v1a" = without it. */
+  pulse: string;
+  veil: number;
+  wave: number;
 }
 
 export function openingSettings(v: ElementValues | undefined): OpeningSettings {
@@ -41,6 +46,9 @@ export function openingSettings(v: ElementValues | undefined): OpeningSettings {
     ringGrow: v?.ringGrow === true,
     hold: num("hold", 600),
     handoff: num("handoff", 600),
+    pulse: str("pulse", "c"),
+    veil: num("veil", OPENING_C.veil),
+    wave: num("wave", OPENING_C.wave),
   };
 }
 
@@ -107,6 +115,11 @@ export function openingDuration(s: OpeningSettings): number {
   return openingRestAt(s) + s.hold + s.handoff;
 }
 
+/** The ring's pulse after its drawing ("ringOut", 1 750 ms, 850 ms): 0 → 1. */
+export function ringOutAt(time: number, s: OpeningSettings): number {
+  return seg(time * s.speed, 1750, 850, C_OUT);
+}
+
 /** Opacity of a CSS keyframe list 0 % → `at` → 100 % (0, 1, 1), the curve applied per interval. */
 function keyIn(u: number, at: number, c: (x: number) => number): number {
   return u <= 0 ? 0 : u >= at ? 1 : c(u / at);
@@ -139,16 +152,15 @@ export function openingAt(
         : glintU < 0.8
           ? 1
           : 1 - C_GLINT((glintU - 0.8) / 0.2);
-  const out = seg(t, 1750, 850, C_OUT);
+  const out = ringOutAt(time, s);
 
   const startX = g.logo.x + g.slide;
   const r0 = s.ringRadius;
   let ring: [number, number, number, number];
   let scale: number;
   if (s.ringGrow) {
-    const k = seg(t, 1750, 850, C_OUT);
-    scale = lerp(1, g.homeRing.r / r0, k);
-    ring = [lerp(startX, g.homeRing.x, k), lerp(g.logo.y, g.homeRing.y, k), r0 * scale, 1 - h];
+    scale = lerp(1, g.homeRing.r / r0, out);
+    ring = [lerp(startX, g.homeRing.x, out), lerp(g.logo.y, g.homeRing.y, out), r0 * scale, 1 - h];
   } else {
     scale = 1 + 0.4 * out;
     ring = [startX, g.logo.y, r0 * scale, 1 - out];

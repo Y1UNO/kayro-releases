@@ -7,6 +7,8 @@ import {
   MOTION_DEFAULTS as M,
   motionCss,
   motionTokens,
+  OPENING_C,
+  OPENING_PULSES,
   SPEEDS,
   WIDGET_MOTIONS,
 } from "../motion/tokens";
@@ -93,6 +95,12 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       toggle("ringGrow", false),
       range("hold", 0, 2000, 50, 600, "ms"),
       range("handoff", 200, 1200, 10, 600, "ms"),
+      // Round 4b (validated 2026-10-12): variant C's pulse in the opaque opening (the page is
+      // seen only in the ring, darkened around; the ringOut sends a wave and opens it in a
+      // circle). "v1a" = the opening without it, for comparison.
+      select("pulse", OPENING_PULSES, "c"),
+      range("veil", 0, 0.8, 0.02, OPENING_C.veil),
+      range("wave", 0, 1, 0.05, OPENING_C.wave),
     ],
   },
   {

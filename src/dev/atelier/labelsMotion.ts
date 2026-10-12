@@ -54,6 +54,9 @@ export const MOTION_LABELS = {
       ringGrow: "L'anneau devient celui de l'accueil",
       hold: "Tenue avant l'accueil",
       handoff: "Passage à l'accueil",
+      pulse: "Pulsation (4b)",
+      veil: "Variante C : voile autour de l'anneau",
+      wave: "Variante C : intensité de l'onde",
     },
   },
   categoryLink: {

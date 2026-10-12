@@ -6,7 +6,7 @@ Lu au début de chaque session de l'étape 12b. Permet de reprendre dans une con
 - Nom : **V4 Aéré lumineux** (`src/design/presets/v4-aere-lumineux.json`, thème Bleu-gris, ronde 2b) : base `v4-aere-bleu-gris` (2a) + fond aéré, particules éclairées, matière, voile brillant, affiches dans le verre, pastille « léger rebond ». `active.json` (défaut du catalogue) n'a pas été modifié : toujours V4 Verre liquide, lavande-pêche
 - 2a : **V4 Verre liquide** : moteur WebGL2 sur les cartes et les pastilles de sélection seulement, anneau liquide
 - Fichiers : `src/design/presets/v4-verre-liquide.json` ; comparaison : `v4-verre-liquide-complet.json` (tout en verre, anneau en tube : état du premier essai 2a), `v4-cristal.json` (V4 de la ronde 1, CSS, moteur coupé), `croquis-12.json` (étapes 3 à 12), `v4-cristal-gpu.json` (anneau seul dans le moteur, comme le spike)
-- Branche / tags : `step-12b-atelier-da` / `da-r1`, `da-r2a` (2a commitée le 2026-10-11, avec `v4-aere-bleu-gris`), ronde 2b commitée (`e497060`). Ronde 3a commitée (`7bb5f30`) ; préréglage `v4-r3-signature.json` = V4 Aéré lumineux + ouverture. Ronde 3b (A + B) : **non commitée** (tag prévu `da-r3b`)
+- Branche / tags : `step-12b-atelier-da` / `da-r1`, `da-r2a` (2a commitée le 2026-10-11, avec `v4-aere-bleu-gris`), ronde 2b commitée (`e497060`). Ronde 3a commitée (`7bb5f30`) ; préréglage `v4-r3-signature.json` = V4 Aéré lumineux + ouverture. Ronde 3b : `da-r3b` ; ronde 4a : `da-r4a` ; ronde 4b : `da-r4b-1a`, `da-r4b-1b`, `da-r4b-2`, `da-r4b-2b`, `da-r4b-3`
 
 ## Mode d'emploi
 - `npm run dev` puis `http://localhost:1420/dev/atelier` (navigateur) : réglages à gauche (générés depuis `src/design/da/catalogue.ts`), écrans réels à droite (Accueil, grille, ajout d'apps, scènes, éditeur, composants), 11 thèmes, qualité, comparaison A/B, Enregistrer / Charger / Historique, Exporter (→ `active.json` = DA de l'app), Mesurer (10 s).
@@ -318,7 +318,7 @@ Lecture : budget de 5,4 ms tenu partout, avec de la marge ; le survol coûte ~+2
 6. interrupteur (bascule toutes les 1,5 s).
 Outils : pages de dev `/dev/home?bench=idle` (cas 1–3, souris réelle par CDP), `/dev/home?cycle=1500&bench=transition` (cas 4), `/dev/motion?cycle=panel:1500&bench=idle` et `?cycle=toggle:1500` (cas 5–6) ; CPU / GPU avec `scripts/measure-cost.ps1`. Captures `docs/captures/da-r4a-*` à prendre au même moment. Aucune mesure 4a n'a encore été faite.
 
-## Ronde 4b — 2026-10-12 (widget, chaîne de points, états, passages de modes, ouverture transparente ; non commitée)
+## Ronde 4b — 2026-10-12 (widget, chaîne de points, états, passages de modes, ouverture ; commitée par sous-étape, dernier tag `da-r4b-3`)
 **Specs** (font foi) : `reference/animations/R4b-notes-4b/r4b-notes/R4b-3c-Widget.txt`, `R4b-3c-Editeur.txt`, `R4b-Etats.txt`, `R4b-Modes.txt`, `R4b-Ouverture-Transparente.txt` (+ R4a). Départ : tag `da-r4a`. Plan validé (copie : `C:\Users\tomca\.claude\plans\contexte-projet-kayro-bubbly-wigderson.md`).
 **Découpage et arrêts** :
 - 4b-1a : widget qui se déroule. **Arrêt.**
@@ -329,7 +329,7 @@ Outils : pages de dev `/dev/home?bench=idle` (cas 1–3, souris réelle par CDP)
 Pas de commit sans ta demande. Tag prévu : `da-r4b-1`, puis `-2`, `-3`. Exclusions : `reference/`, `src/design/presets/history/`, `SceneDock.module.css` (fins de ligne seulement).
 **Tes décisions** :
 - Les voiles 42 / 16 % n'existent **que pendant un passage**. À l'arrivée, rien ne change : immersif = fond opaque, fenêtre = vraie fenêtre Windows.
-- Démarrage silencieux = **pas d'ouverture**. Aujourd'hui, l'ouverture joue au premier affichage : `opening_due` sera corrigé en 4b-3.
+- Démarrage silencieux = **pas d'ouverture**. Fait en 4b-3 (`opening_due` répond `quiet`).
 - Ctrl+Alt+H garde « afficher / masquer », même en widget.
 - Halo du widget allumé tant que le panneau est déplié.
 - Ouverture C = chronologie V1-A **à l'identique** (`openingTimeline.ts`), avec la pulsation (ringOut, onde, révélation) à l'instant exact du ringOut : 1 750 ms, 850 ms.
@@ -633,10 +633,142 @@ Pas de commit sans ta demande. Tag prévu : `da-r4b-1`, puis `-2`, `-3`. Exclusi
 
 **Correctif du lanceur de l'atelier** (`scripts/Kayro-atelier.ps1`, ton erreur « op_Addition ») : quand le script démarrait Vite lui-même et que le serveur avait au moins deux processus enfants, `$p, $todo = $todo` faisait du reste de la liste un simple nombre, et le `+=` suivant échouait. Le parcours utilise maintenant une vraie file. `conhost.exe` (qui ne peut pas rejoindre le job et meurt avec sa console) est écarté, ce qui supprime un avertissement trompeur. Vérifié : erreur reproduite à l'identique dans Windows PowerShell 5.1, puis `-ServerOnly` deux fois : Vite démarre, répond, s'arrête, port libéré.
 
+**Ton retour (voile)** : validé à l'œil. Commité (`cfde663`), tag `da-r4b-2b`.
+
+### 4b-3.0 — Spike : l'ouverture dans une fenêtre transparente dédiée (préparé, non mesuré)
+**Code temporaire, actif seulement avec `KAYRO_SPIKE_OPENING=1`** (l'app normale ne change pas) :
+- `src-tauri/src/desktop/opening_window.rs` : au démarrage normal en immersif, la fenêtre `opening` est construite **en premier**. Elle est transparente, plein écran sur l'écran de l'immersif, au premier plan, hors barre des tâches.
+- `main` est ensuite construite cachée, opaque comme aujourd'hui.
+- Sans départ de l'ouverture en 1,5 s (6 s en debug), `opening` est abandonnée et `main` s'affiche comme aujourd'hui.
+- Commandes temporaires `spike_opening_*` (départ, relève, fin, synchronisation, relevé).
+- Page `?w=opening` (`src/features/opening/spike/OpeningWindow.tsx`) : chronologie V1-A à l'identique.
+  - Voile de 0 → 42 % sur le bureau (sur le fondu du fond, 700 ms).
+  - Fond de Kayro (moteur) visible seulement dans l'anneau (rayon + 16 px), puis révélé en cercle jusqu'à couvrir l'écran **sur le ringOut réel** (sa progression = ce que l'anneau perd d'opacité).
+  - Onde de 400 → 2 240 px, pleine jusqu'à 80 % (pas en Éco).
+- **Relève** quand le cercle couvre l'écran (2 600 ms) :
+  - `main` s'affiche dessous et joue son ouverture opaque **à partir de la même heure de départ** (`runOpening` accepte maintenant une heure de départ et un rappel par image) ;
+  - `opening` reste opaque 200 ms, s'efface en 150 ms, puis elle est détruite ;
+  - Échap ou clic : relève immédiate, `main` passe directement à l'accueil.
+- Mesures : `KAYRO_BENCH_OPENING=<fichier>` reçoit l'âge du processus à chaque étape, et les intervalles d'images des deux pages pendant la relève (pour `main`, à partir du moment où elle se voit).
+
+**Essais à blanc (release, non comptés)** :
+- premier affichage 1,23 s, puis **1,05 s** une fois `opening` construite avant `main` ;
+- relève 2,6 s après le départ ;
+- `main` une fois visible : max 3,8 ms ;
+- `opening` pendant la relève : 1 image à 14,4 ms.
+
+Tout est **à mesurer** dans la séance (PC libre). Plan :
+- base actuelle (ouverture opaque) ×3, spike ×5 (affichage, images) ;
+- mémoire ×2 spike et ×1 base (arbre de processus toutes les 500 ms, jamais en même temps qu'un relevé d'images) ;
+- rafale de captures autour de la relève ×2 (supprimées ensuite).
+
+**Séance de mesure (2026-10-12, PC libre)** :
+- **Conditions.** Release (`tauri build --no-bundle`), 2560×1440 à 150 %, 278 Hz, tes données réelles, mode immersif.
+  - `Get-Process` : aucun jeu. Comet (~22 % du processeur) et Steam encore ouverts : **fermés par moi avec ton accord**, fermeture propre (fenêtre de Comet, `steam -shutdown`). Charge de fond ensuite ~3 %.
+  - Lancements alternés base / spike : 3 base (ouverture opaque d'aujourd'hui) et 5 spike pour les temps et les images ; mémoire à part (2 spike, 1 base) ; 2 rafales de captures (supprimées, conclusions ci-dessous seulement).
+- **Premier affichage** (âge du processus au moment où la première fenêtre s'affiche) :
+  - **base** (`main` affichée) : 733 / 770 / 774 ms, médiane **770**, pire **774** ;
+  - **spike** (`opening` affichée) : 723 / 729 / 747 / 759 / 793 ms, médiane **747**, pire **793** → **≤ 1 s ✅**, et pas plus lent qu'aujourd'hui.
+  - Départ de l'animation : médiane 780 ms, pire 828 ms.
+  - `main` est prête ~60 ms plus tard qu'en base (787–852 ms), mais cachée.
+- **Images pendant la relève** (5 essais propres, sans outil de mesure qui tourne en même temps) :
+  - page `opening` (maintien 200 ms + fondu 150 ms) : max **3,8 / 7,2 / 10,6 / 10,7 / 14,2 ms**, médiane **10,6**, pire **14,2**. **Une image > 8 ms dans 3 essais sur 5, jamais plus d'une par essai.** Les 4 essais perturbés (mémoire, captures) la montrent aussi (10,4 à 17,9 ms).
+  - `main`, dès qu'elle se voit : max 3,7–3,8 ms, médiane 3,8, pire 3,8, **aucune image > 8 ms** (9 essais sur 9).
+- **Mémoire** (privée, arbre de processus entier, 2 essais spike contre 1 base) :
+  - pic à la relève **1,19–1,20 Go** contre 0,58 Go en base ;
+  - le processus de la fenêtre `opening` disparaît ~0,5 s après sa destruction (8 → 7 processus) ;
+  - **5 s après** : 640–668 Mo contre ~450 Mo en base au même moment, **+190 à 220 Mo restants** ;
+  - fin de la fenêtre de mesure (~12 s) : +75 Mo.
+  - Réserve : `main` finit son ouverture ~2,6 s plus tard en spike, donc les deux courbes ne sont pas au même stade.
+  - Critère « rendue en ≤ 5 s » : **non tenu**.
+- **Relève à l'œil** (2 rafales de ~45 captures, toutes les ~30 ms) : **saut visible dans les 2**.
+  - Juste après la relève (~2,62 s), une à deux captures montrent le logo et les lettres **nettement assombris**, et la **barre de l'accueil** qui transparaît en haut ; puis l'image redevient normale. Critère **non tenu**.
+  - Cause probable : en immersif, `main` passe au premier plan dès qu'elle a le focus (règle de l'étape 12). Elle se met donc **au-dessus** de la fenêtre `opening` avant d'avoir dessiné son ouverture au bon instant : ses premières images ont le logo à l'instant 0, et le calque de l'accueil est visible une image.
+  - Correctif possible, **non essayé** : montrer `main` sans focus et sous `opening`, attendre qu'elle signale « je suis à l'heure », puis effacer `opening` et donner le focus.
+
+**Code du spike : toujours dans l'arbre de travail, non commité** (temporaire, `KAYRO_SPIKE_OPENING=1`). À retirer ou à finir selon ta décision.
+
+### 4b-3.0 bis — Dernière tentative (ta règle stricte, 2026-10-12)
+**Règle, sans exception** : un saut dans une rafale, **ou** plus de +50 Mo à **30 s** par rapport à l'ouverture opaque → abandon (tout le code du spike retiré, ouverture opaque). Sinon : rapport, puis 4b-3 pour de bon.
+
+**Relève corrigée** :
+- `main` est montrée **sans focus** (`ShowWindow` sans activation), donc sous la fenêtre `opening`, qui est au premier plan.
+- Elle joue l'ouverture à la même heure de départ. Après **deux images peintes** au bon instant, elle signale « calée » (`spike_opening_caught_up` → événement `SpikeOpeningFade`).
+- `opening` s'efface alors (150 ms ; sécurité : 1,5 s après la relève), libère son contexte WebGL, puis elle est détruite. **Seulement ensuite**, `main` reçoit le focus.
+- Correctif en chemin : la fenêtre `opening` est ajoutée aux fenêtres de `capabilities/default.json`, mêmes droits que `main` et `widget`. Sans ça, sa page ne pouvait pas écouter l'événement.
+- Essai à blanc : relève 3 600 ms → `main` derrière 3 607 → calée **3 674** → `opening` détruite 3 866 → focus de `main` 3 899.
+
+**Mémoire, première analyse** (relevé par type de processus, essai à blanc, PC non libre) :
+- c'est le **processus GPU partagé** de WebView2 qui garde la mémoire : ~960 Mo au pic, puis **~620 Mo après la destruction** de `opening` ;
+- les processus de rendu : 66–103 Mo ; le navigateur : ~42 Mo.
+- Variante préparée : `KAYRO_SPIKE_OPENING_ENV=own` donne à `opening` **son propre environnement WebView2** (son propre dossier de données, donc ses propres processus navigateur et GPU, qui disparaissent avec elle). Coût à mesurer : le premier affichage (un second navigateur à démarrer).
+
+**Séance finale (2026-10-12, PC libre)** :
+- **Conditions.** Release, tes données, immersif. `Get-Process` : aucun jeu. Comet encore ouvert (~22 % du processeur) : **fermé par moi avec ton accord**. Ta règle complétée : premier affichage ≤ 1 s avec la variante retenue.
+- **Choix de la variante** : relevés mémoire de 32 s par type de processus, alternés.
+
+| Cas (30 s après le lancement) | Total | Processus GPU | Premier affichage |
+|---|---|---|---|
+| ouverture opaque (base, 2 essais) | **368 / 369 Mo** | 235–236 Mo | `main` à 757 / 795 ms |
+| spike, environnement partagé (2 essais) | **437 / 440 Mo** (+68 / +72) ❌ | 286–287 Mo | `opening` à 753 / 759 ms ✅ |
+| spike, environnement propre (2 essais) | 422 / 423 Mo | 280–281 Mo | **jamais** : `opening` pas démarrée dans la limite de 1,5 s ; `main` affichée à **~2,0 s** ❌ |
+
+- La relève corrigée a fonctionné sur les 2 essais en environnement partagé : `main` calée 32–37 ms après la relève ; images de `main` une fois visible : max 3,8 ms. Image lente de la fenêtre d'ouverture pendant la relève : 3,8 ms puis 17,8 ms.
+- Lecture :
+  - En environnement partagé, le surplus est dans le **processus GPU commun**, qui garde ~50 Mo de plus que la base à 30 s, malgré la libération explicite du contexte WebGL avant la destruction. La mémoire redescend encore lentement, mais la règle se lit à 30 s.
+  - Un environnement propre libère tout, mais un second navigateur WebView2 démarre trop lentement, et il retarde aussi `main`.
+
+**Décision (ta règle, sans exception) : abandon.**
+- Ni les 5 lancements officiels ni les rafales n'ont été faits (aucune capture prise).
+- **Tout le code du spike est retiré** : fichiers revenus à l'état de `cfde663` (`mod.rs`, `ipc.rs`, `ipc_desktop.rs`, `own_window.rs`, `capabilities/default.json`, `runOpening.ts`, `Opening.tsx`, `useOpening.ts`, `App.tsx`, `main.tsx`, `index.css`, liaisons IPC) ; `opening_window.rs` et `src/features/opening/spike/` supprimés.
+- Le dossier WebView2 `%LOCALAPPDATA%\fr.yiuno.hub\opening-webview` (15 Mo, créé par la variante « environnement propre ») est supprimé, et le release reconstruit sans le spike.
+- Vérifié : tsc, eslint, vitest 499/499, clippy, cargo test 179.
+- **4b-3 garde l'ouverture opaque actuelle (V1-A).**
+- Reste de 4b-3, **à faire seulement sur ton feu vert** : ta décision « démarrage silencieux = pas d'ouverture » (`opening_due`), indépendante de la transparence.
+- Ton accord (2026-10-12) : abandon confirmé, « la règle est la règle ». Note ajoutée dans « À retenter plus tard » (plus bas).
+
+### 4b-3 — Démarrage silencieux sans ouverture, essai de la pulsation C dans l'ouverture opaque (2026-10-12)
+**1. Démarrage silencieux = pas d'ouverture** (ta décision) :
+- `ipc_desktop.rs` : l'état « une fois par lancement » devient `OpeningOnce`, et `desktop::startup` le marque au démarrage silencieux. `opening_due` répond alors `quiet` dès la première question, même fenêtre cachée : la page n'attend plus le premier affichage dans le noir, l'accueil est prêt dessous.
+- Ça reste le démarrage du programme : l'accueil s'ouvre sur l'éventail des catégories, comme avec l'ouverture désactivée. Mode économie + silencieux (fenêtre construite au premier affichage) : `quiet`, puis `no`.
+- Côté page, rien à changer dans `useOpening.ts` (une réponse autre que `now` / `later` = pas d'ouverture ; autre que `no` = éventail) : commentaire mis à jour, liaisons IPC régénérées (`quiet`).
+- Tests Rust : `a_silent_start_plays_no_opening` (nouveau), l'ancien adapté. **Non testé en vrai démarrage silencieux** (lancement avec `--silent`).
+
+**2. Essai : la pulsation de la variante C dans l'ouverture opaque** (sans transparence ; à valider à l'œil) :
+- Réglage de l'élément `opening` : `pulse` = « actuelle (V1-A) » (**défaut** : l'app ne change pas) ou « variante C » ; `veil` (42 %) et `wave` (intensité de l'onde, 0,55). Valeurs dans `tokens.ts` (`OPENING_C`).
+- Avant le ringOut : le fond de Kayro n'est visible que dans l'anneau (cercle de 200 + 16 px, pour garder ses filets et son reflet dedans), avec un voile noir à 42 % autour, sur le fond actuel (moteur ou repli CSS). Le halo du moteur est donc assombri hors du cercle.
+- Au ringOut (1 750 ms, 850 ms, `(.4,0,.2,1)`), avec la **même fonction** `ringOutAt` que l'anneau :
+  - le cercle s'ouvre jusqu'au coin le plus loin de l'écran ;
+  - l'onde (cercle de 400 px agrandi en `scale`, couleur A, seul son halo extérieur dessiné) roule sur le bord : pleine jusqu'à 80 %, puis elle s'efface ;
+  - page entière à 2 600 ms. Rien d'autre ne change (instants de V1-A).
+- Éco : pas d'onde. « Réduire les animations » : état final direct. Clic ou touche : saut à la fin, sans voile.
+- Technique : deux calques DOM dans `Opening.tsx`, montés seulement en variante C, au-dessus du fond, du halo et de l'anneau, sous le logo et les lettres.
+  - Le voile est un dégradé radial plein écran, repeint à chaque image pendant les 850 ms de la pulsation seulement.
+  - L'onde ne change que `transform` et `opacity`.
+  - Calcul pur et testé : `openingReveal.ts` (5 tests).
+- Vérifié dans le volet du navigateur (1280×720, instants figés) :
+  - jusqu'à 1 700 ms : voile 0,42, trou de 216 px ;
+  - 2 050 ms : trou de 495 px, onde 0,55 ;
+  - 2 500 ms : 761 px (l'écran est couvert à 766), onde 0,02 ;
+  - 2 600 ms : plus de voile.
+  - Aucune erreur dans la console. Le volet était masqué : je n'ai pas vu l'animation jouée en temps réel.
+- **À mesurer** (PC libre) : coût d'image pendant la pulsation (cible ≤ 8 ms, note R4b), en Élevée et en Éco, dans la vraie fenêtre.
+- Contrôles : tsc, eslint, prettier, vitest 504/504, clippy, cargo test 180.
+
+**Tes décisions (2026-10-12)** :
+- **Pulsation C validée à l'œil, et mise par défaut** (`pulse` = `c` dans le catalogue et dans `openingSettings`), avec les réglages par défaut : voile 42 %, onde 0,55. « actuelle (V1-A) » reste dans l'atelier pour comparer.
+- Démarrage silencieux : l'accueil **reste sur l'éventail**, c'est l'accueil normal.
+- **Mesures, étape 13** : case ajoutée, « coût par image pendant la pulsation C » (cible ≤ 8 ms, Élevée et Éco, vraie fenêtre, build de production).
+- Commit `feat: DA ronde 4b-3 — …`, tag `da-r4b-3`, sans fusion dans `main`.
+
 ### Reste à faire
 - **4a** : commit après ton feu vert, puis tag `da-r4a`. Mesures : voir ci-dessus (vérification globale).
-- **4b** : voir la ronde 4b ci-dessus (4b-1a `da-r4b-1a`, 4b-1b `da-r4b-1b` ; spike 4b-2.0 fait → **repli** ; 4b-2 `da-r4b-2` ; voile natif main ↔ widget fait, arrêt pour ton œil ; ensuite spike mesuré de l'ouverture dans une fenêtre dédiée (arrêt avant la séance), puis 4b-3 ou ouverture opaque). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
+- **4b** : voir la ronde 4b ci-dessus (4b-1a `da-r4b-1a`, 4b-1b `da-r4b-1b` ; spike 4b-2.0 fait → **repli** ; 4b-2 `da-r4b-2` ; voile `da-r4b-2b` ; ouverture transparente **abandonnée** après la dernière tentative (mémoire +68/+72 Mo à 30 s en environnement partagé, environnement propre trop lent) : code du spike retiré, 4b-3 garde l'ouverture opaque ; démarrage silencieux sans ouverture et pulsation C dans l'ouverture opaque **faits, validés** (`da-r4b-3`) ; coût par image de la pulsation **à mesurer** à l'étape 13). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
 - Remesurer l'ouverture (CPU/GPU, repli CSS) PC libre.
+
+### À retenter plus tard
+- **Fenêtre d'ouverture transparente, environnement WebView2 partagé** (4b-3.0 bis) : elle n'a échoué que de peu. Mémoire à 30 s : **+68 / +72 Mo**, pour une limite de 50 Mo. Le reste passait : premier affichage 753 / 759 ms, relève sans saut. Le surplus est dans le processus GPU commun de WebView2.
+- **À remesurer à la finition**, si une version de WebView2 libère mieux la mémoire de ce processus. Même protocole : release, PC libre, 2 essais alternés avec la base opaque, mémoire par type de processus à 30 s. Le code du spike est à reprendre dans l'historique de la conversation : il n'a jamais été commité.
 
 ## Éléments du catalogue
 | Élément | État | Remarque |
@@ -663,4 +795,5 @@ Pas de commit sans ta demande. Tag prévu : `da-r4b-1`, puis `-2`, `-3`. Exclusi
 | Widget qui se déroule (`motion.widget*`) | à l'essai (4b-1a) | ressorts `linear()` normale 5 % / 2,5 %, halo allumé tant que déplié, reflet une fois ; « sobre » pour comparer |
 | Chaîne de points de l'éditeur | à l'essai (4b-1b) | ajout / retrait / FLIP sur liaison, voisines qui s'écartent au glisser, test qui allume les points, fil lumineux au lieu de la roue |
 | États : catégorie vide, échec de lancement, nouvelle scène (`motion.emptyFloat`) | à l'essai (4b-1b) | carte pointillée qui flotte 4 px ; tremblement + bord `--fail` + message unique « Corriger » ; dialogue à trois départs |
+| Pulsation C dans l'ouverture opaque (`opening.pulse`) | validée (4b-3), par défaut | voile 42 % autour de l'anneau, l'onde (0,55) et le cercle s'ouvrent au ringOut ; « actuelle (V1-A) » pour comparer |
 | Passages entre modes (fondu) | à l'essai (4b-2) | sortie micro, retour moyen + cascade des cartes, widget ×0,96 → 1 ; fenêtres opaques (spike 4b-2.0) ; bouton ↗ du widget |
