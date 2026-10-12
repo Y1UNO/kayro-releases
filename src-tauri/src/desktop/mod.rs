@@ -14,6 +14,7 @@ pub mod passage;
 mod placement;
 mod shortcuts;
 pub mod tray;
+mod veil_play;
 mod windows;
 
 pub use modes::settings_changed;

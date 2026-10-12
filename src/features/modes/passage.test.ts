@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { motionTokens } from "../../design/motion/tokens";
-import { cascadeDelay, passagePlan } from "./passage";
+import { cascadeDelay, parseRgb, passagePlan, veilFade } from "./passage";
 
 const t = motionTokens(undefined);
 
@@ -31,5 +31,28 @@ describe("passages between display modes, fade version (round 4b)", () => {
     const p = passagePlan(motionTokens({ on: true, speed: "1.5" }), false, false);
     expect(p.in.duration).toBeCloseTo(240);
     expect(p.cascade.step).toBeCloseTo(30);
+  });
+});
+
+describe("native veil between main and the widget (round 4b, option A)", () => {
+  it("main gives way: its dark veil leaves in 0.7 × court on the disappearance curve", () => {
+    const v = veilFade(t, "main", [15, 10, 22]);
+    expect([v.r, v.g, v.b, v.ms]).toEqual([15, 10, 22, 168]);
+    expect(v.curve).toHaveLength(17);
+    expect(v.curve[0]).toBe(0);
+    expect(v.curve[16]).toBe(1);
+    expect(v.curve[4]!).toBeLessThan(0.25); // slow then fast (sortie)
+  });
+
+  it("the widget gives way: the veil comes in court on the appearance curve", () => {
+    const v = veilFade(t, "widget", [1, 2, 3]);
+    expect(v.ms).toBe(240);
+    expect(v.curve[4]!).toBeGreaterThan(0.25); // fast then slow (vive)
+  });
+
+  it("reads the colours the page computes", () => {
+    expect(parseRgb("rgb(15, 10, 22)")).toEqual([15, 10, 22]);
+    expect(parseRgb("rgba(15, 10, 22, 0.5)")).toEqual([15, 10, 22]);
+    expect(parseRgb("transparent")).toBeNull();
   });
 });

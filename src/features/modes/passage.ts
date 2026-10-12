@@ -7,7 +7,9 @@
  * « Réduire les animations », level 2 off or Éco: the change is direct, as before (R4b-Modes:
  * « Économie : idem + pas de cascade »).
  */
+import { curveOf } from "../../design/motion/curve";
 import type { MotionTokens } from "../../design/motion/tokens";
+import type { VeilFade } from "../../ipc/bindings";
 
 export interface PassagePlan {
   /** Nothing to play: the change is direct. */
@@ -42,4 +44,36 @@ export function passagePlan(t: MotionTokens, eco: boolean, reduced: boolean): Pa
 /** Delay of the card at `index` in the cascade. */
 export function cascadeDelay(plan: PassagePlan, index: number): number {
   return Math.min(index, plan.cascade.max - 1) * plan.cascade.step;
+}
+
+/** Samples of a curve for the core's native veil (it plays them, linear in between). */
+const VEIL_SAMPLES = 16;
+
+/**
+ * How the native veil fades between `main` and the widget (round 4b, option A), sent by the page
+ * that faded out: `main` (opaque) gives way to the widget → its dark veil fades into the desktop
+ * (a disappearance: 0.7 × court, disappearance curve); the widget gives way to `main` → a veil
+ * darkens the place of `main` (an appearance: court, appearance curve). `rgb`: the colour the
+ * page faded to.
+ */
+export function veilFade(
+  t: MotionTokens,
+  from: "main" | "widget",
+  rgb: readonly [number, number, number],
+): VeilFade {
+  const leaving = from === "main";
+  const curve = curveOf(leaving ? t.ease.out : t.ease.in);
+  return {
+    r: rgb[0],
+    g: rgb[1],
+    b: rgb[2],
+    ms: Math.round(t.dur.court * (leaving ? t.outShare : 1)),
+    curve: Array.from({ length: VEIL_SAMPLES + 1 }, (_, i) => curve(i / VEIL_SAMPLES)),
+  };
+}
+
+/** `rgb(15, 10, 22)` / `rgba(…)` → [15, 10, 22]; null when unreadable. */
+export function parseRgb(css: string): [number, number, number] | null {
+  const m = /^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(css.trim());
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
 }

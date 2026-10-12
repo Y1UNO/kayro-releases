@@ -4,7 +4,7 @@ import { prefersReducedMotion } from "../../fx/motionPref";
 import { desktopIpc } from "../../ipc/commands";
 import { onModePassage, onWindowVisibility } from "../../ipc/events";
 import { hubStore } from "../../store";
-import { cascadeDelay, passagePlan, type PassagePlan } from "./passage";
+import { cascadeDelay, parseRgb, passagePlan, veilFade, type PassagePlan } from "./passage";
 
 /** The cards that rise back after a passage (carousel slots or grid cells of the home screen). */
 const CARDS = "[data-home-layer] [data-app-id]";
@@ -19,6 +19,23 @@ const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 function plan(): PassagePlan {
   const eco = hubStore.getState().settings?.quality === "eco";
   return passagePlan(currentMotion(), eco, prefersReducedMotion());
+}
+
+/**
+ * The colour the page fades to: `main`'s opaque background; for the transparent widget, the same
+ * theme colour (`--bg-mid`), which `main` will show.
+ */
+function fadedColor(label: "main" | "widget"): [number, number, number] {
+  const fallback: [number, number, number] = [15, 10, 22];
+  if (label === "main") {
+    return parseRgb(getComputedStyle(document.documentElement).backgroundColor) ?? fallback;
+  }
+  const probe = document.createElement("span");
+  probe.style.cssText = "position:absolute;width:0;height:0;background:var(--bg-mid)";
+  document.body.append(probe);
+  const rgb = parseRgb(getComputedStyle(probe).backgroundColor);
+  probe.remove();
+  return rgb ?? fallback;
 }
 
 /** Waits for the window's new size (if it changes) to be laid out and painted. */
@@ -71,8 +88,9 @@ function comeIn(label: "main" | "widget", p: PassagePlan): void {
 /**
  * The page's side of a passage between display modes (round 4b). « out »: the whole page fades
  * out on the window's opaque background (the widget's, transparent, onto the desktop), then the
- * core is told; « in »: once the window has its new size, the page comes back. A page built for
- * a passage (`?enter=1`, see main.tsx) comes in on its first show.
+ * core is told, with the colour and timing of its native veil (between `main` and the widget);
+ * « in »: once the window has its new size, the page comes back. A page built for a passage
+ * (`?enter=1`, see main.tsx) comes in on its first show.
  */
 export function usePassage(label: "main" | "widget"): void {
   useEffect(() => {
@@ -86,6 +104,8 @@ export function usePassage(label: "main" | "widget"): void {
       if (e.step === "out") {
         size = { w: innerWidth, h: innerHeight };
         if (p.instant) return void desktopIpc.passageFaded(e.id);
+        // Between `main` and the widget, the core fades a native veil of this colour (round 4b).
+        const veil = veilFade(currentMotion(), label, fadedColor(label));
         const body = document.body;
         const from = getComputedStyle(body).opacity;
         for (const a of body.getAnimations()) a.cancel();
@@ -95,7 +115,7 @@ export function usePassage(label: "main" | "widget"): void {
           fill: "forwards",
         });
         void Promise.race([fade.finished.catch(() => {}), wait(p.out.duration + 80)]).then(
-          () => void desktopIpc.passageFaded(e.id),
+          () => void desktopIpc.passageFaded(e.id, veil),
         );
         // Never left faded out if the core's « in » does not come.
         window.clearTimeout(back);

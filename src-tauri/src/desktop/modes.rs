@@ -6,6 +6,7 @@ use std::sync::atomic::Ordering;
 use tauri::{AppHandle, Manager, Runtime, WebviewWindow};
 
 use super::passage;
+use super::veil_play;
 use super::windows::{self, MAIN, WIDGET};
 use super::{create_for, lock, reveal, save_placement, settings, tray, DesktopState};
 use crate::config::schema::{DisplayMode, Settings};
@@ -58,7 +59,7 @@ fn mode_changed<R: Runtime>(app: &AppHandle<R>, old: DisplayMode, new: DisplayMo
             reconfigure_main(app, &window, new);
             return;
         }
-        passage::fade_out_then(app, MAIN, |app, id| {
+        passage::fade_out_then(app, MAIN, |app, id, _veil| {
             // The latest mode wins (another change may have come in the meantime).
             let now = settings(&app).display_mode;
             if windows::label_for(now) != MAIN {
@@ -96,6 +97,8 @@ fn mode_changed<R: Runtime>(app: &AppHandle<R>, old: DisplayMode, new: DisplayMo
 
 /// The new window of a passage has painted (hidden). When the window it replaces is on screen,
 /// that one fades out first; then the new one is shown (and the old one retired by `reveal`).
+/// `main` is opaque: a native veil of its dark colour fades it into the desktop, or darkens its
+/// place before it shows (option A, see `veil_play`); no veil when the change is direct.
 /// False when there is nothing to fade (the caller reveals at once).
 pub(super) fn swap_after_fade<R: Runtime>(app: &AppHandle<R>, new_label: &str) -> bool {
     let Some(old_label) = *lock(&app.state::<DesktopState>().retire) else {
@@ -108,9 +111,18 @@ pub(super) fn swap_after_fade<R: Runtime>(app: &AppHandle<R>, new_label: &str) -
         return false;
     }
     let new_label = if new_label == WIDGET { WIDGET } else { MAIN };
-    passage::fade_out_then(app, old_label, move |app, _| {
-        if let Some(window) = windows::get(&app, new_label) {
-            reveal(&app, &window);
+    passage::fade_out_then(app, old_label, move |app, _, veil| {
+        let Some(window) = windows::get(&app, new_label) else {
+            return;
+        };
+        let swap = || reveal(&app, &window);
+        let Some(fade) = veil else { return swap() };
+        if new_label == WIDGET {
+            let place = windows::get(&app, MAIN).and_then(|w| veil_play::place_of(&w));
+            veil_play::cover_then_clear(&app, place, &fade, swap);
+        } else {
+            let place = veil_play::place_of(&window);
+            veil_play::darken_then_lift(&app, place, &fade, swap);
         }
     });
     true

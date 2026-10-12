@@ -581,9 +581,61 @@ Pas de commit sans ta demande. Tag prévu : `da-r4b-1`, puis `-2`, `-3`. Exclusi
 
 **Mesures** : à faire à l'étape 13, « pendant un passage » (information seulement).
 
+**Ton retour (4b-2)** : validé à l'œil. Commité (`0a3c8fd`), tag `da-r4b-2`.
+**Tes décisions** :
+- Option A (voile natif) pour main ↔ widget.
+- Puis un spike mesuré de l'ouverture dans une fenêtre transparente dédiée. Critères :
+  - premier affichage ≤ 1 s ;
+  - aucune image > 8 ms pendant la relève ;
+  - mémoire rendue en ≤ 5 s ;
+  - relève sans saut visible.
+- Captures plein écran autorisées pour la rafale de la relève (supprimées ensuite). Arrêt avant la séance de mesure. Si les critères échouent : ouverture opaque actuelle.
+
+### 4b-2b — Voile natif entre `main` et le widget (option A, 2026-10-12)
+**Le problème** : `main` est opaque. Après son fondu vers le sombre, l'écran sombre laissait place au bureau d'un coup.
+
+**Fait** :
+- `src-tauri/src/platform/veil.rs` : une fenêtre Win32 **sans WebView** (classe `KayroVeil`).
+  - Une couleur unie ; opacité de toute la fenêtre réglée par Windows (`SetLayeredWindowAttributes`).
+  - Laisse passer les clics, jamais activée, hors Alt+Tab et barre des tâches, au premier plan.
+  - Coins arrondis de Windows 11 au-dessus d'une fenêtre à cadre.
+  - Posée sur le **rectangle visible** de la fenêtre (bornes du cadre DWM, sans les bords invisibles).
+  - Créée et détruite sur le fil de la boucle d'événements. Deux fonctions de plus de la crate `windows` (DWM, LibraryLoader), aucune nouvelle dépendance.
+- `src-tauri/src/desktop/veil_play.rs` :
+  - **main → widget** : `main` s'efface (comme en 4b-2) ; un voile de la même couleur la couvre à 100 % ; le widget s'affiche devant et `main` est détruite dessous ; le voile s'efface dans le bureau.
+  - **widget → main** : le widget s'efface sur le bureau ; un voile monte de 0 à 100 % sur la place de `main` ; `main` s'affiche dessous ; le voile disparaît et la page de `main` entre.
+  - L'opacité suit la courbe envoyée par la page, échantillonnée (17 points), par pas de 8 ms.
+- La page qui s'efface envoie avec son `passage_faded(id, veil)` : la **couleur** vers laquelle elle s'est effacée (le fond de `main`, ou `--bg-mid` pour le widget), la **durée** et la **courbe**, toutes deux tirées de la table de mouvement (`veilFade`) :
+  - `main` qui part : 0,7 × court = 168 ms, courbe de disparition ;
+  - widget qui part : court = 240 ms, courbe d'apparition.
+- « Réduire les animations », niveau 2 coupé ou Éco : pas de voile (changement direct). Immersif ⇄ fenêtre : pas de voile (même fenêtre).
+
+**Testé** :
+- vitest **499/499** (+ `veilFade`, `parseRgb`) ; cargo test **179** (+ courbe du voile et bornes des valeurs de la page) ; clippy propre ; types régénérés.
+- En vraie fenêtre (app de banc), opacité du voile **lue par l'API Windows** toutes les ~5 ms, sans capture d'écran :
+
+  | Passage | Voile relevé |
+  |---|---|
+  | immersif → widget | apparaît à 255 sur 2560×1440 à 847 ms ; s'efface **255 → 0 de 906 à 1 033 ms** (lent puis rapide) ; détruit à 1 066 ms |
+  | widget → fenêtre (↗) | posé sur **1282×792** (la fenêtre avec sa barre de titre, sans bords invisibles) ; monte **0 → 255 de ~1 000 à 1 166 ms** (rapide puis lent) ; détruit à 1 292 ms, une fois `main` affichée (fenêtre 1280×760, page entrée) |
+  | fenêtre → immersif | aucun voile |
+
+- Réglage d'affichage remis sur « immersive ».
+
+**Non testé** :
+- **le rendu à l'œil** (pas de captures) : la couleur exacte du voile face au fond de `main`, les coins arrondis, l'ordre des fenêtres (widget devant le voile) ;
+- multi-écrans ;
+- une échelle autre que 150 %.
+
+**Limites connues** :
+- Le voile est d'une seule couleur : il rejoint exactement le fond uni de `main` effacée, pas son atmosphère.
+- Pendant les ~170 ms du voile, les clics le traversent vers le bureau.
+
+**Correctif du lanceur de l'atelier** (`scripts/Kayro-atelier.ps1`, ton erreur « op_Addition ») : quand le script démarrait Vite lui-même et que le serveur avait au moins deux processus enfants, `$p, $todo = $todo` faisait du reste de la liste un simple nombre, et le `+=` suivant échouait. Le parcours utilise maintenant une vraie file. `conhost.exe` (qui ne peut pas rejoindre le job et meurt avec sa console) est écarté, ce qui supprime un avertissement trompeur. Vérifié : erreur reproduite à l'identique dans Windows PowerShell 5.1, puis `-ServerOnly` deux fois : Vite démarre, répond, s'arrête, port libéré.
+
 ### Reste à faire
 - **4a** : commit après ton feu vert, puis tag `da-r4a`. Mesures : voir ci-dessus (vérification globale).
-- **4b** : voir la ronde 4b ci-dessus (4b-1a `da-r4b-1a`, 4b-1b `da-r4b-1b` ; spike 4b-2.0 fait → **repli** ; 4b-2 en fondu fait, arrêt pour ton œil ; ensuite plan court de la fenêtre d'ouverture transparente dédiée, puis ta décision pour 4b-3). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
+- **4b** : voir la ronde 4b ci-dessus (4b-1a `da-r4b-1a`, 4b-1b `da-r4b-1b` ; spike 4b-2.0 fait → **repli** ; 4b-2 `da-r4b-2` ; voile natif main ↔ widget fait, arrêt pour ton œil ; ensuite spike mesuré de l'ouverture dans une fenêtre dédiée (arrêt avant la séance), puis 4b-3 ou ouverture opaque). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
 - Remesurer l'ouverture (CPU/GPU, repli CSS) PC libre.
 
 ## Éléments du catalogue

@@ -107,9 +107,15 @@ export const commands = {
 	openingDue: () => __TAURI_INVOKE<OpeningDue>("opening_due"),
 	/**
 	 *  The page has faded out for passage `id` (round 4b: a change of display mode on screen); the
-	 *  core goes on with the window.
+	 *  core goes on with the window. `veil`: how the native veil fades when the widget is involved.
 	 */
-	passageFaded: (id: number) => __TAURI_INVOKE<void>("passage_faded", { id }),
+	passageFaded: (id: number, veil: {
+	r: number,
+	g: number,
+	b: number,
+	ms: number,
+	curve: (number | null)[],
+} | null) => __TAURI_INVOKE<void>("passage_faded", { id, veil }),
 };
 
 /** Events */
@@ -518,6 +524,19 @@ export type Step = { type: "launch"; slot: string; required?: boolean } | { type
 export type StepState = "pending" | "running" | "ok" | "failed" | 
 /**  Not run: unlinked slot, nothing to follow, scene cancelled or aborted… */
 "skipped";
+
+/**
+ *  How the native veil fades when `main` gives way to the widget or takes over from it (round
+ *  4b): sent by the page that faded out. The colour it faded to (its opaque background), how long,
+ *  and the motion table's curve sampled evenly from 0 to 1.
+ */
+export type VeilFade = {
+	r: number,
+	g: number,
+	b: number,
+	ms: number,
+	curve: (number | null)[],
+};
 
 /**  Look of the widget bar (reference/Widget.dc.html); provisional until the art direction is frozen. */
 export type WidgetStyle = "aurore" | "sillage" | "brume" | "orbe";

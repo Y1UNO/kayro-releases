@@ -105,11 +105,16 @@ public static class KayroKillJob {
 # Puts a process and its children already started in the kill-on-close job (later children join
 # it by themselves). A failure only means the old behaviour: the server may outlive the console.
 function Add-ToKillJob([int]$id) {
-    $todo = @($id)
+    # A real queue: `$p, $todo = $todo` turned a one-element rest into a plain number, and the
+    # next `+=` then failed (« op_Addition ») as soon as the server had two children.
+    $todo = [System.Collections.Generic.Queue[int]]::new()
+    $todo.Enqueue($id)
     while ($todo.Count -gt 0) {
-        $p, $todo = $todo
+        $p = $todo.Dequeue()
         if (-not [KayroKillJob]::Add($p)) { Write-Step "(job Windows indisponible pour le PID $p : le serveur pourra survivre à la console)" 'DarkYellow' }
-        $todo += @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$p" | ForEach-Object { [int]$_.ProcessId })
+        # conhost.exe (the console host of cmd) cannot join the job and ends with its console.
+        Get-CimInstance Win32_Process -Filter "ParentProcessId=$p AND Name<>'conhost.exe'" |
+            ForEach-Object { $todo.Enqueue([int]$_.ProcessId) }
     }
 }
 
