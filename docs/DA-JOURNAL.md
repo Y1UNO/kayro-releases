@@ -10,6 +10,7 @@ Lu au début de chaque session de l'étape 12b. Permet de reprendre dans une con
 
 ## Mode d'emploi
 - `npm run dev` puis `http://localhost:1420/dev/atelier` (navigateur) : réglages à gauche (générés depuis `src/design/da/catalogue.ts`), écrans réels à droite (Accueil, grille, ajout d'apps, scènes, éditeur, composants), 11 thèmes, qualité, comparaison A/B, Enregistrer / Charger / Historique, Exporter (→ `active.json` = DA de l'app), Mesurer (10 s).
+- **Tes tests à chaque arrêt** (depuis le 2026-10-12) : raccourci Bureau « Kayro — mettre à jour » (recompile la release et relance), puis « Kayro » (l'exe de production, tes données, ton mode). Plus d'atelier ni de `tauri dev` pour tes tests.
 - Dans la vraie fenêtre : `npm run dev:atelier-bench` (pendant que `npm run dev` tourne) ouvre l'Accueil avec `?preset=<fichier>` ; le CPU/GPU du bouton « Mesurer » n'a de sens que si l'app Tauri tourne (`scripts/measure-cost.ps1`).
 
 ## Ronde 1 — 2026-10-11
@@ -760,6 +761,28 @@ Tout est **à mesurer** dans la séance (PC libre). Plan :
 - Démarrage silencieux : l'accueil **reste sur l'éventail**, c'est l'accueil normal.
 - **Mesures, étape 13** : case ajoutée, « coût par image pendant la pulsation C » (cible ≤ 8 ms, Élevée et Éco, vraie fenêtre, build de production).
 - Commit `feat: DA ronde 4b-3 — …`, tag `da-r4b-3`, sans fusion dans `main`.
+
+### Correctifs de relecture (rondes 3, 4a, 4b) — 2026-10-12
+Relecture en lecture seule, corrigée en trois paquets (arrêt après chacun, pas de commit).
+
+**Paquet A — bugs** :
+- **A1 voile orphelin** (`veil_play.rs`) : `run_on_main_thread` ne garantit aucun délai (vérifié dans tauri-runtime-wry 2.12.1 : message à la boucle, exécuté plus tard ou jeté ; immédiat si on est déjà sur le fil principal). Le délai de 500 ms reste, mais une réponse tardive est détruite par le fil qui l'a créée (`answer_or_undo` : drapeau « abandonné » sous verrou + dernier `try_recv`). Plus de voile opaque au premier plan pour toujours.
+- **A2 double changement de mode** (`modes.rs`, `ModeGate`) : pendant un passage qui construit une fenêtre, un autre changement (zone de notification, réglages) est **mémorisé**, puis appliqué quand la nouvelle fenêtre est à l'écran (`reveal` → `passage_ended`), depuis le mode réellement montré (widget, ou `main` avec / sans cadre). Passage resté en vol > 5 s : abandonné, journalisé. `reveal` ne détruit plus jamais la fenêtre qu'il montre.
+- **A3 boucle du survol** (`cardHoverFx.ts`) : quitter une carte remet toujours la carte à zéro ; la boucle s'arrête quand plus rien n'est allumé ni en fondu, et `leave()` la libère aussi. Passage de A à B : les filets de A s'éteignent en 168 ms, B s'allume ensuite (au plus tôt à 120 ms). Boucle injectable pour les tests.
+- **A4 passage demandé deux fois** : côté Rust, un passage remplacé (`Disconnected`) ne fait plus rien ; côté page, seul le « in » du dernier « out » compte, et un « in » arrivé après le filet de 2,5 s ne rejoue pas l'entrée.
+- **A5 attente de taille** : `ModePassage.resized` (le cœur compare cadre et taille intérieure avant / après, vrai si doute). La page n'attend `resize` (≤ 300 ms) que si la taille change et n'est pas encore là ; l'écouteur est retiré dans tous les cas.
+- **A6 widget puis ↗** : si l'ouverture va jouer (`openingOwnsEntrance`), la page construite pour le passage apparaît d'un coup, sans fondu ni cascade : l'ouverture fait l'entrée.
+- **A7 classe du voile** (`veil.rs`) : seul un atome non nul est gardé ; un refus est journalisé (erreur Win32) et retenté au voile suivant.
+- Refactor : la logique de `usePassage.ts` est dans `passageDriver.ts` (E/S injectées), le hook ne branche que le DOM et l'IPC.
+
+**Testé** : vitest **514/514** (+ `cardHoverLife.test.ts` : 3 tests qui échouent sur l'ancien code ; `passageDriver.test.ts` : 7 tests) ; cargo test **189** (+ `answer_or_undo` ×3, `ModeGate` / double changement ×4, `awaited`, atome du voile) ; clippy propre ; tsc, eslint ; liaisons régénérées (`resized`). `cargo fmt --check` : seulement les trois écarts antérieurs.
+**Non testé** : tout le paquet en vraie fenêtre (double changement depuis la zone de notification, widget puis ↗ avec ouverture, immersif ⇄ fenêtre deux fois vite) ; le survol en mouvement dans le volet du navigateur (`requestAnimationFrame` y est suspendu, volet masqué), vérifié seulement en unitaire. `src/features/modes/passage.test.ts` est signalé par prettier (antérieur, non touché).
+
+**Exe de production pour tes tests (ta demande, 2026-10-12)** :
+- Raccourcis du Bureau (`scripts/install-raccourcis.ps1`) : **« Kayro »** → `target\release\Kayro.exe` directement ; **« Kayro — mettre à jour »** → `scripts\Kayro.cmd -Force` : quitte Kayro doucement s'il est ouvert, recompile en release (sans installeur, ~1 min), relance l'exe ; « Kayro (atelier) » inchangé.
+- Nouveau **`Kayro.exe --quit`** (`lib.rs`) : l'instance ouverte quitte comme « Quitter » (la croix ne fait que masquer) ; sans Kayro ouvert, l'exe s'arrête tout de suite. `build-local.ps1` et `Kayro.ps1` s'en servent (jamais de fermeture forcée). Mesuré : fermeture en 241 ms. Test Rust `only_the_quit_flag_asks_to_quit`.
+- **Bug trouvé en vérifiant l'exe** (antérieur au paquet A, logique de la ronde 3) : au lancement normal, **écran sombre pour toujours**, ni ouverture ni accueil. La page s'annonce prête 2 images après son montage (~7 ms à 278 Hz) ; le cœur affichait la fenêtre avant que `useOpening` soit abonné à « fenêtre affichée » (il ne s'abonne qu'après la réponse « plus tard ») : événement perdu, accueil resté à opacité 0. Reproduit 3 fois, dont une sans aucun outil de mesure branché. Correctif (`useOpening.ts`) : une fois abonnée, la page redemande une fois ; seule la première réponse définitive compte.
+- **Vérifié sur l'exe corrigé** (débogage WebView2 local pour ce seul lancement, aucune capture d'écran) : page `http://tauri.localhost/` (build de production, pas Vite) ; tes données `%APPDATA%\Kayro` (`displayMode` = immersive, 2 apps) ; fenêtre 2560×1440 en (0, 0), page 1707×960 à 150 % ; **ouverture à pulsation C jouée** : voile 0,42 et trou de 216 px dès 1,0 s, ringOut de 2,79 à 3,62 s (trou 216 → 1 021 px, onde 0,55 puis éteinte), accueil à ~5,6 s.
 
 ### Reste à faire
 - **4a** : commit après ton feu vert, puis tag `da-r4a`. Mesures : voir ci-dessus (vérification globale).

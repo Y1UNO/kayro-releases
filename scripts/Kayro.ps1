@@ -8,9 +8,12 @@
   - Sinon : lance l'exe tout de suite.
   - Compilation en échec : affiche l'erreur (fin du journal) et lance la dernière version qui marchait.
   - Kayro déjà ouvert : pas de mise à jour (l'exe est verrouillé), la fenêtre ouverte est affichée.
+    Avec -Force (raccourci « Kayro — mettre à jour ») : Kayro est d'abord quitté doucement
+    (Kayro.exe --quit, comme « Quitter »), puis recompilé et relancé.
   Données : celles de l'utilisateur (%APPDATA%\Kayro), comme l'app installée.
 #>
-# -Force : recompile même si tout est à jour. -CheckOnly : dit seulement s'il faut recompiler.
+# -Force : quitte Kayro s'il est ouvert et recompile même si tout est à jour.
+# -CheckOnly : dit seulement s'il faut recompiler.
 param([switch]$Force, [switch]$CheckOnly)
 
 $ErrorActionPreference = 'Stop'
@@ -106,8 +109,23 @@ function Invoke-Update {
     return $true
 }
 
-# 1. Already open: show it (single instance), no update while the exe is locked.
-if (-not $CheckOnly -and @(Get-RunningKayro).Count -gt 0) { Start-Kayro; exit 0 }
+# Asks the running Kayro to quit as with « Quitter » (never a kill). False if it is still open.
+function Stop-KayroGently {
+    Start-Process -FilePath $exe -ArgumentList '--quit' -WindowStyle Hidden
+    $deadline = (Get-Date).AddSeconds(10)
+    while ((Get-RunningKayro) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 250 }
+    return -not (Get-RunningKayro)
+}
+
+# 1. Already open: show it (single instance), no update while the exe is locked. Asked for an
+#    update (-Force): quit it gently first.
+if (-not $CheckOnly -and @(Get-RunningKayro).Count -gt 0) {
+    if (-not $Force) { Start-Kayro; exit 0 }
+    if (-not (Stop-KayroGently)) {
+        Show-Message "Kayro ne s'est pas fermé (une confirmation attend peut-être).`n`nQuitte-le depuis son icône (clic droit → Quitter), puis relance « Kayro — mettre à jour »." 'Warning'
+        exit 1
+    }
+}
 
 # 2. Up to date: start at once.
 $built = if (Test-Path $exe) { (Get-Item $exe).LastWriteTime } else { [datetime]::MinValue }

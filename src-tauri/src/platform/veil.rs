@@ -92,10 +92,23 @@ extern "system" fn veil_proc(h: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LRESU
     }
 }
 
+/// `cell`'s value, or `register`'s when it gives one (non-zero): a failure is not kept, the next
+/// call tries again.
+fn kept_nonzero(cell: &OnceLock<u16>, register: impl FnOnce() -> u16) -> Option<u16> {
+    if let Some(&atom) = cell.get() {
+        return Some(atom);
+    }
+    let atom = register();
+    if atom == 0 {
+        return None;
+    }
+    Some(*cell.get_or_init(|| atom))
+}
+
 fn class() -> Option<u16> {
     static ATOM: OnceLock<u16> = OnceLock::new();
-    let atom = *ATOM.get_or_init(|| {
-        // SAFETY: registers a window class of this process once; the class name is static.
+    let atom = kept_nonzero(&ATOM, || {
+        // SAFETY: registers a window class of this process; the class name is static.
         unsafe {
             let instance = GetModuleHandleW(None)
                 .ok()
@@ -109,7 +122,10 @@ fn class() -> Option<u16> {
             })
         }
     });
-    (atom != 0).then_some(atom)
+    if atom.is_none() {
+        tracing::warn!(error = %windows::core::Error::from_thread(), "veil window class refused");
+    }
+    atom
 }
 
 /// Shows a veil of colour `rgb` over `rect` at opacity `alpha` (0–255), above every window,
@@ -168,5 +184,19 @@ pub fn destroy(raw: isize) {
     // SAFETY: destroys a window created by `show` on this same thread; a stale handle fails.
     unsafe {
         let _ = DestroyWindow(hwnd(raw));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_refused_registration_is_tried_again_and_a_success_is_kept() {
+        let cell = OnceLock::new();
+        assert_eq!(kept_nonzero(&cell, || 0), None);
+        assert_eq!(cell.get(), None);
+        assert_eq!(kept_nonzero(&cell, || 42), Some(42));
+        assert_eq!(kept_nonzero(&cell, || unreachable!()), Some(42));
     }
 }

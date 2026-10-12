@@ -68,6 +68,8 @@ pub struct DesktopState {
     building_since: Mutex<Option<Instant>>,
     /// The passage between modes whose fade-out is awaited (round 4b).
     passage: passage::Waiting,
+    /// A passage that builds a window is in flight: mode changes wait for its end.
+    mode_gate: Mutex<modes::ModeGate>,
 }
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -182,8 +184,12 @@ fn reveal<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
     let _ = window.set_focus();
     finish_show(window);
     if let Some(label) = lock(&state.retire).take() {
-        retire(app, label);
+        // Never the window just shown (a passage given up may still name it).
+        if label != window.label() {
+            retire(app, label);
+        }
     }
+    modes::passage_ended(app, window);
     crate::ipc::notify(
         WindowVisibility {
             visible: true,

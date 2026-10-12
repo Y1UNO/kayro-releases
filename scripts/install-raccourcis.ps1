@@ -1,10 +1,13 @@
 ﻿<#
 .SYNOPSIS
-  Crée (ou remplace) les deux raccourcis du Bureau : « Kayro » et « Kayro (atelier) ».
+  Crée (ou remplace) les raccourcis du Bureau : « Kayro », « Kayro — mettre à jour » et
+  « Kayro (atelier) ».
 .DESCRIPTION
   À lancer une fois (clic droit → Exécuter avec PowerShell). Relançable sans doublon.
-  - Kayro            → scripts\Kayro.cmd : met à jour si besoin, puis ouvre Kayro (tes données).
-  - Kayro (atelier)  → scripts\Kayro-atelier.cmd : atelier de DA + vraie fenêtre (données temporaires).
+  - Kayro                  → target\release\Kayro.exe : l'exe de production, tel quel (tes données).
+  - Kayro — mettre à jour  → scripts\Kayro.cmd -Force : quitte Kayro doucement s'il est ouvert,
+                             recompile en release, puis relance l'exe.
+  - Kayro (atelier)        → scripts\Kayro-atelier.cmd : atelier de DA + vraie fenêtre (données temporaires).
 #>
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -12,12 +15,16 @@ $desktop = [Environment]::GetFolderPath('Desktop')
 $icon = Join-Path $root 'src-tauri\icons\icon.ico'
 if (-not (Test-Path $icon)) { throw "Icône introuvable : $icon" }
 
+$exe = Join-Path $root 'target\release\Kayro.exe'
+if (-not (Test-Path $exe)) { throw "Exe de production introuvable : $exe (lance d'abord scripts\build-local.ps1)" }
+
 $shell = New-Object -ComObject WScript.Shell
-function New-Shortcut([string]$name, [string]$target, [int]$windowStyle, [string]$description) {
+function New-Shortcut([string]$name, [string]$target, [string]$arguments, [string]$workDir, [int]$windowStyle, [string]$description) {
     $lnk = Join-Path $desktop "$name.lnk"
     $link = $shell.CreateShortcut($lnk)
     $link.TargetPath = $target
-    $link.WorkingDirectory = $root
+    $link.Arguments = $arguments
+    $link.WorkingDirectory = $workDir
     $link.IconLocation = "$icon,0"
     $link.WindowStyle = $windowStyle  # 1 = normal, 7 = minimized
     $link.Description = $description
@@ -25,7 +32,8 @@ function New-Shortcut([string]$name, [string]$target, [int]$windowStyle, [string
     Write-Host "Raccourci : $lnk" -ForegroundColor Green
 }
 
-# Minimized: the .cmd only hands over to a hidden PowerShell, nothing to show.
-New-Shortcut 'Kayro' (Join-Path $PSScriptRoot 'Kayro.cmd') 7 'Kayro (mis à jour automatiquement)'
-New-Shortcut 'Kayro (atelier)' (Join-Path $PSScriptRoot 'Kayro-atelier.cmd') 1 "Kayro : atelier de direction artistique"
+New-Shortcut 'Kayro' $exe '' (Split-Path -Parent $exe) 1 'Kayro (exe de production)'
+# Minimized: the .cmd only hands over to a hidden PowerShell (its progress window shows the build).
+New-Shortcut 'Kayro — mettre à jour' (Join-Path $PSScriptRoot 'Kayro.cmd') '-Force' $root 7 'Kayro : recompiler la dernière version puis relancer'
+New-Shortcut 'Kayro (atelier)' (Join-Path $PSScriptRoot 'Kayro-atelier.cmd') '' $root 1 "Kayro : atelier de direction artistique"
 [void][Runtime.InteropServices.Marshal]::ReleaseComObject($shell)

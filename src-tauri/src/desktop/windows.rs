@@ -122,14 +122,19 @@ fn put<R: Runtime>(window: &WebviewWindow<R>, rect: Rect) {
 }
 
 /// Sets the main window up for `mode` on `screen`. Works on a hidden window (before showing it)
-/// and on a visible one (switching modes).
+/// and on a visible one (switching modes). Returns the rectangle it was given (its inner size).
 pub fn configure_main<R: Runtime>(
     window: &WebviewWindow<R>,
     mode: DisplayMode,
     screen: &Screen,
     saved: &Placement,
-) {
+) -> Rect {
     let immersive = mode == DisplayMode::Immersive;
+    let rect = if immersive {
+        geometry::immersive_rect(screen)
+    } else {
+        geometry::window_rect(saved, screen)
+    };
     if immersive {
         // Taskbar cover is switched on with the focus (see `on_focus`), never while another
         // program is in front.
@@ -137,15 +142,15 @@ pub fn configure_main<R: Runtime>(
         let _ = window.set_decorations(false);
         let _ = window.set_shadow(false);
         let _ = window.set_zoom(geometry::immersive_zoom(screen));
-        put(window, geometry::immersive_rect(screen));
     } else {
         let _ = window.set_always_on_top(false);
         let _ = window.set_zoom(1.0);
         let _ = window.set_decorations(true);
         let _ = window.set_shadow(true);
         let _ = window.set_resizable(true);
-        put(window, geometry::window_rect(saved, screen));
     }
+    put(window, rect);
+    rect
 }
 
 /// The page of a window; `entering` = built for a passage between modes (round 4b): the page

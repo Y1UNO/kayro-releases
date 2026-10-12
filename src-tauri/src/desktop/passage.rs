@@ -78,6 +78,8 @@ pub struct ModePassage {
     pub id: u32,
     pub step: PassageStep,
     pub label: String,
+    /// « in » only: the window's size or zoom changed (the page waits for its new layout).
+    pub resized: bool,
 }
 
 /// The passage whose fade-out is awaited (one at a time: a newer one releases the older).
@@ -113,37 +115,51 @@ impl Waiting {
     }
 }
 
-fn emit<R: Runtime>(app: &AppHandle<R>, id: u32, step: PassageStep, label: &str) {
+fn emit<R: Runtime>(app: &AppHandle<R>, id: u32, step: PassageStep, label: &str, resized: bool) {
     crate::ipc::notify(
         ModePassage {
             id,
             step,
             label: label.to_string(),
+            resized,
         }
         .emit(app),
     );
 }
 
+/// The end of the wait for a page's fade-out: `Some(veil)` when it answered or did not answer in
+/// time (the passage goes on anyway); None when a newer passage replaced this one (it does the
+/// rest: going on here would change the window twice).
+fn awaited(done: &Receiver<Option<VeilFade>>, wait: Duration) -> Option<Option<VeilFade>> {
+    match done.recv_timeout(wait) {
+        Ok(veil) => Some(veil),
+        Err(mpsc::RecvTimeoutError::Timeout) => Some(None),
+        Err(mpsc::RecvTimeoutError::Disconnected) => None,
+    }
+}
+
 /// Asks the page of window `label` to fade out, then runs `then` on another thread once it has
 /// (or after `FADE_WAIT`). `then` receives the passage id (for `fade_in`) and the page's veil
-/// (None when it answered nothing, or when the change is direct).
+/// (None when it answered nothing, or when the change is direct). Not run at all when a newer
+/// passage replaced this one.
 pub fn fade_out_then<R: Runtime>(
     app: &AppHandle<R>,
     label: &str,
     then: impl FnOnce(AppHandle<R>, u32, Option<VeilFade>) + Send + 'static,
 ) {
     let (id, done) = app.state::<DesktopState>().passage.start();
-    emit(app, id, PassageStep::Out, label);
+    emit(app, id, PassageStep::Out, label, false);
     let app = app.clone();
-    std::thread::spawn(move || {
-        let veil = done.recv_timeout(FADE_WAIT).ok().flatten();
-        then(app, id, veil);
+    std::thread::spawn(move || match awaited(&done, FADE_WAIT) {
+        Some(veil) => then(app, id, veil),
+        None => tracing::debug!(id, "passage replaced by a newer one"),
     });
 }
 
-/// Tells the page of window `label` that it can bring its content back.
-pub fn fade_in<R: Runtime>(app: &AppHandle<R>, id: u32, label: &str) {
-    emit(app, id, PassageStep::In, label);
+/// Tells the page of window `label` that it can bring its content back; `resized`: its size or
+/// zoom changed meanwhile.
+pub fn fade_in<R: Runtime>(app: &AppHandle<R>, id: u32, label: &str, resized: bool) {
+    emit(app, id, PassageStep::In, label, resized);
 }
 
 /// Called by the page once it has faded out.
@@ -178,6 +194,24 @@ mod tests {
             Err(mpsc::RecvTimeoutError::Disconnected)
         ));
         assert!(!w.release(first, None));
+    }
+
+    #[test]
+    fn a_replaced_passage_does_nothing_but_a_silent_page_does_not_block() {
+        let w = Waiting::default();
+        let (_, old) = w.start();
+        let (second, new) = w.start();
+        // Replaced: the newer passage reconfigures the window and brings the page back.
+        assert_eq!(awaited(&old, Duration::from_millis(50)), None);
+        // No answer from the page in time: the passage goes on without a veil.
+        assert_eq!(awaited(&new, Duration::from_millis(10)), Some(None));
+        let (third, rx) = w.start();
+        assert!(third > second);
+        assert!(w.release(third, Some(fade(240))));
+        assert_eq!(
+            awaited(&rx, Duration::from_millis(10)),
+            Some(Some(fade(240)))
+        );
     }
 
     fn fade(ms: u32) -> VeilFade {

@@ -20,6 +20,13 @@ use tauri::Manager;
 use tauri_plugin_global_shortcut::ShortcutState;
 
 pub(crate) const SILENT_FLAG: &str = "--silent";
+/// `Kayro.exe --quit`: the running Kayro quits as with « Quitter » (the update script, which must
+/// replace the exe, never kills it); with no Kayro running, this one ends at once.
+pub(crate) const QUIT_FLAG: &str = "--quit";
+
+fn asks_to_quit<S: AsRef<str>>(args: &[S]) -> bool {
+    args.iter().any(|a| a.as_ref() == QUIT_FLAG)
+}
 
 pub fn run() {
     // Before the logger: it creates the new data folder, which would hide the old one.
@@ -41,6 +48,10 @@ pub fn run() {
     tauri::Builder::default()
         // Must be the first plugin registered.
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if asks_to_quit(&args) {
+                tracing::info!("second instance: asked to quit");
+                return desktop::quit(app);
+            }
             tracing::info!(?args, "second instance: showing the window");
             desktop::show(app);
         }))
@@ -59,6 +70,11 @@ pub fn run() {
         )
         .invoke_handler(ipc.invoke_handler())
         .setup(move |app| {
+            if asks_to_quit(&std::env::args().collect::<Vec<_>>()) {
+                tracing::info!("asked to quit, no Kayro was running");
+                app.handle().exit(0);
+                return Ok(());
+            }
             tracing::info!(app_name = %app.package_info().name, "setup done");
             ipc.mount_events(app);
             app.manage(ConfigState::load(paths::DataPaths::default_location()));
@@ -100,5 +116,12 @@ mod tests {
     #[test]
     fn ping_answers_pong() {
         assert_eq!(super::ipc::ping(), "pong");
+    }
+
+    #[test]
+    fn only_the_quit_flag_asks_to_quit() {
+        assert!(super::asks_to_quit(&["Kayro.exe", "--quit"]));
+        assert!(!super::asks_to_quit(&["Kayro.exe", "--silent"]));
+        assert!(!super::asks_to_quit::<&str>(&[]));
     }
 }

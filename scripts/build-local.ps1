@@ -3,7 +3,7 @@
   Compile Kayro en release et cree/met a jour le raccourci "Kayro.lnk" sur le bureau.
 .DESCRIPTION
   Relancable a volonte : le raccourci est reecrit au meme endroit (jamais de doublon).
-  Si Kayro est ouvert, propose de le fermer doucement (fermeture de fenetre, jamais de kill).
+  Si Kayro est ouvert, propose de le fermer doucement (Kayro.exe --quit = « Quitter », jamais de kill).
 .PARAMETER CloseRunning
   Ferme Kayro sans poser la question s'il est ouvert.
 .PARAMETER NoBuild
@@ -47,7 +47,9 @@ if ($running.Count -gt 0) {
     if (-not $close) {
         Stop-Here 'Kayro est ouvert. Ferme-le, ou relance avec -CloseRunning.'
     }
-    foreach ($p in $running) { [void]$p.CloseMainWindow() }
+    # The window's cross only hides Kayro (it lives in the notification area): `--quit` asks the
+    # running one to quit as with « Quitter » (single instance), never a kill.
+    Start-Process -FilePath $exe -ArgumentList '--quit' -WindowStyle Hidden
     $deadline = (Get-Date).AddSeconds(10)
     while ((Get-RunningKayro) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 250 }
     if (Get-RunningKayro) {

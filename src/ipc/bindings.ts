@@ -325,6 +325,8 @@ export type ModePassage = {
 	id: number,
 	step: PassageStep,
 	label: string,
+	/**  « in » only: the window's size or zoom changed (the page waits for its new layout). */
+	resized: boolean,
 };
 
 export type MonitorInfo = {

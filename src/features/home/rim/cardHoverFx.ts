@@ -12,7 +12,7 @@
 import { curveOf } from "../../../design/motion/curve";
 import type { MotionTokens } from "../../../design/motion/tokens";
 import type { ElementValues } from "../../../design/da/daParams";
-import { frameLoop } from "../../../fx/loop";
+import { frameLoop, type FrameLoop } from "../../../fx/loop";
 import { sheenAt } from "../../../fx/gpu/sheen";
 import { hoverConfig, threadPhase } from "../fan/fanFloat";
 import { sheenBandClass, sheenGlide } from "../SheenVeil";
@@ -112,11 +112,14 @@ export class CardHoverFx {
   private layer: HTMLSpanElement | null = null;
   private els: RimEls | null = null;
   private band: HTMLSpanElement | null = null;
+  /** The card under the pointer: waiting for its `delay`, or lit. */
   private card: HTMLElement | null = null;
   private box: RimBox = { w: 0, h: 0, r: 30 };
   private enterAt = 0;
+  /** The threads of the card last lit fade out since then (−1: none), from level `leftFrom`. */
   private leftAt = -1;
   private leftFrom = 0;
+  /** `card`'s veil and threads are on. */
   private lit = false;
   private timer = 0;
   private off: (() => void) | null = null;
@@ -128,18 +131,19 @@ export class CardHoverFx {
     public config: CardHoverConfig,
     /** The periodic veil of the selected card glides now (rule 1: one decorative effect). */
     private readonly periodicGlide: (card: HTMLElement, now: number) => boolean = () => false,
+    private readonly loop: () => FrameLoop = frameLoop,
   ) {}
 
   /** The pointer is over `card` (a card button of the carousel), or over no card (null). */
   pointer(card: HTMLElement | null, now = performance.now()): void {
-    if (card === this.card && this.leftAt < 0) return;
-    if (this.card && this.card !== card) this.leave(now);
+    if (card === this.card) return;
+    if (this.card) this.leave(now);
     if (card) this.enter(card, now);
   }
 
   wheel(now = performance.now()): void {
     this.wheelAt = now;
-    if (this.card && this.leftAt < 0) this.leave(now);
+    if (this.card) this.leave(now);
   }
 
   /** The active card was clicked to launch its app: the rim flashes (A ring + halo). */
@@ -162,43 +166,50 @@ export class CardHoverFx {
 
   dispose(): void {
     window.clearTimeout(this.timer);
-    this.off?.();
-    this.off = null;
+    this.stop();
     this.layer?.remove();
     this.layer = null;
     this.card = null;
+    this.lit = false;
+    this.leftAt = -1;
   }
 
   private enter(card: HTMLElement, now: number): void {
     this.card = card;
     this.enterAt = now;
-    this.leftAt = -1;
     this.lit = false;
     window.clearTimeout(this.timer);
     const c = this.config;
     if (!c.veil && !c.threads) return;
-    this.timer = window.setTimeout(() => this.light(card), c.delay);
+    // One set of spans: the threads of the card just left fade out first, then this one lights.
+    const fading = this.leftAt >= 0 ? this.leftAt + c.fadeOut - now : 0;
+    this.timer = window.setTimeout(() => this.light(card), Math.max(c.delay, fading));
   }
 
   private leave(now: number): void {
     window.clearTimeout(this.timer);
-    if (!this.card || this.leftAt >= 0) return;
-    if (!this.lit) {
-      this.card = null;
-      return;
+    if (!this.card) return;
+    if (this.lit && this.off) {
+      this.leftFrom = threadLevel(now, this.enterAt, this.config);
+      this.leftAt = now;
     }
-    this.leftFrom = threadLevel(now, this.enterAt, this.config);
-    this.leftAt = now;
+    this.card = null;
+    this.lit = false;
+    // Nothing lit, nothing fading: no frame loop left running.
+    if (this.leftAt < 0) this.stop();
   }
 
   /** The pointer stayed `delay` on the card: veil, then threads. */
   private light(card: HTMLElement): void {
     const now = performance.now();
-    if (this.card !== card || this.leftAt >= 0) return;
+    if (this.card !== card) return;
     if (hoverBlocked(this.stage, this.dragging, now - this.wheelAt)) return;
     const c = this.config;
     this.attach(card);
     this.lit = true;
+    // The threads come in from now (later than `delay` when another card's faded out first).
+    this.enterAt = now - c.delay;
+    this.leftAt = -1;
     if (c.veil && this.band && !this.periodicGlide(card, now)) sheenGlide(this.band, c.veilMs);
     if (c.threads) this.run();
   }
@@ -236,23 +247,30 @@ export class CardHoverFx {
   /** The threads' frame loop: only while a card is lit, stopped once they faded out. */
   private run(): void {
     if (this.off) return;
-    this.off = frameLoop().subscribe((_dt, now) => {
+    this.off = this.loop().subscribe((_dt, now) => {
       const els = this.els;
       const c = this.config;
-      const blocked = hoverBlocked(this.stage, this.dragging, now - this.wheelAt);
-      if (blocked && this.leftAt < 0 && this.card) this.leave(now);
-      const h = this.card ? threadLevel(now, this.enterAt, c, this.leftAt, this.leftFrom) : 0;
+      if (this.lit && hoverBlocked(this.stage, this.dragging, now - this.wheelAt)) this.leave(now);
+      const h =
+        this.leftAt >= 0
+          ? threadLevel(now, 0, c, this.leftAt, this.leftFrom)
+          : this.lit
+            ? threadLevel(now, this.enterAt, c)
+            : 0;
       if (els) {
         const phase = (t: number) => threadPhase(t, c.threadSpeed, c.look.reduced);
         renderRim(els, this.box, h, c.look, 0, phase, now);
       }
-      if (h <= 0 && this.leftAt >= 0) {
-        this.card = null;
+      if (h <= 0 && !this.lit) {
         this.leftAt = -1;
-        this.off?.();
-        this.off = null;
+        this.stop();
       }
     }, THREAD_FPS);
+  }
+
+  private stop(): void {
+    this.off?.();
+    this.off = null;
   }
 }
 
