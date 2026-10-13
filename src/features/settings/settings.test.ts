@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { THEME_SWAP } from "../../design/motion/tokens5";
 import type { Settings } from "../../ipc/bindings";
-import { closeSteps, foldMs, openSteps } from "./advancedUnroll";
+import { closeSteps, foldMs, openSteps, revealScroll } from "./advancedUnroll";
 import {
   ATMOSPHERE,
   atmosphereLevel,
@@ -9,7 +9,7 @@ import {
   VISUAL_DEFAULTS as V,
   visualSnapshot,
 } from "./settingsModel";
-import { cardKeyframes, farthestCorner, sparks, swapWay, waveGeometry } from "./themeSwap";
+import { cardKeyframes, easing, farthestCorner, sparks, swapWay, waveGeometry } from "./themeSwap";
 
 const SETTINGS: Settings = {
   ...V,
@@ -72,6 +72,22 @@ describe("« Personnalisation avancée » drop-down", () => {
     });
   });
 
+  it("« Mouvement : Net »: the same steps on the entrance curve, no spring (review A5)", () => {
+    const steps = openSteps(9, 120, false, 1, true);
+    expect(steps.length).toBe(openSteps(9, 120, false).length);
+    expect(steps.every((s) => !String(s.options.easing).startsWith("linear("))).toBe(true);
+  });
+
+  it("scrolls the panel to show what follows, never past its header (review A1)", () => {
+    // Measured in the exe at 1707×960: panel 198–815, header at 747, the reset line ends at 1540.
+    const at = { viewTop: 198, viewBottom: 815, headTop: 747 };
+    expect(revealScroll({ ...at, endBottom: 1540 })).toBe(747 - 198 - 8);
+    // Fits once scrolled a little: just enough, the reset line 24 px above the edge.
+    expect(revealScroll({ ...at, endBottom: 900 })).toBe(900 + 24 - 815);
+    // Already seen: no scroll.
+    expect(revealScroll({ ...at, endBottom: 700 })).toBe(0);
+  });
+
   it("folds in 220 ms, no bounce, everything at once", () => {
     const steps = closeSteps(300);
     expect(steps.every((s) => s.options.duration === 220 && s.options.delay === 0)).toBe(true);
@@ -108,6 +124,15 @@ describe("theme change (R5-Reglages-Themes §2–4)", () => {
     expect(k.transform[1]!.transform).toBe("translateY(-8px) scale(1.1)");
     expect(k.transform[2]!.transform).toBe("translateY(2px) scale(0.93)");
     expect(k.filter).toHaveLength(4);
+  });
+
+  it("« Mouvement : Net »: the card settles and the check pops without overshoot (review A5)", () => {
+    expect(easing("liaison", true)).toBe(easing("vive"));
+    expect(easing("rebond", true)).toBe(easing("vive"));
+    expect(easing("standard", true)).toBe(easing("standard"));
+    expect(easing("rebond")).not.toBe(easing("vive"));
+    const eases = cardKeyframes(true).transform.map((k) => k.easing);
+    expect(eases).not.toContain(easing("liaison"));
   });
 
   it("12 sparks leave the card's edge, 46 to 82 px, within 66 ms", () => {

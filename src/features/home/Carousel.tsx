@@ -6,12 +6,14 @@ import { t } from "../../i18n";
 import { AppCard } from "./AppCard";
 import { cardGeometry, daStore, useDa } from "../../design/da";
 import { useMotionTokens } from "../../design/motion/current";
+import { isEco } from "../../design/quality";
 import { useReducedMotion } from "../../fx/useReducedMotion";
 import { useHub } from "../../store";
 import { CardHoverFx, cardHoverConfig, periodicGlide } from "./rim/cardHoverFx";
 import { geometryVars, mountedRange, type Geometry } from "./carouselGeometry";
 import { inheritKeys } from "./deckKeys";
 import { cssVars } from "./cssVars";
+import { hoverCardOf } from "./float/carouselFloat";
 import { useCarouselFloat } from "./float/useCarouselFloat";
 import styles from "./Carousel.module.css";
 
@@ -24,6 +26,8 @@ interface Props {
   onLaunch: (app: AppEntry) => void;
   /** A card is being dragged towards a tab (no decorative hover meanwhile). */
   dragging?: boolean;
+  /** The carousel is the one shown (not the category fan): its cards may float (review A4a). */
+  floating?: boolean;
 }
 
 const WHEEL_STEP = 60;
@@ -49,6 +53,7 @@ export function Carousel({
   onMove,
   onLaunch,
   dragging = false,
+  floating = true,
 }: Props) {
   const wheel = useRef({ acc: 0, last: 0 });
   const stage = useRef<HTMLDivElement>(null);
@@ -67,7 +72,7 @@ export function Carousel({
   const cardHover = useDa((s) => s.values.cardHover);
   const fanHover = useDa((s) => s.values.categoryHover);
   const sheen = useDa((s) => s.values.cardSheen);
-  const eco = useHub((s) => s.settings?.quality === "eco");
+  const eco = useHub((s) => isEco(s.settings?.quality));
   const windowMode = useHub((s) => s.settings?.displayMode === "window");
   const reduced = useReducedMotion();
   const hoverCfg = useMemo(
@@ -101,7 +106,7 @@ export function Carousel({
     if (fx.current) fx.current.dragging = dragging;
   }, [dragging]);
   // Round 5: the cards float at the settings' level (paused on hover, wheel, fast scroll, drag).
-  const float = useCarouselFloat(stage, dragging);
+  const float = useCarouselFloat(stage, dragging, floating);
   const cardOf = (app: AppEntry) =>
     stage.current?.querySelector<HTMLElement>(
       `[data-app-id="${CSS.escape(app.id)}"] [data-stage]`,
@@ -208,7 +213,7 @@ export function Carousel({
       data-no-pointer-sheen={hoverCfg.magic && cardHover?.pointerSheen !== true ? "" : undefined}
       onWheel={onWheel}
       onPointerOver={(e) => {
-        const card = (e.target as Element).closest<HTMLElement>("[data-stage]");
+        const card = hoverCardOf(e.target as Element);
         fx.current?.pointer(card);
         float.current?.hover(card);
       }}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { glassFloatOf } from "../../../design/glass/glassRegistry";
 import type { FrameLoop, Tick } from "../../../fx/loop";
-import { CarouselFloat } from "./carouselFloat";
+import { CarouselFloat, carouselFloatConfig, hoverCardOf } from "./carouselFloat";
 
 function fakeLoop() {
   const ticks = new Set<Tick>();
@@ -118,5 +118,47 @@ describe("carousel floating (round 5)", () => {
     expect(ticks.size).toBe(1);
     f.setConfig({ ...CONFIG, amp: 0 });
     expect(ticks.size).toBe(0);
+  });
+
+  it("hovering the edit button is hovering its card: the floating stays paused (review A3)", () => {
+    const card = { id: "card" } as unknown as HTMLElement;
+    const slot = { querySelector: () => card } as unknown as HTMLElement;
+    const pencil = { closest: () => slot } as unknown as Element;
+    expect(hoverCardOf(pencil)).toBe(card);
+    const outside = { closest: () => null } as unknown as Element;
+    expect(hoverCardOf(outside)).toBeNull();
+  });
+
+  it("nothing floats under the category fan, back slowly once the carousel shows (review A4a)", () => {
+    expect(carouselFloatConfig("visible", false, false, false).amp).toBe(0);
+    expect(carouselFloatConfig("visible", false, false, true).amp).toBe(5);
+    expect(carouselFloatConfig("visible", false, true, true).amp).toBe(0);
+    const { loop, ticks } = fakeLoop();
+    const { stage } = fakeStage(["steam"]);
+    const f = new CarouselFloat(
+      stage,
+      carouselFloatConfig("visible", false, false, false),
+      () => loop,
+    );
+    f.refresh();
+    f.hover({} as Element);
+    expect(ticks.size).toBe(0);
+    f.setConfig(carouselFloatConfig("visible", false, false, true));
+    expect(ticks.size).toBe(1);
+  });
+
+  it("the float boxes are layers only while the loop runs, when asked (review A10)", () => {
+    const { loop } = fakeLoop();
+    const { stage, boxes } = fakeStage(["steam", "discord"]);
+    // Off by default (`FLOAT_RHYTHM.promote`): not measured yet.
+    const plain = fakeStage(["steam"]);
+    new CarouselFloat(plain.stage, CONFIG, () => loop).refresh();
+    expect((plain.boxes[0]!.el.style as { willChange?: string }).willChange).toBeUndefined();
+    const f = new CarouselFloat(stage, { ...CONFIG, layers: true }, () => loop);
+    f.refresh();
+    const will = () => boxes.map((b) => (b.el.style as { willChange?: string }).willChange);
+    expect(will()).toEqual(["transform", "transform"]);
+    f.setConfig({ ...CONFIG, amp: 0 });
+    expect(will()).toEqual(["", ""]);
   });
 });

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Button, PlusIcon, SearchIcon, UploadIcon } from "../../design";
+import { useDa } from "../../design/da";
 import { t } from "../../i18n";
 import type { SceneFile } from "../../ipc/bindings";
 import { sceneStore, useHub, useScenes } from "../../store";
@@ -39,6 +40,8 @@ export function ScenesScreen({ onBack, onEdit }: Props) {
   const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  // « Survol des cartes : Aucun » holds for the scene cards too (review A7).
+  const hoverOff = useDa((s) => s.values.cardHover?.style === "none");
   const busy = run !== null && run.status === null;
   const shown = useMemo(() => {
     const q = query.trim().toLocaleLowerCase();
@@ -105,7 +108,11 @@ export function ScenesScreen({ onBack, onEdit }: Props) {
               {t("scenes.list.noMatch", { query: query.trim() })}
             </p>
           ) : (
-            <ul className={cards.grid} aria-label={t("scenes.list.title")}>
+            <ul
+              className={cards.grid}
+              aria-label={t("scenes.list.title")}
+              data-hover-off={hoverOff ? "" : undefined}
+            >
               {shown.map((scene) => (
                 <SceneCard
                   key={scene.id}

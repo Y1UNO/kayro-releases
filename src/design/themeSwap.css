@@ -6,6 +6,12 @@
  *  - the theme card is its own group, live, its old picture hidden (never a frozen copy of it);
  *  - the wave is its own group, above the circle, under the card.
  */
+/* Safety net (review A8): if a picture of the old page is ever missing, night shows through, never
+   white. Hidden under the two opaque pictures when all goes well. */
+::view-transition {
+  background: var(--bg-bottom);
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;

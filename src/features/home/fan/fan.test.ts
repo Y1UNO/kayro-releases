@@ -32,6 +32,13 @@ describe("category link A (round 3b): settings and phases", () => {
     expect(c.turn(0.5)).toBeCloseTo(0.5, 2); // cubic-bezier(.65,0,.35,1) is symmetric
   });
 
+  it("« Mouvement : Net »: the deck unfolds without passing its place (review A5)", () => {
+    const peak = (cfg: typeof c) =>
+      Math.max(...Array.from({ length: 101 }, (_, i) => cfg.spring(i / 100)));
+    expect(peak(c)).toBeGreaterThan(1.001);
+    expect(peak(linkConfig(undefined, false, true))).toBeLessThanOrEqual(1.0001);
+  });
+
   it("the link turns at 0, gathers the deck at 650 ms and unfolds it at 1 070 ms", () => {
     expect(stepsOf("link", c)).toEqual([
       [0, "turn"],

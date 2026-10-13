@@ -2,6 +2,7 @@ import { APP_NAME } from "../../app/appName";
 import { daStore } from "../../design/da";
 import { Choreo } from "../../design/motion/choreo";
 import { OPENING_C } from "../../design/motion/tokens4b";
+import { isEco } from "../../design/quality";
 import { setIntroCue } from "../../fx/gpu/cues";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { hubStore } from "../../store";
@@ -86,7 +87,7 @@ export function runOpening(
   const wave = part("wave");
 
   const s = openingSettings(daStore.getState().values.opening);
-  const eco = hubStore.getState().settings?.quality === "eco";
+  const eco = isEco(hubStore.getState().settings?.quality);
   const reduced = prefersReducedMotion();
   const choreo = new Choreo();
   const total = openingDuration(s);

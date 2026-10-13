@@ -4,6 +4,7 @@ import { useTheme } from "../../design";
 import { currentMotion } from "../../design/motion/current";
 import { OPENING_C } from "../../design/motion/tokens4b";
 import { THEME_SWAP as S } from "../../design/motion/tokens5";
+import { isEco } from "../../design/quality";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { hubStore } from "../../store";
 import { cardKeyframes, easing, swapWay, waveGeometry, type SwapWay } from "./themeSwap";
@@ -18,15 +19,18 @@ const WAVE_BOX = S.wave.size * 1.2;
 const part = (card: HTMLElement, name: string) =>
   card.querySelector<HTMLElement | SVGElement>(`[data-swap="${name}"]`);
 
-/** The card's own impact: rise, squash, settle, its sheen and its moon (Eco and « Fondu » too). */
-function playCard(card: HTMLElement, speed: number, impact: boolean): void {
+/**
+ * The card's own impact: rise, squash, settle, its sheen and its moon (Eco and « Fondu » too).
+ * `crisp` (« Mouvement : Net », review A5): the springs on the entrance curve.
+ */
+function playCard(card: HTMLElement, speed: number, impact: boolean, crisp: boolean): void {
   const at = (delay: number, duration: number, ease: string, fill: FillMode = "backwards") => ({
     delay: delay / speed,
     duration: duration / speed,
-    easing: easing(ease),
+    easing: easing(ease, crisp),
     fill,
   });
-  const k = cardKeyframes();
+  const k = cardKeyframes(crisp);
   card.animate(k.transform, { duration: k.ms / speed });
   part(card, "face")?.animate(k.filter, { duration: k.ms / speed });
   part(card, "sheen")?.animate(
@@ -83,21 +87,15 @@ function playCard(card: HTMLElement, speed: number, impact: boolean): void {
   );
 }
 
-/** The check pops on the card once it is the active theme (after the commit). */
-function popCheck(card: HTMLElement, speed: number, delay: number): void {
-  part(card, "check")?.animate(
-    [
-      { transform: "scale(0)" },
-      { transform: `scale(${S.check.peak})`, offset: 0.55 },
-      { transform: "scale(1)" },
-    ],
-    {
-      delay: delay / speed,
-      duration: S.check.ms / speed,
-      easing: easing(S.check.ease),
-      fill: "backwards",
-    },
-  );
+/** The check pops on the card once it is the active theme (after the commit); `crisp`: no pop. */
+function popCheck(card: HTMLElement, speed: number, delay: number, crisp: boolean): void {
+  const peak = crisp ? [] : [{ transform: `scale(${S.check.peak})`, offset: 0.55 }];
+  part(card, "check")?.animate([{ transform: "scale(0)" }, ...peak, { transform: "scale(1)" }], {
+    delay: delay / speed,
+    duration: S.check.ms / speed,
+    easing: easing(S.check.ease, crisp),
+    fill: "backwards",
+  });
 }
 
 /** A fixed 400 px ring drawn like the opening's wave, centred on the moon (C pulse, round 4b). */
@@ -127,10 +125,11 @@ export function useThemeSwap(): (id: string, card: HTMLElement) => void {
     (id: string, card: HTMLElement) => {
       if (busy.current || id === theme.id) return;
       const settings = hubStore.getState().settings;
-      const speed = currentMotion().speed;
+      const { speed, style } = currentMotion();
+      const crisp = style === "crisp";
       const { way, card: withCard } = swapWay({
         setting: WAYS[settings?.themeTransition ?? "wave"] ?? "wave",
-        eco: settings?.quality === "eco",
+        eco: isEco(settings?.quality),
         reduced: prefersReducedMotion(),
         viewTransitions: typeof document.startViewTransition === "function",
         engineFallback: document.documentElement.dataset.glassFallback !== undefined,
@@ -141,13 +140,13 @@ export function useThemeSwap(): (id: string, card: HTMLElement) => void {
       }
       busy.current = true;
       window.setTimeout(() => (busy.current = false), S.end / speed);
-      if (withCard) playCard(card, speed, way === "wave");
+      if (withCard) playCard(card, speed, way === "wave", crisp);
       const checkDelay = S.check.at - S.impact;
 
       window.setTimeout(() => {
         if (way === "fade") {
           flushSync(() => setThemeId(id));
-          popCheck(card, speed, checkDelay);
+          popCheck(card, speed, checkDelay, crisp);
           return;
         }
         const moon = part(card, "moon")?.getBoundingClientRect();
@@ -167,7 +166,7 @@ export function useThemeSwap(): (id: string, card: HTMLElement) => void {
           // Only in the new page, under the card (inserted before the app's root).
           wave = makeWave(x, y);
           document.body.prepend(wave);
-          popCheck(card, speed, checkDelay);
+          popCheck(card, speed, checkDelay, crisp);
         });
         const root = document.documentElement;
         const ms = S.wave.ms / speed;
@@ -206,7 +205,7 @@ export function useThemeSwap(): (id: string, card: HTMLElement) => void {
                   transform: `scale(${S.recoil.scale})`,
                   transformOrigin: origin,
                   offset: 0.2,
-                  easing: easing(S.recoil.ease),
+                  easing: easing(S.recoil.ease, crisp),
                 },
                 { transform: "scale(1)", transformOrigin: origin },
               ],

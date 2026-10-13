@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { daStore, useDa } from "../../../design/da";
+import { useMotionTokens } from "../../../design/motion/current";
+import { isEco } from "../../../design/quality";
 import { prefersReducedMotion } from "../../../fx/motionPref";
 import { useReducedMotion } from "../../../fx/useReducedMotion";
 import { onWindowVisibility } from "../../../ipc/events";
@@ -45,8 +47,9 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
   });
 
   const values = useDa((s) => s.values.categoryLink);
-  const eco = useHub((s) => s.settings?.quality === "eco");
-  const config = useMemo(() => linkConfig(values, eco), [values, eco]);
+  const eco = useHub((s) => isEco(s.settings?.quality));
+  const crisp = useMotionTokens().style === "crisp";
+  const config = useMemo(() => linkConfig(values, eco, crisp), [values, eco, crisp]);
   // Holds the elements too (its `ref` callbacks), so that React never reads a ref while rendering.
   const [director] = useState(
     () => new LinkDirector(linkConfig(daStore.getState().values.categoryLink)),
@@ -60,8 +63,8 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
   );
   const reduced = useReducedMotion();
   useEffect(() => {
-    director.setMotion(motion, eco, hoverConfig(hoverValues, eco, reduced));
-  }, [director, motion, hoverValues, eco, reduced]);
+    director.setMotion(motion, eco, hoverConfig(hoverValues, eco, reduced, crisp));
+  }, [director, motion, hoverValues, eco, reduced, crisp]);
   useLayoutEffect(() => {
     if (fanMounted) director.wake();
   }, [director, fanMounted]);

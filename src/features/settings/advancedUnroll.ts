@@ -7,7 +7,8 @@
  * its side spring (2.5 %, 560 ms); the chevron turns 180° on the vertical spring; the rows come
  * one by one (45 ms, −10 px, opacity in 260 ms); a soft halo (not in Eco); what is below the
  * section slides down with the shell. Closing: 220 ms, the « disparition » curve, no bounce, no
- * cascade. Reduced motion: no animation at all.
+ * cascade. Reduced motion: no animation at all. « Mouvement : Net » (review A5): the same steps on
+ * the entrance curve, no spring.
  */
 import { EASES } from "../../design/motion/eases";
 import { linearCss, ROW_SPRING, SPRING_H, SPRING_V } from "../../design/motion/springCurves";
@@ -21,16 +22,26 @@ export interface Step {
   options: KeyframeAnimationOptions & { delay: number; duration: number };
 }
 
-const V = linearCss(SPRING_V.normale);
-const H = linearCss(SPRING_H.normale);
-const ROW = linearCss(ROW_SPRING);
+const SV = linearCss(SPRING_V.normale);
+const SH = linearCss(SPRING_H.normale);
+const SROW = linearCss(ROW_SPRING);
 
 function at(delay: number, duration: number, easing: string, speed: number) {
   return { delay: delay / speed, duration: duration / speed, easing, fill: "backwards" as const };
 }
 
-/** Opening of `rows` rows; `belowDy`: how far what follows the section moved down (px). */
-export function openSteps(rows: number, belowDy: number, eco: boolean, speed = 1): Step[] {
+/**
+ * Opening of `rows` rows; `belowDy`: how far what follows the section moved down (px); `crisp`:
+ * « Mouvement : Net », every spring on the entrance curve.
+ */
+export function openSteps(
+  rows: number,
+  belowDy: number,
+  eco: boolean,
+  speed = 1,
+  crisp = false,
+): Step[] {
+  const [V, H, ROW] = crisp ? [EASES.vive!, EASES.vive!, EASES.vive!] : [SV, SH, SROW];
   const steps: Step[] = [
     {
       target: "hull",
@@ -103,6 +114,26 @@ export function closeSteps(height: number, speed = 1): Step[] {
     fold([{ opacity: 1 }, { opacity: 0 }], "halo"),
     fold([{ transform: "translateY(0px)" }, { transform: `translateY(${-height}px)` }], "below"),
   ];
+}
+
+/** Where things sit in the panel that scrolls (px, client coordinates, before any animation). */
+export interface RevealBox {
+  viewTop: number;
+  viewBottom: number;
+  /** Top of the section's header row. */
+  headTop: number;
+  /** Bottom of what must be seen under the section (« Revenir aux réglages par défaut »). */
+  endBottom: number;
+}
+
+/**
+ * How far the panel scrolls once the section is open (review A1): enough to show what follows it,
+ * never so far that the header leaves the top (the shell is seen unrolling from it). 0 = stay.
+ */
+export function revealScroll(b: RevealBox): number {
+  const need = b.endBottom + U.revealPad - b.viewBottom;
+  const cap = b.headTop - b.viewTop - U.revealTop;
+  return Math.max(0, Math.min(need, cap));
 }
 
 /** How long the closed content stays mounted (its fold). */

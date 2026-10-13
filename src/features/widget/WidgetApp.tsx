@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { announceReady, useWindowShown } from "../../app/useWindowShown";
 import { useTheme } from "../../design";
 import { useMotionTokens } from "../../design/motion/current";
+import { isEco } from "../../design/quality";
 import type { AppEntry, SceneFile } from "../../ipc/bindings";
 import { desktopIpc } from "../../ipc/commands";
 import { doneCount, hubStore, useDesktop, useHub, useScenes } from "../../store";
@@ -41,7 +42,7 @@ export function WidgetApp() {
   }, [themeId, setThemeId]);
 
   const hideOnEscape = settings?.hideOnEscape ?? true;
-  const eco = settings?.quality === "eco";
+  const eco = isEco(settings?.quality);
   const motion = useMotionTokens().widget;
   // Round 4b: the glass unrolls when the panel opens; it stays mounted while it folds.
   const presence = useUnroll(open, { panel, bar }, fitNow, eco);

@@ -81,6 +81,20 @@ describe("fan hover and floating (round 3b, part B)", () => {
     }
   });
 
+  it("« Flottaison : Aucune »: no frame loop while nothing is hovered (review A4b)", () => {
+    const m = new FanMotion(hoverConfig({ on: true, float: "none" }, false, false));
+    expect(m.config.floatHover).toBeGreaterThan(0);
+    expect(m.busy(0)).toBe(false);
+    m.setHover(1, true, 0);
+    expect(m.busy(500)).toBe(true);
+  });
+
+  it("« Mouvement : Net »: no spring, burst, threads nor sparks; lift and floating stay (A5)", () => {
+    const c = hoverConfig({ on: true }, false, false, true);
+    expect(c).toMatchObject({ bounce: 0, burst: 0, sparks: 0, threads: false, lift: 12 });
+    expect(c.floatRest).toBe(7);
+  });
+
   it("hover level eases in over hoverMs, the pointer tilt follows, the loop can stop", () => {
     const m = new FanMotion(
       hoverConfig({ on: true, float: "none", floatHover: 0, sway: 0 }, false, false),

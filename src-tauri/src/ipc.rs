@@ -1,5 +1,6 @@
 //! Typed IPC surface: every command and event the interface can use. `builder()` is shared by
-//! the app and by `gen_types`, so the generated `src/ipc/bindings.ts` can never drift.
+//! the app and by `gen_types`, so the generated `src/ipc/bindings.ts` can never drift; only
+//! `npm run gen:types` writes it (a test fails when it is out of date).
 
 use serde::{Deserialize, Serialize};
 use specta::Type;

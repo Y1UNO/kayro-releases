@@ -87,6 +87,7 @@ export function SettingsDialog({ open, onClose }: Props) {
         </nav>
         <div
           className={styles.scroll}
+          data-tab={tab}
           role="tabpanel"
           id={`${ids}-panel`}
           aria-labelledby={`${ids}-tab-${tab}`}

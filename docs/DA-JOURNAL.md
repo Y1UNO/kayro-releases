@@ -1065,6 +1065,43 @@ Les choix protégés sont inchangés par défaut (ouverture V1-A + pulsation C, 
 - « Créer mon thème » et import / export de thèmes.
 - Hors liste des propositions, non faits : petit texte secondaire unifié (`--fs-13`), carte vide 176 × 246, éventail descendu de 60 px, ligne d'aide « Entrée · Échap ».
 
+## Correctifs avant le gel — relecture finale de Fable (2026-10-13)
+Liste de travail : `docs/RELECTURE-FINALE-DA.md` (A1–A11 à corriger, B1–B8 dosages) + A12 (`--quit`). Deux paquets, arrêt après chacun.
+
+### Paquet A — corrections (2026-10-13)
+**Fait** :
+- **A1 Déroulé hors champ** : à l'ouverture, le corps des réglages défile (en douceur ; d'un coup avec « réduire les animations ») juste assez pour montrer « Revenir aux réglages par défaut », **sans jamais faire sortir l'en-tête** (ton choix) : calcul pur `revealScroll()` (`advancedUnroll.ts`), jetons `ADVANCED_UNROLL.revealPad` (24) / `revealTop` (8). Mesuré (volet, page de dev, 1707×960) : en-tête 741 → 207 px (8 px sous le haut du corps), défilement de 534 px ; « Revenir… » reste 191 px sous le bord (avec les ~1,5 dernières lignes), comme choisi.
+- **A2 Impact rogné** : `.scroll { overflow-x: hidden }` ; onglet Thèmes sans conteneur qui coupe (`data-tab`, `@media (min-height: 600px) and (min-width: 1100px)`, sinon il garde le défilement). Écart à la relecture : `Dialog.module.css` coupait aussi (`.settings .body { overflow: hidden }`) → `visible` pour le seul dialogue Réglages. Les étincelles de la colonne de droite et du haut peuvent dépasser un peu du panneau (≤ 27 px, en fondu).
+- **A3 Crayon** : `hoverCardOf()` (`carouselFloat.ts`) vise l'emplacement `[data-app-id]` puis sa carte : le crayon compte comme la carte (filets gardés, flottaison en pause).
+- **A4a** : `Carousel` reçoit `floating={!onFan}` → `carouselFloatConfig(…, active)` met l'amplitude à 0 sous l'éventail (boucle arrêtée, reprise lente au retour). **A4b** : `busy()` de l'éventail ne compte plus `floatHover` au repos : à « Aucune », plus de boucle tant que rien n'est survolé.
+- **A5 « Net »** : drapeau `crisp` dans `openSteps` (coque, chevron, lignes sur `vive`), `themeSwap.easing(name, crisp)` (liaison / rebond / ressort → `vive`, coche sans pic, recul sur `vive`), `hoverConfig(…, crisp)` (ressort, éclat, filets, étincelles coupés ; soulèvement, inclinaison, flottaison gardés), `linkConfig(…, crisp)` (deck sur `vive`, ne dépasse plus sa place). Aide : « … Net : sans rebond ni effet dans le hub ; le widget suit ses propres réglages. »
+- **A6** : « Affichage au lancement » → **« Mode d'affichage »**, aide « Change tout de suite ; c'est aussi le mode au prochain lancement. … » (texte seul).
+- **A7** : `data-hover-off` sur la grille des scènes, `.card:hover:not([data-hover-off] *)`.
+- **A8** : `::view-transition { background: var(--bg-bottom) }` (`themeSwap.css`). Limite : couvre une image de l'ancienne vue **manquante** (transparente), pas une image capturée blanche.
+- **A9** : l'annulation est oubliée dès qu'un réglage Visuel quitte le défaut (état dérivé pendant le rendu ; la remise à zéro est optimiste, donc appliquée dans le même rendu).
+- **A10** : mécanisme prêt (`will-change` sur les boîtes de flottaison pendant que la boucle tourne, retiré à l'arrêt), **désactivé** par le jeton `FLOAT_RHYTHM.promote: false` : pas de mesure possible ici (tu jouais), et la règle veut une mesure. L'éventail garde ses `will-change` (ses cartes bougent aussi pendant la liaison).
+- **A11** : `floatRest` / `floatPeriod` retirés d'`actif.json` ; `settings.themes.label` / `.active` retirés ; info-bulle native retirée de `ThemeCard` ; `rx="26"` ; `isEco(q)` (`design/quality.ts`, via `effectiveQuality`) remplace les 10 tests `quality === "eco"` des écrans : un seul endroit à changer quand « Auto » saura redescendre en Éco (étape 13).
+- **A12 `--quit`** :
+  - **Cause** : `app.exit(0)` ne quitte pas, il dépose une demande dans la file de la boucle d'événements (tao), lue seulement par la boucle principale quand elle est libre. Un fil principal retenu dans une boucle de messages imbriquée ne la lit jamais : le 13/10, deux « asked to quit » et `procwatch` journalisait encore 2 et 5 min après. Le journal ne permettait pas de voir où (aucune ligne après la demande, même quand la fermeture marche).
+  - **Journal** : « quit: asking the event loop to end », « exit requested: the event loop ends », « exit: the event loop ended » ; la garde du journal est rangée (`logging.rs`) et vidée juste avant la sortie (avant, les dernières lignes pouvaient se perdre).
+  - **Filet** (`desktop/quit.rs`, validé) : un fil attend 3 s ; si le processus vit encore → « quit: the event loop did not end, leaving directly », puis `cleanup_before_exit()` (icône retirée) et `std::process::exit(0)`, le repli que Tauri utilise déjà quand sa demande échoue. Rien n'est tué de l'extérieur ; les scripts gardent leur attente de 10 s.
+  - **Aucun fichier coupé** (ta précision) : toutes les écritures passent par `write_atomic` (réglages, apps, scènes, état d'interface, icônes, partages). Verrou `WRITES` (`config/atomic.rs`) : avant toute sortie (boucle ou filet), la porte se ferme, les écritures déjà commencées finissent (2 s au plus), une écriture demandée après ne commence pas (le fichier garde son contenu, personne n'attend pour toujours), puis le journal est vidé. Une seule des deux sorties agit (`LEAVING`).
+- **Hors liste** : `src/ipc/bindings.ts` avait été réécrit à 15:55 par l'ancien exe de débogage (`target/debug/Kayro.exe` du 12/10, d'avant la ronde 5) : types R5 perdus, `tsc` et donc la compilation de l'exe échouaient. Remis à la version commitée (identique à ce qu'exporte le Rust actuel) ; copie de l'ancien gardée hors du dépôt. **Après ton test** : `target\debug\Kayro.exe` (12/10) et `target\debug\hub.exe` (10/10, même écriture), avec leurs copies liées dans `deps\`, supprimés ; aucun raccourci (Bureau, menu Démarrer, Démarrage) ni démarrage automatique ne vise un exe de débogage ; l'export automatique des liaisons au démarrage d'un exe de débogage est retiré (`lib.rs`) : seul `npm run gen:types` écrit `bindings.ts`, et le test `committed_bindings_match_the_rust_types` échoue s'il n'est plus à jour.
+
+**Protocole de l'image blanche (A8, étape 13)** : exe relancé, PC libre, thème connu. (1) Réglages › Thèmes, attendre 0,9 s, cliquer une carte : premier changement de la session. Une fois avec une rafale d'écran Windows seule (aucune capture CDP), une fois avec une capture CDP lancée à 330–400 ms. Recommencer en relançant l'exe à chaque fois (c'est le premier changement qui compte). (2) Preuve du filet : pendant un changement, masquer `::view-transition-old(root)` par une feuille injectée (CDP) et capturer vers 500 ms : hors du cercle, la nuit (`--bg-bottom`), pas du blanc. Si l'image blanche ne vient qu'avec la capture CDP : point clos.
+
+**Testé** :
+- tsc, eslint, prettier (mes fichiers), clippy, `cargo fmt` (3 écarts connus seulement), **vitest 641/641** (+ défilement A1, « Net » sur le déroulé / la carte de thème / l'éventail / le deck, crayon A3, flottaison sous l'éventail A4a, « Aucune » A4b, couches A10), **cargo test 198** (+ porte des écritures : une écriture lente retarde la fermeture puis aucune autre ne commence ; limite atteinte ; une seule sortie).
+- Exe reconstruit (114 s, priorité basse, non lancé).
+- Volet du navigateur (page de dev, 1707×960) : A1 (ci-dessus) ; A2 : onglet Thèmes `overflow: visible`, corps du dialogue `visible`, pendant l'impact d'une carte de la colonne de droite la hauteur visible reste à 616 px (avant : 610, la barre horizontale).
+
+**Non testé** (tu jouais à Roblox : aucun lancement de l'exe) :
+- **A12 en vrai** : `--quit` sur une instance normale, une instance en débogage avec CDP attaché, deux `--quit` de suite ; cause exacte du blocage du 13/10 non reproduite. Le filet et la porte des écritures sont testés en unitaire seulement.
+- **A8** : protocole ci-dessus à faire (étape 13 ou PC libre) ; le filet n'est pas encore prouvé dans l'exe.
+- **A10** : mesure p95 avec / sans couches → étape 13 (jeton `FLOAT_RHYTHM.promote`).
+- A3, A4, A5, A7, A9 : vus seulement par les tests (A9 ne se teste pas dans le volet : sans le cœur, les réglages reviennent en arrière).
+- **Mesures de performance** : aucune (étape 13).
+
 ## Éléments du catalogue
 | Élément | État | Remarque |
 |---|---|---|

@@ -244,6 +244,7 @@ export function HomeScreen({
         onMove={move}
         onLaunch={launch}
         dragging={drag !== null}
+        floating={!onFan}
       />
     );
 

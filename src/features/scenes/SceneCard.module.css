@@ -51,7 +51,8 @@
   box-shadow: none;
 }
 
-.card:hover {
+/* Not with « Survol des cartes : Aucun » (review A7, `data-hover-off` on the grid). */
+.card:hover:not([data-hover-off] *) {
   translate: 0 calc(var(--da-hover-lift, -3px) * var(--m-rm));
 }
 

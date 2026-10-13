@@ -32,7 +32,6 @@ export function ThemeCard({ theme, active, onChoose }: Props) {
       style={style}
       aria-pressed={active}
       aria-label={t("settings.themes.apply", { name: theme.name })}
-      title={theme.description}
       data-active={active ? "" : undefined}
       onClick={(e) => onChoose(theme.id, e.currentTarget)}
     >
@@ -54,7 +53,7 @@ export function ThemeCard({ theme, active, onChoose }: Props) {
         <span className={styles.name}>{theme.name}</span>
       </span>
       <svg className={styles.frame} data-swap="frame" aria-hidden="true">
-        <rect x="1.2" y="1.2" rx="25" pathLength={1} />
+        <rect x="1.2" y="1.2" rx="26" pathLength={1} />
       </svg>
       <span className={styles.sparks} data-swap="sparks" aria-hidden="true">
         {dots.map((d, i) => (

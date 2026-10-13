@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { currentMotion } from "../../design/motion/current";
+import { isEco } from "../../design/quality";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { desktopIpc } from "../../ipc/commands";
 import { onModePassage, onWindowVisibility } from "../../ipc/events";
@@ -23,7 +24,7 @@ const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 
 function plan(): PassagePlan {
-  const eco = hubStore.getState().settings?.quality === "eco";
+  const eco = isEco(hubStore.getState().settings?.quality);
   return passagePlan(currentMotion(), eco, prefersReducedMotion());
 }
 

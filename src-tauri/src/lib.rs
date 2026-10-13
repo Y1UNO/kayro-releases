@@ -31,19 +31,14 @@ fn asks_to_quit<S: AsRef<str>>(args: &[S]) -> bool {
 pub fn run() {
     // Before the logger: it creates the new data folder, which would hide the old one.
     let migration = legacy::migrate_legacy_data(&paths::appdata_base());
-    let _log_guard = logging::init();
+    logging::init();
     legacy::log_outcome(&migration);
     tracing::info!(version = env!("CARGO_PKG_VERSION"), "starting");
 
+    // The TypeScript bindings are written by `npm run gen:types` only, never by a running app: an
+    // old debug exe started by mistake rewrote them with stale types (2026-10-13). The test
+    // `ipc::tests` fails when they drift from the Rust types.
     let ipc = ipc::builder();
-    // Keeps the committed TypeScript bindings in step while developing.
-    #[cfg(debug_assertions)]
-    if let Err(e) = ipc.export(
-        specta_typescript::Typescript::default(),
-        concat!(env!("CARGO_MANIFEST_DIR"), "/../src/ipc/bindings.ts"),
-    ) {
-        tracing::warn!(error = %e, "could not export the TypeScript bindings");
-    }
 
     tauri::Builder::default()
         // Must be the first plugin registered.
@@ -99,15 +94,17 @@ pub fn run() {
         })
         .build(tauri::generate_context!())
         .expect("error while building the application")
-        .run(|_app, event| {
+        .run(|_app, event| match event {
             // The hub lives in the notification area: destroying the last window (economy mode)
             // must not end it. Only the menu's « Quitter » (`app.exit`) does.
-            if let tauri::RunEvent::ExitRequested {
+            tauri::RunEvent::ExitRequested {
                 api, code: None, ..
-            } = event
-            {
-                api.prevent_exit();
-            }
+            } => api.prevent_exit(),
+            tauri::RunEvent::ExitRequested {
+                code: Some(code), ..
+            } => tracing::info!(code, "exit requested: the event loop ends"),
+            tauri::RunEvent::Exit => desktop::on_exit(),
+            _ => {}
         });
 }
 

@@ -54,6 +54,12 @@ export const FLOAT_RHYTHM = {
   pauseMs: 240,
   /** …and comes back to it slowly (after a category sequence, a hover): no jolt (ms, ≈ 95 %). */
   resumeMs: 1200,
+  /**
+   * Review A10: the carousel's float boxes as layers of their own (`will-change`) while the loop
+   * runs, so that the script's transform does not repaint the card. Off until step 13 measures it
+   * useful (p95 with and without, rule « will-change seulement si mesuré utile »).
+   */
+  promote: false,
 } as const;
 
 /**
@@ -75,6 +81,10 @@ export const ADVANCED_UNROLL = {
   /** Closing: the « disparition » curve, no bounce, no cascade. */
   foldMs: 220,
   haloAlpha: 0.22,
+  /** Opened, the panel scrolls to show what follows, with this room under it (px)… */
+  revealPad: 24,
+  /** …but the header row stays this far under the panel's top at least (px). */
+  revealTop: 8,
 } as const;
 
 /**

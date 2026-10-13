@@ -63,9 +63,13 @@ export interface LinkConfig {
 const n = (v: ElementValues | undefined, k: string, d: number) =>
   typeof v?.[k] === "number" ? (v[k] as number) : d;
 
-/** Settings of the `categoryLink` element (defaults = the spec). Eco: no blur. */
-export function linkConfig(v: ElementValues | undefined, eco = false): LinkConfig {
+/**
+ * Settings of the `categoryLink` element (defaults = the spec). Eco: no blur. `crisp` (« Mouvement :
+ * Net », review A5): the deck unfolds on the entrance curve, no spring.
+ */
+export function linkConfig(v: ElementValues | undefined, eco = false, crisp = false): LinkConfig {
   const bounce = SPRINGS[String(v?.spring ?? "liaison")] ?? SPRINGS.liaison!;
+  const entrance = curveOf(EASES.vive!);
   return {
     speed: Math.max(0.1, n(v, "speed", 1)),
     angle: n(v, "angle", 7),
@@ -75,7 +79,7 @@ export function linkConfig(v: ElementValues | undefined, eco = false): LinkConfi
     turn: curveOf(EASES[String(v?.turnEase ?? "bascule")] ?? EASES.bascule!),
     blur: eco ? 0 : n(v, "blur", 6),
     unfoldMs: n(v, "unfoldMs", 700),
-    spring: (t) => springAt(t, bounce),
+    spring: crisp ? entrance : (t) => springAt(t, bounce),
     stagger: n(v, "stagger", 70),
     regroup: n(v, "regroup", 380),
   };

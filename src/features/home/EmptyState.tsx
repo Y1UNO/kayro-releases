@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useMotionTokens } from "../../design/motion/current";
 import { useAmbientLoop } from "../../design/motion/useAmbientLoop";
+import { isEco } from "../../design/quality";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { t } from "../../i18n";
 import { useHub } from "../../store";
@@ -21,7 +22,7 @@ export function EmptyState({ scope, onAdd }: Props) {
   const key = scope === "all" ? "home.empty.noApps" : "home.empty.noAppsInCategory";
   const card = useRef<HTMLButtonElement>(null);
   const motion = useMotionTokens();
-  const eco = useHub((s) => s.settings?.quality === "eco");
+  const eco = useHub((s) => isEco(s.settings?.quality));
   const { emptyFloat, floatPeriod } = motion.states;
   const floats = !eco && !prefersReducedMotion() && motion.levels[1] && emptyFloat > 0;
   useAmbientLoop(floats, (now) => {

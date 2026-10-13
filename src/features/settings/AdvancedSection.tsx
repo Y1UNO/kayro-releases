@@ -4,6 +4,7 @@ import { ChevronDownIcon } from "../../design/icons";
 import { useMotionTokens } from "../../design/motion/current";
 import { usePresence } from "../../design/motion/usePresence";
 import type { CardHoverStyle, FloatName } from "../../design/motion/tokens5";
+import { isEco } from "../../design/quality";
 import { useReducedMotion } from "../../fx/useReducedMotion";
 import { t } from "../../i18n";
 import type {
@@ -14,13 +15,27 @@ import type {
   WidgetUnroll,
 } from "../../ipc/bindings";
 import { hubStore, useHub } from "../../store";
-import { closeSteps, foldMs, openSteps, type Step } from "./advancedUnroll";
+import { closeSteps, foldMs, openSteps, revealScroll, type Step } from "./advancedUnroll";
 import { ChoiceRow, ToggleRow } from "./SettingRow";
 import styles from "./Settings.module.css";
 
 interface Props {
   /** What follows the section (slides down / up with it). */
   below: RefObject<HTMLElement | null>;
+}
+
+/** The panel that scrolls and how far, to show the opened section (review A1); null: it stays. */
+function revealBy(head: HTMLElement | null, end: HTMLElement | null) {
+  const scroller = head?.closest<HTMLElement>("[role=tabpanel]");
+  if (!head || !end || !scroller) return null;
+  const view = scroller.getBoundingClientRect();
+  const top = revealScroll({
+    viewTop: view.top,
+    viewBottom: view.bottom,
+    headTop: head.getBoundingClientRect().top,
+    endBottom: end.getBoundingClientRect().bottom,
+  });
+  return top > 0 ? { scroller, top } : null;
 }
 
 const opts = <T extends string>(key: string, values: readonly T[]) =>
@@ -36,19 +51,23 @@ const opts = <T extends string>(key: string, values: readonly T[]) =>
  */
 export function AdvancedSection({ below }: Props) {
   const settings = useHub((s) => s.settings);
-  const eco = useHub((s) => s.settings?.quality === "eco");
+  const eco = useHub((s) => isEco(s.settings?.quality));
   const reduced = useReducedMotion();
-  const speed = useMotionTokens().speed;
+  const { speed, style } = useMotionTokens();
+  const crisp = style === "crisp";
   const [open, setOpen] = useState(false);
   const presence = usePresence(open, reduced ? 0 : foldMs(speed));
   const regionId = useId();
   const box = useRef<HTMLDivElement>(null);
+  const head = useRef<HTMLButtonElement>(null);
   const chevron = useRef<HTMLSpanElement>(null);
   const beforeTop = useRef<number | null>(null);
   const height = useRef(0);
 
   useLayoutEffect(() => {
     const region = box.current;
+    const before = beforeTop.current;
+    beforeTop.current = null;
     const els = {
       hull: region?.querySelector<HTMLElement>("[data-adv=hull]") ?? null,
       inner: region?.querySelector<HTMLElement>("[data-adv=inner]") ?? null,
@@ -60,22 +79,25 @@ export function AdvancedSection({ below }: Props) {
     const rows = [...(region?.querySelectorAll<HTMLElement>("[data-row]") ?? [])];
     const all = [...Object.values(els), ...rows].filter((e): e is HTMLElement => e !== null);
     for (const el of all) for (const a of el.getAnimations()) a.cancel();
-    const before = beforeTop.current;
-    beforeTop.current = null;
-    if (reduced || before === null) return;
+    if (before === null) return;
+    // Opened by a click: the panel will scroll so that the drop-down is seen (review A1),
+    // measured now that nothing is moved by an animation.
+    const by = presence === "in" ? revealBy(head.current, below.current ?? region) : null;
     const play = (steps: Step[]) => {
       for (const s of steps) {
         const el = typeof s.target === "string" ? els[s.target] : rows[s.target.row];
         el?.animate(s.keyframes, s.options);
       }
     };
-    if (presence === "in" && region) {
+    // Reduced motion: nothing moves, only the scroll (at once).
+    if (!reduced && presence === "in" && region) {
       height.current = region.offsetHeight;
       const dy = (below.current?.getBoundingClientRect().top ?? before) - before;
-      play(openSteps(rows.length, dy, eco, speed));
-    } else if (presence === "out") {
+      play(openSteps(rows.length, dy, eco, speed, crisp));
+    } else if (!reduced && presence === "out") {
       play(closeSteps(height.current, speed));
     }
+    if (by) by.scroller.scrollBy({ top: by.top, behavior: reduced ? "auto" : "smooth" });
     // `presence` alone drives it: a re-render for another reason must not replay anything.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presence]);
@@ -91,6 +113,7 @@ export function AdvancedSection({ below }: Props) {
   return (
     <div className={styles.advanced}>
       <button
+        ref={head}
         type="button"
         className={styles.advancedHead}
         aria-expanded={open}

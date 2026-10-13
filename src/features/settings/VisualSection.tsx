@@ -43,6 +43,10 @@ export function VisualSection() {
     };
   }, []);
 
+  // A Visuel choice left the defaults after the reset: « Annuler » would undo it too (review A9).
+  // Derived state, dropped during render (the reset itself is applied at once: optimistic store).
+  if (undo && settings && !isVisualDefault(settings)) setUndo(null);
+
   if (!settings) return null;
   const set = (patch: SettingsPatch) => void hubStore.getState().setSettings(patch);
 

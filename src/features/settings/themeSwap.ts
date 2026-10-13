@@ -31,13 +31,21 @@ export function swapWay(c: SwapContext): { way: SwapWay; card: boolean } {
   return { way: "wave", card: true };
 }
 
-/** A curve of the token table by name, or a written `cubic-bezier(…)`. */
-export function easing(name: string): string {
+/** The springs that « Mouvement : Net » replaces by the entrance curve (review A5). */
+const SPRING_EASES = new Set(["liaison", "rebond", "ressort"]);
+
+/** A curve of the token table by name, or a written `cubic-bezier(…)`; `crisp`: no overshoot. */
+export function easing(name: string, crisp = false): string {
+  if (crisp && SPRING_EASES.has(name)) return EASES.vive!;
   return EASES[name] ?? name;
 }
 
 /** The card's rise, squash and settle (one animation, 720 ms at speed 1) with its depth. */
-export function cardKeyframes(): { transform: Keyframe[]; filter: Keyframe[]; ms: number } {
+export function cardKeyframes(crisp = false): {
+  transform: Keyframe[];
+  filter: Keyframe[];
+  ms: number;
+} {
   const end = S.settle.at + S.settle.ms;
   const o = (t: number) => t / end;
   const rise = `translateY(${S.rise.y}px) scale(${S.rise.scale})`;
@@ -49,7 +57,7 @@ export function cardKeyframes(): { transform: Keyframe[]; filter: Keyframe[]; ms
     squash: "drop-shadow(0px 3px 6px rgba(0, 0, 0, 0.42))",
   };
   const at = [0, o(S.squash.at), o(S.impact), 1];
-  const eases = [easing(S.rise.ease), easing(S.squash.ease), easing(S.settle.ease)];
+  const eases = [S.rise.ease, S.squash.ease, S.settle.ease].map((e) => easing(e, crisp));
   const frames = (values: string[], prop: "transform" | "filter"): Keyframe[] =>
     values.map((v, i) => ({ offset: at[i], [prop]: v, easing: eases[i] ?? "linear" }));
   return {

@@ -45,7 +45,7 @@
       },
       "motion": {
         "label": "Mouvement",
-        "help": "Vivant : la magie au survol des cartes et au lancement d’une app. Complet : partout, même en fenêtre. Net : sans rebond ni effet.",
+        "help": "Vivant : la magie au survol des cartes et au lancement d’une app. Complet : partout, même en fenêtre. Net : sans rebond ni effet dans le hub ; le widget suit ses propres réglages.",
         "complete": "Complet",
         "lively": "Vivant",
         "crisp": "Net"
@@ -55,8 +55,8 @@
         "help": "Respecte « Effets d’animation » de Windows. Désactivé, {app} anime toujours."
       },
       "launch": {
-        "label": "Affichage au lancement",
-        "help": "Immersif : sans bordure, à la taille de l’écran. Fenêtre : classique. Widget : une barre en haut de l’écran, toujours au premier plan."
+        "label": "Mode d’affichage",
+        "help": "Change tout de suite ; c’est aussi le mode au prochain lancement. Immersif : sans bordure, à la taille de l’écran. Fenêtre : classique. Widget : une barre en haut de l’écran, toujours au premier plan."
       },
       "screen": {
         "label": "Écran du mode immersif",
@@ -111,8 +111,6 @@
       }
     },
     "themes": {
-      "label": "Thème",
-      "active": "actif",
       "apply": "Thème {name}"
     }
   }

@@ -65,30 +65,36 @@ export interface HoverConfig {
 const num = (v: ElementValues | undefined, k: string, d: number) =>
   typeof v?.[k] === "number" ? (v[k] as number) : d;
 
-/** Settings (defaults of the catalogue). Reduced motion: no floating, no motion at all. */
+/**
+ * Settings (defaults of the catalogue). Reduced motion: no floating, no motion at all. `crisp`
+ * (« Mouvement : Net », review A5): no spring, no burst, no threads nor sparks; the lift, the tilt
+ * and the floating stay.
+ */
 export function hoverConfig(
   v: ElementValues | undefined,
   eco: boolean,
   reduced: boolean,
+  crisp = false,
 ): HoverConfig {
   const off = v?.on === false;
   const level = floatLevel(v?.float);
   const sparks = Math.min(MAX_SPARKS, Math.max(0, Math.round(num(v, "sparks", 12))));
+  const noMagic = off || reduced || crisp;
   return {
     hoverMs: reduced ? 0 : num(v, "hoverMs", 240),
-    bounce: reduced ? 0 : (SPRINGS[String(v?.hoverSpring ?? "leger")] ?? 0),
-    burst: off || reduced ? 0 : num(v, "burst", 0.8),
+    bounce: reduced || crisp ? 0 : (SPRINGS[String(v?.hoverSpring ?? "leger")] ?? 0),
+    burst: noMagic ? 0 : num(v, "burst", 0.8),
     lift: off || reduced ? 0 : num(v, "lift", 12),
     tilt: off || reduced ? 0 : Math.min(3, num(v, "tilt", 3)),
     grow: off || reduced ? 0 : num(v, "grow", 0.03),
-    threads: !off && v?.threads !== false,
+    threads: !off && !crisp && v?.threads !== false,
     threadSpeed: reduced ? 0 : num(v, "threadSpeed", 0.25),
     threadIntensity: num(v, "threadIntensity", 1.8),
     threadLength: num(v, "threadLength", 0.2),
     threadWidth: num(v, "threadWidth", 2.2),
     threadGlow: num(v, "threadGlow", 0.9),
     // Eco: half the sparks (30 images/s already).
-    sparks: off || reduced ? 0 : eco ? Math.ceil(sparks / 2) : sparks,
+    sparks: noMagic ? 0 : eco ? Math.ceil(sparks / 2) : sparks,
     sparkSize: num(v, "sparkSize", 2.4),
     floatRest: off || reduced ? 0 : level.fan,
     floatTilt: level.tilt,
@@ -280,10 +286,13 @@ export class FanMotion {
   /** Something still changes (the frame loop must go on). */
   busy(now: number): boolean {
     const c = this.config;
-    if (c.floatRest > 0 || c.floatHover > 0) return true;
+    // « Flottaison : Aucune »: nothing moves at rest (review A4b); the hover floating only counts
+    // on a hovered card.
+    if (c.floatRest > 0) return true;
     for (let i = 0; i < FAN_SIZE; i++) {
       const tw = this.levels[i]!;
-      if (tw.to > 0 && (c.threads || c.sparks > 0 || c.sway > 0) && !c.reduced) return true;
+      const moves = c.threads || c.sparks > 0 || c.sway > 0 || c.floatHover > 0;
+      if (tw.to > 0 && moves && !c.reduced) return true;
       if (now - tw.start < c.hoverMs) return true;
       const t = this.tilt[i]!;
       if (Math.abs(t.x - t.tx) > 1e-3 || Math.abs(t.y - t.ty) > 1e-3) return true;

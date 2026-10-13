@@ -18,3 +18,11 @@ export function applyQuality(quality: Quality): void {
 export function effectiveQuality(q: Quality | "auto" | null | undefined): Quality {
   return q === "auto" ? "high" : (q ?? "balanced");
 }
+
+/**
+ * Whether the level drawn is Eco: what the scripts test (review A11). Through `effectiveQuality`,
+ * the one place to change when « Auto » learns to go down to Eco (step 13).
+ */
+export function isEco(q: Quality | "auto" | null | undefined): boolean {
+  return effectiveQuality(q) === "eco";
+}

@@ -12,6 +12,7 @@ pub mod hotkeys;
 mod modes;
 pub mod passage;
 mod placement;
+mod quit;
 mod shortcuts;
 pub mod tray;
 mod veil_play;
@@ -20,6 +21,7 @@ mod windows;
 pub use modes::settings_changed;
 use placement::save_placement;
 pub use placement::{choose_immersive_screen, fit_widget, screen_names};
+pub use quit::{on_exit, quit};
 pub use shortcuts::{on_hotkey, scenes_changed, take_pending_scene, trigger_scene};
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -300,19 +302,6 @@ pub fn toggle<R: Runtime>(app: &AppHandle<R>) {
         }
         None => show(app),
     }
-}
-
-/// « Quitter »: remembers the placement, then ends the process.
-pub fn quit<R: Runtime>(app: &AppHandle<R>) {
-    if let Some(w) = windows::visible(app) {
-        let mode = if w.label() == WIDGET {
-            DisplayMode::Widget
-        } else {
-            settings(app).display_mode
-        };
-        save_placement(app, &w, mode);
-    }
-    app.exit(0);
 }
 
 /// Called by the page after its first paint. True when the window was shown because of a

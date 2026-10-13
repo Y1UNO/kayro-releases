@@ -93,6 +93,12 @@
   flex-direction: column;
 }
 
+/* Settings: its body scrolls by itself (Settings.module.css .scroll); nothing clips here, so a
+   theme card's impact may go past the column (review A2). */
+.settings .body {
+  overflow: visible;
+}
+
 @keyframes scrim-in {
   from {
     opacity: 0;
