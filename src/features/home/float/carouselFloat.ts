@@ -193,11 +193,13 @@ export class CarouselFloat {
         if (b.el.style.transform) this.rest(b);
         continue;
       }
-      // Each app its own period factor, start and rocking side (its id's seed).
+      // Each app its own period factor, start and rocking side (its id's seed). The active card
+      // (the one read) floats less (review B3).
+      const amp = c.amp * (b.slot.dataset.active !== undefined ? R.activeGain : 1);
       const f = floatAt(
         b.key,
         now,
-        c.amp * b.gain,
+        amp * b.gain,
         c.tilt * b.gain,
         c.period,
         seed(b.key, 2) * c.period,

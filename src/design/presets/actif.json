@@ -278,7 +278,7 @@
       "threadGlow": 0.9,
       "sparks": 12,
       "sparkSize": 2.4,
-      "floatHover": 6,
+      "floatHoverGain": 1.15,
       "sway": 2,
       "swayPeriod": 3.6
     },

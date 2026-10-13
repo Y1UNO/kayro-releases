@@ -163,7 +163,8 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       range("sparkSize", 0.8, 5, 0.1, 2.4, "px"),
       // Round 5: « Flottaison des cartes » of the settings (levels in tokens5.ts, fan and carousel).
       userSelect("float", FLOAT_NAMES, "visible"),
-      range("floatHover", 0, 12, 0.5, 6, "px"),
+      // Review B3: the hovered card floats × this (was a fixed px value, dead from « Visible » on).
+      range("floatHoverGain", 1, 1.6, 0.05, 1.15),
       // Hovered card: slow pivot left / right (vertical axis), within the 3° tilt.
       range("sway", 0, 3, 0.1, 2, "°"),
       range("swayPeriod", 1.5, 8, 0.1, 3.6, "s"),

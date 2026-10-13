@@ -266,6 +266,12 @@ void main() {
 }
 `;
 
+/**
+ * Weights of a bokeh's sprite (round 5): a soft disc and a thin ring. Review B7, less « bubble »,
+ * more disc: 0.55 / 0.45 → 0.7 / 0.3 (the intensity, 0.09, unchanged).
+ */
+export const BOKEH_SPRITE = { disc: 0.7, ring: 0.3 } as const;
+
 export const SPRITE_FRAGMENT = `#version 300 es
 precision mediump float;
 in vec2 vUv;
@@ -286,7 +292,7 @@ void main() {
     col = mix(vC.rgb, uStar, core);
   } else {
     // Bokeh (round 5): a soft disc and a thin ring, like a real lens bokeh (no hard rim).
-    a = 0.55 * exp(-r * r * 2.2) + 0.45 * smoothstep(0.80, 0.93, r) * (1.0 - smoothstep(0.95, 1.0, r));
+    a = ${BOKEH_SPRITE.disc.toFixed(2)} * exp(-r * r * 2.2) + ${BOKEH_SPRITE.ring.toFixed(2)} * smoothstep(0.80, 0.93, r) * (1.0 - smoothstep(0.95, 1.0, r));
   }
   a *= vA;
   outColor = vec4(col * a, a);

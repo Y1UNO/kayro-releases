@@ -43,9 +43,9 @@ describe("bokeh (round 5, proposal 1)", () => {
     }
   });
 
-  it("is drawn as a soft disc and a thin ring (no flat disc with a hard rim)", () => {
+  it("is drawn as a soft disc and a thin ring, the disc first (review B7)", () => {
     expect(SPRITE_FRAGMENT).toContain(
-      "a = 0.55 * exp(-r * r * 2.2) + 0.45 * smoothstep(0.80, 0.93, r) * (1.0 - smoothstep(0.95, 1.0, r));",
+      "a = 0.70 * exp(-r * r * 2.2) + 0.30 * smoothstep(0.80, 0.93, r) * (1.0 - smoothstep(0.95, 1.0, r));",
     );
     expect(SPRITE_FRAGMENT).not.toContain("smoothstep(1.0, 0.86, r)");
   });

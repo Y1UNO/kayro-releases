@@ -46,6 +46,10 @@ describe("contrast model matches tokens.css", () => {
     expect(norm(token("--panel-bg"))).toContain(`var(--bg-mid)${MODEL.panelMix * 100}%`);
   });
 
+  it("the dark end of the card faces (review B5)", () => {
+    expect(Number(token("--face-foot"))).toBe(MODEL.faceFoot);
+  });
+
   it("glass filter brightness", () => {
     expect(css).toContain(`brightness(${MODEL.glassBrightness})`);
   });

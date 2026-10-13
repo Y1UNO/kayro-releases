@@ -15,6 +15,7 @@ import type { ElementValues } from "../../../design/da/daParams";
 import { springAt, SPRINGS } from "../../../design/glass/pillMotion";
 import { curveOf, lerp } from "../../../design/motion/curve";
 import { EASES } from "../../../design/motion/eases";
+import { FLOAT_RHYTHM } from "../../../design/motion/tokens5";
 import { floatAt, floatLevel, seed } from "../float/cardFloat";
 import { FAN_SIZE } from "./fanTimeline";
 
@@ -54,7 +55,10 @@ export interface HoverConfig {
   /** Floating at rest (px, ±), its rocking (deg, ±) and period (ms): the settings' level. */
   floatRest: number;
   floatTilt: number;
-  floatHover: number;
+  /** Hovered, the card floats × this (review B3: was a fixed 6 px, dead from « Visible » on). */
+  floatHoverGain: number;
+  /** Hovered, it sways sideways (px, ±); none at « Aucune » (review B3). */
+  drift: number;
   floatPeriod: number;
   /** Hovered card: slow pivot left / right round a vertical axis (deg, within the 3° tilt). */
   sway: number;
@@ -98,7 +102,8 @@ export function hoverConfig(
     sparkSize: num(v, "sparkSize", 2.4),
     floatRest: off || reduced ? 0 : level.fan,
     floatTilt: level.tilt,
-    floatHover: off || reduced ? 0 : num(v, "floatHover", 6),
+    floatHoverGain: num(v, "floatHoverGain", 1.15),
+    drift: off || reduced || level.fan <= 0 ? 0 : FLOAT_RHYTHM.fanHoverDrift,
     floatPeriod: level.period,
     sway: off || reduced ? 0 : Math.min(3, num(v, "sway", 2)),
     swayPeriod: Math.max(1, num(v, "swayPeriod", 3.6)) * 1000,
@@ -291,7 +296,7 @@ export class FanMotion {
     if (c.floatRest > 0) return true;
     for (let i = 0; i < FAN_SIZE; i++) {
       const tw = this.levels[i]!;
-      const moves = c.threads || c.sparks > 0 || c.sway > 0 || c.floatHover > 0;
+      const moves = c.threads || c.sparks > 0 || c.sway > 0;
       if (tw.to > 0 && moves && !c.reduced) return true;
       if (now - tw.start < c.hoverMs) return true;
       const t = this.tilt[i]!;
@@ -325,7 +330,7 @@ export class FanMotion {
   sample(i: number, now: number): FanMotionSample {
     const c = this.config;
     const h = this.level(i, now);
-    const amp = lerp(c.floatRest, Math.max(c.floatRest, c.floatHover), h);
+    const amp = c.floatRest * lerp(1, c.floatHoverGain, h);
     const f = floatAt(i, now, amp, c.floatTilt, c.floatPeriod);
     const t = this.tilt[i]!;
     // Hovered, the card floats: it pivots slowly left and right round a vertical axis, rocks a
@@ -334,7 +339,7 @@ export class FanMotion {
     const sway = c.sway * h * Math.sin(w + seed(i, 6) * 6.28);
     const clamp3 = (x: number) => Math.max(-3, Math.min(3, x));
     // Hovered, it also drifts a little sideways (round 3b), on a slower rhythm of its own.
-    const drift = 0.66 * c.floatHover * h * Math.sin((w * 0.5) / 1.3 + seed(i, 4) * 6.28);
+    const drift = c.drift * h * Math.sin((w * 0.5) / 1.3 + seed(i, 4) * 6.28);
     return {
       dx: drift,
       dy: f.dy,

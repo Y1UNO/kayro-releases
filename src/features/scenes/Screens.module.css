@@ -9,7 +9,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  /* Review B8: no gap under the bar (was --space-4, 16 px), so that the small title sits at the
+     height of the home screen's « CATÉGORIE » (≈ 97 px at 1707 × 960). */
+  gap: 0;
   box-sizing: border-box;
   height: 100%;
   padding: 24px var(--space-14) 0;

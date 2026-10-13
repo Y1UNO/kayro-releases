@@ -14,6 +14,16 @@ import type { Theme } from "./theme";
  *    are not covered by this test (limit reported in ROADMAP).
  *  - not modelled: saturate(190%) (changes chroma more than luminance), the vignette (only darkens).
  */
+/** `--face-foot` (tokens.css): the dark end of a face's gradient, × its colour (review B5). */
+const FACE_FOOT = 0.28;
+/**
+ * How far along a face's gradient (towards its dark end at 85 %) a name sits: × 0.37 under a fan
+ * card's name and × 0.3 at the top-left of an app plate's text when the foot was 0.2.
+ */
+const FAN_NAME_AT = 0.7875;
+const APP_PLATE_AT = 0.875;
+const faceAt = (along: number) => 1 - along * (1 - FACE_FOOT);
+
 export const MODEL = {
   text: "#f6efe8",
   text2: "rgba(246,239,232,.88)",
@@ -32,20 +42,21 @@ export const MODEL = {
   tooltip: "rgba(20,14,28,.94)",
   /** Dialog panel (round 5, `--panel-bg`): the theme's middle background at this opacity. */
   panelMix: 0.92,
+  faceFoot: FACE_FOOT,
   /**
    * Face of a category card (CategoryFan.module.css), at the top-left of its name (round 5): the
-   * A → B colour darkened by the face's gradient there (× 0.37), the fill opacity, then the foot
-   * shade (black at .29 at that height).
+   * A → B colour darkened by the face's gradient there (× 0.43 with the foot at 0.28), the fill
+   * opacity, then the foot shade (black at .29 at that height).
    */
-  faceGradAtName: 0.37,
+  faceGradAtName: faceAt(FAN_NAME_AT),
   faceFill: 0.85,
   faceShadeAtName: 0.29,
   /**
    * Face of an app card without a poster (AppCardFace.module.css), at the left end of its name
-   * plate: the colour × 0.3, the foot shade there (.4 × the face's .85), then the plate's own
-   * white (.12, as the glass).
+   * plate: the colour × 0.37 (foot at 0.28), the foot shade there (.4 × the face's .85), then the
+   * plate's own white (.12, as the glass).
    */
-  appFaceAtPlate: 0.3,
+  appFaceAtPlate: faceAt(APP_PLATE_AT),
   appFaceShade: 0.34,
 } as const;
 

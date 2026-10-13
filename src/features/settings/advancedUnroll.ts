@@ -111,7 +111,7 @@ export function closeSteps(height: number, speed = 1): Step[] {
       ...fold([{ transform: "rotate(180deg)" }, { transform: "rotate(0deg)" }], "chevron"),
       options: { delay: 0, duration: U.foldMs / speed, easing: out, fill: "none" },
     },
-    fold([{ opacity: 1 }, { opacity: 0 }], "halo"),
+    fold([{ opacity: U.haloAlpha }, { opacity: 0 }], "halo"),
     fold([{ transform: "translateY(0px)" }, { transform: `translateY(${-height}px)` }], "below"),
   ];
 }

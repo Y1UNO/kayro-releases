@@ -23,7 +23,7 @@ describe("fan hover and floating (round 3b, part B)", () => {
 
   it("reduced motion: no floating, no lift, no tilt, no sparks, threads still", () => {
     const r = hoverConfig(undefined, false, true);
-    expect(r).toMatchObject({ lift: 0, tilt: 0, grow: 0, sparks: 0, floatRest: 0, floatHover: 0 });
+    expect(r).toMatchObject({ lift: 0, tilt: 0, grow: 0, sparks: 0, floatRest: 0, drift: 0 });
     expect(r.hoverMs).toBe(0);
     expect(threadPhase(1234, 0.5, true)).toBe(threadPhase(99999, 0.5, true));
   });
@@ -83,10 +83,22 @@ describe("fan hover and floating (round 3b, part B)", () => {
 
   it("« Flottaison : Aucune »: no frame loop while nothing is hovered (review A4b)", () => {
     const m = new FanMotion(hoverConfig({ on: true, float: "none" }, false, false));
-    expect(m.config.floatHover).toBeGreaterThan(0);
+    expect(m.config.drift).toBe(0);
     expect(m.busy(0)).toBe(false);
     m.setHover(1, true, 0);
     expect(m.busy(500)).toBe(true);
+  });
+
+  it("hovered, a card floats × 1.15 of its level and sways 4 px, none at « Aucune » (B3)", () => {
+    const visible = hoverConfig({ on: true }, false, false);
+    expect(visible).toMatchObject({ floatRest: 7, floatHoverGain: 1.15, drift: 4 });
+    const m = new FanMotion(visible);
+    m.setHover(0, true, 0);
+    let peak = 0;
+    for (let t = 400; t <= 20000; t += 16) peak = Math.max(peak, Math.abs(m.sample(0, t).dy));
+    expect(peak).toBeGreaterThan(7.5);
+    expect(peak).toBeLessThanOrEqual(7 * 1.15 + 1e-6);
+    expect(hoverConfig({ on: true, float: "none" }, false, false).drift).toBe(0);
   });
 
   it("« Mouvement : Net »: no spring, burst, threads nor sparks; lift and floating stay (A5)", () => {
@@ -96,9 +108,7 @@ describe("fan hover and floating (round 3b, part B)", () => {
   });
 
   it("hover level eases in over hoverMs, the pointer tilt follows, the loop can stop", () => {
-    const m = new FanMotion(
-      hoverConfig({ on: true, float: "none", floatHover: 0, sway: 0 }, false, false),
-    );
+    const m = new FanMotion(hoverConfig({ on: true, float: "none", sway: 0 }, false, false));
     expect(m.busy(0)).toBe(false);
     expect(m.floatingOnly(0)).toBe(true);
     m.setHover(2, true, 0);

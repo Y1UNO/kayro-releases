@@ -54,6 +54,13 @@ export const FLOAT_RHYTHM = {
   pauseMs: 240,
   /** …and comes back to it slowly (after a category sequence, a hover): no jolt (ms, ≈ 95 %). */
   resumeMs: 1200,
+  /** The carousel's active card (the one read, plate and pencil) floats less (review B3; was 1). */
+  activeGain: 0.7,
+  /**
+   * The fan's hovered card sways sideways this much (px, ±), none at « Aucune » (review B3; was
+   * 0.66 × `floatHover` 6 = 3.96, at every level).
+   */
+  fanHoverDrift: 4,
   /**
    * Review A10: the carousel's float boxes as layers of their own (`will-change`) while the loop
    * runs, so that the script's transform does not repaint the card. Off until step 13 measures it
@@ -73,14 +80,16 @@ export const ADVANCED_UNROLL = {
   vMs: 680,
   hMs: 560,
   hullFade: 60,
-  rowAt: 50,
-  rowStep: 45,
+  /** Review B4: a cascade that ends with the shell (was 50 / 45: the last row 300 ms late). */
+  rowAt: 40,
+  rowStep: 32,
   rowRise: 10,
   rowFade: 260,
   rowMs: 520,
   /** Closing: the « disparition » curve, no bounce, no cascade. */
   foldMs: 220,
-  haloAlpha: 0.22,
+  /** The halo while open (review B4: was 0.22, unseen at rest). */
+  haloAlpha: 0.3,
   /** Opened, the panel scrolls to show what follows, with this room under it (px)… */
   revealPad: 24,
   /** …but the header row stays this far under the panel's top at least (px). */
@@ -101,12 +110,16 @@ export const THEME_SWAP = {
   settle: { at: 380, ms: 340, ease: "liaison" },
   sheen: { at: 60, ms: 620, ease: "cubic-bezier(0.45, 0, 0.25, 1)" },
   moon: { at: 370, ms: 560, glow: 2.4, scale: 1.06 },
-  shock: { at: 380, ms: 620, spread: 18, halo: 40, alpha: 0.85, ease: "vive" },
+  /** Review B2 (onde de choc, pas une lueur): halo 40 → 28, alpha 0.85 → 0.7. */
+  shock: { at: 380, ms: 620, spread: 18, halo: 28, alpha: 0.7, ease: "vive" },
   sparks: { at: 380, ms: 620, count: 12, from: 46, to: 82, stagger: 66, ease: "vive" },
   recoil: { at: 380, ms: 420, scale: 0.993, ease: "rebond" },
   frame: { at: 400, ms: 520, width: 2.4, ease: "bascule" },
-  /** The wave of the C pulse: a 400 px circle scaled to the farthest corner, full until 80 %. */
-  wave: { at: 400, ms: 850, ease: "standard", size: 400, full: 0.8 },
+  /**
+   * The wave of the C pulse: a 400 px circle scaled to the farthest corner, full until 80 %. Its
+   * glow keeps `haloPx` on screen whatever the scale (review B1; before: 5.5 % of the radius).
+   */
+  wave: { at: 400, ms: 850, ease: "standard", size: 400, full: 0.8, haloPx: 40 },
   check: { at: 620, ms: 380, peak: 1.35, ease: "rebond" },
   end: 1250,
   /** Eco and « Fondu »: the cross-fade of the theme variables, from the impact. */

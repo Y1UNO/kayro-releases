@@ -9,7 +9,15 @@ import {
   VISUAL_DEFAULTS as V,
   visualSnapshot,
 } from "./settingsModel";
-import { cardKeyframes, easing, farthestCorner, sparks, swapWay, waveGeometry } from "./themeSwap";
+import {
+  cardKeyframes,
+  easing,
+  farthestCorner,
+  sparks,
+  swapWay,
+  waveBandFrames,
+  waveGeometry,
+} from "./themeSwap";
 
 const SETTINGS: Settings = {
   ...V,
@@ -58,13 +66,17 @@ describe("Réglages › Visuel (round 5)", () => {
 });
 
 describe("« Personnalisation avancée » drop-down", () => {
-  it("unrolls on the widget's springs, rows 45 ms apart, a halo but in Eco", () => {
+  it("unrolls on the widget's springs, rows 32 ms apart, a halo but in Eco", () => {
     const steps = openSteps(3, 120, false);
     const inner = steps.find((s) => s.target === "inner")!;
     expect(inner.options.duration).toBe(680);
     expect(String(inner.options.easing)).toMatch(/^linear\(/);
     const rows = steps.filter((s) => typeof s.target === "object" && s.options.duration === 520);
-    expect(rows.map((s) => s.options.delay)).toEqual([50, 95, 140]);
+    expect(rows.map((s) => s.options.delay)).toEqual([40, 72, 104]);
+    // Review B4: with the 9 rows, the last one lands ~0.14 s after the shell (680 ms), not 0.3 s.
+    const nine = openSteps(9, 0, false).filter((s) => typeof s.target === "object");
+    const lands = Math.max(...nine.map((s) => s.options.delay + s.options.duration));
+    expect(lands).toBe(816);
     expect(steps.some((s) => s.target === "halo")).toBe(true);
     expect(openSteps(3, 120, true).some((s) => s.target === "halo")).toBe(false);
     expect(steps.find((s) => s.target === "below")?.keyframes[0]).toEqual({
@@ -133,6 +145,17 @@ describe("theme change (R5-Reglages-Themes §2–4)", () => {
     expect(easing("rebond")).not.toBe(easing("vive"));
     const eases = cardKeyframes(true).transform.map((k) => k.easing);
     expect(eases).not.toContain(easing("liaison"));
+  });
+
+  it("the wave's glow stays 40 px on screen as the ring grows (review B1)", () => {
+    const frames = waveBandFrames(0.1, 5.5);
+    expect(frames.map((f) => f.offset)).toEqual([0, 0.25, 0.5, 0.75, 1]);
+    const band = (i: number) => Number(frames[i]!["--wave-band"]);
+    // Small at the moon: at most what the 480 px box shows.
+    expect(band(0)).toBe(0.2);
+    // At the farthest corner (r = 1 100 px): 40 px = 200 × 5.5 × band.
+    expect(200 * 5.5 * band(4)).toBeCloseTo(THEME_SWAP.wave.haloPx, 1);
+    expect(band(2)).toBeLessThan(band(1));
   });
 
   it("12 sparks leave the card's edge, 46 to 82 px, within 66 ms", () => {

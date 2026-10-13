@@ -96,7 +96,7 @@ export const MOTION_LABELS = {
       threadGlow: "Halo à la tête des filets",
       sparks: "Étincelles (0 = aucune)",
       sparkSize: "Taille des étincelles",
-      floatHover: "Flottaison au survol",
+      floatHoverGain: "Flottaison au survol (×)",
       sway: "Pivot gauche / droite au survol",
       swayPeriod: "Période du pivot",
     },

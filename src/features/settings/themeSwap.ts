@@ -6,6 +6,7 @@
  * settles on the « liaison » spring. Nothing is laid over it (a separate shape made a « double »,
  * a spectral card). Only then the wave leaves its moon and the new theme is revealed behind it.
  */
+import { curveOf } from "../../design/motion/curve";
 import { EASES } from "../../design/motion/eases";
 import { THEME_SWAP as S } from "../../design/motion/tokens5";
 
@@ -105,6 +106,26 @@ export function sparks(w: number, h: number, count: number = S.sparks.count): Sp
     });
   }
   return out;
+}
+
+/** The wave's box (px): its ring sits at `S.wave.size / 2`, its glow needs room around it. */
+export const WAVE_BOX = S.wave.size * 1.2;
+
+/**
+ * The glow of the wave as a fixed `haloPx` on screen (review B1): the 400 px ring is scaled, so its
+ * band (a fraction of the ring's radius, `--wave-band`) shrinks as the scale grows. Sampled at `n`
+ * moments on the wave's own curve (played linearly between them); at most what the box can show.
+ */
+export function waveBandFrames(scale0: number, scale1: number, n = 5): Keyframe[] {
+  const half = S.wave.size / 2;
+  const most = (WAVE_BOX / 2 - half) / half;
+  const curve = curveOf(easing(S.wave.ease));
+  return Array.from({ length: n }, (_, i) => {
+    const offset = i / (n - 1);
+    const scale = scale0 + (scale1 - scale0) * curve(offset);
+    const band = Math.min(most, S.wave.haloPx / (half * Math.max(scale, 1e-3)));
+    return { offset, "--wave-band": band.toFixed(4) };
+  });
 }
 
 /** Distance from (x, y) to the farthest corner of a w × h view: where the reveal must reach. */

@@ -26,7 +26,9 @@
 /* Still hit box (and the glass drawn by the engine from the pose); the picture is in .lift. */
 .card {
   --c1: color-mix(in srgb, var(--grad-a), var(--grad-b) var(--mix, 0%));
-  --c2: rgb(from var(--c1) calc(r * 0.2) calc(g * 0.2) calc(b * 0.2));
+  --c2: rgb(
+    from var(--c1) calc(r * var(--face-foot)) calc(g * var(--face-foot)) calc(b * var(--face-foot))
+  );
   position: absolute;
   inset: 0;
   box-sizing: border-box;

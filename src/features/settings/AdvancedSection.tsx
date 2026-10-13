@@ -3,6 +3,7 @@ import type { RefObject } from "react";
 import { ChevronDownIcon } from "../../design/icons";
 import { useMotionTokens } from "../../design/motion/current";
 import { usePresence } from "../../design/motion/usePresence";
+import { ADVANCED_UNROLL } from "../../design/motion/tokens5";
 import type { CardHoverStyle, FloatName } from "../../design/motion/tokens5";
 import { isEco } from "../../design/quality";
 import { useReducedMotion } from "../../fx/useReducedMotion";
@@ -134,7 +135,12 @@ export function AdvancedSection({ below }: Props) {
           className={styles.region}
           inert={presence === "out"}
         >
-          <div className={styles.halo} data-adv="halo" aria-hidden="true" />
+          <div
+            className={styles.halo}
+            style={{ opacity: ADVANCED_UNROLL.haloAlpha }}
+            data-adv="halo"
+            aria-hidden="true"
+          />
           <div className={styles.hull} data-adv="hull" aria-hidden="true">
             <div className={styles.hullInner} data-adv="inner" />
           </div>

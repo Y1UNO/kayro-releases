@@ -161,4 +161,23 @@ describe("carousel floating (round 5)", () => {
     f.setConfig({ ...CONFIG, amp: 0 });
     expect(will()).toEqual(["", ""]);
   });
+
+  it("the active card floats × 0.7 of its neighbours (review B3)", () => {
+    const { loop } = fakeLoop();
+    const { stage, boxes } = fakeStage(["steam", "steam"]);
+    (boxes[0]!.slot.dataset as Record<string, string>).active = "";
+    const f = new CarouselFloat(stage, CONFIG, () => loop);
+    f.refresh();
+    const peak = [0, 0];
+    for (let t = 0; t <= 12000; t += 16) {
+      f.tick(16, t);
+      boxes.forEach((b, i) => {
+        const dy = Math.abs(
+          Number(/translateY\((-?[\d.]+)px\)/.exec(b.el.style.transform)?.[1] ?? 0),
+        );
+        peak[i] = Math.max(peak[i]!, dy);
+      });
+    }
+    expect(peak[0]! / peak[1]!).toBeCloseTo(0.7, 2);
+  });
 });

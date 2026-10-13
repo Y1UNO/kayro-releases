@@ -1102,6 +1102,47 @@ Liste de travail : `docs/RELECTURE-FINALE-DA.md` (A1–A11 à corriger, B1–B8 
 - A3, A4, A5, A7, A9 : vus seulement par les tests (A9 ne se teste pas dans le volet : sans le cœur, les réglages reviennent en arrière).
 - **Mesures de performance** : aucune (étape 13).
 
+**Ton retour (paquet A)** : validé dans l'exe. Commit `577feea`, tag `da-r5-fix-a` (avec `docs/RELECTURE-FINALE-DA.md`), sans fusion dans `main`.
+
+### Paquet B — dosages (2026-10-13)
+Huit affinages par les jetons, aucune signature validée changée. **Pour revenir sur un dosage, remettre la valeur « avant » à l'endroit indiqué** (un seul endroit chaque fois, sauf mention).
+
+| N° | Où (jeton) | Avant | Après |
+|---|---|---|---|
+| B1 | `THEME_SWAP.wave.haloPx` (`tokens5.ts`) ; `waveBandFrames()` (`themeSwap.ts`), `@property --wave-band` (`themeSwap.css`) | halo de l'onde = 5,5 % du rayon (`OPENING_C.waveBand`, ≈ 55–70 px près des coins) | halo fixe de **40 px** à l'écran (bande = min(0,2 ; 40 / (200 × échelle)), 5 images-clés sur la courbe de l'onde). Revenir : retirer l'animation `band` dans `useThemeSwap.ts` (le `makeWave` reprend `OPENING_C.waveBand`) |
+| B2 | `THEME_SWAP.shock` | halo 40, alpha 0,85 | halo **28**, alpha **0,7** |
+| B3a | `FLOAT_RHYTHM.activeGain` | carte active du carrousel × 1 (5 px à « Visible ») | × **0,7** (3,5 px ; 5,6 à « Marquée », 1,4 à « Légère ») |
+| B3b | catalogue `categoryHover.floatHoverGain` (remplace `floatHover`, px) ; `actif.json` | survol de l'éventail : max(repos, 6 px) → mort dès « Visible » ; 6 px même à « Aucune » | repos × **1,15** (8 px, 13,8, 2,9 ; 0 à « Aucune ») |
+| B3c | `FLOAT_RHYTHM.fanHoverDrift` | dérive latérale au survol 3,96 px (0,66 × 6), à tous les niveaux | **4 px**, **0 à « Aucune »** |
+| B4 | `ADVANCED_UNROLL.rowAt` / `rowStep` / `haloAlpha` | 50 / 45 ms (9 lignes : la dernière posée à 930 ms, 250 ms après la coque) ; halo 0,22 | **40 / 32 ms** (posée à 816 ms) ; halo **0,3** (l'opacité au repos lit maintenant le jeton ; la fermeture part de lui au lieu de 1) |
+| B5 | `--face-foot` (`tokens.css`), lu par `AppCardFace`, `SceneCard`, `CategoryFan` | bout sombre des faces × 0,2 | × **0,28** |
+| B6 | `.actions` de `SceneCard.module.css` (`--action-size`, `--action-gap`, `bottom`, `--action-rise`) | 34 px, écart 6, bas 74, fondu sec | **30 px**, écart **8** (16 px de marge sur 176), bas **80**, montée de **4 px** avec le fondu (`--m1-court`, coupée par « réduire les animations ») |
+| B7 | `BOKEH_SPRITE` (`bgShader.ts`) | disque 0,55 / anneau 0,45 | disque **0,7** / anneau **0,3** ; intensité 0,09 inchangée |
+| B8 | `.screen` de `Screens.module.css` | `gap: var(--space-4)` (16 px) | **0** |
+
+**Au passage** :
+- **B5, contraste** : le modèle de la relecture ne tenait plus. Avec 0,28, la teinte sous les noms remonte (0,30 → 0,37 sous la plaque des apps, 0,37 → 0,43 sous les noms de l'éventail), au-dessus du modèle, qui n'était plus pessimiste. Le modèle est maintenant dérivé du jeton (`contrast.ts` : `faceFoot`, position des noms dans le dégradé), et un test vérifie `--face-foot` = modèle. Pire ratio « face » sur les 11 thèmes : **7,10** (texte secondaire sur une carte de l'éventail, Graphite), pour 4,5 exigé.
+- **B3b** : `floatHover` retiré du catalogue et d'`actif.json` (libellé de l'atelier « Flottaison au survol (×) »).
+
+**Testé** :
+- tsc, eslint, prettier (mes fichiers), **vitest 645/645** (+ halo de 40 px, carte active × 0,7, survol × 1,15 et dérive, cascade posée à 816 ms, poids du bokeh, jeton `--face-foot` = modèle).
+- Volet du navigateur (pages de dev, 1707×960) : **B8** « SCÈNES » à 90 px = « CATÉGORIE » de l'accueil (avant : 16 px plus bas, le `gap` retiré ; non remesuré) ; **B6** 4 boutons de 30 px, écart 8, marges 16 / 16, décalés de +4 px au repos ; **B5** bout sombre calculé = 0,28 × la couleur.
+- Exe reconstruit (priorité basse, non lancé : Roblox ouvert).
+
+**Non testé** : tous les dosages en mouvement (onde, impact, flottaison, cascade, bokeh) ; aucune mesure de performance (étape 13 ; aucun coût par image attendu : des valeurs, un sprite, une propriété animée pendant l'onde).
+
+**Ton retour (paquet B)** : validé dans l'exe, **les 8 dosages gardés**. Commit `feat: DA relecture finale paquet B — …`, tag `da-r5-fix-b`, sans fusion dans `main`.
+
+### Fin des correctifs avant le gel (2026-10-13)
+| Paquet | Tag | Commit |
+|---|---|---|
+| A. Corrections (A1–A12) | `da-r5-fix-a` | `577feea` |
+| B. Dosages (B1–B8) | `da-r5-fix-b` | (celui-ci) |
+
+**Restent pour l'étape 13** (exe de production, PC libre) : `--quit` en vrai (instance normale, instance en débogage avec CDP, deux demandes de suite) ; protocole de l'image blanche (A8, ci-dessus) ; mesure p95 avec et sans couches pour la flottaison du carrousel (A10, jeton `FLOAT_RHYTHM.promote`) ; coût de l'onde à halo fixe ; points ouverts de la ronde 5.
+
+**Pour la suite** : le gel de la DA quand tu le décides (« je fige la DA ») : `docs/DESIGN.md` (DA officielle v1) et retrait de ce qui reste en essai.
+
 ## Éléments du catalogue
 | Élément | État | Remarque |
 |---|---|---|

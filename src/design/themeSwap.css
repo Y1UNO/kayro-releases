@@ -6,6 +6,14 @@
  *  - the theme card is its own group, live, its old picture hidden (never a frozen copy of it);
  *  - the wave is its own group, above the circle, under the card.
  */
+/* The wave's glow, a fraction of its ring's radius (ThemeCard.module.css .wave): registered so that
+   it can be animated, a fixed 40 px on screen while the ring grows (review B1). */
+@property --wave-band {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0.055;
+}
+
 /* Safety net (review A8): if a picture of the old page is ever missing, night shows through, never
    white. Hidden under the two opaque pictures when all goes well. */
 ::view-transition {

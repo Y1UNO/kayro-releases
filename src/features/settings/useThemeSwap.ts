@@ -7,14 +7,20 @@ import { THEME_SWAP as S } from "../../design/motion/tokens5";
 import { isEco } from "../../design/quality";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { hubStore } from "../../store";
-import { cardKeyframes, easing, swapWay, waveGeometry, type SwapWay } from "./themeSwap";
+import {
+  cardKeyframes,
+  easing,
+  swapWay,
+  WAVE_BOX,
+  waveBandFrames,
+  waveGeometry,
+  type SwapWay,
+} from "./themeSwap";
 import styles from "./ThemeCard.module.css";
 
 const WAYS: Record<string, SwapWay> = { wave: "wave", fade: "fade", direct: "direct" };
 const CARD_NAME = "kayro-swap-card";
 const WAVE_NAME = "kayro-swap-wave";
-/** The wave's box: its ring sits at S.wave.size / 2, its outer glow needs room around it. */
-const WAVE_BOX = S.wave.size * 1.2;
 
 const part = (card: HTMLElement, name: string) =>
   card.querySelector<HTMLElement | SVGElement>(`[data-swap="${name}"]`);
@@ -98,14 +104,17 @@ function popCheck(card: HTMLElement, speed: number, delay: number, crisp: boolea
   });
 }
 
-/** A fixed 400 px ring drawn like the opening's wave, centred on the moon (C pulse, round 4b). */
-function makeWave(x: number, y: number): HTMLElement {
+/**
+ * A fixed 400 px ring drawn like the opening's wave, centred on the moon (C pulse, round 4b);
+ * `band`: its glow at the start (review B1, then animated to stay `haloPx` on screen).
+ */
+function makeWave(x: number, y: number, band: string): HTMLElement {
   const el = document.createElement("div");
   el.className = styles.wave ?? "";
   el.setAttribute("aria-hidden", "true");
   el.style.left = `${x - WAVE_BOX / 2}px`;
   el.style.top = `${y - WAVE_BOX / 2}px`;
-  el.style.setProperty("--wave-band", String(OPENING_C.waveBand));
+  el.style.setProperty("--wave-band", band);
   el.style.viewTransitionName = WAVE_NAME;
   return el;
 }
@@ -161,10 +170,11 @@ export function useThemeSwap(): (id: string, card: HTMLElement) => void {
         // stays live above it (one card, never a frozen copy under the live one).
         card.style.viewTransitionName = CARD_NAME;
         let wave: HTMLElement | null = null;
+        const band = waveBandFrames(geo.scale[0], geo.scale[1]);
         const vt = document.startViewTransition(() => {
           flushSync(() => setThemeId(id, { instant: true }));
           // Only in the new page, under the card (inserted before the app's root).
-          wave = makeWave(x, y);
+          wave = makeWave(x, y, String(band[0]?.["--wave-band"] ?? OPENING_C.waveBand));
           document.body.prepend(wave);
           popCheck(card, speed, checkDelay, crisp);
         });
@@ -197,6 +207,12 @@ export function useThemeSwap(): (id: string, card: HTMLElement) => void {
                 pseudoElement: `::view-transition-group(${WAVE_NAME})`,
               },
             );
+            // Its glow stays `haloPx` on screen as it grows (the element's picture is live).
+            (wave as HTMLElement | null)?.animate(band, {
+              duration: ms,
+              easing: "linear",
+              fill: "both",
+            });
             const origin = `${x}px ${y}px`;
             root.animate(
               [

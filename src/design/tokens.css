@@ -159,6 +159,11 @@
   --radius-card: var(--da-card-radius, 30px); /* app cards */
   --radius-fan: 24px; /* category cards (210 px wide) and the empty card */
 
+  /* Faces without a poster (app cards, scene cards, category fan): the dark end of their A → B
+     gradient, × the face colour (review B5: 0.2 → 0.28, the theme stays in the bottom third).
+     The contrast model follows it (contrast.ts `faceFoot`). */
+  --face-foot: 0.28;
+
   /* Round 5: the carousel (and the fan, same centre for the category link) sits this much lower,
      so that the active card lifted by its hover (10 px, ×1.03) keeps ≥ 12 px of air under the
      longest descender of a category title (« Logiciels », 96 px: measured 14.3 px). */
