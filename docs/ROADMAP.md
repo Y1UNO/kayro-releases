@@ -162,3 +162,6 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   30 s pour une limite de 50) si une version de WebView2 libère mieux la mémoire du processus GPU ; même protocole.
 - [x] Journal du renommage Hub → Kayro : dossier de données migré (`%APPDATA%/Hub` copié une fois vers `Kayro`),
   identifiant `fr.yiuno.hub` conservé (voir l'entrée « Chore renommage » du journal ci-dessus).
+
+## Abandonné
+Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).
