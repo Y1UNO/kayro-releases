@@ -18,12 +18,12 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 7. Ambiguïté de design ou de comportement : pose une question courte plutôt que deviner.
 8. Fin d'étape : coche l'étape dans `docs/ROADMAP.md` (+ 1 à 3 lignes : décisions, limites, chiffres), puis rapport de 12 lignes maximum (fait / comment le tester / mesures de perf / limites connues / commit proposé) et stop. Ne fais pas de commit sans que je le demande.
 9. Honnêteté des mesures : rapporte les chiffres réels, y compris les mauvais. Ne dis jamais « testé » pour ce que tu n'as pas exécuté ; dis « non testé » et pourquoi.
-10. Étape 12b : atelier itératif, lire `docs/DA-JOURNAL.md` au début de chaque session.
+10. DA gelée le 2026-10-14 : `docs/DESIGN.md` est la référence ; tout changement de DA se note dans `docs/DA-JOURNAL.md` § « Gel de la DA » (à lire au début d'une session qui touche à la DA).
 11. Après le gel de la DA, `docs/DESIGN.md` (DA officielle v1) prime sur `reference/`.
 
 ## Stack (à confirmer à l'étape 1)
 - Tauri 2 (Rust) + React + TypeScript + Vite. Animation d'interface : Framer Motion (`motion`). État : Zustand. Styles : CSS Modules + variables CSS (pas de bibliothèque d'UI lourde).
-- Polices embarquées en local (pas de CDN) : Fraunces (titres), DM Sans (interface), via `@fontsource`.
+- Polices embarquées en local (pas de CDN) : Cormorant Garamond (titres), Manrope (interface), via `@fontsource`.
 - Rust : `serde`, `tracing`, `sysinfo`, crate `windows` (API Win32), parseur VDF pour Steam. Types partagés Rust ↔ TypeScript générés (`tauri-specta` ou `ts-rs`).
 - Tests : `cargo test` (parseurs, moteur de scènes avec faux lanceur), `vitest` (palette, schémas), lint : `clippy`, `eslint`.
 

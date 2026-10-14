@@ -253,6 +253,8 @@ repos en capture. Les écrans rejouables de l'atelier (« Ouverture », « Caté
 
 ## Idées de fonctionnalités pour plus tard (hors DA)
 
+> Repris dans `docs/ROADMAP.md` § « Plus tard (liste unique) » au gel de la DA (2026-10-14) : c'est là qu'on le suit.
+
 - **Écran Apparence** : aucun sélecteur de thème dans l'app aujourd'hui (`themeId` n'est lu que dans `settings.json`) ;
   grille des 6 thèmes + importer / exporter, comme la maquette `04-apparence`. Retirer les 5 anciens thèmes au gel.
 - **Affiches en production** : `posterUrl` renvoie `null` hors dev ; dossier local d'affiches + ajout par

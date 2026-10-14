@@ -1,14 +1,52 @@
 # Journal de l'atelier de DA (étape 12b)
 
-Lu au début de chaque session de l'étape 12b. Permet de reprendre dans une conversation neuve sans rien perdre. Mis à jour à chaque tour.
+Historique de l'atelier de DA, puis suivi des changements après le gel (section suivante). Lu au début d'une session qui touche à la DA, avec `docs/DESIGN.md`.
 
-## Preset courant
+## Gel de la DA (2026-10-14)
+**La DA globale est la base de référence : `docs/DESIGN.md` (DA officielle v1), qui prime sur `reference/`.** Ce n'est
+pas définitif : des détails peuvent encore bouger aux étapes suivantes, mais selon la règle ci-dessous.
+
+**Règle des changements après le gel**
+- Tout changement visuel ou de mouvement après le gel = **une ligne** dans le tableau ci-dessous : date, quoi,
+  avant → après, jeton ou fichier, pourquoi, et qui l'a décidé. `docs/DESIGN.md` est corrigé dans le même passage.
+- **Aucune signature ne change sans décision de l'utilisateur.** Signatures protégées : ouverture V1-A + pulsation C,
+  liaison A, onde de changement de thème, déroulé de la Personnalisation avancée, widget déroulé, passages entre modes
+  en fondu avec voile natif, flottaison (Aucune · Légère · Visible · Marquée), langage de mouvement « Vivant ».
+- Un dosage passe par son jeton (jamais une valeur en dur) ; un nouvel effet passe par `FxLayer`, avec repli CSS et
+  mesure `npm run perf` en Élevée et Éco.
+
+**Ce que le gel a fait** (3 paquets, rendu identique vérifié dans l'exe à chaque arrêt) :
+- **Paquet 1** : atelier retiré (écran, plugin Vite, scripts, raccourci, configuration `atelier-bench`), préréglages et
+  historique (`src/design/presets/` ; 2 fichiers non suivis rangés dans `reference/archives/presets/`), anciens bancs
+  de dev (`?bench`, `/dev/launcher`, `dev:home`), affiches de test, 5 anciens thèmes (migration des réglages gardée),
+  polices Fraunces / DM Sans, `widgetStyle`, jetons et textes jamais lus ; `setThemeId` passe par `resolveTheme`.
+  Pages `/dev/home`, `/dev/scenes`, `/dev/widget`, `/dev/motion`, `/dev/catalogue` gardées (vérification dans le volet).
+- **Paquet 2** : couches « croquis » de l'étape 8 (brume, faisceau, lueur basse, halo, poussière, bande de lumière) et
+  `useFxTarget`, anneau en tube `glassRing` (programme et texture en moins), effets 2b jamais retenus (`matter` et sa
+  parallaxe, `particleLight`, `cardSheen` et son voile périodique), options `ringGrow`, `veilRender`, `pointerSheen`.
+  **Ils existent encore au tag `perf-13-fix`** : pour en faire revenir un comme option, le reprendre depuis git.
+  Gardés : le repli CSS complet, `posterGlass` (étape 14), le verre éteint des barres / dock / boutons (il porte
+  l'imbrication de la pastille de sélection ; le retirer changerait son rendu).
+  Vérification `npm run perf` (R1, R2, I1, A2, Élevée et Éco) : p95 3,7 ms partout ; carrousel au repos ≈ −45 Mo ;
+  onde 2–3 images > 8 ms par changement en Élevée (3–6 avant).
+- **Paquet 3** : `docs/DESIGN.md`, liste unique « Plus tard » dans `docs/ROADMAP.md`, cette section, `CLAUDE.md`.
+
+**Changements après le gel**
+
+| Date | Quoi | Avant → après | Jeton / fichier | Pourquoi | Décidé par |
+|---|---|---|---|---|---|
+| 2026-10-14 | Description du thème Lavande-pêche (sous sa carte, Réglages › Thèmes) | « Lavande et pêche du logo. Le thème par défaut. » → « Lavande et pêche du logo. » | `src/design/themes/lavande-peche.json` | Bleu-gris est le défaut depuis R5 | l'utilisateur |
+
+**Avant le gel** : tout ce qui suit est l'historique de l'atelier (rondes 1 à 5, relecture finale, étape 13). Les
+fichiers de préréglages et l'atelier qu'il cite n'existent plus dans l'arbre (tag `perf-13-fix` pour les retrouver).
+
+## Preset courant (avant le gel)
 - Nom : **V4 Aéré lumineux** (`src/design/presets/v4-aere-lumineux.json`, thème Bleu-gris, ronde 2b) : base `v4-aere-bleu-gris` (2a) + fond aéré, particules éclairées, matière, voile brillant, affiches dans le verre, pastille « léger rebond ». `active.json` (défaut du catalogue) n'a pas été modifié : toujours V4 Verre liquide, lavande-pêche
 - 2a : **V4 Verre liquide** : moteur WebGL2 sur les cartes et les pastilles de sélection seulement, anneau liquide
 - Fichiers : `src/design/presets/v4-verre-liquide.json` ; comparaison : `v4-verre-liquide-complet.json` (tout en verre, anneau en tube : état du premier essai 2a), `v4-cristal.json` (V4 de la ronde 1, CSS, moteur coupé), `croquis-12.json` (étapes 3 à 12), `v4-cristal-gpu.json` (anneau seul dans le moteur, comme le spike)
 - Branche / tags : `step-12b-atelier-da` / `da-r1`, `da-r2a` (2a commitée le 2026-10-11, avec `v4-aere-bleu-gris`), ronde 2b commitée (`e497060`). Ronde 3a commitée (`7bb5f30`) ; préréglage `v4-r3-signature.json` = V4 Aéré lumineux + ouverture. Ronde 3b : `da-r3b` ; ronde 4a : `da-r4a` ; ronde 4b : `da-r4b-1a`, `da-r4b-1b`, `da-r4b-2`, `da-r4b-2b`, `da-r4b-3` ; relecture : `da-fix-a`, `da-fix-b`, `da-fix-c` ; ronde 5 (dernière avant le gel) : `da-r5-1`, `da-r5-2`, `da-r5-3`
 
-## Mode d'emploi
+## Mode d'emploi de l'atelier (retiré au gel)
 - `npm run dev` puis `http://localhost:1420/dev/atelier` (navigateur) : réglages à gauche (générés depuis `src/design/da/catalogue.ts`), écrans réels à droite (Accueil, grille, ajout d'apps, scènes, éditeur, composants), 11 thèmes, qualité, comparaison A/B, Enregistrer / Charger / Historique, Exporter (→ `active.json` = DA de l'app), Mesurer (10 s).
 - **Tes tests à chaque arrêt** (depuis le 2026-10-12) : raccourci Bureau « Kayro — mettre à jour » (recompile la release et relance), puis « Kayro » (l'exe de production, tes données, ton mode). Plus d'atelier ni de `tauri dev` pour tes tests.
 - Dans la vraie fenêtre : `npm run dev:atelier-bench` (pendant que `npm run dev` tourne) ouvre l'Accueil avec `?preset=<fichier>` ; le CPU/GPU du bouton « Mesurer » n'a de sens que si l'app Tauri tourne (`scripts/measure-cost.ps1`).
@@ -823,11 +861,13 @@ Relecture en lecture seule, corrigée en trois paquets (arrêt après chacun, pa
 **Incident** : un `prettier --write` lancé sur des dossiers entiers a converti les fins de ligne de ~40 fichiers non touchés et reformaté `widgetModel.ts` (écart antérieur) : tout remis dans l'état du dépôt ; `SceneDock.module.css` laissé intact (son contenu égale le dépôt). Prettier ne passe plus que sur mes fichiers.
 
 ### Reste à faire
+> Repris dans `docs/ROADMAP.md` § « Plus tard (liste unique) » au gel de la DA (2026-10-14) : c'est là qu'on le suit.
 - **4a** : commit après ton feu vert, puis tag `da-r4a`. Mesures : voir ci-dessus (vérification globale).
 - **4b** : voir la ronde 4b ci-dessus (4b-1a `da-r4b-1a`, 4b-1b `da-r4b-1b` ; spike 4b-2.0 fait → **repli** ; 4b-2 `da-r4b-2` ; voile `da-r4b-2b` ; ouverture transparente **abandonnée** après la dernière tentative (mémoire +68/+72 Mo à 30 s en environnement partagé, environnement propre trop lent) : code du spike retiré, 4b-3 garde l'ouverture opaque ; démarrage silencieux sans ouverture et pulsation C dans l'ouverture opaque **faits, validés** (`da-r4b-3`) ; coût par image de la pulsation **à mesurer** à l'étape 13). Ancienne note 3c, remplacée par R4b : éditeur « chaîne de points » (fil vertical A→B, point qui apparaît 0,6→1 en 250 ms, segment qui se trace en `scaleY` 300 ms, suivants qui glissent en ressort « net », perle lumineuse qui descend pendant l'exécution d'une scène ; DOM seul) ; dépliage du widget (fenêtre à sa taille finale tout de suite, contenu 0,94→1 + fondu 240 ms, lignes en cascade 30 ms, repli 180 ms ; CSS seul).
 - Remesurer l'ouverture (CPU/GPU, repli CSS) PC libre, dont le voile de la pulsation C : moteur contre CSS (`opening.veilRender`), intervalles d'images pendant le ringOut, Élevée et Éco.
 
 ### À retenter plus tard
+> Repris dans `docs/ROADMAP.md` § « Plus tard (liste unique) » au gel de la DA (2026-10-14) : c'est là qu'on le suit.
 - **Fenêtre d'ouverture transparente, environnement WebView2 partagé** (4b-3.0 bis) : elle n'a échoué que de peu. Mémoire à 30 s : **+68 / +72 Mo**, pour une limite de 50 Mo. Le reste passait : premier affichage 753 / 759 ms, relève sans saut. Le surplus est dans le processus GPU commun de WebView2.
 - **À remesurer à la finition**, si une version de WebView2 libère mieux la mémoire de ce processus. Même protocole : release, PC libre, 2 essais alternés avec la base opaque, mémoire par type de processus à 30 s. Le code du spike est à reprendre dans l'historique de la conversation : il n'a jamais été commité.
 
@@ -1056,6 +1096,7 @@ Les choix protégés sont inchangés par défaut (ouverture V1-A + pulsation C, 
 **Pour la suite** : le gel de la DA, quand tu le décides (« je fige la DA »). Il faudra alors écrire `docs/DESIGN.md` (DA officielle v1, qui primera sur `reference/`) et retirer ce qui reste en essai (5 anciens thèmes, éléments « historique » et « croquis » du catalogue, verre des barres / dock / boutons s'ils ne sont pas retenus).
 
 ### Plus tard (hors ronde 5, à ne pas faire dans cette ronde)
+> Repris dans `docs/ROADMAP.md` § « Plus tard (liste unique) » au gel de la DA (2026-10-14) : c'est là qu'on le suit.
 - Gestion des apps qui démarrent avec Windows au premier lancement.
 - Design propre à chaque carte de catégorie.
 - Affiches en production.
@@ -1239,33 +1280,22 @@ Rapport complet : **`docs/PERF-ETAPE13.md`**.
 **Point ouvert pour l'audit de l'étape 18** : le CPU au repos du carrousel est de 3,6 à 4,2 % en Élevée avec la flottaison « Visible » (R2), contre 1,4 % sans flottaison (R3). La cible CLAUDE.md est < 1 %.
 
 ## Éléments du catalogue
-| Élément | État | Remarque |
+État au gel (2026-10-14). « Retenu » = dans la DA livrée (défauts du catalogue) ; « retiré » = encore au tag `perf-13-fix`.
+
+| Élément | État au gel | Remarque |
 |---|---|---|
-| Fond radial + vignette + grain | à l'essai | V4 : radial, vignette 0,55 |
-| Halo de lune | à l'essai | respiration 4 %, 9 s |
-| Deux voiles | à l'essai | ±80 px, 30 / 36 s |
-| Anneau cristal (CSS) | à l'essai | 680 px, bande 12, reflet 40 s, frost 5 px |
-| Anneau cristal (GPU) | remplacé (2a) | devenu `glassRing` dans le moteur de verre |
-| Moteur de verre liquide | à l'essai (2a) | défaut ; interrupteur = comparaison CSS |
-| Verre : cartes, pastilles de sélection | à l'essai (2a) | activés par défaut |
-| Verre : barres, dock, boutons ronds, anneau en tube | gardés, désactivés (2a) | à supprimer au gel si non retenus |
-| Anneau liquide | à l'essai (2a) | remplace l'anneau en tube par défaut |
-| Bandes de lumière, bokeh, lumière du curseur | à l'essai (2a) | moteur seulement |
-| Braises / Étoiles | à l'essai | 20 / 24 |
-| Cartes, survol, barres de verre, titre, typographies, mouvement | à l'essai | valeurs de la maquette V4 |
-| Brume, faisceau, lueur basse, halo sous la carte, poussière, bande de lumière | croquis, désactivés | à supprimer au gel si non retenus |
-| Clarté du fond, largeur de la lueur de lune | à l'essai (2b) | 0 = rendu 2a |
-| Particules éclairées, matière et profondeur, voile brillant, affiches dans le verre | à l'essai (2b) | désactivés par défaut, activés dans `v4-aere-lumineux` |
-| Ressort de la pastille (net / léger rebond) | à l'essai (2b) | défaut « net » |
-| Ouverture V1-A (`opening`) | à l'essai (3a) | activée par défaut ; `ringGrow` désactivé |
-| Jetons de mouvement (`motion`) | à l'essai (4a) | table unique, niveaux 1 / 2 / 3, vitesse ; remplace l'ancien `motion` |
-| Survol niveau 3 du carrousel (`cardHover`) | à l'essai (4a) | voile + filets après 120 ms, 4 étincelles, éclat au lancement ; reflet souris coupé (`pointerSheen`) |
-| Widget qui se déroule (`motion.widget*`) | à l'essai (4b-1a) | ressorts `linear()` normale 5 % / 2,5 %, halo allumé tant que déplié, reflet une fois ; « sobre » pour comparer |
-| Chaîne de points de l'éditeur | à l'essai (4b-1b) | ajout / retrait / FLIP sur liaison, voisines qui s'écartent au glisser, test qui allume les points, fil lumineux au lieu de la roue |
-| États : catégorie vide, échec de lancement, nouvelle scène (`motion.emptyFloat`) | à l'essai (4b-1b) | carte pointillée qui flotte 4 px ; tremblement + bord `--fail` + message unique « Corriger » ; dialogue à trois départs |
-| Pulsation C dans l'ouverture opaque (`opening.pulse`) | validée (4b-3), par défaut | voile 42 % autour de l'anneau, l'onde (0,55) et le cercle s'ouvrent au ringOut ; « actuelle (V1-A) » pour comparer |
-| Passages entre modes (fondu) | à l'essai (4b-2) | sortie micro, retour moyen + cascade des cartes, widget ×0,96 → 1 ; fenêtres opaques (spike 4b-2.0) ; bouton ↗ du widget |
-| Réglages Visuel → DA (`userDa.ts`) | à l'essai (R5-1) | ouverture, widget, flottaison, survol, mouvement, bokeh, particules, lumière du curseur ; sélecteurs `user` retirés de l'atelier |
-| Flottaison des cartes (`categoryHover.float`) | à l'essai (R5-1) | Visible par défaut ; éventail + carrousel ; ombre au sol dans le moteur |
-| Onde de changement de thème | à l'essai (R5-1) | View Transitions à l'impact, carte vivante nommée, onde de la pulsation C ; fondu en Éco |
-| Thèmes du logo | à l'essai (R5-1) | Encre remplace Mauve, Bleu-gris par défaut ; 5 anciens gardés pour l'atelier |
+| Fond radial + vignette + grain, halo de lune, deux voiles | retenu | moteur ; repli CSS (`MoonLayer`) |
+| Anneau cristal (CSS) | retenu comme repli et géométrie | `crystalRing` |
+| Anneau liquide | retenu | `liquidRing` |
+| Anneau en tube (`glassRing`) | retiré | — |
+| Moteur de verre liquide : cartes, pastilles de sélection | retenu | `glassEngine`, `glassCards`, `glassPills` |
+| Verre : barres, dock, boutons ronds | gardé, éteint | porte l'imbrication de la pastille (ROADMAP, étape 18) |
+| Bandes de lumière, bokeh, lumière du curseur, braises, étoiles | retenu | bokeh 7 × 120 px, disque 0,7 / anneau 0,3 |
+| Brume, faisceau, lueur basse, halo sous la carte, poussière, bande de lumière (croquis) | retiré | — |
+| Clarté du fond, largeur de la lueur de lune | retenu | — |
+| Particules éclairées, matière et profondeur, voile brillant périodique | retiré | — |
+| Affiches dans le verre (`posterGlass`) | gardé, éteint | étape 14 (art local) |
+| Ouverture V1-A + pulsation C | retenu (signature) | « Classique » = V1-A, choix des Réglages |
+| Jetons de mouvement, survol niveau 3, widget déroulé, chaîne de points, états | retenu | « Sobre » = choix des Réglages |
+| Passages entre modes (fondu) + voile natif | retenu (signature) | — |
+| Réglages Visuel → DA (`userDa.ts`), flottaison, onde de thème, 6 thèmes du logo | retenu | Bleu-gris par défaut ; 5 anciens thèmes retirés |
