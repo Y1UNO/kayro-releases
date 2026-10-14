@@ -10,7 +10,12 @@ import { fileURLToPath } from "node:url";
 
 export const HERE = dirname(fileURLToPath(import.meta.url));
 export const REPO = join(HERE, "..", "..");
-export const EXE = join(REPO, "target", "release", "Kayro.exe");
+/** The exe measured: the repository's production build, or another one (`--exe`, A/B of two builds). */
+export let EXE = join(REPO, "target", "release", "Kayro.exe");
+export function setExe(path) {
+  if (!existsSync(path)) throw new Error("exe introuvable : " + path);
+  EXE = path;
+}
 export const ROOT = join(tmpdir(), "kayro-perf");
 /** APPDATA given to the exe; its data folder is `<APPDATA_TEST>/Kayro`. */
 export const APPDATA_TEST = join(ROOT, "appdata");

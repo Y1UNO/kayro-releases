@@ -25,7 +25,9 @@ npm run perf -- --dry                          # essai à blanc : fenêtres de 2
 npm run perf -- --cases G1,G2,G3,G4,G5         # étape 14 : couleurs du jeu et affiches (images générées)
 ```
 
-Autres options : `--trials 2` (essais par case ; un 3e s'ajoute tout seul si les deux s'écartent), `--keep-data` (garde le dossier de test) et `--art` (images générées sans case G).
+Autres options : `--trials 2` (essais par case ; un 3e s'ajoute tout seul si les deux s'écartent), `--keep-data` (garde le dossier de test), `--art` (images générées sans case G) et `--exe <chemin>` (mesure un
+autre exe que `target/release/Kayro.exe`, par exemple celui d'un commit plus ancien compilé à part : comparaison A/B
+dans les mêmes conditions ; le chemin est noté dans `results.jsonl`).
 
 **Cases G (étape 14, `cases14.mjs`)** : elles se jouent sur l'onglet « Stream », dont les 4 apps de test reçoivent des images **générées** (affiche, héros, logo : dégradés de `data.mjs`, jamais l'art d'un jeu). Les images ne sont écrites que si une case G est demandée (ou `--art`) : les autres cases restent comparables aux mesures du 14/10.
 

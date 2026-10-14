@@ -87,6 +87,27 @@ p95 : 3,7 ms partout.
   l'onde et du retour vient du code de l'étape 14 sans comparer, dans les mêmes conditions, l'exe d'avant l'étape
   (`ae097c6`) et celui d'aujourd'hui.
 
+## A/B dans les mêmes conditions (15/10, 00:42–01:00)
+Même PC, même fond (Discord, Steam, Voicemeeter, HueSync ouverts ; Wallpaper Engine en pause), banc
+`npm run perf -- --cases A2,I8 --exe …` : l'exe d'**avant l'étape 14** (`ae097c6`, compilé à part) et l'exe
+**actuel** (`1b419a3`), dans l'ordre ancien, actuel, actuel, ancien ; 2 ou 3 essais par case et par séance.
+Valeurs par essai : images > 8 ms par fenêtre de 10 s · pire par occurrence · max (ms).
+
+| Case | Avant l'étape 14 (6 ou 4 essais) | Actuel (6 ou 4 essais) |
+|---|---|---|
+| I8 Élevée | 3–8 · liaison 0–2, retour 1–2 · max 10,8–21,5 (3 essais avec une image > 16 ms) | 4–10 · liaison 1–3, retour 1–2 · max 14,2–21,4 (1 essai > 16 ms) |
+| I8 Éco | 1–3 · retour 1 · max 10,7–14,4 | 2–4 · retour 1 · max 10,7–17,9 (1 essai > 16 ms) |
+| A2 Élevée | 8–15 · onde 2–6 (médiane 3) · max 17,9–21,6 | 8–11 · onde 2–4 (médiane 3) · max 17,9–25,0 |
+| A2 Éco | 6–13 · onde 2–4 · max 17,9–24,9 | 6–8 · onde 2–3 · max 17,9–21,5 |
+
+p95 : 3,7 ms partout ; CPU, GPU de l'app et dwm identiques entre les deux exe (à ± 0,3 pt).
+
+**Conclusion** : dans les mêmes conditions, l'exe actuel n'est **pas plus lent** que celui d'avant l'étape 14 sur
+l'onde de thème et la liaison / le retour (couleurs du jeu actives, au thème faute d'images dans ces cases). Les écarts
+avec le 14/10 après-midi (onde 3–6 images lentes, retour à 21 ms) se retrouvent **avec l'exe d'avant l'étape** :
+ils viennent du fond de ces séances (dwm × 2–3, GPU hors Kayro 4,5 % au lieu de 1,5 %), pas du code de l'étape 14.
+Ce qui reste propre à l'étape 14 : la marée en Élevée donne 2 images > 8 ms par changement (≤ 14,3 ms ; 1 en Éco).
+
 ## Non mesuré
 - La piste du gel « éventail prêt à 0 % » contre « recalcul allégé » (il faut d'abord écrire les deux chemins).
 - Trace `--invalidations` d'un changement de jeu (recalcul unique des accents) : à faire avec la remesure.

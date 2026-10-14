@@ -363,7 +363,8 @@ async function main() {
     throw new Error("Kayro est ouvert : le quitter d'abord (Kayro.exe --quit).");
   mkdirSync(OUT, { recursive: true });
   const screen = await win.ask("screen");
-  rec({ id: "écran", screen });
+  if (args.exe) L.setExe(String(args.exe)); // A/B of two builds (README)
+  rec({ id: "écran", screen, exe: L.EXE });
   const n = makeData(QUALITIES[0], screen, wantsArt(args)); // step 14: pictures for G cases
   say("dossier de test :", n, "apps ; résultats :", OUT);
   await win.ask("awake on");
