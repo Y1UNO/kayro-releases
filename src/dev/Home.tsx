@@ -9,9 +9,12 @@
 //   ?seq=link|tab|back&seek=ms (one moment of a category sequence, still)
 //   ?loop=ms&seq=link|tab|back (that sequence again every ms; link starts on the fan)
 //   ?fan=1&hover=i (card i of the fan hovered: lift, threads, sparks)
+//   ?colors=light|immersive (step 14: fake palettes for the games, the tide between them)
 import { useEffect, useRef, useState } from "react";
 import { QUALITIES, ThemeProvider, applyQuality } from "../design";
 import { Atmosphere } from "../fx";
+import { GameAtmosphere } from "../features/gameColors/GameAtmosphere";
+import { installGameColorsMock } from "./gameColorsMock";
 import { HomeScreen } from "../features/home/HomeScreen";
 import type { AppEntry } from "../ipc/bindings";
 import { ipc } from "../ipc/commands";
@@ -120,7 +123,7 @@ export default function HomeDev() {
         schemaVersion: 2,
         themeId: params.get("theme") ?? ACTIVE_THEME_ID,
         quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
-        colorMode: "light",
+        colorMode: params.get("colors") === "immersive" ? "immersive" : "light",
         hotkey: "Ctrl+Alt+H",
         language: "fr",
         atmosphereIntensity: Number(params.get("intensity")) || 1,
@@ -141,6 +144,7 @@ export default function HomeDev() {
       },
     });
     if (params.has("addmock")) installAddAppsMock(() => hubStore.getState().apps);
+    if (params.has("colors")) installGameColorsMock(apps);
     applyQuality(effectiveQuality(hubStore.getState().settings?.quality ?? "high"));
     if (params.has("running")) {
       const first = apps[2];
@@ -183,7 +187,7 @@ export default function HomeDev() {
   const themeId = params.get("theme") ?? ACTIVE_THEME_ID;
   return (
     <ThemeProvider initialThemeId={themeId}>
-      <Atmosphere />
+      {params.has("colors") ? <GameAtmosphere /> : <Atmosphere />}
       <div ref={under} style={{ height: "100%" }}>
         <HomeScreen
           key={params.get("view")}

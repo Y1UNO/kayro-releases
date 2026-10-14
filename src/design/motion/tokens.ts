@@ -179,13 +179,20 @@ export function motionTokens(v: ElementValues | undefined): MotionTokens {
 
 const pct = (a: number) => `${Math.round(a * 1000) / 10}%`;
 
-/** The focus ring, in the theme's colours (background, A, B). */
-export function focusShadow(f: MotionTokens["focus"]): string {
+/**
+ * The focus ring: background, A, B. In the theme's colours by default; step 14 writes it again in
+ * the game's colours on the home's containers (a custom property is resolved where it is declared).
+ */
+export function focusShadow(
+  f: MotionTokens["focus"],
+  a = "var(--grad-a)",
+  b = "var(--grad-b)",
+): string {
   return [
     `0 0 0 ${f.gap}px var(--bg-mid)`,
-    `0 0 0 ${f.a}px var(--grad-a)`,
-    `0 0 0 ${f.b}px color-mix(in srgb, var(--grad-b) ${pct(f.bAlpha)}, transparent)`,
-    `0 0 ${f.halo}px color-mix(in srgb, var(--grad-a) ${pct(f.haloAlpha)}, transparent)`,
+    `0 0 0 ${f.a}px ${a}`,
+    `0 0 0 ${f.b}px color-mix(in srgb, ${b} ${pct(f.bAlpha)}, transparent)`,
+    `0 0 ${f.halo}px color-mix(in srgb, ${a} ${pct(f.haloAlpha)}, transparent)`,
   ].join(", ");
 }
 

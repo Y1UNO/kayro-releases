@@ -26,7 +26,7 @@ interface Slot {
 
 export const loadPoster: PosterLoader = async (url) => {
   const img = new Image();
-  // A poster from another origin (Tauri's asset protocol) must allow it, or WebGL refuses it.
+  // A poster from another origin (`kayro-art`, step 14) must allow it, or WebGL refuses it.
   if (new URL(url, location.href).origin !== location.origin) img.crossOrigin = "anonymous";
   img.decoding = "async";
   img.src = url;

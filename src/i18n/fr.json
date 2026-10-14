@@ -90,6 +90,9 @@
       "list": "Catégories"
     },
     "allCategories": "Toutes les catégories",
+    "artDrop": {
+      "refused": "Cette image ne peut pas servir d’affiche : il faut un fichier JPEG, PNG ou WebP de 16 Mo au plus."
+    },
     "launchFail": {
       "title": "{name} ne s’est pas lancé.",
       "launchNotFound": "Le chemin n’existe plus.",
@@ -223,6 +226,25 @@
       "deleteExplain": "Le programme lui-même reste sur votre ordinateur.",
       "deleteYes": "Retirer",
       "deleteNo": "Garder"
+    },
+    "look": {
+      "title": "Apparence",
+      "help": "Appliqué tout de suite. Glissez une image (JPEG, PNG ou WebP) sur une case.",
+      "poster": "Affiche",
+      "hero": "Fond",
+      "logo": "Logo",
+      "none": "Aucune",
+      "fromSteam": "Steam",
+      "fromYou": "vous",
+      "remove": "Retirer",
+      "colors": "Couleurs",
+      "auto": "Automatiques",
+      "chosen": "Choisies",
+      "theme": "Thème",
+      "colorA": "Couleur A",
+      "colorB": "Couleur B",
+      "noPalette": "Pas encore de couleurs pour cette app : ajoutez une image.",
+      "preview": "Aperçu des couleurs"
     }
   },
   "widget": {

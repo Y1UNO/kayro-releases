@@ -95,3 +95,35 @@
 [data-glass-poster="gpu"] > .poster {
   visibility: hidden;
 }
+
+/* Step 14 (V9 c): on the active carousel card, the game's logo instead of its name (a cross-fade,
+   level 1 of the motion table). The name stays in the button's label for screen readers. */
+.logo {
+  position: absolute;
+  left: 12%;
+  bottom: 18px;
+  width: 76%;
+  height: 22%;
+  object-fit: contain;
+  object-position: 50% 100%;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+  opacity: 0;
+  transition: opacity var(--m1-micro) var(--m-ease-out);
+  pointer-events: none;
+}
+
+[data-active] .logo {
+  opacity: 1;
+  transition-timing-function: var(--m-ease-in);
+}
+
+.withLogo {
+  transition:
+    opacity var(--m1-micro) var(--m-ease-in),
+    transform var(--dur-card) var(--ease),
+    width var(--dur-card) var(--ease);
+}
+
+[data-active] .withLogo {
+  opacity: 0;
+}

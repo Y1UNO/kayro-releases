@@ -61,3 +61,11 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 Voix, contrôle par les mains, intégrations (OBS, Discord, lumières), salon d'amis, mises à jour automatiques. Prévoir les points d'extension, sans implémenter.
 
 **Moteur graphique (WebGL2 / shaders) : autorisé par l'utilisateur (étape 12b).** Toujours derrière `FxLayer`, avec repli CSS automatique (WebGL2 absent, contexte perdu, budget d'image dépassé) et coût mesuré.
+
+## Notes et outils
+- La doc est dans `docs/`, ouverte dans Obsidian ; `docs/Accueil.md` est l'index (avec l'encadré « Où on en est »).
+- Une note par sujet : mettre à jour plutôt que dupliquer. Jamais de seconde liste « Plus tard » (celle de `docs/ROADMAP.md`) ni de second journal (`docs/DA-JOURNAL.md`).
+- Ne lire que les notes utiles à l'étape en cours.
+- Ne jamais supprimer une idée sans me demander : la déplacer dans « Abandonné » (`docs/ROADMAP.md`).
+- Avant d'utiliser une API Tauri 2 ou React dont tu n'es pas sûr, vérifier avec Context7.
+- Raccourcis : `/idee <texte>` (note une idée dans `docs/Idees.md`), `/fin` (range les idées, met à jour les notes, propose un commit).

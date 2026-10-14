@@ -67,6 +67,10 @@ Hors familles : traits de 1–2 px, case à cocher, piste du curseur, logo de la
 font le tour du bord en sens opposés, cœur blanc à 55 %, 2,2 px, intensité 1,8, longueur 0,2, halo 0,9, 0,25 tr/s,
 12 étincelles au plus sur l'éventail, 4 sur le carrousel (catalogue `categoryHover`, `cardHover`).
 
+**Affiches** (étape 14, `src/features/home/art.ts`) : une carte d'app montre l'affiche locale de l'app quand elle en a
+une (image déposée sur la carte, copiée dans `%APPDATA%/Kayro/art/<appId>/`, sinon le cache Steam lu en place),
+servie par le protocole `kayro-art` (id d'app + rôle, jamais un chemin) ; nom sur `.posterShade`. Sinon :
+
 **Faces sans affiche** (cartes d'apps, de scènes, éventail) : dégradé A → B du thème tiré par carte, 0,85, bout sombre
 × `--face-foot` 0,28, ombre de pied sous le nom, icône du programme sinon la lettre.
 
@@ -105,6 +109,31 @@ valeur initiale : la première image n'attend pas le JS), `html` / `body` peints
   recalcule donc la page qu'une fois ;
 - aucune lecture forcée après l'écriture (`getComputedStyle`, `offsetHeight`) ;
 - le moteur reçoit ses couleurs par la palette (`themePalette` → `FxPalette` : `a`, `b`, `bg`), jamais en relisant le CSS.
+
+**Couleurs du jeu** (étape 14, décisions de la planche du 14/10 dans `DA-JOURNAL.md` ; `src/features/gameColors/`,
+jetons `GAME_COLORS` dans `src/design/motion/tokens14.ts`) :
+- **Calcul** (`derive.ts`) : la palette brute du cœur (OKLab, `palettes.json`) donne A = dominante, B = accent
+  (une image d'une seule couleur prend l'accent de l'autre image du jeu, sinon du thème) ; bornées comme les thèmes
+  (L 0,72–0,85, C ≤ 0,12) puis mêlées au thème à **60 %**. Contraste ≥ 4,5:1 testé sur les 6 thèmes.
+- **Ce qui se teinte** (réglage `color_mode`, **Léger** par défaut) : l'ambiance du moteur (fond, lune, anneau, bokeh,
+  braises, teinte du verre des cartes et des pastilles, prise dans la palette : `FxPalette.card`) et les accents de
+  l'accueil (`--game-a`, `--game-b` : filet du titre, filets de survol ; anneau de focus réécrit avec eux), posés
+  sur 3 conteneurs (`data-game-accents`), jamais sur `:root` : texte, dialogues et Réglages restent au thème.
+  **Immersif** : en plus, la nuit aux couleurs du jeu (`FxPalette.bg`) et le héros flouté de Steam en haut
+  (`FxPalette.hero`, texture du moteur, opacité 0,75, fondu dans la nuit de 18 à 60 % de la hauteur).
+- **Passage d'un jeu à l'autre : la marée** (`paletteTween.ts`, shader du fond) : 180 ms après que la sélection se
+  pose (rien pendant une rafale), les nouvelles couleurs partent de la carte active en cercle, **700 ms**, courbe
+  `standard`, bord doux 90 px et bande de lumière (0,55, pleine jusqu'à 80 %) ; sans View Transition ; les accents
+  changent une fois, quand le bord atteint le titre. Premier affichage, thème, réglage : changement direct.
+  « Réduire les animations » : direct. Repli CSS : lune et anneau en fondu, nuit de l'Immersif sur `Backdrop`.
+- **Sortie des jeux** (éventail, autre écran) : retour au thème par la même marée. **App sans image** : face et
+  ambiance aux couleurs de son icône. **Carte active avec affiche** : le logo du jeu à la place du nom (fondu micro).
+- **Variantes** (Personnalisation avancée, § 5) : intensité 35 / 60 / 100 %, caractère (comme le thème, fidèle,
+  vive), couleur principale (dominante, la plus vive, accordée au thème), passage (marée, fondu 600 ms, direct),
+  moment (sélection posée, tout de suite, au lancement seulement), image du jeu en Immersif, couleurs de l'icône.
+- **Par app** (dialogue de modification, panneau « Apparence », enregistré tout de suite) : ses images (affiche,
+  fond, logo : déposer une image sur une case, « Retirer » rend celle de Steam) et ses couleurs (Automatiques ·
+  Choisies : A et B parmi les couleurs de ses images, bornées et mêlées comme les autres · Thème : jamais teintée).
 
 ---
 
@@ -246,13 +275,17 @@ Pause en 240 ms (survol, molette, défilement rapide, glisser), reprise lente en
 onglets verticaux (`src/features/settings/`, textes `src/i18n/fr-settings.json`) :
 - **Général** : raccourci (Ctrl+Alt+H), mode économe, Échap cache Kayro, cliquer ailleurs cache Kayro, démarrer avec Windows.
 - **Visuel** : Qualité (Auto · Éco · **Équilibré** · Élevé · Ultra) ; Atmosphère (Douce 0,6 · **Normale 1** · Forte 1,3) ;
-  Mouvement (Complet · **Vivant** · Net) ; Suivre Windows ; Mode d'affichage (+ écran du mode immersif) ; puis
-  **Personnalisation avancée** : Flottaison des cartes, Ouverture au lancement, Changement de thème, Dépliage et
-  Élasticité du widget, Survol des cartes (**Complet** · Simple · Aucun), Bokeh du fond, Particules, Lumière du curseur ;
+  Couleurs du jeu (Désactivé · **Léger** · Immersif) ; Mouvement (Complet · **Vivant** · Net) ; Suivre Windows ;
+  Mode d'affichage (+ écran du mode immersif) ; puis **Personnalisation avancée** : Flottaison des cartes, Ouverture
+  au lancement, Changement de thème, Dépliage et Élasticité du widget, Survol des cartes (**Complet** · Simple ·
+  Aucun), Bokeh du fond, Particules, Lumière du curseur, puis les couleurs du jeu : Intensité (Douce · **Normale** ·
+  Forte), Caractère (**Comme le thème** · Fidèle à l'affiche · Vive), Couleur principale (**Dominante** · La plus
+  vive · Accordée au thème), Passage d'un jeu à l'autre (**Marée** · Fondu · Direct), Moment du changement
+  (**Sélection posée** · Tout de suite · Au lancement), Image du jeu en fond (Immersif, **oui**), Apps sans image
+  aux couleurs de leur icône (**oui**) ;
   enfin « Revenir aux réglages par défaut » (tout Visuel sauf l'affichage), avec « Annuler » tant qu'aucun réglage
   Visuel n'a été changé ensuite.
 - **Thèmes** : grille des 6 cartes 240 × 150 ; un clic applique et joue l'onde.
-- « Couleurs du jeu » (`color_mode`) reste **masqué** jusqu'à l'étape 14 (valeur gardée dans le schéma).
 Défauts : `VISUAL_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::default` (`src-tauri/src/config/schema.rs`).
 
 ---
@@ -260,11 +293,15 @@ Défauts : `VISUAL_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::def
 ## 6. Performance
 
 - **Budget** : p95 de l'intervalle entre images **≤ 5,4 ms**, en Élevée **et** en Éco, mesuré dans l'exe de production
-  (2560 × 1440, écran à ~280 Hz). Tenu partout à la remesure du 14/10 (`docs/PERF-ETAPE13.md`).
+  (2560 × 1440, écran à ~280 Hz). Tenu partout à la remesure du 14/10 (`docs/PERF-ETAPE13.md`) et à l'étape 14
+  (`docs/PERF-ETAPE14.md` : 3,7 ms partout, couleurs du jeu comprises).
 - **Tolérances acceptées à l'étape 13** (14/10) : au plus 1 image > 8 ms par occurrence d'une signature ; en Élevée, la
   liaison, le retour et les onglets gardent 1 à 2 images de 10 à 14 ms (la tâche du clic) ; l'onde garde 1 à 2 images
   de 15 à 25 ms à l'impact (capture de la View Transition, cachée sous l'image figée) ; aucune image > 16 ms pendant la
   liaison, le retour, les onglets ou le survol.
+- **Accepté à l'étape 14** (15/10) : la marée garde 2 images > 8 ms par changement de jeu en Élevée (toutes ≤ 14,3 ms),
+  1 en Éco. Ces chiffres dépendent du fond de la machine : une remesure se compare en A/B, avec `--exe`, à un exe
+  plus ancien mesuré dans les mêmes conditions.
 - **Cadence** (`CADENCE`, `src/fx/budget.ts`) : pointeur seul 60 i/s ; sous un dialogue 30 ; au repos (ambiance seule)
   30 en Élevée et Équilibré ; séquence 60 ; verre qui suit 60. Éco : tout à 30. **Ultra** : non plafonné (≤ 144),
   seul le plafond du dialogue s'applique.
@@ -286,11 +323,13 @@ Défauts : `VISUAL_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::def
 3. **Aucune signature** (§ 4) ne change sans décision de l'utilisateur ; un dosage se change par son jeton et se note
    dans `DA-JOURNAL.md` (date, avant → après, jeton, pourquoi).
 4. Tout nouvel effet : derrière `FxLayer`, avec repli CSS, coût mesuré par `npm run perf` en Élevée et Éco.
-5. **Pistes notées pour l'étape 14** (couleurs du jeu, ambiances par jeu) :
+5. **Pistes notées pour l'étape 14** (couleurs du jeu, ambiances par jeu ; les trois premières sont appliquées aux
+   couleurs du jeu, § 2 ; la mesure des deux chemins de la liaison passe à l'audit, étape 18) :
    - changer les couleurs **en un recalcul** : variables écrites d'un coup, sans transition déclarée en permanence, sans
      lecture forcée après l'écriture ;
    - **pas de View Transition à chaque changement de jeu** (une capture plein écran = 1 à 2 images lentes) ;
    - **couleurs du moteur par la palette** (`FxPalette`), jamais en relisant le CSS ;
    - liaison et onglets : mesurer les deux chemins (éventail prêt à 0 % d'opacité, ou recalcul allégé au changement
      de thème / catégorie) avec `npm run perf -- --trace … --invalidations` ;
-   - les affiches dans le verre (`posterGlass`, éteint) attendent l'art local.
+   - les affiches dans le verre (`posterGlass`) : restent éteintes, la planche de l'étape 14 a retenu l'affiche plate
+     (V9 c).

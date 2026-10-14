@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import styles from "./Backdrop.module.css";
 
 /**
@@ -6,9 +6,9 @@ import styles from "./Backdrop.module.css";
  * `src/fx/`), then film grain and vignette on top. Gradients only (no filter: blur), so it stays
  * cheap on a full-screen surface.
  */
-export function Backdrop({ children }: { children?: ReactNode }) {
+export function Backdrop({ children, style }: { children?: ReactNode; style?: CSSProperties }) {
   return (
-    <div className={styles.root} aria-hidden="true">
+    <div className={styles.root} style={style} aria-hidden="true">
       {children}
       <div className={styles.grain} />
       <div className={styles.vignette} />

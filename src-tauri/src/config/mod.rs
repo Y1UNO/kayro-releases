@@ -4,6 +4,7 @@
 pub mod apps;
 pub mod atomic;
 pub mod dirstore;
+pub mod game_colors;
 pub mod migrate;
 pub mod scene;
 pub mod scene_ops;

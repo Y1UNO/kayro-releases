@@ -68,6 +68,27 @@ fn add_list_reload_update_remove() {
 }
 
 #[test]
+fn an_apps_own_colours_are_kept_and_checked() {
+    use super::game_colors::AppColors;
+    let (dir, s) = state();
+    let mut app = s.add_app(new_app("Hades II")).unwrap();
+    assert_eq!(app.colors, None, "automatic by default");
+    app.colors = Some(AppColors::Chosen {
+        a: "#1d342f".into(),
+        b: "#89b08e".into(),
+    });
+    s.update_app(app.clone()).unwrap();
+    let again = ConfigState::load(DataPaths::new(dir.path()));
+    assert_eq!(again.apps().apps, vec![app.clone()]);
+    app.colors = Some(AppColors::Chosen {
+        a: "red".into(),
+        b: "#000000".into(),
+    });
+    let e = s.update_app(app).unwrap_err();
+    assert_eq!(e.field.as_deref(), Some("colors"));
+}
+
+#[test]
 fn ids_are_unique_and_valid() {
     let (_d, s) = state();
     let ids: Vec<_> = ["Pokémon Épée", "Pokémon Épée", "!!!", "", "A  B"]

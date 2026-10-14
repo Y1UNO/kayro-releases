@@ -3,7 +3,8 @@ import type { AppEntry } from "../../ipc/bindings";
 import { t } from "../../i18n";
 import { EditIcon, useGlass } from "../../design";
 import { markGlassDirtyFor } from "../../design/glass/glassRegistry";
-import { posterUrl } from "./art";
+import { useArtUrl, usePosterUrl } from "./art";
+import { IconFace } from "../gameColors/IconFace";
 import { faceMixOf, monogram, shadeOf } from "./cardLook";
 import { currentMotion } from "../../design/motion/current";
 import { durOf } from "../../design/motion/tokens";
@@ -82,8 +83,12 @@ export function AppCard({
     // Added to the card's own transform (the carousel's scale stays).
     el.animate([x(0), x(-a), x(a), x(-b), x(b), x(0)], { duration: ms, composite: "add" });
   }, [failed]);
-  const poster = posterUrl(app);
+  const poster = usePosterUrl(app);
   const icon = useAppIcon(app);
+  // Step 14: the game's logo instead of its name on the active card (V9 c); a card without a
+  // picture in its icon's colours (V10 b).
+  const logo = useArtUrl(app.id, "logo");
+  const withLogo = Boolean(poster && logo && mode === "stage");
   const stage = mode === "stage";
   const hidden = stage && !isVisible(d);
   const vars = cssVars({
@@ -132,8 +137,8 @@ export function AppCard({
               <span className={face.posterShade} />
             </>
           ) : (
-            // Round 5: the theme's A → B face; where between A and B: a draw per app.
-            <span className={face.face} style={cssVars({ "--mix": `${faceMixOf(app.id)}%` })} />
+            // Round 5: the theme's A → B face (step 14: or its icon's colours); A → B: a draw per app.
+            <IconFace id={app.id} mix={faceMixOf(app.id)} className={face.face} />
           )}
           {stage && <span className={styles.veil} aria-hidden="true" />}
           {!poster && icon && (
@@ -155,9 +160,16 @@ export function AppCard({
           <span className={styles.sheen} data-pointer-sheen="" aria-hidden="true" />
           {running && <span className={styles.running} aria-hidden="true" />}
           <span className={fail.ring} data-on={failed ? "" : undefined} aria-hidden="true" />
-          <span className={styles.plate} data-face="">
+          <span
+            className={withLogo ? `${styles.plate} ${face.withLogo}` : styles.plate}
+            data-face=""
+          >
             {app.name}
           </span>
+          {withLogo && (
+            // Decorative: the button's label names the app.
+            <img className={face.logo} src={logo!} alt={""} draggable={false} decoding="async" />
+          )}
         </button>
         {/* Mouse shortcut; the keyboard has F2 and the context-menu key (see HomeScreen). */}
         <button

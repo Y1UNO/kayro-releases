@@ -34,3 +34,7 @@ spikes/**/captures/
 spikes/**/*.png
 Cargo.lock.bak
 spikes/**/gen/
+
+# Coffre Obsidian (docs/)
+docs/.obsidian/
+docs/.trash/

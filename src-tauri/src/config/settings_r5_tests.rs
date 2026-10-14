@@ -109,3 +109,36 @@ fn patches_reach_every_new_field_and_atmosphere_goes_up_to_1_3() {
         .unwrap_err();
     assert_eq!(e.field.as_deref(), Some("atmosphereIntensity"));
 }
+
+#[test]
+fn game_colour_choices_default_to_the_board_and_unknown_values_fall_back() {
+    use super::schema::{ColorCharacter, ColorIntensity, ColorPassage, ColorPick, ColorTrigger};
+    let s = Settings::default();
+    assert_eq!(s.color_intensity, ColorIntensity::Normal);
+    assert_eq!(s.color_character, ColorCharacter::Theme);
+    assert_eq!(s.color_pick, ColorPick::Dominant);
+    assert_eq!(s.color_passage, ColorPassage::Tide);
+    assert_eq!(s.color_trigger, ColorTrigger::Select);
+    assert!(s.color_hero && s.color_from_icon);
+    // An older file has none of them; a hand-edited one may hold nonsense: defaults, the rest kept.
+    let (_d, s) = load_settings(
+        r#"{"schemaVersion":2,"colorPassage":"wave","colorTrigger":"launch","colorHero":false}"#,
+    );
+    assert_eq!(s.color_passage, ColorPassage::Tide);
+    assert_eq!(s.color_trigger, ColorTrigger::Launch);
+    assert!(!s.color_hero);
+    let dir = tempfile::tempdir().unwrap();
+    let state = ConfigState::load(DataPaths::new(dir.path()));
+    let out = state
+        .set_settings(SettingsPatch {
+            color_intensity: Some(ColorIntensity::Strong),
+            color_pick: Some(ColorPick::Vivid),
+            color_from_icon: Some(false),
+            ..Default::default()
+        })
+        .unwrap();
+    assert_eq!(
+        ConfigState::load(DataPaths::new(dir.path())).settings(),
+        out
+    );
+}

@@ -36,6 +36,27 @@ pas définitif : des détails peuvent encore bouger aux étapes suivantes, mais 
 | Date | Quoi | Avant → après | Jeton / fichier | Pourquoi | Décidé par |
 |---|---|---|---|---|---|
 | 2026-10-14 | Description du thème Lavande-pêche (sous sa carte, Réglages › Thèmes) | « Lavande et pêche du logo. Le thème par défaut. » → « Lavande et pêche du logo. » | `src/design/themes/lavande-peche.json` | Bleu-gris est le défaut depuis R5 | l'utilisateur |
+| 2026-10-14 | Affiches sur les cartes d'apps (carrousel, grille) | toutes les cartes en face A → B + icône ou lettre → **affiche locale** quand l'app en a une (image déposée sur la carte, sinon cache Steam : 600 × 900 ou capsule 300 × 450, variante française d'abord), avec le rendu d'affiche déjà présent (`.poster` + `.posterShade`, opacité `--da-poster-opacity` dans le verre) ; sans image, face inchangée. Jeux Steam sans icône du Shell : petite icône Steam (32 px) au lieu de la lettre (scènes, palette, widget) | `src/features/home/art.ts`, `AppCardFace.module.css`, `useAppIcon.ts` | étape 14, paquet 1 (art local) ; le rendu de l'affiche (V9) sera tranché sur la planche | l'utilisateur (plan de l'étape 14) |
+| 2026-10-14 | Couleurs du jeu (Léger par défaut) : ambiance du moteur et accents de l'accueil aux couleurs du jeu sélectionné | thème seul → A/B du jeu mêlés au thème (60 %) ; filet du titre, filets de survol, anneau de focus de l'accueil en `--game-a`/`--game-b` ; dialogues et Réglages au thème | `src/features/gameColors/`, `tokens.css` (`--game-a`, `--game-b`), `CategoryTitle.module.css`, `Rim.module.css`, `focusShadow` | planche V1 b, V2 b, V4 a, V5 a, V6 a | l'utilisateur |
+| 2026-10-14 | Passage d'un jeu à l'autre : marée | (aucun) → cercle depuis la carte active, 700 ms `standard`, bande 0,55, après 180 ms de sélection posée ; retour au thème sur l'éventail par la même marée | `GAME_COLORS` (`tokens14.ts`), `paletteTween.ts`, `bgShader.ts` | planche V7 c, V8 b, V10 a | l'utilisateur |
+| 2026-10-14 | Immersif : nuit et héros du jeu ; carte active : logo ; app sans image : couleurs de l'icône | nuit du thème → nuit du jeu + héros flouté (0,75, fondu 18–60 %) ; nom → logo du jeu (carte active avec affiche) ; face A → B du thème → de l'icône | `heroTexture.ts`, `AppCardFace.module.css` (`.logo`), `useIconFace.ts` | planche V3 b, V9 c, V10 b | l'utilisateur |
+| 2026-10-14 | Réglages des couleurs du jeu ; panneau « Apparence » du dialogue de modification | « Couleurs du jeu » masqué → visible dans Visuel (Désactivé · Léger · Immersif) + 7 lignes en Personnalisation avancée ; dialogue : (rien) → images de l'app (3 cases à déposer) et ses couleurs (Automatiques · Choisies · Thème, pastilles A / B, aperçu) | `VisualSection.tsx`, `AdvancedSection.tsx`, `src/features/gameColors/AppArtTiles.tsx`, `AppColorsChoice.tsx`, `AppLook.module.css` | étape 14, paquet 5 : un maximum de personnalisation | l'utilisateur (plan de l'étape 14) |
+
+**Étape 14 — décisions tranchées sur la planche (2026-10-14)** : planche locale `reference/planches-14/` (non suivie :
+vrais thèmes, vraies affiches Steam de ce PC lues en place). L'utilisateur retient toutes les options recommandées :
+- « Couleurs du jeu » : **Léger** par défaut ;
+- V1 b : 60 % de la couleur du jeu mêlée au thème ;
+- V2 b : en Léger, l'ambiance (lune, anneau, bokeh, braises, teinte du verre) et les accents (filet du titre, onglet
+  actif, anneau de focus, filets de survol) ;
+- V3 b : en Immersif, en plus, fond et brume aux couleurs du jeu, et héros flouté de Steam en haut, fondu dans la nuit ;
+- V4 a : jamais teintés : texte, dialogues, Réglages ;
+- V5 a : A = dominante, B = accent ; une image d'une seule couleur prend l'accent de l'autre image du jeu, sinon du thème ;
+- V6 a : bornes des thèmes (L 0,72–0,85, C ≤ 0,12) ;
+- V7 c : « marée » depuis la carte active, 700 ms, courbe `standard`, sans View Transition ;
+- V8 b : 180 ms après que la sélection se pose, rien pendant un défilement rapide ;
+- V9 c : affiche plate, nom sur l'ombre de pied ; logo du jeu à la place du nom sur la carte active ;
+- V10 : en sortant des jeux, fondu vers le thème ; app sans image : couleurs de son icône.
+Les lignes du tableau ci-dessus suivent au fil du code (paquets 4 et 5).
 
 **Avant le gel** : tout ce qui suit est l'historique de l'atelier (rondes 1 à 5, relecture finale, étape 13). Les
 fichiers de préréglages et l'atelier qu'il cite n'existent plus dans l'arbre (tag `perf-13-fix` pour les retrouver).

@@ -1,11 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Backdrop, themeGradient, useTheme, type Quality, type Theme } from "../design";
 import { effectiveQuality } from "../design/quality";
 import { useDa } from "../design/da";
+import { ELEMENTS } from "../design/da/catalogue";
 import { parseColor } from "../lib/color";
 import { useHub } from "../store";
 import { createFx } from "./createFx";
-import type { FxLayer, FxPalette } from "./FxLayer";
+import type { FxLayer, FxPalette, FxTarget } from "./FxLayer";
 import { onWindowVisibility } from "../ipc/events";
 
 interface Props {
@@ -14,6 +15,13 @@ interface Props {
   intensity?: number;
   /** Other layers than the default ones (tests). Read once, at mount. */
   layers?: () => FxLayer[];
+  /** Colours other than the theme's (step 14: the selected game's). */
+  palette?: FxPalette;
+  /**
+   * A change to play from `origin` (a new `id` each time): a tide from there, or a fade of the whole
+   * screen; null: changes are instant.
+   */
+  change?: { id: number; origin: FxTarget | null; kind: "tide" | "fade" } | null;
 }
 
 function rgbOf(css: string): [number, number, number] {
@@ -31,7 +39,7 @@ export function themePalette(theme: Theme): FxPalette {
  * Quality and intensity come from the settings; the palette from the theme (step 14: the game's).
  * Paused while the page is hidden (the complete standby — focus lost, game in front — is step 13).
  */
-export function Atmosphere({ quality, intensity, layers }: Props) {
+export function Atmosphere({ quality, intensity, layers, palette, change = null }: Props) {
   const slot = useRef<HTMLDivElement>(null);
   const [fx, setFx] = useState<FxLayer | null>(null);
   const { theme } = useTheme();
@@ -65,7 +73,18 @@ export function Atmosphere({ quality, intensity, layers }: Props) {
 
   // Params and palette before quality: the particles start once they have their sprite colours.
   useLayoutEffect(() => fx?.setParams(params), [fx, params]);
-  useLayoutEffect(() => fx?.setPalette(themePalette(theme)), [fx, theme]);
+  // Step 14: a new change plays the tide from its card; the rest (theme, setting) is instant.
+  const played = useRef(0);
+  useLayoutEffect(() => {
+    if (!fx) return;
+    const fresh = change !== null && change.id !== played.current;
+    if (change) played.current = change.id;
+    if (fresh) fx.setFocusTarget(change.origin);
+    fx.setPalette({
+      ...(palette ?? themePalette(theme)),
+      passage: fresh ? change.kind : "instant",
+    });
+  }, [fx, theme, palette, change]);
   useLayoutEffect(() => fx?.setQuality(q), [fx, q]);
   useLayoutEffect(() => fx?.setIntensity(k), [fx, k]);
 
@@ -73,8 +92,18 @@ export function Atmosphere({ quality, intensity, layers }: Props) {
     if (fx && document.hidden) fx.pause();
   }, [fx]);
 
+  // Step 14, CSS fallback: the immersive night of a game, on the backdrop (the engine draws its own).
+  const night = palette?.bg?.some((c, i) => c !== theme.bg[i]) ? palette.bg : null;
+  const shape = params.backdrop;
+  const backdrop = useMemo((): CSSProperties | undefined => {
+    if (!night) return undefined;
+    const da = ELEMENTS.get("backdrop")?.css?.(shape ?? { on: true }) ?? {};
+    const vars = { "--bg-top": night[0], "--bg-mid": night[1], "--bg-bottom": night[2] };
+    return { ...vars, "--da-bg": da["--da-bg"] } as CSSProperties;
+  }, [night, shape]);
+
   return (
-    <Backdrop>
+    <Backdrop style={backdrop}>
       <div ref={slot} style={{ position: "absolute", inset: 0 }} />
     </Backdrop>
   );

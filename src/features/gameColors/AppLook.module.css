@@ -1,0 +1,131 @@
+/* Step 14, edit dialog of an app: « Apparence » (its images and its colours). Tokens only: rows
+   and tiles in --radius-row, swatches in --radius-pill, the dialog's text sizes. */
+.look {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-row);
+  background: var(--field);
+  box-shadow: var(--field-inset);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.title {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.help {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--text-3);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.tile {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+/* Drop target: the image in use, or « Aucune ». */
+.drop {
+  width: 100%;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-row);
+  border: 1px dashed var(--glass-border);
+  background: var(--fill-soft);
+}
+
+.drop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drop[data-role="logo"] img {
+  object-fit: contain;
+  padding: var(--space-2);
+  box-sizing: border-box;
+}
+
+.none {
+  font-size: var(--fs-12);
+  color: var(--text-3);
+}
+
+.tileLabel {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.tileLabel small {
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.colors {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+}
+
+.swatchRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.swatchLabel {
+  min-width: 90px;
+  font-size: var(--fs-13);
+  color: var(--text-2);
+}
+
+.swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: transform var(--m1-micro) var(--m-ease-in);
+}
+
+.swatch:hover {
+  transform: scale(1.08);
+}
+
+.swatch[aria-checked="true"] {
+  box-shadow:
+    0 0 0 2px var(--bg-mid),
+    0 0 0 4px var(--text);
+}
+
+.swatch:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus);
+}
+
+/* What the home will take: A → B, or the theme's when the app is not tinted. */
+.preview {
+  width: 100%;
+  height: 10px;
+  border-radius: var(--radius-pill);
+}

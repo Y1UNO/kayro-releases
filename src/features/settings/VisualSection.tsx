@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, SegmentedControl } from "../../design";
 import { t } from "../../i18n";
-import type { DisplayMode, MonitorInfo, Quality, SettingsPatch } from "../../ipc/bindings";
+import type {
+  ColorMode,
+  DisplayMode,
+  MonitorInfo,
+  Quality,
+  SettingsPatch,
+} from "../../ipc/bindings";
 import { desktopIpc } from "../../ipc/commands";
 import { hubStore, useHub } from "../../store";
 import type { MotionStyle } from "../../design/motion/tokens5";
@@ -84,6 +90,16 @@ export function VisualSection() {
         options={(["soft", "normal", "strong"] as const).map((l) => ({
           value: l,
           label: t(`settings.visual.atmosphere.${l}`),
+        }))}
+      />
+      <ChoiceRow<ColorMode>
+        label={t("settings.visual.gameColors.label")}
+        help={t("settings.visual.gameColors.help")}
+        value={settings.colorMode}
+        onChange={(colorMode) => set({ colorMode })}
+        options={(["off", "light", "immersive"] as const).map((m) => ({
+          value: m,
+          label: t(`settings.visual.gameColors.${m}`),
         }))}
       />
       <ChoiceRow<MotionStyle>

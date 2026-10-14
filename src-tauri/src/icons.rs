@@ -5,18 +5,25 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::config::apps::{AppEntry, Launch};
+use crate::config::apps::{AppEntry, AppSource, Launch};
 use crate::detect::short_hash;
-use crate::platform::icon::Rgba;
+use crate::platform::icon::{Rgba, APPS_FOLDER};
 
 /// Side of the stored icon, in pixels (cards show it at 56–96 px).
 pub const ICON_PX: u32 = 128;
 
-/// The file the Shell can take an icon from: a program or a shortcut. Links, protocols and
-/// packaged apps have none (the card keeps its monogram).
-pub fn icon_source(launch: &Launch) -> Option<&str> {
-    match launch {
-        Launch::Exe { path, .. } | Launch::Lnk { path } => Some(path),
+/// What the Shell can take an icon from: a program or a shortcut; a packaged app through its
+/// `shell:AppsFolder` item; an Epic game through the program its manifest names. Links, Steam
+/// games and other protocols have none (Steam's own small icon comes through `crate::art`).
+pub fn icon_source(app: &AppEntry) -> Option<String> {
+    match (&app.launch, &app.source) {
+        (Launch::Exe { path, .. } | Launch::Lnk { path }, _) => Some(path.clone()),
+        (Launch::Uwp { aumid }, _) => Some(format!("{APPS_FOLDER}{aumid}")),
+        (Launch::Uri { .. }, AppSource::Epic { app_name }) => {
+            let manifests = crate::detect::epic::EpicSource::system();
+            crate::detect::epic::installed_exe(manifests.manifests(), app_name)
+                .map(|p| p.to_string_lossy().into_owned())
+        }
         _ => None,
     }
 }
@@ -115,12 +122,12 @@ pub fn icon_png(
     app: &AppEntry,
     extract: &dyn Fn(&str) -> Option<Rgba>,
 ) -> Option<Vec<u8>> {
-    let source = icon_source(&app.launch)?;
-    let file = file_for(icons_dir, &app.id, source);
+    let source = icon_source(app)?;
+    let file = file_for(icons_dir, &app.id, &source);
     if let Ok(bytes) = fs::read(&file) {
         return Some(bytes);
     }
-    let icon = shrink(&extract(source)?, ICON_PX);
+    let icon = shrink(&extract(&source)?, ICON_PX);
     let bytes = match encode_png(&icon) {
         Ok(b) => b,
         Err(e) => {
@@ -179,6 +186,7 @@ mod tests {
             art: Art::default(),
             mood_id: None,
             favorite: false,
+            colors: None,
         }
     }
 
@@ -257,6 +265,25 @@ mod tests {
         };
         assert!(icon_png(dir.path(), &link, &|_| panic!("not asked")).is_none());
         assert!(icon_png(dir.path(), &app("x", r"C:\x.exe"), &|_| None).is_none());
+    }
+
+    #[test]
+    fn packaged_apps_ask_the_shell_for_their_apps_folder_item() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut calc = app("calc", "");
+        calc.launch = Launch::Uwp {
+            aumid: "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".into(),
+        };
+        let asked = std::cell::RefCell::new(String::new());
+        let extract = |s: &str| {
+            *asked.borrow_mut() = s.to_string();
+            Some(square(8, [1, 1, 1, 255]))
+        };
+        assert!(icon_png(dir.path(), &calc, &extract).is_some());
+        assert_eq!(
+            *asked.borrow(),
+            r"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"
+        );
     }
 
     #[test]

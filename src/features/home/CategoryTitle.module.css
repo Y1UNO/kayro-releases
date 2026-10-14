@@ -52,13 +52,13 @@
   background: linear-gradient(
     90deg,
     transparent,
-    var(--grad-a) 22%,
-    color-mix(in srgb, var(--grad-a), #fff 45%) 50%,
-    var(--grad-b) 78%,
+    var(--game-a) 22%,
+    color-mix(in srgb, var(--game-a), #fff 45%) 50%,
+    var(--game-b) 78%,
     transparent
   );
   box-shadow: 0 0 calc(10px * var(--da-underline-glow, 0))
-    color-mix(in srgb, var(--grad-a) calc(var(--da-underline-glow, 0) * 100%), transparent);
+    color-mix(in srgb, var(--game-a) calc(var(--da-underline-glow, 0) * 100%), transparent);
   transition: width var(--dur-card) var(--ease);
 }
 

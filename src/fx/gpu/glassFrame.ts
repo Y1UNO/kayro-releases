@@ -35,7 +35,16 @@ function themeTint(): [number, number, number] {
   return c ? [c.r / 255, c.g / 255, c.b / 255] : [0.03, 0.02, 0.05];
 }
 
-/** Static info of an entry (radius, style chain, clipping ancestor, depth, tint). */
+/** Where the glass tints of cards and pills come from (step 14: the palette, see paletteTween.ts). */
+export interface TintSource {
+  tint(kind: GlassKind, base: readonly number[], x: number, y: number): readonly number[];
+}
+
+/**
+ * Static info of an entry (radius, style chain, clipping ancestor, depth, tint). Cards and pills
+ * keep only their shade here (cards: `--k`, pills: 1); their colour comes from the palette at each
+ * frame (step 14: no more reading of `--card` / `--accent`, and the tide can pass over them).
+ */
 function refresh(e: GlassEntry, dark: [number, number, number]): void {
   const cs = getComputedStyle(e.el);
   e.radius = parseRadius(cs.borderTopLeftRadius);
@@ -53,15 +62,10 @@ function refresh(e: GlassEntry, dark: [number, number, number]): void {
   }
   e.depth = e.el.parentElement?.closest("[data-glass-kind]") ? 1 : 0;
   if (e.kind === "card") {
-    const c = parseColor(cs.getPropertyValue("--card"));
     const k = parseFloat(cs.getPropertyValue("--k")) || 1;
-    e.tint = c ? [(c.r / 255) * k, (c.g / 255) * k, (c.b / 255) * k] : dark;
-  } else if (e.kind === "pill") {
-    // A selection reads lighter than its bar: a pale tint of the theme colour.
-    const a = parseColor(cs.getPropertyValue("--accent"));
-    const m = (x: number | undefined) => 0.75 + 0.25 * ((x ?? 255) / 255);
-    e.tint = [m(a?.r), m(a?.g), m(a?.b)];
-  } else e.tint = dark;
+    e.tint = [k, k, k];
+  } else if (e.kind === "pill") e.tint = [1, 1, 1];
+  else e.tint = dark;
   e.dirty = false;
 }
 
@@ -95,6 +99,7 @@ export class GlassFrame {
   private readonly prevP = new Float32Array(MAX_GLASS);
   private readonly clips = new Map<HTMLElement, DOMRect>();
   private readonly stacked: { e: GlassEntry; pose: GlassPose }[] = [];
+  private colours: TintSource | null = null;
 
   /** Measures every drawn element; true when a shape moved or changed since the last call. */
   measure(
@@ -103,8 +108,10 @@ export class GlassFrame {
     posters: PosterPass | null = null,
     poses: ReadonlyMap<Element, GlassPose> | null = null,
     hoverEl: Element | null = null,
+    colours: TintSource | null = null,
   ): boolean {
     let dark: [number, number, number] | null = null;
+    this.colours = colours;
     this.hoverEl = hoverEl;
     this.hover = -1;
     this.clips.clear();
@@ -183,7 +190,8 @@ export class GlassFrame {
     const o = this.n * 4;
     this.R.set([cx, cy, hw, hh], o);
     this.S.set([radius, KIND_INDEX[e.kind], opacity, e.depth], o);
-    this.T.set([e.tint[0], e.tint[1], e.tint[2], tint(e.kind)], o);
+    const c = this.colours ? this.colours.tint(e.kind, e.tint, cx, cy) : e.tint;
+    this.T.set([c[0]!, c[1]!, c[2]!, tint(e.kind)], o);
     // .w: stack order + the floating height (round 5) in its fraction (the shader reads `fract`).
     const elev = Math.min(0.99, Math.max(0, pose?.elev ?? float?.elev ?? 0));
     const a = pose?.a ?? float?.rot ?? 0;

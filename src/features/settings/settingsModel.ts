@@ -40,6 +40,15 @@ export const VISUAL_DEFAULTS = {
   bokeh: true,
   particles: true,
   cursorLight: true,
+  // Step 14, game colours: the decisions of the board (DA-JOURNAL, 14/10).
+  colorMode: "light",
+  colorIntensity: "normal",
+  colorCharacter: "theme",
+  colorPick: "dominant",
+  colorPassage: "tide",
+  colorTrigger: "select",
+  colorHero: true,
+  colorFromIcon: true,
 } as const satisfies SettingsPatch;
 
 type VisualKey = keyof typeof VISUAL_DEFAULTS;

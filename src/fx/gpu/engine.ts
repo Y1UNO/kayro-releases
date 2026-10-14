@@ -1,8 +1,9 @@
 import type { Quality } from "../../design";
+import { currentMotion } from "../../design/motion/current";
 import { markGlassDirty, type GlassKind } from "../../design/glass/glassRegistry";
 import { cadenceFor, underDialog, type Cadence } from "../budget";
 import { dialogOpen } from "../cadenceCap";
-import type { FxLayer, FxPalette, FxParams } from "../FxLayer";
+import type { FxLayer, FxPalette, FxParams, FxTarget } from "../FxLayer";
 import { frameLoop, type FrameLoop, type Unsubscribe } from "../loop";
 import { prefersReducedMotion } from "../motionPref";
 import { BudgetWatch } from "./budgetWatch";
@@ -18,6 +19,8 @@ import {
 } from "./cues";
 import { rgb01 } from "./gl";
 import { GlassFrame } from "./glassFrame";
+import { HeroTextures } from "./heroTexture";
+import { PaletteTween } from "./paletteTween";
 import { posterPassOf, shapeUniforms } from "./glassPass";
 import { PosterTextures } from "./posterTextures";
 import { PointerLight } from "./pointer";
@@ -79,6 +82,9 @@ export class GlassEngine implements FxLayer {
   private readonly scene = new Scene();
   private readonly frame = new GlassFrame();
   private posters: PosterTextures | null = null;
+  /** Step 14: passage between palettes (the tide) and the immersive hero. */
+  private readonly tween = new PaletteTween();
+  private hero: HeroTextures | null = null;
   private readonly pointer = new PointerLight();
   private readonly watch = new BudgetWatch();
   private readonly onResize = () => {
@@ -116,8 +122,13 @@ export class GlassEngine implements FxLayer {
 
   setPalette(p: FxPalette): void {
     this.palette = p;
+    const reduced = prefersReducedMotion();
+    const { W, H } = this.view;
+    this.tween.set(p, W, H, currentMotion().speed, reduced, performance.now());
+    this.hero?.set(p.hero ?? null, this.tween.running, reduced, () => (this.dirty = true));
     // Step 13: the theme's own colours, not the page's computed style (each read forced a restyle).
-    if (p.bg) this.setBg(p.bg.map(rgb01));
+    // A game's tide leaves the glass alone: its tints come from the palette at each frame.
+    if (p.bg) this.setBg(p.bg.map(rgb01), p.passage !== "tide");
     else this.readTheme();
   }
 
@@ -126,7 +137,9 @@ export class GlassEngine implements FxLayer {
     this.dirty = true;
   }
 
-  setFocusTarget(): void {}
+  setFocusTarget(t: FxTarget | null): void {
+    this.tween.focus(t);
+  }
 
   pause(): void {
     this.paused = true;
@@ -192,7 +205,9 @@ export class GlassEngine implements FxLayer {
     this.gl = gl;
     this.renderer = renderer;
     this.posters = new PosterTextures(gl);
-    this.readTheme();
+    this.hero = new HeroTextures(gl);
+    this.hero.set(this.palette?.hero ?? null, false, true, () => (this.dirty = true));
+    if (!this.palette?.bg) this.readTheme();
     return true;
   }
 
@@ -210,6 +225,8 @@ export class GlassEngine implements FxLayer {
     this.canvas?.removeEventListener("webglcontextlost", this.onLost);
     this.posters?.dispose();
     this.posters = null;
+    this.hero?.dispose();
+    this.hero = null;
     this.renderer?.dispose();
     this.gl?.getExtension("WEBGL_lose_context")?.loseContext();
     this.canvas?.remove();
@@ -239,9 +256,9 @@ export class GlassEngine implements FxLayer {
     this.setBg(["--bg-top", "--bg-mid", "--bg-bottom"].map((n) => rgb01(s.getPropertyValue(n))));
   }
 
-  private setBg(bg: number[][]): void {
+  private setBg(bg: number[][], glass = true): void {
     this.bg = bg;
-    markGlassDirty();
+    if (glass) markGlassDirty();
     this.dirty = true;
   }
 
@@ -296,6 +313,9 @@ export class GlassEngine implements FxLayer {
       this.dirty = true;
     }
     this.scene.step(dt);
+    if (this.tween.step(now)) this.dirty = true;
+    this.hero?.step(now);
+    if (!this.tween.running) this.hero?.settle();
     const fading = this.pointer.step(dt);
     const pass = posterPassOf(this.params, this.posters, this.watch);
     pass?.textures.begin();
@@ -304,10 +324,11 @@ export class GlassEngine implements FxLayer {
     const stage = sc ? sc(now) : null;
     const poses = stage?.poses ?? null;
     const hoverEl = stage?.hover?.el ?? null;
-    let moved = this.frame.measure(this.drawn, this.tint, pass, poses, hoverEl);
+    const tw = this.tween;
+    let moved = this.frame.measure(this.drawn, this.tint, pass, poses, hoverEl, tw);
     // A poster just became a texture: draw (the DOM picture was hidden in this same frame).
     if (this.posters?.end())
-      moved = this.frame.measure(this.drawn, this.tint, pass, poses, hoverEl) || true;
+      moved = this.frame.measure(this.drawn, this.tint, pass, poses, hoverEl, tw) || true;
     // A sequence of the interface (the opening) asks for every frame while its picture changes.
     const cue = introCue();
     const intro = cue ? cue(now) : null;
@@ -321,7 +342,8 @@ export class GlassEngine implements FxLayer {
     // A stage sequence (category link, tab) ticks on its own grid: the engine follows it.
     const why = {
       moved,
-      cued,
+      // The tide and a hero fading in are sequences too: every frame of their cadence.
+      cued: cued || tw.running || this.hero?.fading === true,
       dirty: this.dirty,
       ambient: this.scene.animated,
       pointer: fading || this.pointer.moved,
@@ -336,23 +358,27 @@ export class GlassEngine implements FxLayer {
     const { renderer, palette, params: p, view: v } = this;
     if (!renderer || !palette) return;
     const light = lightOf(p, this.pointer);
-    this.scene.fill(p, palette, v.W, v.H, this.intensity);
+    this.scene.fill(p, palette, v.W, v.H, this.intensity, this.tween);
     const ringAllowed = this.watch.allows("ring");
     const intro = this.intro;
     const liquid = ringAllowed && liquidRingOn(p);
     const f = this.frame;
-    const bg = bgUniforms(
-      p,
-      palette,
-      this.bg,
-      this.scene,
-      light,
-      v,
-      this.intensity,
-      ringAllowed,
-      intro,
-      this.stage?.ring ?? null,
-    );
+    const bg = {
+      ...bgUniforms(
+        p,
+        palette,
+        this.bg,
+        this.scene,
+        light,
+        v,
+        this.intensity,
+        ringAllowed,
+        intro,
+        this.stage?.ring ?? null,
+      ),
+      ...this.tween.uniforms(),
+      ...this.hero?.uniforms(v.H),
+    };
     const su = { ...spriteUniforms(p, v), uKind: kindUniform(intro) };
     renderer.render(
       bg,
@@ -363,6 +389,7 @@ export class GlassEngine implements FxLayer {
         ...introVeilUniform(intro),
       },
       this.posters ? () => this.posters!.bind() : null,
+      this.hero ? () => this.hero!.bind() : null,
     );
     this.setState({ active: true, ring: liquid });
   }

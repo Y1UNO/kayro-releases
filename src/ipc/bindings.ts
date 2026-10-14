@@ -116,15 +116,25 @@ export const commands = {
 	ms: number,
 	curve: (number | null)[],
 } | null) => __TAURI_INVOKE<void>("passage_faded", { id, veil }),
+	/**  The images of every app (folder listings only, no image is read). */
+	artIndex: () => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_index")),
+	/**  Copies a dropped image as the app's poster (or hero, logo), replacing the previous one. */
+	artSetUser: (id: string, role: ArtRole, path: string) => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_set_user", { id, role, path })),
+	/**  Forgets the user's image for `role` (Steam's comes back, if there is one). */
+	artClearUser: (id: string, role: ArtRole) => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_clear_user", { id, role })),
+	/**  The palettes known so far (the first pass may still be running: `PalettesChanged` follows). */
+	palettesGet: () => __TAURI_INVOKE<AppPalette[]>("palettes_get"),
 };
 
 /** Events */
 export const events = {
 	appStateChanged: makeEvent<AppStateChanged>("app-state-changed"),
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
+	artChanged: makeEvent<ArtChanged>("art-changed"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
 	modePassage: makeEvent<ModePassage>("mode-passage"),
+	palettesChanged: makeEvent<PalettesChanged>("palettes-changed"),
 	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
 	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
@@ -145,6 +155,21 @@ export type AddReport = {
 	failed: AddFailure[],
 };
 
+/**  The images of one app (apps without any are left out of the index). */
+export type AppArt = {
+	id: string,
+	images: ArtImage[],
+};
+
+/**  The colours of one app, chosen by the user in its edit dialog. Absent = automatic. */
+export type AppColors = 
+/**  The palette of the app's images. */
+{ mode: "auto" } | 
+/**  Two colours picked among the palette's (`#rrggbb`), used as A and B. */
+{ mode: "chosen"; a: string; b: string } | 
+/**  Never tinted: the theme's colours. */
+{ mode: "theme" };
+
 export type AppEntry = {
 	id: string,
 	name: string,
@@ -155,6 +180,8 @@ export type AppEntry = {
 	art: Art,
 	moodId: string | null,
 	favorite: boolean,
+	/**  The user's choice of colours for this app (step 14); absent = automatic. */
+	colors?: AppColors | null,
 };
 
 /**
@@ -165,6 +192,12 @@ export type AppError = {
 	code: ErrorCode,
 	message: string,
 	field: string | null,
+};
+
+export type AppPalette = {
+	id: string,
+	source: PaletteSource,
+	palette: Palette,
 };
 
 export type AppRunState = {
@@ -193,6 +226,34 @@ export type Art = {
 	hero: string | null,
 };
 
+/**  Emitted when the user's images change (the whole index: a few hundred bytes per app). */
+export type ArtChanged = AppArt[];
+
+/**  One image of an app, as the interface sees it. */
+export type ArtImage = {
+	role: ArtRole,
+	origin: ArtOrigin,
+	/**  Size and modification time of the file: changes when the image changes (URL `?v=`). */
+	stamp: string,
+	lowRes: boolean,
+};
+
+/**  Where an image comes from. */
+export type ArtOrigin = "user" | "steam";
+
+/**  What an image is for. */
+export type ArtRole = 
+/**  Vertical poster (cards). */
+"poster" | 
+/**  Wide hero picture (background of the immersive mode, later). */
+"hero" | 
+/**  The hero already blurred by Steam. */
+"heroBlur" | 
+/**  Transparent title logo. */
+"logo" | 
+/**  Small square icon (Steam's 32 px one): for apps the Shell gives no icon for. */
+"icon";
+
 /**  An app the user could add. */
 export type Candidate = {
 	/**  What the user gave (path or address), to tell candidates apart in the interface. */
@@ -211,8 +272,23 @@ export type CardFloat = "none" | "light" | "visible" | "strong";
 /**  « Survol des cartes » (app cards): threads + sheen, lift only, or nothing. */
 export type CardHoverStyle = "full" | "simple" | "none";
 
+/**  Bounds of lightness and chroma (V6): like the themes', faithful to the picture, or vivid. */
+export type ColorCharacter = "theme" | "faithful" | "vivid";
+
+/**  Share of the game's colours mixed into the theme (V1). */
+export type ColorIntensity = "soft" | "normal" | "strong";
+
 /**  How much the colours of the selected game tint the interface (DESIGN.md). */
 export type ColorMode = "off" | "light" | "immersive";
+
+/**  How the colours go from one game to the next (V7): the tide, a fade, or at once. */
+export type ColorPassage = "tide" | "fade" | "direct";
+
+/**  Which colours become A and B (V5): dominant → accent, the two most vivid, dominant → theme B. */
+export type ColorPick = "dominant" | "vivid" | "theme";
+
+/**  When the colours change (V8): once the selection rests, at once, or only when an app starts. */
+export type ColorTrigger = "select" | "instant" | "launch";
 
 /**  Emitted while a scan runs, once per source and state change. */
 export type DetectProgress = {
@@ -384,6 +460,36 @@ export type OpeningDue =
 /**  « Ouverture au lancement »: V1-A with the C pulse, V1-A alone, or nothing. */
 export type OpeningStyle = "pulse" | "classic" | "none";
 
+/**  The colours of an image, largest share first, and the index of each role in `colors`. */
+export type Palette = {
+	colors: PaletteColor[],
+	/**  Largest share among colours that are neither almost black nor almost white. */
+	dominant: number,
+	/**  Most vivid colour clearly apart from the dominant one (the dominant one if none). */
+	accent: number,
+	dark: number,
+	light: number,
+};
+
+/**  One colour in OKLab, with its share of the image. */
+export type PaletteColor = {
+	l: number | null,
+	a: number | null,
+	b: number | null,
+	/**  Share of the visible pixels, 0 to 1. */
+	weight: number | null,
+	/**  The same colour in sRGB (`#rrggbb`), for display and checks. */
+	hex: string,
+};
+
+/**  Which image a palette was taken from. */
+export type PaletteSource = "poster" | "hero" | 
+/**  The program's icon (or Steam's small one), for apps with neither poster nor hero. */
+"icon";
+
+/**  Emitted when the palettes changed (an image was added, changed or removed). */
+export type PalettesChanged = AppPalette[];
+
 export type PassageStep = 
 /**  Fade your content out, then call `passage_faded(id)`. */
 "out" | 
@@ -517,6 +623,16 @@ export type Settings = {
 	bokeh: boolean,
 	particles: boolean,
 	cursorLight: boolean,
+	/**  Game colours (step 14, « Personnalisation avancée »): V1, V6, V5, V7, V8. */
+	colorIntensity: ColorIntensity,
+	colorCharacter: ColorCharacter,
+	colorPick: ColorPick,
+	colorPassage: ColorPassage,
+	colorTrigger: ColorTrigger,
+	/**  Immersive: the game's hero at the top of the night (V3 b); off = its colours only. */
+	colorHero: boolean,
+	/**  An app without a picture takes its icon's colours (V10 b); off = the theme's. */
+	colorFromIcon: boolean,
 };
 
 /**  Emitted after every successful change of the settings (also to the window that made it). */
@@ -545,6 +661,13 @@ export type SettingsPatch = {
 	bokeh?: boolean | null,
 	particles?: boolean | null,
 	cursorLight?: boolean | null,
+	colorIntensity?: ColorIntensity | null,
+	colorCharacter?: ColorCharacter | null,
+	colorPick?: ColorPick | null,
+	colorPassage?: ColorPassage | null,
+	colorTrigger?: ColorTrigger | null,
+	colorHero?: boolean | null,
+	colorFromIcon?: boolean | null,
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */

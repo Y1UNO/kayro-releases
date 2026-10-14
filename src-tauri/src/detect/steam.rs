@@ -58,7 +58,7 @@ impl DetectSource for SteamSource {
 }
 
 /// Steam folder: registry value `HKCU\Software\Valve\Steam\SteamPath`, then the usual place.
-fn find_root() -> Option<PathBuf> {
+pub(crate) fn find_root() -> Option<PathBuf> {
     let from_registry = registry_steam_path().map(|s| PathBuf::from(s.replace('/', "\\")));
     [from_registry, Some(PathBuf::from(DEFAULT_ROOT))]
         .into_iter()
@@ -225,44 +225,13 @@ fn scan_library(library: &Path, steam_root: &Path, ctx: &ScanCtx) -> Vec<Detecte
     apps
 }
 
-/// Best vertical poster and hero in `appcache/librarycache/<appid>`. Steam writes two layouts
-/// (files directly in the folder, or one more level of hash-named folders): look at both.
+/// Best vertical poster and hero in `appcache/librarycache/<appid>` (all layouts and language
+/// variants: `crate::art::locate`).
 pub(crate) fn find_art(steam_root: &Path, app_id: &str) -> (Option<PathBuf>, Option<PathBuf>) {
-    const POSTERS: [&str; 4] = [
-        "library_600x900.jpg",
-        "library_capsule.jpg",
-        "header.jpg",
-        "library_header.jpg",
-    ];
-    let base = steam_root
-        .join("appcache")
-        .join("librarycache")
-        .join(app_id);
-    let mut files: Vec<PathBuf> = Vec::new();
-    let Ok(top) = fs::read_dir(&base) else {
-        return (None, None);
-    };
-    for entry in top.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            if let Ok(sub) = fs::read_dir(&path) {
-                files.extend(sub.flatten().map(|e| e.path()).filter(|p| p.is_file()));
-            }
-        } else {
-            files.push(path);
-        }
-    }
-    let named = |wanted: &str| {
-        files
-            .iter()
-            .find(|p| {
-                p.file_name()
-                    .is_some_and(|n| n.eq_ignore_ascii_case(wanted))
-            })
-            .cloned()
-    };
-    let poster = POSTERS.iter().find_map(|n| named(n));
-    (poster, named("library_hero.jpg"))
+    use crate::art::{locate, ArtRole};
+    let cache = steam_root.join("appcache").join("librarycache");
+    let path = |role| locate::steam(&cache, app_id, role).map(|f| f.path);
+    (path(ArtRole::Poster), path(ArtRole::Hero))
 }
 
 #[cfg(test)]

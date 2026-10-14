@@ -30,6 +30,8 @@ import { CategoryFan, FanTitle } from "./fan/CategoryFan";
 import { useCategoryLink } from "./fan/useCategoryLink";
 import { cardGeometry, useDa } from "../../design/da";
 import { useHomeKeys } from "./useHomeKeys";
+import { usePosterDrop } from "./usePosterDrop";
+import { GameColorsBridge } from "../gameColors/GameColorsBridge";
 import styles from "./HomeScreen.module.css";
 
 const launch = (app: AppEntry) => void hubStore.getState().launchApp(app.id);
@@ -155,6 +157,8 @@ export function HomeScreen({
     columns.current = n;
   }, []);
 
+  // Step 14: an image dropped on a card becomes its poster.
+  usePosterDrop();
   useHomeKeys(
     {
       onArrow: (dx, dy) => {
@@ -252,6 +256,8 @@ export function HomeScreen({
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion={reduced ? "always" : "never"}>
         <main className={styles.screen}>
+          {/* Step 14: the selected app's colours (the fan has none: back to the theme's). */}
+          <GameColorsBridge activeId={onFan ? null : (list[focus]?.id ?? null)} />
           <TopBar
             onSearch={() => setPaletteOpen(true)}
             onAdd={() => setAddOpen(true)}
@@ -261,13 +267,13 @@ export function HomeScreen({
             backRef={backRef}
           />
           <div className={styles.titles}>
-            <div ref={titleRef} aria-hidden={onFan || undefined}>
+            <div ref={titleRef} aria-hidden={onFan || undefined} data-game-accents="">
               <CategoryTitle category={state.category} compact={grid && count > 0} />
             </div>
             <FanTitle askRef={askRef} shown={onFan} />
           </div>
 
-          <div ref={areaRef} className={styles.area}>
+          <div ref={areaRef} className={styles.area} data-game-accents="">
             {fanMounted && (
               <CategoryFan
                 counts={counts}
@@ -327,7 +333,7 @@ export function HomeScreen({
             </div>
           </div>
 
-          <div ref={bottomRef} className={styles.bottom} inert={onFan}>
+          <div ref={bottomRef} className={styles.bottom} inert={onFan} data-game-accents="">
             <CategoryTabs
               category={state.category}
               view={state.view}

@@ -43,6 +43,13 @@
         "normal": "Normale",
         "strong": "Forte"
       },
+      "gameColors": {
+        "label": "Couleurs du jeu",
+        "help": "Léger : l’ambiance et les accents prennent les couleurs du jeu sélectionné. Immersif : le fond aussi, avec l’image du jeu en haut.",
+        "off": "Désactivé",
+        "light": "Léger",
+        "immersive": "Immersif"
+      },
       "motion": {
         "label": "Mouvement",
         "help": "Vivant : la magie au survol des cartes et au lancement d’une app. Complet : partout, même en fenêtre. Net : sans rebond ni effet dans le hub ; le widget suit ses propres réglages.",
@@ -102,7 +109,39 @@
         },
         "bokeh": "Bokeh du fond",
         "particles": "Particules",
-        "cursorLight": "Lumière du curseur"
+        "cursorLight": "Lumière du curseur",
+        "colorIntensity": {
+          "label": "Intensité des couleurs du jeu",
+          "soft": "Douce",
+          "normal": "Normale",
+          "strong": "Forte"
+        },
+        "colorCharacter": {
+          "label": "Caractère des couleurs",
+          "theme": "Comme le thème",
+          "faithful": "Fidèle à l’affiche",
+          "vivid": "Vive"
+        },
+        "colorPick": {
+          "label": "Couleur principale",
+          "dominant": "Dominante",
+          "vivid": "La plus vive",
+          "theme": "Accordée au thème"
+        },
+        "colorPassage": {
+          "label": "Passage d’un jeu à l’autre",
+          "tide": "Marée",
+          "fade": "Fondu",
+          "direct": "Direct"
+        },
+        "colorTrigger": {
+          "label": "Moment du changement",
+          "select": "Sélection posée",
+          "instant": "Tout de suite",
+          "launch": "Au lancement"
+        },
+        "colorHero": "Image du jeu en fond (Immersif)",
+        "colorFromIcon": "Apps sans image aux couleurs de leur icône"
       },
       "reset": {
         "label": "Revenir aux réglages par défaut",

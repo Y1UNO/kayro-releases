@@ -9,6 +9,11 @@ import { isEco } from "../../design/quality";
 import { useReducedMotion } from "../../fx/useReducedMotion";
 import { t } from "../../i18n";
 import type {
+  ColorCharacter,
+  ColorIntensity,
+  ColorPassage,
+  ColorPick,
+  ColorTrigger,
   Elasticity,
   OpeningStyle,
   SettingsPatch,
@@ -195,6 +200,47 @@ export function AdvancedSection({ below }: Props) {
               label={t("settings.visual.advanced.cursorLight")}
               checked={settings.cursorLight}
               onChange={(cursorLight) => set({ cursorLight })}
+            />
+            {/* Step 14: the game colours (defaults = the board of 14/10). */}
+            <ChoiceRow<ColorIntensity>
+              label={t("settings.visual.advanced.colorIntensity.label")}
+              value={settings.colorIntensity}
+              onChange={(colorIntensity) => set({ colorIntensity })}
+              options={opts("colorIntensity", ["soft", "normal", "strong"] as const)}
+            />
+            <ChoiceRow<ColorCharacter>
+              label={t("settings.visual.advanced.colorCharacter.label")}
+              value={settings.colorCharacter}
+              onChange={(colorCharacter) => set({ colorCharacter })}
+              options={opts("colorCharacter", ["theme", "faithful", "vivid"] as const)}
+            />
+            <ChoiceRow<ColorPick>
+              label={t("settings.visual.advanced.colorPick.label")}
+              value={settings.colorPick}
+              onChange={(colorPick) => set({ colorPick })}
+              options={opts("colorPick", ["dominant", "vivid", "theme"] as const)}
+            />
+            <ChoiceRow<ColorPassage>
+              label={t("settings.visual.advanced.colorPassage.label")}
+              value={settings.colorPassage}
+              onChange={(colorPassage) => set({ colorPassage })}
+              options={opts("colorPassage", ["tide", "fade", "direct"] as const)}
+            />
+            <ChoiceRow<ColorTrigger>
+              label={t("settings.visual.advanced.colorTrigger.label")}
+              value={settings.colorTrigger}
+              onChange={(colorTrigger) => set({ colorTrigger })}
+              options={opts("colorTrigger", ["select", "instant", "launch"] as const)}
+            />
+            <ToggleRow
+              label={t("settings.visual.advanced.colorHero")}
+              checked={settings.colorHero}
+              onChange={(colorHero) => set({ colorHero })}
+            />
+            <ToggleRow
+              label={t("settings.visual.advanced.colorFromIcon")}
+              checked={settings.colorFromIcon}
+              onChange={(colorFromIcon) => set({ colorFromIcon })}
             />
           </div>
         </div>

@@ -15,6 +15,7 @@ fn entry(launch: Launch) -> AppEntry {
         art: Art::default(),
         mood_id: None,
         favorite: false,
+        colors: None,
     }
 }
 

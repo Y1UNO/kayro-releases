@@ -11,6 +11,15 @@
   );
 }
 
+/* Step 14, engine off (CSS fallback): the immersive night of a game is written on this element
+   (Atmosphere.tsx) and fades in; with the engine, its canvas covers this one and draws its own. */
+:global(:root[data-glass-fallback]) .root {
+  transition:
+    --bg-top var(--dur-theme) var(--ease),
+    --bg-mid var(--dur-theme) var(--ease),
+    --bg-bottom var(--dur-theme) var(--ease);
+}
+
 /* "Plus aéré" (backdrop.lift): the whole background lifted towards a light mix of the theme. Under
    the atmosphere layers; the glass engine draws its own (its canvas covers this one). */
 .root::before {

@@ -1,3 +1,4 @@
+pub mod art;
 pub mod config;
 pub mod desktop;
 pub mod detect;
@@ -5,6 +6,7 @@ pub mod error;
 pub mod icons;
 pub mod intake;
 pub mod ipc;
+pub mod ipc_art;
 pub mod ipc_desktop;
 pub mod ipc_scenes;
 pub mod launcher;
@@ -63,6 +65,8 @@ pub fn run() {
                 })
                 .build(),
         )
+        // Local images of the apps (step 14): app id + role in, image out; never a path.
+        .register_asynchronous_uri_scheme_protocol(art::protocol::SCHEME, art::protocol::handle)
         .invoke_handler(ipc.invoke_handler())
         .setup(move |app| {
             if asks_to_quit(&std::env::args().collect::<Vec<_>>()) {
@@ -72,7 +76,14 @@ pub fn run() {
             }
             tracing::info!(app_name = %app.package_info().name, "setup done");
             ipc.mount_events(app);
-            app.manage(ConfigState::load(paths::DataPaths::default_location()));
+            let data = paths::DataPaths::default_location();
+            app.manage(art::ArtState {
+                roots: art::ArtRoots::system(data.art_dir()),
+            });
+            app.manage(ConfigState::load(data));
+            // Colours of the apps' images, on a background thread (step 14).
+            app.manage(ipc_art::PaletteWorker::default());
+            app.state::<ipc_art::PaletteWorker>().request(app.handle());
             app.manage(detect::scan::DetectState::default());
             app.manage(scenes::SceneRunner::default());
             app.manage(desktop::DesktopState::default());

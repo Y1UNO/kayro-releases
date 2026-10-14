@@ -160,7 +160,11 @@ pub fn validate_app(app: &AppEntry) -> Check {
         &app.art.poster,
         &app.art.hero,
         &app.mood_id,
-    )
+    )?;
+    match &app.colors {
+        Some(c) => super::game_colors::validate_app_colors(c).or_else(|e| err("colors", e)),
+        None => Ok(()),
+    }
 }
 
 pub fn validate_new_app(app: &NewApp) -> Check {

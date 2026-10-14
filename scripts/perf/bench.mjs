@@ -5,7 +5,7 @@
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CASES, ensure, select } from "./cases.mjs";
-import { makeData, removeData, writeSettings } from "./data.mjs";
+import { BASE_LOOK, makeData, removeData, wantsArt, writeSettings } from "./data.mjs";
 import * as L from "./lib.mjs";
 import { aggregate, markdown, readJsonl } from "./report.mjs";
 import {
@@ -174,7 +174,7 @@ const FORCED = Object.fromEntries(
     .map((kv) => kv.split("="))
     .map(([k, v]) => [k, v === "true" ? true : v === "false" ? false : v]),
 );
-const BASE = { cardFloat: "visible", particles: true, themeId: "lavande-peche", ...FORCED };
+const BASE = { ...BASE_LOOK, ...FORCED };
 let current = {};
 async function apply(patch) {
   const diff = Object.fromEntries(Object.entries(patch).filter(([k, v]) => current[k] !== v));
@@ -363,8 +363,10 @@ async function main() {
     throw new Error("Kayro est ouvert : le quitter d'abord (Kayro.exe --quit).");
   mkdirSync(OUT, { recursive: true });
   const screen = await win.ask("screen");
-  rec({ id: "écran", screen });
-  say("dossier de test :", makeData(QUALITIES[0], screen), "apps ; résultats :", OUT);
+  if (args.exe) L.setExe(String(args.exe)); // A/B of two builds (README)
+  rec({ id: "écran", screen, exe: L.EXE });
+  const n = makeData(QUALITIES[0], screen, wantsArt(args)); // step 14: pictures for G cases
+  say("dossier de test :", n, "apps ; résultats :", OUT);
   await win.ask("awake on");
   if (args.trace) return trace(args.trace);
   if (args.memory) return memoryRun(Number(args.memory) || 10);
