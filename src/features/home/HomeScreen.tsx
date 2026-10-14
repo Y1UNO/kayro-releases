@@ -31,7 +31,7 @@ import { useCategoryLink } from "./fan/useCategoryLink";
 import { cardGeometry, useDa } from "../../design/da";
 import { useHomeKeys } from "./useHomeKeys";
 import { usePosterDrop } from "./usePosterDrop";
-import { useHomeGameColors } from "../gameColors/useHomeGameColors";
+import { GameColorsBridge } from "../gameColors/GameColorsBridge";
 import styles from "./HomeScreen.module.css";
 
 const launch = (app: AppEntry) => void hubStore.getState().launchApp(app.id);
@@ -140,8 +140,6 @@ export function HomeScreen({
     carousel: !grid,
   });
   const onFan = link.mode === "fan";
-  // Step 14: the selected app's colours (the fan has none: back to the theme's).
-  useHomeGameColors(onFan ? null : (list[focus]?.id ?? null));
   const { fanMounted, fanParked, config: linkCfg } = link;
   const { fan: fanRef, area: areaRef, ask: askRef, title: titleRef, back: backRef } = link.bind;
   const { bottom: bottomRef, card: onFanCard } = link.bind;
@@ -258,6 +256,8 @@ export function HomeScreen({
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion={reduced ? "always" : "never"}>
         <main className={styles.screen}>
+          {/* Step 14: the selected app's colours (the fan has none: back to the theme's). */}
+          <GameColorsBridge activeId={onFan ? null : (list[focus]?.id ?? null)} />
           <TopBar
             onSearch={() => setPaletteOpen(true)}
             onAdd={() => setAddOpen(true)}

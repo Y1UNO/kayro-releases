@@ -23,11 +23,17 @@ function locate(id: string | null): FxTarget {
 /** The home's containers that take the game's accents: title, cards, tabs (`data-game-accents`). */
 const targets = () => document.querySelectorAll<HTMLElement>("[data-game-accents]");
 
+/** What each container holds now: an identical write is skipped (no restyle for nothing). */
+const written = new WeakMap<HTMLElement, string>();
+
 /** Writes the accents (V2 b) on the home's containers, or gives them back to the theme. */
 function write(view: GameColorsView): void {
   const c = view.colors;
   const ring = c ? focusShadow(currentMotion().focus, c.a, c.b) : null;
+  const key = c ? `${c.a}|${c.b}|${ring}` : "";
   for (const el of targets()) {
+    if ((written.get(el) ?? "") === key) continue;
+    written.set(el, key);
     const s = el.style;
     if (c && ring) {
       s.setProperty("--game-a", c.a);

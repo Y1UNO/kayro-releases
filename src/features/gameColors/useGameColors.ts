@@ -46,28 +46,40 @@ export function heroOf(id: string, images: readonly ArtImage[] | undefined): FxP
   return sharp ? { url: artUrl(id, sharp), blurred: false } : null;
 }
 
+/**
+ * The settings of « Couleurs du jeu », as plain values: a component re-renders only when one of
+ * them changes, never for another setting (step 14, measured 14/10: whole-object subscriptions
+ * re-rendered every card).
+ */
+export function useColorSettings() {
+  return useHub(
+    useShallow((s) => ({
+      mode: s.settings?.colorMode ?? "light",
+      intensity: s.settings?.colorIntensity ?? DEFAULT_CHOICE.intensity,
+      character: s.settings?.colorCharacter ?? DEFAULT_CHOICE.character,
+      pick: s.settings?.colorPick ?? DEFAULT_CHOICE.pick,
+      fromIcon: s.settings?.colorFromIcon ?? true,
+      hero: s.settings?.colorHero ?? true,
+      passage: s.settings?.colorPassage ?? "tide",
+    })),
+  );
+}
+
 /** The colours of the shown app for `theme`, live (store, palettes, settings, the app's choice). */
 export function useGameColors(theme: Theme): GameColorsView {
   const { shown, origin, since, tide } = useStore(
     gameColorsStore,
     useShallow((s) => s),
   );
-  const settings = useHub((s) => s.settings);
+  const cs = useColorSettings();
   const own = useHub((s) => (shown ? s.apps.find((a) => a.id === shown)?.colors : null) ?? null);
   const palettes = useArt((s) => (shown ? s.palettes[shown] : undefined));
   const images = useArt((s) => (shown ? s.byId[shown] : undefined));
   return useMemo(() => {
-    const mode = settings?.colorMode ?? "light";
-    const choice = {
-      intensity: settings?.colorIntensity ?? DEFAULT_CHOICE.intensity,
-      character: settings?.colorCharacter ?? DEFAULT_CHOICE.character,
-      pick: settings?.colorPick ?? DEFAULT_CHOICE.pick,
-    };
-    const source = sourceOf(palettes, settings?.colorFromIcon ?? true);
-    const colors = deriveGameColors(theme, source, mode, choice, own);
-    const showHero = mode === "immersive" && (settings?.colorHero ?? true);
+    const choice = { intensity: cs.intensity, character: cs.character, pick: cs.pick };
+    const colors = deriveGameColors(theme, sourceOf(palettes, cs.fromIcon), cs.mode, choice, own);
+    const showHero = cs.mode === "immersive" && cs.hero;
     const hero = showHero && shown && colors ? heroOf(shown, images) : null;
-    const passage = settings?.colorPassage ?? "tide";
-    return { colors, hero, tide, origin, since, passage };
-  }, [theme, settings, own, palettes, shown, images, tide, origin, since]);
+    return { colors, hero, tide, origin, since, passage: cs.passage };
+  }, [theme, cs, own, palettes, shown, images, tide, origin, since]);
 }

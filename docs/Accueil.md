@@ -15,6 +15,7 @@
 
 ## Mesures et relectures
 - [[PERF-ETAPE13]] — mesures de performance en production
+- [[PERF-ETAPE14]] — mesures des couleurs du jeu (étape 14, 14/10 au soir)
 - [[RELECTURE-FINALE-DA]] — relecture finale avant le gel
 - [[PROPOSITIONS-DA]] — propositions et idées de DA
 - [[RETOUCHES]] — petites retouches

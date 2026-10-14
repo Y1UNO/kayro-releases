@@ -4,7 +4,7 @@ import { t } from "../../i18n";
 import { EditIcon, useGlass } from "../../design";
 import { markGlassDirtyFor } from "../../design/glass/glassRegistry";
 import { useArtUrl, usePosterUrl } from "./art";
-import { useIconFace } from "../gameColors/useIconFace";
+import { IconFace } from "../gameColors/IconFace";
 import { faceMixOf, monogram, shadeOf } from "./cardLook";
 import { currentMotion } from "../../design/motion/current";
 import { durOf } from "../../design/motion/tokens";
@@ -89,7 +89,6 @@ export function AppCard({
   // picture in its icon's colours (V10 b).
   const logo = useArtUrl(app.id, "logo");
   const withLogo = Boolean(poster && logo && mode === "stage");
-  const iconFace = useIconFace(app.id, Boolean(poster));
   const stage = mode === "stage";
   const hidden = stage && !isVisible(d);
   const vars = cssVars({
@@ -138,14 +137,8 @@ export function AppCard({
               <span className={face.posterShade} />
             </>
           ) : (
-            // Round 5: the theme's A → B face; where between A and B: a draw per app.
-            <span
-              className={face.face}
-              style={cssVars({
-                "--mix": `${faceMixOf(app.id)}%`,
-                ...(iconFace ? { "--grad-a": iconFace[0], "--grad-b": iconFace[1] } : null),
-              })}
-            />
+            // Round 5: the theme's A → B face (step 14: or its icon's colours); A → B: a draw per app.
+            <IconFace id={app.id} mix={faceMixOf(app.id)} className={face.face} />
           )}
           {stage && <span className={styles.veil} aria-hidden="true" />}
           {!poster && icon && (
