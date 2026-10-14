@@ -39,9 +39,6 @@ export const GLASS_UNIFORMS = [
   "uLight",
   "uSpec",
   "uLightCol",
-  "uMatter",
-  "uSheen",
-  "uSheenBox",
   "uPo",
   "uPosterK",
   "uX",
@@ -72,9 +69,6 @@ uniform float uFusion;     // smooth union radius (px)
 uniform vec4 uLight;       // cursor x, y, intensity (fade included), radius
 uniform float uSpec;       // cursor light on glass
 uniform vec3 uLightCol;
-uniform vec2 uMatter;      // round 2b: rim grain, rim depth (inner shadow + inner edge line)
-uniform vec4 uSheen;       // glossy veil: position 0–1 (< 0: none), intensity, half width (px), angle
-uniform vec4 uSheenBox;    // selected card: centre x, y, half width, half height
 uniform vec4 uPo[MAXS];    // poster per shape: texture slot (< 0: none), picture w / h, opacity, inset
 uniform vec2 uPosterK;     // poster: refraction (× the rim's), reflection on the rim
 uniform vec4 uX[MAXS];     // per shape: cos, sin of its angle, edge softness (px), stack order + floating height (fract)
@@ -98,15 +92,6 @@ vec2 coverUv(vec2 q, vec2 hb, float ia) {
   return uv;
 }
 
-// Value noise on a 1.5 px lattice, stable on the glass (coordinates relative to its centre).
-float hash(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
-float grain(vec2 q) {
-  vec2 i = floor(q / 1.5);
-  vec2 f = fract(q / 1.5);
-  f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0)), f.x), f.y);
-}
 
 // Signed distance to a rounded box and its gradient (outwards).
 vec3 sdg(vec2 p, vec2 b, float r) {
@@ -177,9 +162,6 @@ vec3 shade(vec3 under, vec2 p, float depth, float px, float D, vec2 N, vec4 KA, 
   float bend = 1.0 - sqrt(1.0 - u * u);            // lens: neutral in the middle
   float slope = u / sqrt(max(1.0 - u * u, 0.03));
   vec2 off = -N * KA.x * th * 1.4 * bend;          // pulled inwards
-  // Rim grain: the glass of the rim is not perfectly smooth (a little frost, light and shade).
-  float gr = uMatter.x > 0.0 ? (grain(p - O) - 0.5) * uMatter.x * smoothstep(0.0, 0.25, u) : 0.0;
-  off += vec2(gr, -gr) * 2.0;
   float disp = KA.z * 0.35;
   float lod = KA.w * 4.0 + bend * 0.6 + soft * 0.3;
   vec3 col = vec3(
@@ -227,24 +209,6 @@ vec3 shade(vec3 under, vec2 p, float depth, float px, float D, vec2 N, vec4 KA, 
     cur = (pow(max(dot(n3, normalize(Lc + V)), 0.0), KB.w * 0.8) * 1.1 + exp(-x / 0.8) * 0.3) * att;
   }
   col += uLightCol * (spec + cur) + vec3(rim) + bend * 0.06 * KB.x;
-  col += gr * 0.09;
-  if (uSheen.x >= 0.0 && depth < 0.5) {
-    // Glossy veil: a soft band with a brighter core, gliding across the selected card.
-    vec2 q = p - uSheenBox.xy;
-    if (abs(q.x) <= uSheenBox.z && abs(q.y) <= uSheenBox.w) {
-      vec2 dir = vec2(cos(uSheen.w), sin(uSheen.w));
-      float reach = abs(uSheenBox.z * dir.x) + abs(uSheenBox.w * dir.y) + uSheen.z * 2.0;
-      float d = (dot(q, dir) - mix(-reach, reach, uSheen.x)) / max(uSheen.z, 1.0);
-      float band = exp(-d * d * 1.6) * 0.75 + exp(-d * d * 14.0) * 0.35;
-      col += uLightCol * band * uSheen.y * 0.45;
-    }
-  }
-  if (uMatter.y > 0.0) {
-    // Depth: the inner wall of the rim shades the inside a little, its inner edge catches light.
-    float inner = x - th;
-    col *= 1.0 - uMatter.y * 0.3 * (inner > 0.0 ? exp(-inner / 7.0) : 0.0);
-    col += uLightCol * uMatter.y * 0.07 * exp(-abs(inner) / 0.9);
-  }
   return mix(c0, min(col, vec3(1.0)), cover);
 }
 

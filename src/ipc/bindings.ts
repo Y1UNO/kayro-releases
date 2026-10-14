@@ -499,7 +499,6 @@ export type Settings = {
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
 	displayMode: DisplayMode,
-	widgetStyle: WidgetStyle,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */
@@ -532,7 +531,6 @@ export type SettingsPatch = {
 	language?: string | null,
 	atmosphereIntensity?: number | null,
 	displayMode?: DisplayMode | null,
-	widgetStyle?: WidgetStyle | null,
 	hideOnEscape?: boolean | null,
 	hideOnBlur?: boolean | null,
 	economyMode?: boolean | null,
@@ -591,12 +589,6 @@ export type VeilFade = {
 	ms: number,
 	curve: (number | null)[],
 };
-
-/**
- *  Look of the widget bar (reference/Widget.dc.html); provisional until the art direction is frozen.
- *  Since R5 the widget follows the theme; the field stays so older files still load cleanly.
- */
-export type WidgetStyle = "aurore" | "sillage" | "brume" | "orbe";
 
 /**  « Dépliage du widget ». */
 export type WidgetUnroll = "unroll" | "sober";

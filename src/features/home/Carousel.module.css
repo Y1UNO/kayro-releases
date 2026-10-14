@@ -65,7 +65,7 @@
 }
 
 /* Level 3: the veil and the threads are the hovered card's effects; the reflection that follows
-   the pointer would be a third one (rule 1), unless the workshop keeps it (cardHover.pointerSheen). */
+   the pointer would be a third one (rule 1), at level 3 the pointer's reflection is off. */
 .stage[data-no-pointer-sheen] [data-pointer-sheen] {
   display: none;
 }

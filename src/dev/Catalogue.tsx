@@ -80,7 +80,7 @@ function Toolbar({
   const used = useSyncExternalStore(subscribeBackdrop, backdropInUse);
   const worst = worstContrast(theme);
   return (
-    <Surface as="header" radius="var(--radius-3xl)" className={styles.toolbar}>
+    <Surface as="header" radius="var(--radius-card)" className={styles.toolbar}>
       <div className={styles.toolbarRow}>
         <h1 className={styles.title}>Catalogue</h1>
         <div className={styles.chips} role="group" aria-label="Thème">
@@ -266,7 +266,7 @@ function GlassDemo() {
           ))}
         </Surface>
 
-        <Surface radius="var(--radius-4xl)" className={styles.dock}>
+        <Surface radius="var(--radius-panel)" className={styles.dock}>
           <Button variant="primary">Soirée gaming</Button>
           <Button>Stream</Button>
           <Button>Créa</Button>

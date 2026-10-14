@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { chainOpacity, parseRadius, radiusPx } from "../../design/glass/glassRegistry";
-import { parsePreset } from "../../design/da";
-import cristal from "../../design/presets/v4-cristal.json";
-import verre from "../../design/presets/v4-verre-liquide.json";
+import { defaultValues } from "../../design/da";
 import { pillAt } from "../../design/glass/pillMotion";
 import { BudgetWatch, LADDER, WINDOW } from "./budgetWatch";
 import { DROP_MS, dropAt, ringPhase } from "./liquidRing";
@@ -77,26 +75,16 @@ describe("glass shapes from the DOM", () => {
   });
 });
 
-describe("liquid glass presets", () => {
-  it("V4 Verre liquide: glass cards and pills only, liquid ring, posters fully visible", () => {
-    const a = parsePreset(verre);
-    if (!a.ok) throw new Error(a.error);
-    const v = a.preset.values;
+describe("liquid glass in the art direction (catalogue defaults)", () => {
+  it("glass cards and pills only, liquid ring, posters fully visible", () => {
+    const v = defaultValues();
     expect([v.glassCards?.on, v.glassPills?.on, v.liquidRing?.on]).toEqual([true, true, true]);
-    expect([v.glassBars?.on, v.glassDock?.on, v.glassButtons?.on, v.glassRing?.on]).toEqual([
-      false,
-      false,
-      false,
-      false,
-    ]);
+    expect([v.glassBars?.on, v.glassDock?.on, v.glassButtons?.on]).toEqual([false, false, false]);
     expect(v.glassCards?.posterOpacity).toBe(1);
   });
 
-  it("V4 Verre liquide runs the engine, V4 Cristal keeps the CSS look", () => {
-    const a = parsePreset(verre);
-    const b = parsePreset(cristal);
-    expect(a.ok && a.preset.values.glassEngine?.on).toBe(true);
-    expect(b.ok && b.preset.values.glassEngine?.on).toBe(false);
+  it("runs the engine", () => {
+    expect(defaultValues().glassEngine?.on).toBe(true);
   });
 });
 

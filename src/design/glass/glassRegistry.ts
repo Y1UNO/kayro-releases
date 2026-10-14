@@ -31,7 +31,6 @@ export interface GlassEntry {
 export const MAX_GLASS = 24;
 
 const entries: GlassEntry[] = [];
-let version = 0;
 
 export function registerGlass(el: HTMLElement, kind: GlassKind): () => void {
   const entry: GlassEntry = {
@@ -46,23 +45,16 @@ export function registerGlass(el: HTMLElement, kind: GlassKind): () => void {
   };
   el.dataset.glassKind = kind;
   entries.push(entry);
-  version++;
   return () => {
     const i = entries.indexOf(entry);
     if (i >= 0) entries.splice(i, 1);
     delete el.dataset.glassKind;
     delete el.dataset.glass;
-    version++;
   };
 }
 
 export function glassEntries(): readonly GlassEntry[] {
   return entries;
-}
-
-/** Changes whenever an element registers or leaves. */
-export function glassVersion(): number {
-  return version;
 }
 
 export function markGlassDirty(): void {

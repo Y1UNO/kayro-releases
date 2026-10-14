@@ -1,6 +1,5 @@
 import { GLASS_KIND_ELEMENT } from "../../design/da/catalogueGlass";
 import type { IntroFrame } from "./cues";
-import { sheenAt, STILL_AT, STILL_DIM } from "./sheen";
 import type { GlassKind } from "../../design/glass/glassRegistry";
 import { pingPong } from "../css/drift";
 import type { FxPalette, FxParams } from "../FxLayer";
@@ -14,7 +13,6 @@ type Values = Readonly<Record<string, number | boolean | string>>;
 export const num = (v: Values | undefined, k: string, d: number) =>
   typeof v?.[k] === "number" ? (v[k] as number) : d;
 
-const RING_MARGIN = 48;
 const DEG = Math.PI / 180;
 
 export interface View {
@@ -28,43 +26,10 @@ export interface View {
 
 const rgb = (c: readonly number[]) => [c[0]! / 255, c[1]! / 255, c[2]! / 255];
 
-/** Glossy veil position (−1 = resting / off) at engine time `now` (ms). */
-export function sheenPos(p: FxParams, now: number, reduced: boolean): number {
-  const s = p.cardSheen;
-  if (s?.on !== true) return -1;
-  return reduced ? STILL_AT : sheenAt(now, num(s, "duration", 1800));
-}
-
-/** Glossy veil uniforms for the selected card's box (`box` = centre, half size). */
-export function sheenUniforms(
-  p: FxParams,
-  pos: number,
-  box: Float32Array | null,
-  reduced: boolean,
-) {
-  const s = p.cardSheen;
-  const on = box !== null && pos >= 0;
-  const half = box ? (num(s, "width", 28) / 100) * (box[2]! + box[3]!) * 0.5 : 0;
-  return {
-    uSheen: [
-      on ? pos : -1,
-      num(s, "intensity", 0.3) * (reduced ? STILL_DIM : 1),
-      half,
-      num(s, "angle", 18) * DEG,
-    ],
-    uSheenBox: box ? Array.from(box) : [0, 0, 0, 0],
-  };
-}
-
 /** Poster textures: refraction (× the rim's), reflection on the rim. */
 export function posterK(p: FxParams): number[] {
   const g = p.posterGlass;
   return [num(g, "refraction", 1), num(g, "reflection", 0.35)];
-}
-
-/** Parallax of the particles (px, nearest layer), or 0 (matter off, reduced motion). */
-export function parallaxPx(p: FxParams, reduced: boolean): number {
-  return p.matter?.on === true && !reduced ? num(p.matter, "parallax", 12) : 0;
 }
 
 /** Cursor light uniform: x, y, intensity (fade included), radius. */
@@ -219,55 +184,7 @@ export function spriteUniforms(p: FxParams, v: View): Uniforms {
     typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c)
       ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255)
       : [244 / 255, 241 / 255, 250 / 255];
-  const l = p.particleLight;
-  const lit = l?.on === true;
-  return {
-    uView: [v.W, v.H],
-    uStar: star,
-    uPLight: [lit ? num(l, "intensity", 0.6) : 0, num(l, "reach", 1), num(l, "halo", 0.35), 0],
-  };
-}
-
-/** The ring in the background texture, or null (ring off / fallen back). */
-export function ringUniforms(
-  p: FxParams,
-  pal: FxPalette,
-  scene: Scene,
-  light: number[],
-  v: View,
-): Uniforms | null {
-  const c = p.crystalRing;
-  const g = p.glassRing;
-  const e = p.glassEngine;
-  if (c?.on !== true || g?.on !== true) return null;
-  const size = num(c, "size", 680);
-  const cx = v.W / 2 + num(c, "offsetX", 0);
-  const top = num(c, "top", -230);
-  const period = num(c, "period", 40) * 1000;
-  const t = scene.drifting ? scene.time : 0;
-  const box = size / 2 + RING_MARGIN;
-  return {
-    uRes: [v.w, v.h],
-    uView: [v.W, v.H],
-    uBox: [cx - box, top + size / 2 - box, cx + box, top + size / 2 + box],
-    uRing: [cx, top + size / 2, size / 2, num(g, "band", 26)],
-    uA: rgb(pal.a),
-    uB: rgb(pal.b),
-    uP: [
-      num(e, "refraction", 0.6) * num(g, "refraction", 1.2),
-      num(e, "dispersion", 0.55) * num(g, "dispersion", 1.2),
-      num(e, "blur", 0.22) * num(g, "blur", 0.3),
-      num(e, "spec", 0.8) * num(g, "spec", 1),
-    ],
-    uE: [
-      num(c, "edge", 0.42) * num(g, "bevel", 1) * (0.5 + num(e, "bevel", 0.75)),
-      num(c, "fringe", 0.5),
-      num(c, "glow", 0.18),
-      (2 * Math.PI * (t % period)) / period,
-    ],
-    uLight: light,
-    uSpec: p.cursorLight?.on ? num(p.cursorLight, "spec", 0.6) : 0,
-  };
+  return { uView: [v.W, v.H], uStar: star };
 }
 
 const KA = new Float32Array(4 * Object.keys(KIND_INDEX).length);
@@ -304,8 +221,5 @@ export function glassUniforms(p: FxParams, light: number[], pal: FxPalette, v: V
     uLight: light,
     uSpec: p.cursorLight?.on ? num(p.cursorLight, "spec", 0.6) : 0,
     uLightCol: [0.85 + 0.15 * a[0]!, 0.85 + 0.15 * a[1]!, 0.85 + 0.15 * a[2]!],
-    uMatter: p.matter?.on
-      ? [num(p.matter, "rimGrain", 0.35), num(p.matter, "rimDepth", 0.4)]
-      : [0, 0],
   };
 }

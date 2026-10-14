@@ -4,8 +4,8 @@ import type { Theme } from "./theme";
 const rgb = ([r, g, b]: readonly [number, number, number]) => `rgb(${r}, ${g}, ${b})`;
 
 /**
- * The two colours of the gradient (logo themes: their own; older themes: fog A and the beam,
- * the same violet / amber pair their atmosphere already uses).
+ * The two colours of the gradient (built-in themes: their own; a theme file without one: fog A and
+ * the beam, the pair its atmosphere already uses).
  */
 export function themeGradient(theme: Theme): [string, string] {
   if (theme.gradient) return theme.gradient;
@@ -21,11 +21,7 @@ export function themeVariables(theme: Theme): Record<string, string> {
     "--bg-bottom": theme.bg[2],
     "--accent": theme.accent,
     "--glow": theme.glow,
-    "--fog-a": theme.fog[0],
-    "--fog-b": theme.fog[1],
-    "--fog-c": theme.fog[2],
     "--card": rgb(theme.card),
-    "--beam": rgb(theme.beam),
     "--grad-a": themeGradient(theme)[0],
     "--grad-b": themeGradient(theme)[1],
     "--text-soft": theme.soft ?? "var(--accent-light)",

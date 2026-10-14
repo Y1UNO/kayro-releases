@@ -4,12 +4,7 @@
 import { EASES } from "../motion/eases";
 import { UNROLL_SPRINGS } from "../motion/springCurves";
 import { MOTION_DEFAULTS as M, motionCss, motionTokens, SPEEDS } from "../motion/tokens";
-import {
-  OPENING_C,
-  OPENING_PULSES,
-  OPENING_VEIL_RENDERS,
-  WIDGET_MOTIONS,
-} from "../motion/tokens4b";
+import { OPENING_C, OPENING_PULSES, WIDGET_MOTIONS } from "../motion/tokens4b";
 import { NONE, range, select, toggle, userSelect, type DaElement } from "./daParams";
 import { FLOAT_NAMES, MOTION_STYLES } from "../motion/tokens5";
 
@@ -63,7 +58,7 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       range("cardLift", 0, 24, 1, M.cardLift, "px"),
       range("cardGrow", 1, 1.08, 0.005, M.cardGrow),
       // Round 4b: widget panel, empty category.
-      // Round 5: chosen in Réglages › Visuel (userDa.ts), no longer in the workshop.
+      // Round 5: chosen in Réglages › Visuel (userDa.ts), not tuned here.
       userSelect("widgetMotion", WIDGET_MOTIONS, M.widgetMotion),
       userSelect("widgetSpring", UNROLL_SPRINGS, M.widgetSpring),
       toggle("widgetHalo", true),
@@ -93,20 +88,15 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       range("letterScale", 0.2, 1, 0.01, 0.45),
       range("letterBlur", 0, 14, 0.5, 6, "px"),
       range("ringRadius", 120, 320, 1, 200, "px"),
-      // Instead of widening and fading, the ring grows into the home screen's ring.
-      toggle("ringGrow", false),
       range("hold", 0, 2000, 50, 600, "ms"),
       range("handoff", 200, 1200, 10, 600, "ms"),
       // Round 4b (validated 2026-10-12): variant C's pulse in the opaque opening (the page is
       // seen only in the ring, darkened around; the ringOut sends a wave and opens it in a
-      // circle). "v1a" = the opening without it, for comparison.
+      // circle). "v1a" = the opening without it (« Classique »).
       // Round 5: « Ouverture au lancement » of the settings picks it (userDa.ts).
       userSelect("pulse", OPENING_PULSES, "c"),
       range("veil", 0, 0.8, 0.02, OPENING_C.veil),
       range("wave", 0, 1, 0.05, OPENING_C.wave),
-      // Review C: the veil drawn by the engine (no full-screen gradient repainted each frame of
-      // the ringOut), or by the CSS layer to compare.
-      select("veilRender", OPENING_VEIL_RENDERS, "moteur"),
     ],
   },
   {

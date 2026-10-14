@@ -27,8 +27,8 @@ export interface SelectParam {
   options: readonly string[];
   default: string;
   /**
-   * Chosen by the user in Réglages › Visuel (R5), not in the workshop: hidden there (no duplicate),
-   * set from the settings by `userDa.ts`.
+   * Chosen by the user in Réglages › Visuel (R5): set from the settings by `userDa.ts` (marks the
+   * parameters the settings own).
    */
   user?: true;
 }
@@ -40,7 +40,7 @@ export interface ColorParam {
 }
 export type DaParam = RangeParam | ToggleParam | SelectParam | ColorParam;
 
-export type DaGroup = "fond" | "particules" | "verre" | "interface" | "mouvement" | "historique";
+export type DaGroup = "fond" | "particules" | "verre" | "interface" | "mouvement";
 export type DaCost = "faible" | "moyen" | "élevé";
 
 export interface DaElement {
@@ -74,7 +74,7 @@ export const select = (key: string, options: readonly string[], def: string): Se
   options,
   default: def,
 });
-/** A select the user picks in the settings (R5), hidden from the workshop. */
+/** A select the user picks in the settings (R5). */
 export const userSelect = (key: string, options: readonly string[], def: string): SelectParam => ({
   ...select(key, options, def),
   user: true,

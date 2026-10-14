@@ -77,22 +77,6 @@ export const GLASS_ELEMENTS: readonly DaElement[] = [
       select("resolution", ["auto", "1", "0.75", "0.5"], "auto"),
     ],
   },
-  {
-    // Round 2a look, kept to compare: the ring as a thick glass tube (geometry from `crystalRing`).
-    id: "glassRing",
-    group: "verre",
-    cost: "moyen",
-    defaultOn: false,
-    fx: true,
-    params: [
-      range("band", 6, 60, 1, 26, "px"),
-      factor("refraction", 1.2),
-      factor("dispersion", 1.2),
-      factor("blur", 0.3),
-      factor("bevel", 1),
-      factor("spec", 1),
-    ],
-  },
   glassKind(
     "glassCards",
     { thickness: 0.75, tint: 0.14 },

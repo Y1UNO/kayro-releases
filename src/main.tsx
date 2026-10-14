@@ -1,6 +1,4 @@
-import "@fontsource-variable/fraunces/opsz.css"; // wght + opsz axes (optical size, as in the mock-ups)
-import "@fontsource-variable/dm-sans";
-// Art direction fonts (step 12b): Cormorant Garamond (titles) + Manrope (interface).
+// Art direction fonts (docs/DESIGN.md): Cormorant Garamond (titles) + Manrope (interface).
 import "@fontsource-variable/cormorant-garamond";
 import "@fontsource-variable/manrope";
 import { StrictMode, Suspense, lazy } from "react";
@@ -29,16 +27,9 @@ const Catalogue: ComponentType | null =
     ? lazy(() => import("./dev/Catalogue"))
     : null;
 
-// Launcher test bench (step 6): development builds only, like the catalogue.
-const LauncherBench: ComponentType | null =
-  import.meta.env.DEV && location.pathname === "/dev/launcher"
-    ? lazy(() => import("./dev/Launcher"))
-    : null;
-
-// Home screen with fake data and a frame-time bench (step 7): development builds, and the
-// `vite build --mode bench` build used to measure with production React (never in a normal build).
+// Home screen with fake data (step 7): development builds only.
 const HomeDev: ComponentType | null =
-  (import.meta.env.DEV || import.meta.env.MODE === "bench") && location.pathname === "/dev/home"
+  import.meta.env.DEV && location.pathname === "/dev/home"
     ? lazy(() => import("./dev/Home"))
     : null;
 
@@ -48,7 +39,7 @@ const ScenesDev: ComponentType | null =
     ? lazy(() => import("./dev/Scenes"))
     : null;
 
-// Motion language lab (step 12b, round 4a): the workshop's "Mouvement" screen. Dev only.
+// Motion language lab (art direction round 4a): every interaction of the three levels. Dev only.
 const MotionDev: ComponentType | null =
   import.meta.env.DEV && location.pathname === "/dev/motion"
     ? lazy(() => import("./dev/MotionLab"))
@@ -60,22 +51,6 @@ const WidgetDev: ComponentType | null =
     ? lazy(() => import("./dev/Widget"))
     : null;
 
-// Preview of the art direction workshop (step 12b): live values from `/dev/atelier`, or a saved
-// preset with `?preset=<file name>` (bench in the Tauri window). Dev only.
-if (import.meta.env.DEV && /[?&](atelier|preset)=/.test(location.search)) {
-  const q = new URLSearchParams(location.search);
-  void import("./dev/atelier/sync").then((m) => {
-    m.listenAsPreview(q.get("atelier"));
-    void m.applyPresetParam(q.get("preset"));
-  });
-}
-
-// Art direction workshop (step 12b): development builds only.
-const Atelier: ComponentType | null =
-  import.meta.env.DEV && location.pathname === "/dev/atelier"
-    ? lazy(() => import("./dev/atelier/Atelier"))
-    : null;
-
 const appRoot = createRoot(root);
 
 // A window built for a passage between display modes (round 4b, `?enter=1`): the page starts
@@ -84,8 +59,7 @@ if (new URLSearchParams(location.search).get("enter") === "1") {
   document.documentElement.dataset.entering = "";
   document.body.style.opacity = "0";
 }
-const DevPage =
-  Atelier ?? Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev;
+const DevPage = Catalogue ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev;
 
 if (DevPage) {
   appRoot.render(

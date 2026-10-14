@@ -156,7 +156,7 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
     [ask, category],
   );
 
-  // Development only: the dev page drives the journey (captures, bench, workshop replay).
+  // Development only: the dev page drives the journey (still moments, loops).
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     const w = window as unknown as { __categoryLink?: unknown };

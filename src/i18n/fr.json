@@ -1,7 +1,6 @@
 {
   "app": {
     "loading": "Chargement de vos données…",
-    "appsCount": "Applications : {count}",
     "loadFailed": "Vos données n’ont pas pu être chargées."
   },
   "opening": {
@@ -46,7 +45,6 @@
         "title": "Rien dans cette catégorie",
         "text": "Aucune application n’est classée ici pour l’instant."
       },
-      "add": "Ajouter des apps",
       "addCard": "Ajouter une app"
     },
     "dock": {
@@ -77,8 +75,7 @@
       "unfavorite": "Retirer des favoris",
       "remove": "Retirer de {app}…",
       "editButton": "Modifier {name}",
-      "moved": "« {name} » est maintenant dans {category}.",
-      "dragging": "Dépose sur un onglet pour changer de catégorie"
+      "moved": "« {name} » est maintenant dans {category}."
     },
     "settings": {
       "open": "Réglages"
@@ -150,8 +147,7 @@
       "startmenu": "Menu Démarrer · {count}",
       "sourceSteam": "Steam",
       "sourceEpic": "Epic",
-      "sourceStartmenu": "Menu Démarrer",
-      "sourceManual": "Manuel"
+      "sourceStartmenu": "Menu Démarrer"
     },
     "row": {
       "pick": "Choisir {name}",
@@ -234,7 +230,6 @@
     "bar": "Barre {app}",
     "expand": "Déplier",
     "collapse": "Replier",
-    "dragHint": "Déplacer le widget",
     "search": {
       "placeholder": "Rechercher une app ou une scène",
       "label": "Rechercher",
@@ -250,7 +245,6 @@
     "toFrontLabel": "Mettre {name} au premier plan",
     "recents": "Récents",
     "noRecents": "Les apps que vous lancez apparaîtront ici.",
-    "category": "{category}",
     "noneInCategory": "Aucune application dans cette catégorie.",
     "launch": "Lancer {name}",
     "toWindow": "Ouvrir en fenêtre"

@@ -21,15 +21,12 @@ export interface OpeningSettings {
   letterScale: number;
   letterBlur: number;
   ringRadius: number;
-  ringGrow: boolean;
   hold: number;
   handoff: number;
   /** Round 4b: "c" = variant C's pulse (openingReveal.ts, default), "v1a" = without it. */
   pulse: string;
   veil: number;
   wave: number;
-  /** Review C: "moteur" = the engine draws the veil (CSS as fallback), "css" = the CSS layer. */
-  veilRender: string;
 }
 
 export function openingSettings(v: ElementValues | undefined): OpeningSettings {
@@ -45,13 +42,11 @@ export function openingSettings(v: ElementValues | undefined): OpeningSettings {
     letterScale: num("letterScale", 0.45),
     letterBlur: num("letterBlur", 6),
     ringRadius: num("ringRadius", 200),
-    ringGrow: v?.ringGrow === true,
     hold: num("hold", 600),
     handoff: num("handoff", 600),
     pulse: str("pulse", "c"),
     veil: num("veil", OPENING_C.veil),
     wave: num("wave", OPENING_C.wave),
-    veilRender: str("veilRender", "moteur"),
   };
 }
 
@@ -63,8 +58,6 @@ export interface OpeningGeometry {
   slide: number;
   /** Start offset of each letter (its centre on the logo's final centre): − = to the left. */
   letters: readonly number[];
-  /** The home screen's ring (centre, radius), for `ringGrow`. */
-  homeRing: { x: number; y: number; r: number };
 }
 
 /** Each letter starts on the logo's final centre (hidden behind it, the logo is above). */
@@ -159,15 +152,8 @@ export function openingAt(
 
   const startX = g.logo.x + g.slide;
   const r0 = s.ringRadius;
-  let ring: [number, number, number, number];
-  let scale: number;
-  if (s.ringGrow) {
-    scale = lerp(1, g.homeRing.r / r0, out);
-    ring = [lerp(startX, g.homeRing.x, out), lerp(g.logo.y, g.homeRing.y, out), r0 * scale, 1 - h];
-  } else {
-    scale = 1 + 0.4 * out;
-    ring = [startX, g.logo.y, r0 * scale, 1 - out];
-  }
+  const scale = 1 + 0.4 * out;
+  const ring: [number, number, number, number] = [startX, g.logo.y, r0 * scale, 1 - out];
   const haloR = 340 * (r0 / 200) * (0.75 + 0.25 * haloK);
   const intro: IntroFrame = {
     fade,

@@ -41,7 +41,7 @@ describe("springs written as linear() (round 4b, widget)", () => {
     expect(curveOf("linear(0, nope)")(0.5)).toBe(0.5); // unreadable → a straight line
   });
 
-  it("the token table exposes them: « normale » by default, the others in the workshop", () => {
+  it("the token table exposes them: « normale » by default, the others in Réglages", () => {
     const w = motionTokens(undefined).widget;
     expect(w.motion).toBe("deroule");
     expect(w.spring).toBe("normale");

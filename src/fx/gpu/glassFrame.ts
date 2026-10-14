@@ -89,8 +89,6 @@ export class GlassFrame {
   private hoverEl: Element | null = null;
   nested = 0;
   /** Selected card whose inside the engine draws (no DOM poster over it): centre, half size. */
-  readonly sel = new Float32Array(4);
-  hasSel = false;
   private readonly prev = new Float32Array(MAX_GLASS * 12);
   private prevN = -1;
   private prevHover = -1;
@@ -113,7 +111,6 @@ export class GlassFrame {
     this.stacked.length = 0;
     this.n = 0;
     this.nested = 0;
-    this.hasSel = false;
     for (const e of glassEntries()) {
       const on = drawn(e.kind) && this.n + this.stacked.length < MAX_GLASS;
       if (!on) {
@@ -212,18 +209,6 @@ export class GlassFrame {
     }
     if (e.depth) this.nested++;
     if (e.el === this.hoverEl) this.hover = this.n;
-    // Glossy veil (round 2b): on the selected card at rest, unless a DOM poster hides its inside
-    // (the CSS veil of SheenVeil.tsx is drawn above that poster instead).
-    if (
-      !pose &&
-      e.kind === "card" &&
-      !this.hasSel &&
-      e.el.getAttribute("aria-selected") === "true" &&
-      (!e.el.hasAttribute("data-poster") || e.el.dataset.glassPoster === "gpu")
-    ) {
-      this.sel.set([cx, cy, hw, hh]);
-      this.hasSel = true;
-    }
     this.n++;
   }
 

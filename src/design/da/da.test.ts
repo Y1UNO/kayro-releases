@@ -1,7 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { presetSlug } from "../../../vite/atelier";
-import croquis from "../presets/croquis-12.json";
-import v4 from "../presets/v4-cristal.json";
 import active from "./active.json";
 import { CATALOGUE } from "./catalogue";
 import {
@@ -74,26 +71,16 @@ describe("parseValues / parsePreset (untrusted JSON)", () => {
     expect(parseValues(raw).ok).toBe(false);
   });
 
-  it("accepts the shipped presets and active.json", () => {
-    for (const p of [v4, croquis, active]) expect(parsePreset(p).ok).toBe(true);
+  it("accepts active.json (the shipped art direction)", () => {
+    expect(parsePreset(active).ok).toBe(true);
   });
 
   it.each([
-    ["unknown key", { ...v4, script: "x" }],
-    ["bad theme id", { ...v4, themeId: "../x" }],
-    ["bad date", { ...v4, savedAt: "never" }],
-    ["long name", { ...v4, name: "x".repeat(61) }],
+    ["unknown key", { ...active, script: "x" }],
+    ["bad theme id", { ...active, themeId: "../x" }],
+    ["bad date", { ...active, savedAt: "never" }],
+    ["long name", { ...active, name: "x".repeat(61) }],
   ])("rejects a preset with %s", (_l, raw) => {
     expect(parsePreset(raw).ok).toBe(false);
-  });
-});
-
-describe("preset file names (dev server)", () => {
-  it("keeps only lower-case ASCII, digits and dashes", () => {
-    expect(presetSlug("V4 Cristal")).toBe("v4-cristal");
-    expect(presetSlug("Piste été")).toBe("piste-ete");
-    expect(presetSlug("../../etc/passwd")).toBe("etc-passwd");
-    expect(presetSlug("..\\..\\x")).toBe("x");
-    expect(presetSlug("///")).toBeNull();
   });
 });

@@ -1,6 +1,5 @@
 import type { Quality } from "../design";
-import { DustLayer } from "./canvas/dust";
-import { CssFxLayer, cls } from "./css/cssFx";
+import { cls } from "./css/host";
 import type { FxLayer, FxPalette, FxParams, FxTarget } from "./FxLayer";
 import { MoonLayer } from "./css/moonFx";
 import { RingLayer } from "./css/ringFx";
@@ -25,26 +24,19 @@ export function clampIntensity(v: number | null | undefined): number {
 function replacedBy(engine: EngineState, l: FxLayer): boolean {
   if (!engine.active) return false;
   if (l instanceof RingLayer) return engine.ring;
-  return (
-    l instanceof MoonLayer ||
-    l instanceof ParticlesLayer ||
-    l instanceof CssFxLayer ||
-    l instanceof DustLayer
-  );
+  return l instanceof MoonLayer || l instanceof ParticlesLayer;
 }
 
 /**
  * The atmosphere: every layer behind one `FxLayer`, plus the fade and the real stop of `pause`.
- * Layers are stacked in order (CSS fog and light, then the dust canvas); the glass engine puts its
- * canvas under them and, while it runs, the layers it replaces are paused. `make` lets a test or
- * the dev bench supply other layers.
+ * Layers are stacked in order (moon and veils, ring, embers and stars): they are the CSS and 2D
+ * fallback of the glass engine, which puts its canvas under them and, while it runs, pauses the
+ * layers it replaces. `make` lets a test supply other layers.
  */
 export function createFx(
   make: (onEngine: (s: EngineState) => void) => FxLayer[] = (onEngine) => [
-    new CssFxLayer(),
     new MoonLayer(),
     new RingLayer(),
-    new DustLayer(),
     new ParticlesLayer(),
     new GlassEngine(onEngine),
   ],

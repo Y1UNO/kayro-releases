@@ -13,7 +13,6 @@ const S: Settings = {
   hotkey: "Ctrl+Alt+H",
   language: "fr",
   displayMode: "immersive",
-  widgetStyle: "brume",
   hideOnEscape: true,
   hideOnBlur: false,
   economyMode: false,

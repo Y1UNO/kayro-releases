@@ -84,15 +84,3 @@
   gap: 16px;
   color: var(--text);
 }
-
-.bench {
-  position: fixed;
-  right: 8px;
-  bottom: 8px;
-  z-index: 999;
-  margin: 0;
-  padding: 8px;
-  background: #000c;
-  color: #fff;
-  font: 12px monospace;
-}

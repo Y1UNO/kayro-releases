@@ -1,32 +1,14 @@
-/* Glossy veil of the selected card (art direction `cardSheen`, round 2b), CSS version: above a
-   DOM poster, or without the engine. Moved by SheenVeil.tsx (one-shot Web Animations, transform
-   only). Where the engine draws the inside of the card (no DOM poster), the engine draws the veil. */
-.sheenClip {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  pointer-events: none;
-}
-
+/* Glossy band played once at the hover of a carousel card (round 4a, cardHoverFx.ts), moved by
+   sheenGlide (one-shot Web Animations, transform only). */
 .sheenVeil {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    calc(90deg + var(--da-sheen-angle, 18deg)),
-    rgba(255, 255, 255, 0) calc(50% - var(--da-sheen-w, 28%) / 2),
-    rgba(255, 255, 255, calc(var(--da-sheen-i, 0.3) * 0.5)) calc(50% - var(--da-sheen-w, 28%) / 8),
-    rgba(255, 255, 255, calc(var(--da-sheen-i, 0.3) * 0.75)) 50%,
-    rgba(255, 255, 255, calc(var(--da-sheen-i, 0.3) * 0.5)) calc(50% + var(--da-sheen-w, 28%) / 8),
-    rgba(255, 255, 255, 0) calc(50% + var(--da-sheen-w, 28%) / 2)
+    108deg,
+    rgba(255, 255, 255, 0) 36%,
+    rgba(255, 255, 255, 0.15) 46.5%,
+    rgba(255, 255, 255, 0.225) 50%,
+    rgba(255, 255, 255, 0.15) 53.5%,
+    rgba(255, 255, 255, 0) 64%
   );
-}
-
-.sheenVeil[data-still] {
-  opacity: 0.6;
-}
-
-[data-glass="gpu"]:not([data-poster]) .sheenClip,
-[data-glass-poster="gpu"] .sheenClip {
-  display: none;
 }

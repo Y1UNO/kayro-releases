@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef } from "react";
 import type { AppEntry, AppRunState } from "../../ipc/bindings";
-import { targetOf, useFxTarget } from "../../fx";
 import { t } from "../../i18n";
 import { useDa } from "../../design/da";
 import { AppCard } from "./AppCard";
@@ -43,12 +42,6 @@ export function AppGrid({ apps, focus, running, onColumns, onFocus, onLaunch }: 
   useEffect(() => {
     if (activeDomId) document.getElementById(activeDomId)?.scrollIntoView({ block: "nearest" });
   }, [activeDomId]);
-
-  // The light glides to the selected cell (declared after the scroll: measured once it is done).
-  useFxTarget(
-    () => (activeDomId ? targetOf(document.getElementById(activeDomId)) : null),
-    [activeDomId],
-  );
 
   const hoverOff = useDa((s) => s.values.cardHover?.style === "none");
   return (

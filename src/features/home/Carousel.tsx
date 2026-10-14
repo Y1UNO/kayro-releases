@@ -1,15 +1,14 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { WheelEvent } from "react";
 import type { AppEntry, AppRunState } from "../../ipc/bindings";
-import { useFxTarget } from "../../fx";
 import { t } from "../../i18n";
 import { AppCard } from "./AppCard";
-import { cardGeometry, daStore, useDa } from "../../design/da";
+import { cardGeometry, useDa } from "../../design/da";
 import { useMotionTokens } from "../../design/motion/current";
 import { isEco } from "../../design/quality";
 import { useReducedMotion } from "../../fx/useReducedMotion";
 import { useHub } from "../../store";
-import { CardHoverFx, cardHoverConfig, periodicGlide } from "./rim/cardHoverFx";
+import { CardHoverFx, cardHoverConfig } from "./rim/cardHoverFx";
 import { geometryVars, mountedRange, type Geometry } from "./carouselGeometry";
 import { inheritKeys } from "./deckKeys";
 import { cssVars } from "./cssVars";
@@ -60,7 +59,7 @@ export function Carousel({
   const fast = useRef({ last: 0, timer: 0 });
   const listId = useId();
   const active = apps[focus];
-  // Card sizes come from the art direction (`cards` element, live in the workshop).
+  // Card sizes come from the art direction (`cards` element).
   const cards = useDa((s) => s.values.cards);
   const geometry = useMemo<Geometry>(() => {
     const c = cardGeometry(cards);
@@ -71,7 +70,6 @@ export function Carousel({
   const motion = useMotionTokens();
   const cardHover = useDa((s) => s.values.cardHover);
   const fanHover = useDa((s) => s.values.categoryHover);
-  const sheen = useDa((s) => s.values.cardSheen);
   const eco = useHub((s) => isEco(s.settings?.quality));
   const windowMode = useHub((s) => s.settings?.displayMode === "window");
   const reduced = useReducedMotion();
@@ -87,7 +85,7 @@ export function Carousel({
   const fx = useRef<CardHoverFx | null>(null);
   useLayoutEffect(() => {
     if (!stage.current) return;
-    const f = new CardHoverFx(stage.current, hoverCfg, periodicGlide(sheen));
+    const f = new CardHoverFx(stage.current, hoverCfg);
     fx.current = f;
     return () => {
       f.dispose();
@@ -98,10 +96,6 @@ export function Carousel({
   useEffect(() => {
     if (fx.current) fx.current.config = hoverCfg;
   }, [hoverCfg]);
-  // The selected card's periodic veil follows its settings (review B5: it was read once).
-  useEffect(() => {
-    if (fx.current) fx.current.periodicGlide = periodicGlide(sheen);
-  }, [sheen]);
   useEffect(() => {
     if (fx.current) fx.current.dragging = dragging;
   }, [dragging]);
@@ -111,17 +105,6 @@ export function Carousel({
     stage.current?.querySelector<HTMLElement>(
       `[data-app-id="${CSS.escape(app.id)}"] [data-stage]`,
     ) ?? null;
-
-  // The active card always sits at the centre of the stage: the light stays there while the
-  // cards slide under it (measured from the stage, not the moving card).
-  useFxTarget(() => {
-    const el = stage.current;
-    if (!el) return null;
-    const r = el.getBoundingClientRect();
-    const h = cardGeometry(daStore.getState().values.cards).activeH;
-    const top = r.top + (r.height - h) / 2;
-    return { x: r.left + r.width / 2, top, bottom: top + h };
-  }, []);
 
   // Fast scrolling: while the selection changes faster than the eye can follow, the dimming, the
   // glow and the name plate switch instantly (`data-fast`, see AppCard.module.css) and only the
@@ -210,7 +193,7 @@ export function Carousel({
           : undefined
       }
       data-hover-off={cardHover?.style === "none" ? "" : undefined}
-      data-no-pointer-sheen={hoverCfg.magic && cardHover?.pointerSheen !== true ? "" : undefined}
+      data-no-pointer-sheen={hoverCfg.magic ? "" : undefined}
       onWheel={onWheel}
       onPointerOver={(e) => {
         const card = hoverCardOf(e.target as Element);

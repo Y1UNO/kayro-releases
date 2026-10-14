@@ -17,7 +17,7 @@ export const VISIBLE_RADIUS = 2;
 export const MOUNT_RADIUS = VISIBLE_RADIUS + 1;
 
 /**
- * Sizes tunable in the art direction workshop (`cards` element); the constants above are the
+ * Sizes from the art direction (`cards` element); the constants above are the
  * defaults. Same rules: one fixed slot, side cards shrunk by `scale` (sideW / slotW).
  */
 export interface Geometry {

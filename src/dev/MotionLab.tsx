@@ -1,10 +1,8 @@
 // Development page of the motion language (art direction round 4a, "Vivant intelligent"):
-// `/dev/motion`, dev builds only (see main.tsx). The workshop's "Mouvement" screen: every kind of
-// interaction of the three levels, live with the `motion` tokens of the workshop. Texts are not
-// translated on purpose (dev page).
-//   ?theme=<id>   ?atelier=A|B (workshop preview)   ?fx=eco|balanced|high|ultra
-//   ?cycle=panel|toggle|tab|notice|fail:ms (repeats that interaction every ms, for the bench)
-//   ?bench=idle (frame times over 10 s, result in #bench and window.__bench)
+// `/dev/motion`, dev builds only (see main.tsx): every kind of interaction of the three levels,
+// with the `motion` tokens of the art direction. Texts are not translated on purpose (dev page).
+//   ?theme=<id>   ?fx=eco|balanced|high|ultra
+//   ?cycle=panel|toggle|tab|notice|fail:ms (repeats that interaction every ms)
 import { useEffect, useId, useState } from "react";
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
 import {
@@ -32,7 +30,6 @@ import { Notice } from "../features/home/Overlays";
 import type { AppEntry } from "../ipc/bindings";
 import { ipc } from "../ipc/commands";
 import { hubStore } from "../store";
-import { runBench, type BenchResult } from "./bench";
 import { MotionLab4b } from "./MotionLab4b";
 import styles from "./MotionLab.module.css";
 import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
@@ -66,7 +63,6 @@ function seedStore(params: URLSearchParams): true {
       language: "fr",
       atmosphereIntensity: 1,
       displayMode: "immersive",
-      widgetStyle: "brume",
       hideOnEscape: true,
       hideOnBlur: false,
       economyMode: false,
@@ -76,7 +72,7 @@ function seedStore(params: URLSearchParams): true {
   return true;
 }
 
-/** ?cycle=kind:ms — repeats one interaction for the bench (clicks, as a person would). */
+/** ?cycle=kind:ms — repeats one interaction (clicks, as a person would). */
 function useCycle(params: URLSearchParams, act: Record<string, () => void>): void {
   useEffect(() => {
     const [kind, ms] = (params.get("cycle") ?? "").split(":");
@@ -102,7 +98,6 @@ export default function MotionLab() {
   const [notice, setNotice] = useState(0);
   const [list, setList] = useState(0);
   const [focus, setFocus] = useState(2);
-  const [bench, setBench] = useState<BenchResult | null>(null);
   const panelId = useId();
 
   useCycle(params, {
@@ -127,19 +122,6 @@ export default function MotionLab() {
     const id = window.setTimeout(() => setNotice(0), 2500);
     return () => window.clearTimeout(id);
   }, [notice]);
-
-  useEffect(() => {
-    if (!params.has("bench")) return;
-    const id = window.setTimeout(() => {
-      void runBench(10_000, 0).then((r) => {
-        const res = { ...r, rung: document.documentElement.dataset.glassRung ?? "none" };
-        (window as unknown as { __bench: BenchResult }).__bench = res;
-        setBench(res);
-      });
-    }, 1500);
-    return () => window.clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   if (!ready) return null;
   return (
@@ -257,13 +239,6 @@ export default function MotionLab() {
           />
           {notice > 0 && <Notice key={notice} text="Steam : notification de démonstration" />}
           <LaunchToast onFix={() => setPanel(true)} />
-          {bench && (
-            <pre id="bench" className={styles.bench}>
-              {JSON.stringify(bench, (_, v) =>
-                typeof v === "number" ? Math.round(v * 10) / 10 : v,
-              )}
-            </pre>
-          )}
         </MotionConfig>
       </LazyMotion>
     </ThemeProvider>

@@ -32,10 +32,6 @@ import {
   kindTint,
   lightOf,
   liquidRingOn,
-  parallaxPx,
-  sheenPos,
-  sheenUniforms,
-  ringUniforms,
   spriteUniforms,
   type View,
 } from "./uniforms";
@@ -73,9 +69,6 @@ export class GlassEngine implements FxLayer {
   private dirty = true;
   private cadence: Cadence = cadenceFor("balanced");
   private readonly pacer = new Pacer();
-  private parallax = 0;
-  private reduced = false;
-  private sheen = -1;
   private intro: IntroFrame | null = null;
   private stage: StageFrame | null = null;
   private cueSeen = -1;
@@ -163,9 +156,6 @@ export class GlassEngine implements FxLayer {
     if (!this.gl && !this.create()) return;
     const reduced = prefersReducedMotion();
     this.scene.configure(this.params, this.quality, reduced);
-    this.reduced = reduced;
-    this.parallax = parallaxPx(this.params, reduced);
-    this.pointer.parallax = this.parallax > 0;
     this.cadence = cadenceFor(this.quality);
     this.layout();
     this.dirty = true;
@@ -318,10 +308,6 @@ export class GlassEngine implements FxLayer {
     // A poster just became a texture: draw (the DOM picture was hidden in this same frame).
     if (this.posters?.end())
       moved = this.frame.measure(this.drawn, this.tint, pass, poses, hoverEl) || true;
-    // The glossy veil asks for frames only while it glides (and once more when it stops).
-    const sheen = this.frame.hasSel ? sheenPos(this.params, now, this.reduced) : -1;
-    const gliding = !this.reduced && (sheen >= 0 || this.sheen >= 0);
-    this.sheen = sheen;
     // A sequence of the interface (the opening) asks for every frame while its picture changes.
     const cue = introCue();
     const intro = cue ? cue(now) : null;
@@ -337,7 +323,7 @@ export class GlassEngine implements FxLayer {
       moved,
       cued,
       dirty: this.dirty,
-      ambient: this.scene.animated || gliding,
+      ambient: this.scene.animated,
       pointer: fading || this.pointer.moved,
     };
     if (!this.pacer.frame(why, now, this.live(), stage !== null, this.unsubscribe)) return;
@@ -353,8 +339,6 @@ export class GlassEngine implements FxLayer {
     this.scene.fill(p, palette, v.W, v.H, this.intensity);
     const ringAllowed = this.watch.allows("ring");
     const intro = this.intro;
-    const homeRing = !intro || intro.home > 0.01;
-    const ring = ringAllowed && homeRing ? ringUniforms(p, palette, this.scene, light, v) : null;
     const liquid = ringAllowed && liquidRingOn(p);
     const f = this.frame;
     const bg = bgUniforms(
@@ -369,28 +353,17 @@ export class GlassEngine implements FxLayer {
       intro,
       this.stage?.ring ?? null,
     );
-    // Lit particles receive the same lights as the background (moon, liquid ring, cursor).
-    const par = [-this.pointer.ox * this.parallax, -this.pointer.oy * this.parallax * 0.6];
-    const su = {
-      ...spriteUniforms(p, v),
-      uMoon: bg.uMoon!,
-      uLight: light,
-      uLRing: bg.uLRing!,
-      uPar: par,
-      uKind: kindUniform(intro),
-    };
+    const su = { ...spriteUniforms(p, v), uKind: kindUniform(intro) };
     renderer.render(
       bg,
       { data: this.scene.sprites, count: this.scene.count, u: su },
-      ring,
       {
         ...glassUniforms(p, light, palette, v),
-        ...sheenUniforms(p, this.sheen, f.hasSel ? f.sel : null, this.reduced),
         ...shapeUniforms(f, p, this.stage),
         ...introVeilUniform(intro),
       },
       this.posters ? () => this.posters!.bind() : null,
     );
-    this.setState({ active: true, ring: ring !== null || liquid });
+    this.setState({ active: true, ring: liquid });
   }
 }

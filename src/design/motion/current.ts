@@ -7,7 +7,7 @@ export function currentMotion(): MotionTokens {
   return motionTokens(daStore.getState().values.motion);
 }
 
-/** The motion token table, live (re-renders when it is tuned in the workshop). */
+/** The motion token table, live (re-renders when a setting changes it). */
 export function useMotionTokens(): MotionTokens {
   const v = useDa((s) => s.values.motion);
   return useMemo(() => motionTokens(v), [v]);

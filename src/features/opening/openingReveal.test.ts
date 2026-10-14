@@ -3,7 +3,7 @@ import { defaultValues } from "../../design/da";
 import { OPENING_C } from "../../design/motion/tokens4b";
 import { sameIntro } from "../../fx/gpu/cues";
 import { introVeilUniform } from "../../fx/gpu/uniforms";
-import { engineDrawsVeil, revealAt, veilUniform } from "./openingReveal";
+import { revealAt, veilUniform } from "./openingReveal";
 import { openingAt, openingSettings, type OpeningGeometry } from "./openingTimeline";
 
 const C = openingSettings(defaultValues().opening);
@@ -12,7 +12,6 @@ const G: OpeningGeometry = {
   logo: { x: 490, y: 316 },
   slide: 150,
   letters: [-127, -183, -234, -279, -326],
-  homeRing: { x: 640, y: 110, r: 340 },
 };
 const VIEW = { w: 1280, h: 760 };
 // The ring is centred on the window (640, 316): the farthest corner is a bottom one.
@@ -78,13 +77,6 @@ describe("opening variant C in the opaque opening (round 4b)", () => {
 });
 
 describe("variant C's veil drawn by the engine (review C)", () => {
-  it("the engine draws it by default when it runs; the CSS layer otherwise, or when asked", () => {
-    expect(C.veilRender).toBe("moteur");
-    expect(engineDrawsVeil(C, true)).toBe(true);
-    expect(engineDrawsVeil(C, false)).toBe(false); // no engine: the CSS fallback
-    expect(engineDrawsVeil({ ...C, veilRender: "css" }, true)).toBe(false);
-  });
-
   it("the uniform is the CSS layer's circle and opacity, none once the page is whole", () => {
     const rv = revealAt(2050, C, G, VIEW, false)!;
     expect(veilUniform(rv)).toEqual([rv.x, rv.y, rv.r, OPENING_C.veil]);

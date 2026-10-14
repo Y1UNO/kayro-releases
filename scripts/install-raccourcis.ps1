@@ -1,13 +1,11 @@
 ﻿<#
 .SYNOPSIS
-  Crée (ou remplace) les raccourcis du Bureau : « Kayro », « Kayro — mettre à jour » et
-  « Kayro (atelier) ».
+  Crée (ou remplace) les raccourcis du Bureau : « Kayro » et « Kayro — mettre à jour ».
 .DESCRIPTION
   À lancer une fois (clic droit → Exécuter avec PowerShell). Relançable sans doublon.
   - Kayro                  → target\release\Kayro.exe : l'exe de production, tel quel (tes données).
   - Kayro — mettre à jour  → scripts\Kayro.cmd -Force : quitte Kayro doucement s'il est ouvert,
                              recompile en release, puis relance l'exe.
-  - Kayro (atelier)        → scripts\Kayro-atelier.cmd : atelier de DA + vraie fenêtre (données temporaires).
 #>
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -35,5 +33,4 @@ function New-Shortcut([string]$name, [string]$target, [string]$arguments, [strin
 New-Shortcut 'Kayro' $exe '' (Split-Path -Parent $exe) 1 'Kayro (exe de production)'
 # Minimized: the .cmd only hands over to a hidden PowerShell (its progress window shows the build).
 New-Shortcut 'Kayro — mettre à jour' (Join-Path $PSScriptRoot 'Kayro.cmd') '-Force' $root 7 'Kayro : recompiler la dernière version puis relancer'
-New-Shortcut 'Kayro (atelier)' (Join-Path $PSScriptRoot 'Kayro-atelier.cmd') '' $root 1 "Kayro : atelier de direction artistique"
 [void][Runtime.InteropServices.Marshal]::ReleaseComObject($shell)

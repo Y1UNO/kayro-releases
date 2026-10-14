@@ -7,13 +7,12 @@ import { useHub } from "../store";
 import { createFx } from "./createFx";
 import type { FxLayer, FxPalette } from "./FxLayer";
 import { onWindowVisibility } from "../ipc/events";
-import { connectFx } from "./target";
 
 interface Props {
   /** Overrides the saved settings (dev pages, catalogue). */
   quality?: Quality;
   intensity?: number;
-  /** Other layers than the default ones (dev bench: one layer at a time). Read once, at mount. */
+  /** Other layers than the default ones (tests). Read once, at mount. */
   layers?: () => FxLayer[];
 }
 
@@ -48,7 +47,6 @@ export function Atmosphere({ quality, intensity, layers }: Props) {
     const layer = createFx(layers);
     layer.mount(el);
     setFx(layer);
-    connectFx(layer);
     const onVisibility = () => (document.hidden ? layer.pause() : layer.resume());
     document.addEventListener("visibilitychange", onVisibility);
     // WebView2 never fires `visibilitychange` for a window the core hides (spike 01): the core
@@ -59,7 +57,6 @@ export function Atmosphere({ quality, intensity, layers }: Props) {
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       void unlistenShown.then((off) => off());
-      connectFx(null);
       layer.dispose();
       setFx(null);
     };

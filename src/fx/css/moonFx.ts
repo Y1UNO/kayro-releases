@@ -3,7 +3,7 @@ import { budgetFor, fxFps } from "../budget";
 import type { FxLayer, FxPalette, FxParams } from "../FxLayer";
 import { frameLoop, type FrameLoop } from "../loop";
 import { prefersReducedMotion } from "../motionPref";
-import type { LayerOptions } from "./cssFx";
+import type { LayerOptions } from "./host";
 import { pingPong } from "./drift";
 import styles from "./Moon.module.css";
 

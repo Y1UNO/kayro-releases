@@ -11,7 +11,7 @@
  *  2 "vivant" — selection pill, switches, panels, notifications, list entries: the "liaison"
  *               spring (3.4 %), cascade, rise of 14 px;
  *  3 "magie"  — the carousel's app cards: the "rebond" spring (6.6 %), veil, light threads.
- * A level switched off (workshop) or "reduce motion" = final state at once.
+ * A level switched off or "reduce motion" = final state at once.
  */
 import type { ElementValues } from "../da/daParams";
 import { SPRINGS } from "../glass/pillMotion";
@@ -72,7 +72,7 @@ export const MOTION_DEFAULTS = {
  */
 export const TITLE_SHINE = { sweepMs: 1100, firstAt: 450, ease: "standard" } as const;
 
-/** Speed multiplier of the workshop: durations are divided by it (as `opening.speed`). */
+/** Speed multiplier: durations are divided by it (as `opening.speed`). */
 export const SPEEDS = ["0.7", "1", "1.5"] as const;
 
 export type DurKey = "micro" | "court" | "moyen" | "long";
@@ -214,7 +214,6 @@ export function motionCss(t: MotionTokens): Record<string, string> {
     "--m-card-lift": `${t.cardLift}px`,
     "--m-card-grow": String(t.cardGrow),
     "--m-spring-v": t.widget.springV,
-    "--m-spring-h": t.widget.springH,
     "--m-widget-chevron": ms(t.widget.chevronMs),
   };
 }

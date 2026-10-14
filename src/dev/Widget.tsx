@@ -1,9 +1,9 @@
 // Development page of the widget (art direction round 4b): `/dev/widget`, dev builds only (see
 // main.tsx). The real widget page (bar + panel whose glass unrolls) with fake apps, scenes and
 // recents, over a fake desktop drawn in CSS (dev only), so it can be tried in a plain browser and
-// in the workshop. Texts are not translated on purpose (dev page).
+// in the Code browser pane. Texts are not translated on purpose (dev page).
 //   ?theme=<id>   ?fx=eco|balanced|high|ultra
-//   ?atelier=A|B (workshop preview)   ?open=1 (opens once at load)   ?cycle=ms (opens / folds)
+//   ?open=1 (opens once at load)   ?cycle=ms (opens / folds)
 import { useEffect, useState } from "react";
 import { QUALITIES, ThemeProvider } from "../design";
 import { ACTIVE_THEME_ID } from "../design/da";
@@ -51,7 +51,6 @@ function install(params: URLSearchParams): true {
       language: "fr",
       atmosphereIntensity: 1,
       displayMode: "widget",
-      widgetStyle: "brume", // ignored since round 5 (the widget follows the theme)
       hideOnEscape: true,
       hideOnBlur: false,
       economyMode: false,

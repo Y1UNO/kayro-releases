@@ -46,13 +46,13 @@ export function ThemeProvider({ initialThemeId, onThemeChange, children }: Props
 
   const setThemeId = useCallback(
     (id: string, options?: SetThemeOptions) => {
-      const next = themes.find((t) => t.id === id);
-      if (!next) return;
+      // Renamed or retired ids resolve like at start-up (an unknown one gives the default theme).
+      const next = resolveTheme(id);
       instant.current = options?.instant === true;
       setTheme(next);
       onThemeChange?.(next.id);
     },
-    [themes, onThemeChange],
+    [onThemeChange],
   );
 
   const value = useMemo(() => ({ theme, themes, setThemeId }), [theme, themes, setThemeId]);

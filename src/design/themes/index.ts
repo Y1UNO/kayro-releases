@@ -1,13 +1,8 @@
 import bleuGris from "./bleu-gris.json";
-import boreale from "./boreale.json";
-import crepuscule from "./crepuscule.json";
 import cuivre from "./cuivre.json";
 import encre from "./encre.json";
-import graphite from "./graphite.json";
 import lavandePeche from "./lavande-peche.json";
-import ocean from "./ocean.json";
 import opale from "./opale.json";
-import rose from "./rose.json";
 import sakura from "./sakura.json";
 import { parseTheme, type Theme } from "../theme";
 
@@ -17,12 +12,10 @@ function checked(raw: unknown): Theme {
   return r.theme;
 }
 
-/** How many of the built-in themes are the logo ones (shown in Réglages › Thèmes). */
-const LOGO_COUNT = 6;
-
 /**
- * The built-in themes, in display order. The first one is the default (Bleu-gris since R5). The 6
- * logo themes come first; the 5 older ones stay for the atelier until the art direction is frozen.
+ * The built-in themes: the 6 logo themes, in display order. The first one is the default (Bleu-gris
+ * since R5). The 5 older ones were retired when the art direction was frozen (settings migrated to
+ * Bleu-gris by the core, config/visual.rs; an unknown id resolves to the default here).
  */
 export const BUILTIN_THEMES: readonly Theme[] = [
   checked(bleuGris),
@@ -31,17 +24,12 @@ export const BUILTIN_THEMES: readonly Theme[] = [
   checked(sakura),
   checked(opale),
   checked(cuivre),
-  checked(crepuscule),
-  checked(boreale),
-  checked(ocean),
-  checked(rose),
-  checked(graphite),
 ];
 
 export const DEFAULT_THEME: Theme = BUILTIN_THEMES[0] as Theme;
 
-/** The themes offered in the settings (the logo ones), in grid order. */
-export const PICKER_THEMES: readonly Theme[] = BUILTIN_THEMES.slice(0, LOGO_COUNT);
+/** The themes offered in Réglages › Thèmes, in grid order (all the built-in ones). */
+export const PICKER_THEMES: readonly Theme[] = BUILTIN_THEMES;
 
 /** Ids that were renamed (the settings file is migrated too; this covers presets and old pages). */
 const RENAMED: Readonly<Record<string, string>> = { mauve: "encre" };

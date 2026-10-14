@@ -1,4 +1,4 @@
-import { hash } from "../canvas/dust";
+import { hash } from "../hash";
 
 /**
  * Motion of the liquid ring (art direction `liquidRing`): pure functions of the time, so the ring

@@ -1,9 +1,9 @@
 /**
- * Catalogue of the visual elements of the art direction (step 12b). Every tunable look of the
- * app is declared here: its parameters (bounds, default), its estimated cost, whether it is on.
- * The workshop (`/dev/atelier`) builds its controls from this list; presets and `active.json`
- * only hold values. Adding or removing an element = this file + one isolated module (an FxLayer
- * or a few CSS variables). French labels live in the dev-only workshop (`src/dev/atelier`).
+ * Catalogue of the visual elements of the art direction (step 12b, frozen: docs/DESIGN.md). Every
+ * tunable look of the app is declared here: its parameters (bounds, default), its estimated cost,
+ * whether it is on. The defaults ARE the shipped art direction (`active.json` holds no values);
+ * the user's settings override some of them (userDa.ts). Adding or removing an element = this
+ * file + one isolated module (an FxLayer or a few CSS variables).
  *
  * Two kinds of consumers:
  *  - `css`: the element writes CSS variables on <html> (screens: cards, glass, titles…);
@@ -34,15 +34,11 @@ export type {
 /** Curves offered for UI motion (`ease` selects): src/design/motion/eases.ts. */
 export { EASES };
 
-/** Font pairs (`typography.pair`): titles / interface. Both are bundled (no CDN). */
+/** Font pairs (`typography.pair`): titles / interface. Bundled (no CDN), same as tokens.css. */
 export const FONT_PAIRS: Readonly<Record<string, { title: string; ui: string }>> = {
   kayro: {
     title: '"Cormorant Garamond Variable", Georgia, serif',
     ui: '"Manrope Variable", system-ui, sans-serif',
-  },
-  historique: {
-    title: '"Fraunces Variable", Georgia, serif',
-    ui: '"DM Sans Variable", system-ui, sans-serif',
   },
 };
 
@@ -204,7 +200,7 @@ export const CATALOGUE: readonly DaElement[] = [
     // Level 3 of the carousel cards: after `delay` of the pointer on the card, one glossy veil
     // (`veilMs`) then the two light threads of the fan (its `categoryHover` look), `sparks` at most;
     // a flash at the launch (`launchFlash` × the "long" token). The reflection that follows the
-    // pointer (`sheen`) is a 3rd effect: off on carousel cards unless `pointerSheen`.
+    // pointer (`sheen`) is a 3rd effect: off on carousel cards at level 3 (rule 1).
     params: [
       range("tilt", 0, 3, 0.1, 2.5, "°"),
       range("lift", 0, 10, 0.5, 4, "px"),
@@ -213,7 +209,6 @@ export const CATALOGUE: readonly DaElement[] = [
       range("veilMs", 300, 1600, 10, 800, "ms"),
       range("sparks", 0, 4, 1, 4),
       range("launchFlash", 0.5, 3, 0.1, 1.6),
-      toggle("pointerSheen", false),
       // Round 5, « Survol des cartes » of the settings: full (veil + threads) / simple (lift) / none.
       userSelect("style", CARD_HOVER_STYLES, "full"),
     ],
@@ -221,7 +216,6 @@ export const CATALOGUE: readonly DaElement[] = [
       "--da-hover-tilt": String(v.on ? n(v, "tilt") : 0),
       "--da-hover-lift": v.on ? `${-n(v, "lift")}px` : "0px",
       "--da-hover-sheen": String(v.on ? n(v, "sheen") : 0),
-      "--da-pointer-sheen": v.pointerSheen ? "1" : "0",
     }),
   },
   {
@@ -284,31 +278,11 @@ export const CATALOGUE: readonly DaElement[] = [
     defaultOn: true,
     params: [select("pair", Object.keys(FONT_PAIRS), "kayro")],
     css: (v) => {
-      const pair = FONT_PAIRS[v.on ? (v.pair as string) : "historique"] ?? FONT_PAIRS.historique!;
+      const pair = FONT_PAIRS[v.pair as string] ?? FONT_PAIRS.kayro!;
       return { "--font-title": pair.title, "--font-ui": pair.ui };
     },
   },
   // ---- Motion: the token table and the signature animations (catalogueMotion.ts) ----
-  // ---- Elements of the step 3–12 sketch, kept to compare (off in the V4 direction) ----
-  { id: "fog", group: "historique", cost: "moyen", defaultOn: false, fx: true, params: [] },
-  { id: "beam", group: "historique", cost: "moyen", defaultOn: false, fx: true, params: [] },
-  { id: "floor", group: "historique", cost: "faible", defaultOn: false, fx: true, params: [] },
-  { id: "cardHalo", group: "historique", cost: "faible", defaultOn: false, fx: true, params: [] },
-  {
-    id: "dust",
-    group: "historique",
-    cost: "moyen",
-    defaultOn: false,
-    fx: true,
-    params: [range("count", 0, 40, 1, 14)],
-  },
-  {
-    id: "shine",
-    group: "historique",
-    cost: "faible",
-    defaultOn: false,
-    params: [],
-  },
 ];
 
 export const ELEMENTS: ReadonlyMap<string, DaElement> = new Map(CATALOGUE.map((e) => [e.id, e]));

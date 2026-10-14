@@ -49,18 +49,6 @@ pub enum DisplayMode {
     Widget,
 }
 
-/// Look of the widget bar (reference/Widget.dc.html); provisional until the art direction is frozen.
-/// Since R5 the widget follows the theme; the field stays so older files still load cleanly.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
-#[serde(rename_all = "lowercase")]
-pub enum WidgetStyle {
-    Aurore,
-    Sillage,
-    #[default]
-    Brume,
-    Orbe,
-}
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
@@ -73,7 +61,6 @@ pub struct Settings {
     /// Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »).
     pub atmosphere_intensity: f32,
     pub display_mode: DisplayMode,
-    pub widget_style: WidgetStyle,
     /// Escape hides the hub once there is nothing left to close.
     pub hide_on_escape: bool,
     /// Losing the focus hides the hub (the widget only folds its panel).
@@ -111,7 +98,6 @@ impl Default for Settings {
             language: "fr".into(),
             atmosphere_intensity: ATMOSPHERE_DEFAULT,
             display_mode: DisplayMode::default(),
-            widget_style: WidgetStyle::default(),
             hide_on_escape: true,
             hide_on_blur: false,
             economy_mode: false,
@@ -141,7 +127,6 @@ pub struct SettingsPatch {
     pub language: Option<String>,
     pub atmosphere_intensity: Option<f32>,
     pub display_mode: Option<DisplayMode>,
-    pub widget_style: Option<WidgetStyle>,
     pub hide_on_escape: Option<bool>,
     pub hide_on_blur: Option<bool>,
     pub economy_mode: Option<bool>,
@@ -175,7 +160,6 @@ impl Settings {
             language,
             atmosphere_intensity,
             display_mode,
-            widget_style,
             hide_on_escape,
             hide_on_blur,
             economy_mode,

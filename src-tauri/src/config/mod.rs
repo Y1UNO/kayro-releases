@@ -299,6 +299,8 @@ fn unique_id(name: &str, apps: &AppsFile) -> String {
 }
 
 #[cfg(test)]
+mod scene_tests;
+#[cfg(test)]
 mod settings_r5_tests;
 #[cfg(test)]
 mod store_tests;

@@ -13,7 +13,7 @@ export function applyDa(vars: Record<string, string>): void {
 
 let installed = false;
 
-/** Applies the current direction now and after every change (live tuning in the workshop). */
+/** Applies the current direction now and after every change (the user's settings, userDa.ts). */
 export function installDa(): void {
   if (installed) return;
   installed = true;

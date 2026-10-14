@@ -1,6 +1,6 @@
 import type { Quality } from "../../design";
 import { budgetFor } from "../budget";
-import { hash } from "../canvas/dust";
+import { hash } from "../hash";
 import {
   advance,
   emberAlpha,

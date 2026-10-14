@@ -97,12 +97,7 @@ describe("carousel card hover: life of the threads (review A3)", () => {
   it("A lit, pointer on B, out of the carousel before B lights: A fades out, the loop stops", () => {
     const { loop, run } = fakeLoop();
     const stage = { dataset: {} } as unknown as HTMLElement;
-    const fx = new CardHoverFx(
-      stage,
-      config,
-      () => false,
-      () => loop,
-    );
+    const fx = new CardHoverFx(stage, config, () => loop);
     const a = card();
     const b = card();
     fx.pointer(a.el, performance.now());
@@ -127,12 +122,7 @@ describe("carousel card hover: life of the threads (review A3)", () => {
   it("B lights once A has faded out, from level 0", () => {
     const { loop, run } = fakeLoop();
     const stage = { dataset: {} } as unknown as HTMLElement;
-    const fx = new CardHoverFx(
-      stage,
-      config,
-      () => false,
-      () => loop,
-    );
+    const fx = new CardHoverFx(stage, config, () => loop);
     const a = card();
     const b = card();
     fx.pointer(a.el, performance.now());
@@ -153,12 +143,7 @@ describe("carousel card hover: life of the threads (review A3)", () => {
   it("back on the same card while it fades: it lights again, once the fade is over", () => {
     const { loop, run } = fakeLoop();
     const stage = { dataset: {} } as unknown as HTMLElement;
-    const fx = new CardHoverFx(
-      stage,
-      config,
-      () => false,
-      () => loop,
-    );
+    const fx = new CardHoverFx(stage, config, () => loop);
     const a = card();
     fx.pointer(a.el, performance.now());
     run(500);
@@ -175,12 +160,7 @@ describe("carousel card hover: life of the threads (review A3)", () => {
   it("a wheel turn fades the threads out; disposing mid-fade stops everything", () => {
     const { loop, run } = fakeLoop();
     const stage = { dataset: {} } as unknown as HTMLElement;
-    const fx = new CardHoverFx(
-      stage,
-      config,
-      () => false,
-      () => loop,
-    );
+    const fx = new CardHoverFx(stage, config, () => loop);
     fx.pointer(card().el, performance.now());
     run(500);
     fx.wheel(performance.now());
@@ -195,23 +175,13 @@ describe("carousel card hover: life of the threads (review A3)", () => {
   it("nothing lights while the selection scrolls fast or after a wheel turn", () => {
     const { loop, run } = fakeLoop();
     const stage = { dataset: { fast: "" } } as unknown as HTMLElement;
-    const fx = new CardHoverFx(
-      stage,
-      config,
-      () => false,
-      () => loop,
-    );
+    const fx = new CardHoverFx(stage, config, () => loop);
     fx.pointer(card().el, performance.now());
     run(500);
     expect(lit()).toBe(false);
     expect(loop.active).toBe(false);
     const calm = { dataset: {} } as unknown as HTMLElement;
-    const fx2 = new CardHoverFx(
-      calm,
-      config,
-      () => false,
-      () => loop,
-    );
+    const fx2 = new CardHoverFx(calm, config, () => loop);
     fx2.wheel(performance.now());
     fx2.pointer(card().el, performance.now());
     run(500);
@@ -223,12 +193,7 @@ describe("carousel card hover: life of the threads (review A3)", () => {
   it("a card left before its delay leaves no loop behind", () => {
     const { loop, run } = fakeLoop();
     const stage = { dataset: {} } as unknown as HTMLElement;
-    const fx = new CardHoverFx(
-      stage,
-      config,
-      () => false,
-      () => loop,
-    );
+    const fx = new CardHoverFx(stage, config, () => loop);
     fx.pointer(card().el, performance.now());
     run(60);
     fx.pointer(null, performance.now());

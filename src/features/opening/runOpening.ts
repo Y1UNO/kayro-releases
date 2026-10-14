@@ -6,7 +6,7 @@ import { isEco } from "../../design/quality";
 import { setIntroCue } from "../../fx/gpu/cues";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { hubStore } from "../../store";
-import { engineDrawsVeil, revealAt, veilUniform, type RevealFrame } from "./openingReveal";
+import { revealAt, veilUniform, type RevealFrame } from "./openingReveal";
 import {
   letterOffsets,
   openingAt,
@@ -31,14 +31,6 @@ const SKIP_KEYS = new Set(["Escape", "Enter", " "]);
 /** A pointer press, or one of SKIP_KEYS. */
 export function skipsOpening(e: { type: string; key?: string }): boolean {
   return e.type === "pointerdown" || (e.type === "keydown" && SKIP_KEYS.has(e.key ?? ""));
-}
-
-/** The home screen's ring (centre, radius) from the art direction, for `ringGrow`. */
-function homeRing(): OpeningGeometry["homeRing"] {
-  const c = daStore.getState().values.crystalRing;
-  const n = (k: string, d: number) => (typeof c?.[k] === "number" ? (c[k] as number) : d);
-  const size = n("size", 680);
-  return { x: innerWidth / 2 + n("offsetX", 0), y: n("top", -230) + size / 2, r: size / 2 };
 }
 
 /** Last values written per element: a still element gets no style change (no new layer pass). */
@@ -102,7 +94,6 @@ export function runOpening(
       logo: { x: innerWidth / 2, y: innerHeight * 0.416 },
       slide: 0,
       letters: LETTERS.map(() => 0),
-      homeRing: homeRing(),
     } as OpeningGeometry,
     content: -1,
     home: -1, // last opacity written on the two big layers (no style change while it stays)
@@ -173,7 +164,7 @@ export function runOpening(
       `scale(${(f.intro.ring[2] / s.ringRadius).toFixed(4)})`,
     );
     const rv = revealAt(time, s, state.geo, view(), eco);
-    if (rv) reveal(rv, engineDrawsVeil(s, fb === 0));
+    if (rv) reveal(rv, fb === 0);
   };
 
   const finish = () => {
@@ -198,7 +189,6 @@ export function runOpening(
       logo: { x: lx, y: ly },
       slide: innerWidth / 2 - lx,
       letters: letterOffsets(lx, centres),
-      homeRing: homeRing(),
     };
   };
 
@@ -206,7 +196,7 @@ export function runOpening(
   setIntroCue((now) => {
     const t = choreo.time(now);
     const intro = openingAt(t, s, state.geo).intro;
-    if (!engineDrawsVeil(s, engineOn())) return intro;
+    if (!engineOn()) return intro;
     return { ...intro, veil: veilUniform(revealAt(t, s, state.geo, view(), eco)) };
   });
   render(0);

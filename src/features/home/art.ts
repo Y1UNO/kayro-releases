@@ -10,15 +10,5 @@ import type { AppEntry } from "../../ipc/bindings";
  */
 export function posterUrl(app: Pick<AppEntry, "art"> & { id?: string }): string | null {
   void app.art.poster;
-  if (!import.meta.env.DEV || devPosters.length === 0) return null;
-  // Several stand-ins, spread over the cards (tests the engine's poster textures, round 2b).
-  let h = 0;
-  for (const c of app.id ?? "") h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return devPosters[h % devPosters.length]!;
-}
-
-/** Dev pages only (`/dev/home?posters=1`): stand-in posters, spread over the cards. */
-let devPosters: readonly string[] = [];
-export function setDevPoster(urls: readonly string[] | null): void {
-  if (import.meta.env.DEV) devPosters = urls ?? [];
+  return null;
 }

@@ -15,7 +15,6 @@ export const SETTINGS = {
   language: "fr",
   atmosphereIntensity: 1.0,
   displayMode: "immersive",
-  widgetStyle: "brume",
   hideOnEscape: true,
   hideOnBlur: false,
   economyMode: false,

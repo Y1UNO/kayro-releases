@@ -53,26 +53,6 @@ export function secondsText(ms: number): string {
   return Number.isInteger(s) ? String(s) : s.toFixed(1).replace(".", ",");
 }
 
-/** What a step looks like in a list: kind, subject (a slot label, a duration…) and the app it reaches. */
-export interface StepInfo {
-  kind: StepKind;
-  /** Slot of the step, null for `wait`. */
-  slot: string | null;
-  /** Milliseconds for `wait` / `waitReady`. */
-  ms: number | null;
-}
-
-export function stepInfo(step: Step): StepInfo {
-  switch (step.type) {
-    case "wait":
-      return { kind: "wait", slot: null, ms: step.ms };
-    case "waitReady":
-      return { kind: "waitReady", slot: step.slot, ms: step.timeoutMs };
-    default:
-      return { kind: step.type, slot: step.slot, ms: null };
-  }
-}
-
 /** App linked to a slot, if it still exists. */
 export function appOfSlot(
   slot: string,

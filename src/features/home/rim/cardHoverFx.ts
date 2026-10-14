@@ -14,7 +14,6 @@ import { EASES } from "../../../design/motion/eases";
 import { MOTION_DEFAULTS, type MotionTokens } from "../../../design/motion/tokens";
 import type { ElementValues } from "../../../design/da/daParams";
 import { frameLoop, type FrameLoop } from "../../../fx/loop";
-import { sheenAt } from "../../../fx/gpu/sheen";
 import { hoverConfig, threadPhase } from "../fan/fanFloat";
 import { sheenBandClass, sheenGlide } from "../SheenVeil";
 import { createRimEls, renderRim, type RimBox, type RimEls, type RimLook } from "./rimRender";
@@ -141,11 +140,6 @@ export class CardHoverFx {
   constructor(
     private readonly stage: HTMLElement,
     public config: CardHoverConfig,
-    /**
-     * The periodic veil of the selected card glides now (rule 1: one decorative effect). Replaced
-     * when the `cardSheen` settings change (Carousel.tsx).
-     */
-    public periodicGlide: (card: HTMLElement, now: number) => boolean = () => false,
     private readonly loop: () => FrameLoop = frameLoop,
   ) {}
 
@@ -225,7 +219,7 @@ export class CardHoverFx {
     // The threads come in from now (later than `delay` when another card's faded out first).
     this.enterAt = now - c.delay;
     this.leftAt = -1;
-    if (c.veil && this.band && !this.periodicGlide(card, now)) sheenGlide(this.band, c.veilMs);
+    if (c.veil && this.band) sheenGlide(this.band, c.veilMs);
     if (c.threads) this.run();
   }
 
@@ -287,16 +281,4 @@ export class CardHoverFx {
     this.off?.();
     this.off = null;
   }
-}
-
-/** The selected card's own periodic veil (2b, `cardSheen`) glides at `now` (engine or CSS). */
-export function periodicGlide(sheen: ElementValues | undefined) {
-  return (card: HTMLElement, now: number): boolean => {
-    // The card's slot (its floating box sits in between since round 5).
-    const slot = card.closest?.<HTMLElement>("[data-app-id]") ?? card.parentElement;
-    if (sheen?.on !== true || slot?.dataset.active === undefined) return false;
-    const css = card.querySelector(`.${CSS.escape(sheenBandClass)}`);
-    if (css && css.getAnimations().length > 0) return true;
-    return sheenAt(now, Number(sheen.duration) || 1800) >= 0;
-  };
 }

@@ -1,10 +1,10 @@
 import type { Quality } from "../../design";
 import { budgetFor, fxFps } from "../budget";
-import type { LayerOptions } from "../css/cssFx";
+import type { LayerOptions } from "../css/host";
 import type { FxLayer, FxPalette, FxParams } from "../FxLayer";
 import { frameLoop, type FrameLoop } from "../loop";
 import { prefersReducedMotion } from "../motionPref";
-import { hash } from "./dust";
+import { hash } from "../hash";
 
 /**
  * Rising embers and twinkling stars (piste P2 « Deux lumières », art direction elements `embers`

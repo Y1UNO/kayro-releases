@@ -216,16 +216,7 @@ void main() {
 }
 `;
 
-export const SPRITE_UNIFORMS = [
-  "uView",
-  "uStar",
-  "uMoon",
-  "uLight",
-  "uLRing",
-  "uPLight",
-  "uPar",
-  "uKind",
-] as const;
+export const SPRITE_UNIFORMS = ["uView", "uStar", "uKind"] as const;
 
 /** Per instance: aI = x, y, size (CSS px), alpha; aC = rgb, kind (0 ember, 1 star, 2 bokeh). */
 export const SPRITE_VERTEX = `#version 300 es
@@ -233,35 +224,16 @@ layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec4 aI;
 layout(location = 2) in vec4 aC;
 uniform vec2 uView;
-uniform vec4 uMoon;    // as in the background pass
-uniform vec4 uLight;   // cursor x, y, intensity (fade included), radius
-uniform vec4 uLRing;   // liquid ring centre x, y, radius, intensity
-uniform vec4 uPLight;  // lit particles (round 2b): intensity, reach, halo, 0
-uniform vec2 uPar;     // parallax shift of the nearest layer (px); stars far, bokeh mid, embers near
 uniform vec3 uKind;    // opacity of the embers, stars, bokeh (opening, round 3; 1 otherwise)
 out vec2 vUv;
 out vec4 vC;
 out float vA;
-// Light received at q from the engine's lights (embers and stars only, not the bokeh).
-float received(vec2 q) {
-  float r = uPLight.y;
-  vec2 dm = (q - uMoon.xy) / (uMoon.z * r);
-  float m = uMoon.w * 1.6 * exp(-dot(dm, dm) * 1.5);
-  float dr = (length(q - uLRing.xy) - uLRing.z) / (60.0 * r);
-  float g = uLRing.w * 1.8 * exp(-dr * dr);
-  vec2 dc = (q - uLight.xy) / (uLight.w * r);
-  float c = uLight.z * 2.6 * exp(-dot(dc, dc) * 2.0);
-  return min(m + g + c, 1.5);
-}
 void main() {
-  float depth = aC.w < 0.5 ? 1.0 : (aC.w < 1.5 ? 0.35 : 0.65);
-  vec2 q = aI.xy + uPar * depth;
-  float lit = (aC.w < 1.5 && uPLight.x > 0.0) ? received(q) * uPLight.x : 0.0;
-  vec2 p = q + aPos * aI.z * 0.5 * (1.0 + uPLight.z * lit);
+  vec2 p = aI.xy + aPos * aI.z * 0.5;
   vUv = aPos;
-  vC = vec4(mix(aC.rgb, vec3(1.0), 0.35 * min(lit, 1.0)), aC.w);
+  vC = aC;
   float kind = aC.w < 0.5 ? uKind.x : (aC.w < 1.5 ? uKind.y : uKind.z);
-  vA = aI.w * (1.0 + 1.2 * lit) * kind;
+  vA = aI.w * kind;
   gl_Position = vec4(p.x / uView.x * 2.0 - 1.0, 1.0 - p.y / uView.y * 2.0, 0.0, 1.0);
 }
 `;

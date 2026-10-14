@@ -14,7 +14,7 @@ import {
   type UnrollSpring,
 } from "./springCurves";
 
-/** Ways the widget's panel opens (workshop): the validated unrolling, or the first proposal. */
+/** Ways the widget's panel opens (Réglages › Personnalisation avancée): the unrolling, or « Sobre ». */
 export const WIDGET_MOTIONS = ["deroule", "sobre"] as const;
 export type WidgetMotion = (typeof WIDGET_MOTIONS)[number];
 
@@ -77,7 +77,7 @@ export const CHAIN = {
   pointDelay: 120,
   /** The running step's point. */
   active: 1.18,
-  /** Demo pace of the workshop (a real test follows the real steps). */
+  /** Demo pace of the dev page (a real test follows the real steps). */
   demoLaunch: 520,
   demoWait: 900,
 } as const;
@@ -94,11 +94,6 @@ export const STATES = {
 
 /** Round 4b — opening variant C in the opaque opening (R4b-Ouverture-Transparente.txt). */
 export const OPENING_PULSES = ["v1a", "c"] as const;
-/**
- * Who draws variant C's veil (review C): the glass engine (default; the CSS layer stays as its
- * fallback without the engine), or the CSS layer always (workshop, to compare).
- */
-export const OPENING_VEIL_RENDERS = ["moteur", "css"] as const;
 export const OPENING_C = {
   /** Darkening around the ring until the pulse (as the passages' veil). */
   veil: 0.42,

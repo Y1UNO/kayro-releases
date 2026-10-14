@@ -6,12 +6,12 @@ import { ERROR_MESSAGE_KEYS } from "../ipc/errors";
 
 describe("t()", () => {
   it("returns the message and fills placeholders", () => {
-    expect(t("app.appsCount", { count: 3 })).toBe("Applications : 3");
+    expect(t("addApps.row.category", { name: "Steam" })).toBe("Catégorie de Steam");
   });
 
   it("leaves unknown placeholders visible instead of failing", () => {
-    expect(t("app.appsCount")).toBe("Applications : {count}");
-    expect(t("app.appsCount", { other: 1 })).toBe("Applications : {count}");
+    expect(t("addApps.row.category")).toBe("Catégorie de {name}");
+    expect(t("addApps.row.category", { other: 1 })).toBe("Catégorie de {name}");
   });
 
   it("rejects unknown keys at compile time", () => {

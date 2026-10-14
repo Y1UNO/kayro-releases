@@ -50,7 +50,7 @@ export function CategoryTitle({ category, compact }: Props) {
 /**
  * A light gliding along the rule under the title: once when the category changes, then every
  * `underlineShine` seconds. Not a CSS infinite animation (it would ask for a frame at every
- * refresh, see Shine.tsx): a one-shot Web Animation and one timer, stopped while the window is
+ * refresh: 17 % of a core measured at step 7): a one-shot Web Animation and one timer, stopped while the window is
  * hidden. None with reduced motion. Timing and curve: the motion table (`titleShine`).
  */
 function UnderlineShine({ category }: { category: CategoryId }) {

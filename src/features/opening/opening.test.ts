@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { CATALOGUE, defaultValues, parsePreset } from "../../design/da";
-import signature from "../../design/presets/v4-r3-signature.json";
 import { sameIntro } from "../../fx/gpu/cues";
 import { introUniforms, kindUniform } from "../../fx/gpu/uniforms";
 import { skipsOpening } from "./runOpening";
@@ -18,7 +17,6 @@ const G: OpeningGeometry = {
   logo: { x: 490, y: 316 },
   slide: 150,
   letters: [-127, -183, -234, -279, -326],
-  homeRing: { x: 640, y: 110, r: 340 },
 };
 
 describe("opening V1-A timeline", () => {
@@ -31,7 +29,6 @@ describe("opening V1-A timeline", () => {
       letterScale: 0.45,
       letterBlur: 6,
       ringRadius: 200,
-      ringGrow: false,
     });
     expect(openingRestAt(S)).toBe(3400);
     expect(openingDuration(S)).toBe(3400 + S.hold + S.handoff);
@@ -94,22 +91,9 @@ describe("opening V1-A timeline", () => {
     expect(openingRestAt(fast)).toBe(1700);
     expect(openingAt(650, fast, G).intro.draw[0]).toBe(1);
   });
-
-  it("ringGrow: the ring becomes the home screen's ring instead of fading", () => {
-    const g = { ...S, ringGrow: true };
-    const f = openingAt(2600, g, G);
-    expect(f.intro.ring[2]).toBeCloseTo(340);
-    expect(f.intro.ring[0]).toBeCloseTo(640);
-    expect(f.intro.ring[3]).toBe(1);
-    expect(openingAt(openingDuration(g), g, G).intro.ring[3]).toBe(0);
-  });
 });
 
 describe("opening in the catalogue and the engine", () => {
-  it("the round 3 preset is valid", () => {
-    expect(parsePreset(signature).ok).toBe(true);
-  });
-
   it("the element is on by default and older presets still load", () => {
     expect(CATALOGUE.find((e) => e.id === "opening")?.defaultOn).toBe(true);
     const r = parsePreset({

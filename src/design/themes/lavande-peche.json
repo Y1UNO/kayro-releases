@@ -3,7 +3,7 @@
   "id": "lavande-peche",
   "name": "Lavande-pêche",
   "author": "Kayro",
-  "description": "Lavande et pêche du logo. Le thème par défaut.",
+  "description": "Lavande et pêche du logo.",
   "bg": ["#15112B", "#0C0A1A", "#06050D"],
   "accent": "#B7A2F2",
   "glow": "rgba(246,169,138,.35)",

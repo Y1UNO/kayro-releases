@@ -24,7 +24,7 @@ const DEMO: SceneFile = {
   ],
 };
 
-/** Plays the demo chain at the workshop's pace: a step « Lancer » 520 ms, « Attendre » 900 ms. */
+/** Plays the demo chain at the demo pace: a step « Lancer » 520 ms, « Attendre » 900 ms. */
 function useFakeTest(steps: () => SceneFile["steps"]) {
   const [run, setRun] = useState<StepView[] | undefined>(undefined);
   const timer = useRef(0);

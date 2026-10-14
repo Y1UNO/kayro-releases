@@ -1,36 +1,23 @@
 // Development page for the home screen (step 7): `/dev/home`, dev builds only (see main.tsx).
 // It fills the store with fake apps, so the screen can be checked in a plain browser:
-//   ?theme=<theme id> (default: the exported art direction's)   ?atelier=A|B (workshop preview)   ?apps=60 (all in "jeux")   ?empty=1
-//   ?view=grid   ?bench=1 (frame-time measurement while scrolling fast)   ?bench=idle (no input)
-//   ?fx=eco|balanced|high|ultra (quality, default high)   ?intensity=0.3…1   ?nodust=1 (CSS layer only)
+//   ?theme=<theme id> (default: the art direction's)   ?apps=60 (all in "jeux")   ?empty=1   ?view=grid
+//   ?fx=eco|balanced|high|ultra (quality, default high)   ?intensity=0.3…1
 //   ?addmock=1 (fake core for the add / edit dialogs: detected apps, drop, add, edit, remove)
-//   ?fps=N (cadence of the continuous layers, instead of the budget's)
-//   ?posters=1 (a stand-in poster on every card)   ?cycle=ms (clicks the next category tab every ms: watch the glass selection pill slide)
-//   ?opening=1 (the opening above the home screen; `replay` from the workshop)   ?seek=ms (one moment of it, still)
-//   ?loop=ms (plays the opening again every ms)   ?bench=transition (frame times, also during the sequences only)
-//   ?fan=1 (round 3b: start on the category fan; `replay` from the workshop plays the link again)
+//   ?cycle=ms (clicks the next category tab every ms: watch the glass selection pill slide)
+//   ?opening=1 (the opening above the home screen)   ?seek=ms (one moment of it, still)
+//   ?loop=ms (plays the opening again every ms)   ?fan=1 (round 3b: start on the category fan)
 //   ?seq=link|tab|back&seek=ms (one moment of a category sequence, still)
-//   ?loop=ms&seq=link|tab|back (that sequence again every ms, for the bench; link starts on the fan)
+//   ?loop=ms&seq=link|tab|back (that sequence again every ms; link starts on the fan)
 //   ?fan=1&hover=i (card i of the fan hovered: lift, threads, sparks)
 import { useEffect, useRef, useState } from "react";
 import { QUALITIES, ThemeProvider, applyQuality } from "../design";
 import { Atmosphere } from "../fx";
-import { DustLayer } from "../fx/canvas/dust";
-import { CssFxLayer } from "../fx/css/cssFx";
 import { HomeScreen } from "../features/home/HomeScreen";
 import type { AppEntry } from "../ipc/bindings";
 import { ipc } from "../ipc/commands";
 import { hubStore } from "../store";
 import { installAddAppsMock } from "./addAppsMock";
-import { runBench, type BenchResult } from "./bench";
-import { setDevPoster } from "../features/home/art";
 import { Opening } from "../features/opening/Opening";
-import { REPLAY_EVENT } from "./atelier/sync";
-
-/** Colourful pictures of the repository, as stand-in game posters (dev server only). */
-const DEV_POSTERS = ["140406", "140411", "140423"].map(
-  (t) => `/reference/inspirations/Capture d%27%C3%A9cran 2026-10-11 ${t}.png`,
-);
 import { ACTIVE_THEME_ID } from "../design/da";
 import type { CategoryId } from "../features/home/categories";
 import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
@@ -49,7 +36,7 @@ interface LinkDev {
 const linkDev = () => (window as unknown as { __categoryLink?: LinkDev }).__categoryLink;
 const CATS: CategoryId[] = ["jeux", "stream", "creativite", "logiciels", "autres"];
 
-/** Category sequences on demand (round 3b): still moments, loops for the bench, replay. */
+/** Category sequences on demand (round 3b): still moments and loops. */
 function useCategoryDev(params: URLSearchParams): void {
   useEffect(() => {
     const seq = params.get("seq");
@@ -68,7 +55,7 @@ function useCategoryDev(params: URLSearchParams): void {
       } else if (l.mode() === "fan") l.pick(cat);
       else l.fan();
     };
-    // ?hover=i: card i of the fan stays hovered (threads, sparks; bench and captures).
+    // ?hover=i: card i of the fan stays hovered (threads, sparks).
     const hover = params.has("hover") ? Number(params.get("hover")) : -1;
     if (hover >= 0) timers.push(window.setTimeout(() => linkDev()?.hover(hover), 900));
     if (seq && seek !== undefined) {
@@ -83,17 +70,7 @@ function useCategoryDev(params: URLSearchParams): void {
     } else if (loop > 0 && (params.has("fan") || seq)) {
       timers.push(window.setInterval(step, loop));
     }
-    const replay = () => {
-      const l = linkDev();
-      if (!l) return;
-      l.fan();
-      timers.push(window.setTimeout(() => l.pick(CATS[n++ % CATS.length]!), 600));
-    };
-    if (params.has("fan")) window.addEventListener(REPLAY_EVENT, replay);
-    return () => {
-      timers.forEach((t) => window.clearTimeout(t));
-      window.removeEventListener(REPLAY_EVENT, replay);
-    };
+    return () => timers.forEach((t) => window.clearTimeout(t));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
@@ -127,21 +104,8 @@ function seed(params: URLSearchParams): AppEntry[] {
   return Object.entries(MOCK).flatMap(([cat, names]) => names.map((nm, i) => entry(nm, cat, i)));
 }
 
-/** Bench variants of the atmosphere layers (undefined = the normal ones). */
-function benchLayers(params: URLSearchParams) {
-  const fps = Number(params.get("fps")) || undefined;
-  const noDust = params.has("nodust");
-  if (!fps && !noDust) return undefined;
-  return () =>
-    noDust ? [new CssFxLayer({ fps })] : [new CssFxLayer({ fps }), new DustLayer({ fps })];
-}
-
-(window as unknown as { __runBench: typeof runBench }).__runBench = runBench;
-
 export default function HomeDev() {
   const params = new URLSearchParams(location.search);
-  if (params.has("posters")) setDevPoster(DEV_POSTERS);
-  const [bench, setBench] = useState<BenchResult | null>(null);
   const [opening, setOpening] = useState({ on: params.has("opening"), run: 0 });
   const under = useRef<HTMLDivElement>(null);
   const seek = params.has("seek") && params.has("opening") ? Number(params.get("seek")) : null;
@@ -161,7 +125,6 @@ export default function HomeDev() {
         language: "fr",
         atmosphereIntensity: Number(params.get("intensity")) || 1,
         displayMode: "immersive",
-        widgetStyle: "brume",
         hideOnEscape: true,
         hideOnBlur: false,
         economyMode: false,
@@ -210,31 +173,9 @@ export default function HomeDev() {
   useEffect(() => {
     if (!params.has("opening")) return;
     const replay = () => setOpening((o) => ({ on: true, run: o.run + 1 }));
-    window.addEventListener(REPLAY_EVENT, replay);
     const loop = params.has("fan") ? 0 : Number(params.get("loop"));
     const id = loop > 0 ? window.setInterval(replay, loop) : 0;
-    return () => {
-      window.removeEventListener(REPLAY_EVENT, replay);
-      window.clearInterval(id);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!params.has("bench")) return;
-    const id = window.setTimeout(() => {
-      if (params.get("view") === "grid")
-        window.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
-      const still = params.get("bench") === "idle" || params.get("bench") === "transition";
-      void runBench(10_000, still ? 0 : 30).then((r) => {
-        // Last rung of the glass engine's fallback ladder, if it stepped down during the bench.
-        const rung = document.documentElement.dataset.glassRung ?? "none";
-        const res = { ...r, rung };
-        (window as unknown as { __bench: BenchResult }).__bench = res;
-        setBench(res);
-      });
-    }, 1500);
-    return () => window.clearTimeout(id);
+    return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -242,7 +183,7 @@ export default function HomeDev() {
   const themeId = params.get("theme") ?? ACTIVE_THEME_ID;
   return (
     <ThemeProvider initialThemeId={themeId}>
-      <Atmosphere layers={benchLayers(params)} />
+      <Atmosphere />
       <div ref={under} style={{ height: "100%" }}>
         <HomeScreen
           key={params.get("view")}
@@ -257,24 +198,6 @@ export default function HomeDev() {
           seek={seek}
           onDone={() => setOpening((o) => ({ ...o, on: false }))}
         />
-      )}
-      {bench && (
-        <pre
-          id="bench"
-          style={{
-            position: "fixed",
-            right: 8,
-            bottom: 8,
-            zIndex: 999,
-            margin: 0,
-            padding: 8,
-            background: "#000c",
-            color: "#fff",
-            font: "12px monospace",
-          }}
-        >
-          {JSON.stringify(bench, (_, v) => (typeof v === "number" ? Math.round(v * 10) / 10 : v))}
-        </pre>
       )}
     </ThemeProvider>
   );

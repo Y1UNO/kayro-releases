@@ -5,15 +5,12 @@ import { EditIcon, useGlass } from "../../design";
 import { markGlassDirtyFor } from "../../design/glass/glassRegistry";
 import { posterUrl } from "./art";
 import { faceMixOf, monogram, shadeOf } from "./cardLook";
-import { useDa } from "../../design/da";
 import { currentMotion } from "../../design/motion/current";
 import { durOf } from "../../design/motion/tokens";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { useHub } from "../../store";
 import { DEFAULT_GEOMETRY, isVisible, slotOffset, type Geometry } from "./carouselGeometry";
 import { cssVars } from "./cssVars";
-import { SheenVeil } from "./SheenVeil";
-import { Shine } from "./Shine";
 import { useAppIcon } from "./useAppIcon";
 import { cardTilt } from "./cardTilt";
 import fail from "./LaunchFail.module.css";
@@ -86,8 +83,6 @@ export function AppCard({
     el.animate([x(0), x(-a), x(a), x(-b), x(b), x(0)], { duration: ms, composite: "add" });
   }, [failed]);
   const poster = posterUrl(app);
-  const shine = useDa((s) => s.values.shine?.on === true);
-  const sheen = useDa((s) => (s.values.cardSheen?.on === true ? s.values.cardSheen : null));
   const icon = useAppIcon(app);
   const stage = mode === "stage";
   const hidden = stage && !isVisible(d);
@@ -158,8 +153,6 @@ export function AppCard({
             </span>
           )}
           <span className={styles.sheen} data-pointer-sheen="" aria-hidden="true" />
-          {shine && active && stage && <Shine />}
-          {sheen && active && stage && <SheenVeil duration={Number(sheen.duration) || 1800} />}
           {running && <span className={styles.running} aria-hidden="true" />}
           <span className={fail.ring} data-on={failed ? "" : undefined} aria-hidden="true" />
           <span className={styles.plate} data-face="">
