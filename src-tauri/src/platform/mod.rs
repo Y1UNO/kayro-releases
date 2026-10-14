@@ -5,8 +5,8 @@
 pub mod com;
 pub mod icon;
 pub mod own_window;
-pub mod startup;
 pub mod shell;
+pub mod startup;
 pub mod theme;
 pub mod veil;
 pub mod window;
@@ -52,6 +52,18 @@ impl std::fmt::Display for Win32Error {
 /// UTF-16, NUL-terminated.
 pub(crate) fn wide(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(std::iter::once(0)).collect()
+}
+
+/// Puts the calling thread in Windows' background mode (lower CPU, disk and memory priority): for
+/// work the user does not wait for, such as the palettes of step 14. Best effort.
+pub fn background_thread() {
+    use windows::Win32::System::Threading::{
+        GetCurrentThread, SetThreadPriority, THREAD_MODE_BACKGROUND_BEGIN,
+    };
+    // SAFETY: the pseudo-handle of the current thread needs no closing.
+    if let Err(e) = unsafe { SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN) } {
+        tracing::debug!(error = %e, "could not lower the thread priority");
+    }
 }
 
 #[cfg(test)]

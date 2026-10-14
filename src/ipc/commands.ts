@@ -17,6 +17,7 @@ import type {
   MonitorInfo,
   VeilFade,
   AppArt,
+  AppPalette,
   ArtRole,
 } from "./bindings";
 
@@ -145,6 +146,8 @@ export const artIpc = {
     checked(commands.artSetUser(id, role, path)),
   clearUser: (id: string, role: ArtRole): Promise<Outcome<AppArt[]>> =>
     checked(commands.artClearUser(id, role)),
+  /** Colours taken from the images so far (computed by the core in the background). */
+  palettes: (): Promise<Outcome<AppPalette[]>> => plain(commands.palettesGet()),
 };
 
 export type ArtIpc = typeof artIpc;

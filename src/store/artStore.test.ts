@@ -1,27 +1,45 @@
 import { describe, expect, it } from "vitest";
-import type { AppArt } from "../ipc/bindings";
+import type { AppArt, AppPalette } from "../ipc/bindings";
 import type { ArtIpc } from "../ipc/commands";
 import type { ArtEvents } from "../ipc/events";
 import { artUrl } from "../features/home/art";
-import { createArtStore, imageOf } from "./artStore";
+import { createArtStore, imageOf, paletteOf } from "./artStore";
 
 const poster = (stamp: string): AppArt => ({
   id: "steam-1",
   images: [{ role: "poster", origin: "steam", stamp, lowRes: true }],
 });
 
-function fakes(answers: AppArt[][]) {
+const red: AppPalette = {
+  id: "steam-1",
+  source: "poster",
+  palette: {
+    colors: [{ l: 0.55, a: 0.18, b: 0.09, weight: 1, hex: "#c82828" }],
+    dominant: 0,
+    accent: 0,
+    dark: 0,
+    light: 0,
+  },
+};
+
+function fakes(answers: AppArt[][], palettes: AppPalette[] = []) {
   let calls = 0;
-  const handlers: { art?: (i: AppArt[]) => void; apps?: () => void } = {};
+  const handlers: {
+    art?: (i: AppArt[]) => void;
+    apps?: () => void;
+    palettes?: (p: AppPalette[]) => void;
+  } = {};
   const ipc = {
     index: async () => ({
       ok: true as const,
       value: answers[Math.min(calls++, answers.length - 1)],
     }),
+    palettes: async () => ({ ok: true as const, value: palettes }),
   } as unknown as ArtIpc;
   const events: ArtEvents = {
     onArtChanged: async (h) => ((handlers.art = h), () => {}),
     onAppsChanged: async (h) => ((handlers.apps = h), () => {}),
+    onPalettesChanged: async (h) => ((handlers.palettes = h), () => {}),
   };
   return { ipc, events, handlers, calls: () => calls };
 }
@@ -49,6 +67,21 @@ describe("art store", () => {
     expect(imageOf(store.getState(), "steam-1", "poster")?.stamp).toBe("b");
     f.handlers.art?.([]);
     expect(store.getState().byId).toEqual({});
+  });
+});
+
+describe("palettes", () => {
+  it("are read at start, then follow the event, by app and source", async () => {
+    const f = fakes([[]], [red]);
+    const store = createArtStore(f.ipc, f.events);
+    await store.getState().init();
+    expect(paletteOf(store.getState(), "steam-1", "poster")?.palette.colors[0]?.hex).toBe(
+      "#c82828",
+    );
+    expect(paletteOf(store.getState(), "steam-1", "hero")).toBeNull();
+    f.handlers.palettes?.([{ ...red, source: "hero" }]);
+    expect(paletteOf(store.getState(), "steam-1", "poster")).toBeNull();
+    expect(paletteOf(store.getState(), "steam-1", "hero")).not.toBeNull();
   });
 });
 

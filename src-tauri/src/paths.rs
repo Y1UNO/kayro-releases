@@ -78,6 +78,11 @@ impl DataPaths {
         self.root.join("art")
     }
 
+    /// Colours taken from the apps' images (step 14), rebuilt on demand.
+    pub fn palettes(&self) -> PathBuf {
+        self.root.join("cache").join("palettes.json")
+    }
+
     /// Icons extracted from programs and shortcuts (`cache/icons/`), rebuilt on demand.
     pub fn icons_dir(&self) -> PathBuf {
         self.root.join("cache").join("icons")

@@ -211,6 +211,9 @@ pub fn detect_cancel(detect: State<'_, DetectState>) {
 /// Tells the interface the list changed, and the process watcher to look at the new list.
 fn apps_changed<R: Runtime>(app: &AppHandle<R>, state: &ConfigState) {
     notify(AppsChanged(state.apps()).emit(app));
+    if let Some(palettes) = app.try_state::<ipc_art::PaletteWorker>() {
+        palettes.request(app);
+    }
     if let Some(watch) = app.try_state::<ProcWatch>() {
         watch.refresh();
     }
@@ -333,6 +336,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_art::art_index,
             ipc_art::art_set_user::<tauri::Wry>,
             ipc_art::art_clear_user::<tauri::Wry>,
+            ipc_art::palettes_get,
         ])
         .events(collect_events![
             SettingsChanged,
@@ -345,7 +349,8 @@ pub fn builder() -> Builder<tauri::Wry> {
             crate::desktop::SceneHotkey,
             crate::desktop::hotkeys::HotkeysChanged,
             ipc_desktop::RecentsChanged,
-            ipc_art::ArtChanged
+            ipc_art::ArtChanged,
+            ipc_art::PalettesChanged
         ])
 }
 

@@ -34,6 +34,8 @@ specta = { version = "=2.0.0-rc.25", features = ["derive"] }
 specta-typescript = "0.0.12"
 keyvalues-parser = "0.2.4"
 png = "0.18.1"
+# Decodes the posters for the game colours (step 14): JPEG (Steam) and PNG only, pure Rust.
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png"] }
 sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }
 
 [target.'cfg(windows)'.dependencies]

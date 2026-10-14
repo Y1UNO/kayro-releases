@@ -10,7 +10,7 @@ export { createSceneStore } from "./sceneStore";
 export type { SceneState, SceneStore } from "./sceneStore";
 export { createDesktopStore } from "./desktopStore";
 export type { DesktopState, DesktopStore } from "./desktopStore";
-export { createArtStore, imageOf } from "./artStore";
+export { createArtStore, imageOf, paletteOf } from "./artStore";
 export type { ArtState, ArtStore } from "./artStore";
 export { applyProgress, doneCount } from "./runView";
 export type { RunView, StepView } from "./runView";

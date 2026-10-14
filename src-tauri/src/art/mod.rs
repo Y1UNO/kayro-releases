@@ -8,6 +8,8 @@
 //! roles here and in `user.rs` without touching the protocol or the index.
 
 pub mod locate;
+pub mod palette;
+pub mod palettes;
 pub mod protocol;
 pub mod user;
 

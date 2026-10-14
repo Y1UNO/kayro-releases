@@ -2,6 +2,7 @@ import type { UnlistenFn } from "@tauri-apps/api/event";
 import {
   events,
   type AppArt,
+  type AppPalette,
   type AppEntry,
   type AppRunState,
   type DetectProgress,
@@ -110,9 +111,11 @@ export function onModePassage(handler: (e: ModePassage) => void): Promise<Unlist
 export interface ArtEvents {
   onArtChanged(handler: (index: AppArt[]) => void): Promise<Unlisten>;
   onAppsChanged(handler: () => void): Promise<Unlisten>;
+  onPalettesChanged(handler: (palettes: AppPalette[]) => void): Promise<Unlisten>;
 }
 
 export const artEvents: ArtEvents = {
   onArtChanged: (handler) => listenTo(events.artChanged.listen, handler),
   onAppsChanged: (handler) => listenTo(events.appsChanged.listen, () => handler()),
+  onPalettesChanged: (handler) => listenTo(events.palettesChanged.listen, handler),
 };

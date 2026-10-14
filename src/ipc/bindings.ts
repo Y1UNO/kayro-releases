@@ -122,6 +122,8 @@ export const commands = {
 	artSetUser: (id: string, role: ArtRole, path: string) => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_set_user", { id, role, path })),
 	/**  Forgets the user's image for `role` (Steam's comes back, if there is one). */
 	artClearUser: (id: string, role: ArtRole) => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_clear_user", { id, role })),
+	/**  The palettes known so far (the first pass may still be running: `PalettesChanged` follows). */
+	palettesGet: () => __TAURI_INVOKE<AppPalette[]>("palettes_get"),
 };
 
 /** Events */
@@ -132,6 +134,7 @@ export const events = {
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
 	modePassage: makeEvent<ModePassage>("mode-passage"),
+	palettesChanged: makeEvent<PalettesChanged>("palettes-changed"),
 	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
 	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
@@ -178,6 +181,12 @@ export type AppError = {
 	code: ErrorCode,
 	message: string,
 	field: string | null,
+};
+
+export type AppPalette = {
+	id: string,
+	source: PaletteSource,
+	palette: Palette,
 };
 
 export type AppRunState = {
@@ -424,6 +433,36 @@ export type OpeningDue =
 
 /**  « Ouverture au lancement »: V1-A with the C pulse, V1-A alone, or nothing. */
 export type OpeningStyle = "pulse" | "classic" | "none";
+
+/**  The colours of an image, largest share first, and the index of each role in `colors`. */
+export type Palette = {
+	colors: PaletteColor[],
+	/**  Largest share among colours that are neither almost black nor almost white. */
+	dominant: number,
+	/**  Most vivid colour clearly apart from the dominant one (the dominant one if none). */
+	accent: number,
+	dark: number,
+	light: number,
+};
+
+/**  One colour in OKLab, with its share of the image. */
+export type PaletteColor = {
+	l: number | null,
+	a: number | null,
+	b: number | null,
+	/**  Share of the visible pixels, 0 to 1. */
+	weight: number | null,
+	/**  The same colour in sRGB (`#rrggbb`), for display and checks. */
+	hex: string,
+};
+
+/**  Which image a palette was taken from. */
+export type PaletteSource = "poster" | "hero" | 
+/**  The program's icon (or Steam's small one), for apps with neither poster nor hero. */
+"icon";
+
+/**  Emitted when the palettes changed (an image was added, changed or removed). */
+export type PalettesChanged = AppPalette[];
 
 export type PassageStep = 
 /**  Fade your content out, then call `passage_faded(id)`. */

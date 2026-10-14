@@ -81,6 +81,9 @@ pub fn run() {
                 roots: art::ArtRoots::system(data.art_dir()),
             });
             app.manage(ConfigState::load(data));
+            // Colours of the apps' images, on a background thread (step 14).
+            app.manage(ipc_art::PaletteWorker::default());
+            app.state::<ipc_art::PaletteWorker>().request(app.handle());
             app.manage(detect::scan::DetectState::default());
             app.manage(scenes::SceneRunner::default());
             app.manage(desktop::DesktopState::default());
