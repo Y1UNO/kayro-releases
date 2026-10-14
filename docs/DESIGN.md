@@ -293,11 +293,15 @@ Défauts : `VISUAL_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::def
 ## 6. Performance
 
 - **Budget** : p95 de l'intervalle entre images **≤ 5,4 ms**, en Élevée **et** en Éco, mesuré dans l'exe de production
-  (2560 × 1440, écran à ~280 Hz). Tenu partout à la remesure du 14/10 (`docs/PERF-ETAPE13.md`).
+  (2560 × 1440, écran à ~280 Hz). Tenu partout à la remesure du 14/10 (`docs/PERF-ETAPE13.md`) et à l'étape 14
+  (`docs/PERF-ETAPE14.md` : 3,7 ms partout, couleurs du jeu comprises).
 - **Tolérances acceptées à l'étape 13** (14/10) : au plus 1 image > 8 ms par occurrence d'une signature ; en Élevée, la
   liaison, le retour et les onglets gardent 1 à 2 images de 10 à 14 ms (la tâche du clic) ; l'onde garde 1 à 2 images
   de 15 à 25 ms à l'impact (capture de la View Transition, cachée sous l'image figée) ; aucune image > 16 ms pendant la
   liaison, le retour, les onglets ou le survol.
+- **Accepté à l'étape 14** (15/10) : la marée garde 2 images > 8 ms par changement de jeu en Élevée (toutes ≤ 14,3 ms),
+  1 en Éco. Ces chiffres dépendent du fond de la machine : une remesure se compare en A/B, avec `--exe`, à un exe
+  plus ancien mesuré dans les mêmes conditions.
 - **Cadence** (`CADENCE`, `src/fx/budget.ts`) : pointeur seul 60 i/s ; sous un dialogue 30 ; au repos (ambiance seule)
   30 en Élevée et Équilibré ; séquence 60 ; verre qui suit 60. Éco : tout à 30. **Ultra** : non plafonné (≤ 144),
   seul le plafond du dialogue s'applique.
@@ -320,11 +324,12 @@ Défauts : `VISUAL_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::def
    dans `DA-JOURNAL.md` (date, avant → après, jeton, pourquoi).
 4. Tout nouvel effet : derrière `FxLayer`, avec repli CSS, coût mesuré par `npm run perf` en Élevée et Éco.
 5. **Pistes notées pour l'étape 14** (couleurs du jeu, ambiances par jeu ; les trois premières sont appliquées aux
-   couleurs du jeu, § 2) :
+   couleurs du jeu, § 2 ; la mesure des deux chemins de la liaison passe à l'audit, étape 18) :
    - changer les couleurs **en un recalcul** : variables écrites d'un coup, sans transition déclarée en permanence, sans
      lecture forcée après l'écriture ;
    - **pas de View Transition à chaque changement de jeu** (une capture plein écran = 1 à 2 images lentes) ;
    - **couleurs du moteur par la palette** (`FxPalette`), jamais en relisant le CSS ;
    - liaison et onglets : mesurer les deux chemins (éventail prêt à 0 % d'opacité, ou recalcul allégé au changement
      de thème / catégorie) avec `npm run perf -- --trace … --invalidations` ;
-   - les affiches dans le verre (`posterGlass`, éteint) attendent l'art local.
+   - les affiches dans le verre (`posterGlass`) : restent éteintes, la planche de l'étape 14 a retenu l'affiche plate
+     (V9 c).

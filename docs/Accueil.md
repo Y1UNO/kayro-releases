@@ -1,7 +1,7 @@
 # Kayro — Accueil
 
 > [!info] Où on en est
-> - **Étape en cours** : 14 — Couleurs du jeu
+> - **Dernière étape close** : 14 — Couleurs du jeu (le 2026-10-15)
 > - **Prochaine étape** : 15 — Réglages · Apparence
 > - **DA** : gelée le 2026-10-14 (v1)
 

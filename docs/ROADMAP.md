@@ -18,7 +18,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 12 | Modes immersif/fenêtre/widget, raccourci, tray | 2, 7 | C |
 | [x] 12b | Atelier de direction artistique (DA officielle v1), itératif, fini quand je dis « je fige la DA » | 8, 12 | C |
 | [x] 13 | Performance : états, qualité adaptative, benchmark, réglages, sans échec | 6, 8, 12 | D |
-| [ ] 14 | Couleurs du jeu : art local, palette OKLab, modes | 5, 8 | E |
+| [x] 14 | Couleurs du jeu : art local, palette OKLab, modes | 5, 8 | E |
 | [ ] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
 | [ ] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
 | [ ] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
@@ -85,6 +85,9 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
     - Restent : le CPU au repos du carrousel avec flottaison (3,3 %, audit de l'étape 18) et les pistes de l'étape 14 (journal).
 - **Étape 12b — Atelier de DA, gel le 2026-10-14** (branche `step-12b-atelier-da`, rondes 1 à 5 + relecture finale, tags `da-r1` … `da-r5-fix-b`) : `docs/DESIGN.md` écrit (DA telle qu'elle est dans le code) ; nettoyage en deux paquets au rendu identique : atelier, préréglages, anciens bancs de dev, 5 anciens thèmes, polices Fraunces / DM Sans, `widgetStyle`, couches « croquis » de l'étape 8, anneau en tube, effets 2b non retenus (matière, particules éclairées, voile périodique) et options de comparaison retirés (récupérables au tag `perf-13-fix`). Gardés : le repli CSS complet, les affiches dans le verre (étape 14), le verre des barres (imbrication de la pastille).
   - Mesures (`npm run perf`, R1 / R2 / I1 / A2, Élevée et Éco) : p95 3,7 ms partout comme avant ; carrousel au repos ≈ −45 Mo de mémoire ; onde 2–3 images > 8 ms par changement en Élevée (3–6 avant). Tests : vitest 527, cargo 198.
+- **Étape 14 — Couleurs du jeu, 2026-10-14 → 15** (branche `step-14-couleurs-du-jeu`, commits `182cf67` … `50aafe5`) : art local (cache Steam lu en place, variantes de langue, images déposées copiées dans `art/<appId>/`, protocole `kayro-art` id + rôle, CSP ouverte aux seules images), icônes UWP / Epic / Steam ; palettes OKLab côté Rust (k-means sur 64 × 64, `cache/palettes.json`, thread en arrière-plan, JPEG / PNG / WebP) ; planche V1–V10 (toutes les options recommandées) ; couleurs appliquées (moteur par la palette, marée sans View Transition, accents sur 3 conteneurs, Immersif avec nuit et héros, logo sur la carte active, faces aux couleurs de l'icône) ; réglages (Visuel + 7 variantes) et panneau « Apparence » par app.
+  - Mesures (`docs/PERF-ETAPE14.md`) : p95 3,7 ms partout ; marée : 2 images > 8 ms par changement en Élevée (≤ 14,3 ms, acceptées le 15/10), 1 en Éco ; A/B avec l'exe d'avant l'étape : pas de régression sur l'onde et la liaison (les écarts avec le 14/10 viennent du fond) ; extraction : 2,6 ms par affiche, 8,8 ms par héros (hors thread d'interface). Tests : vitest 548, cargo 227. Dépendances : `image` (jpeg, png, webp → `zune-jpeg`, `image-webp`).
+  - Limites : non testé sur un vrai jeu Epic ni GOG ; « Au lancement » non gardé après un redémarrage ; héros non dessiné en repli CSS ; une marée lancée pendant une autre fait sauter les bords à la couleur visée ; aucun retour visuel pendant le glisser d'une image.
 
 ## Plus tard (liste unique)
 Seul endroit des choses à faire plus tard (regroupées au gel de la DA, le 2026-10-14). Elles viennent de l'ancienne liste
@@ -94,15 +97,14 @@ Seul endroit des choses à faire plus tard (regroupées au gel de la DA, le 2026
 l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 
 ### Étape 14 — Couleurs du jeu
-- [ ] Affiches en production : `posterUrl` renvoie `null` hors dev ; dossier local d'affiches + ajout par glisser-déposer
-  sur une carte. *Paquet 1 du 14/10 : fait (cache Steam en place + image déposée, protocole `kayro-art`) ; reste
-  `posterGlass` (V9).* L'élément `posterGlass` (affiches dans le verre, éteint) attend cet art local.
+- [x] Affiches en production : `posterUrl` renvoie `null` hors dev ; dossier local d'affiches + ajout par glisser-déposer
+  sur une carte — fait le 2026-10-14 (cache Steam en place + image déposée, protocole `kayro-art`). L'élément
+  `posterGlass` (affiches dans le verre) reste éteint : la planche a retenu l'affiche plate (V9 c).
 - [x] Icônes dans le carrousel pour les apps sans icône (Steam, Epic, UWP) et dans la palette — fait le 2026-10-14
   (UWP par le Shell, Epic par l'exe de son manifeste (non testé sur un vrai jeu), Steam : sa petite icône 32 px).
-- [ ] Pistes de perf du gel : thème / palette en un recalcul, pas de View Transition à chaque changement de jeu,
-  couleurs du moteur par la palette ; liaison et onglets : mesurer « éventail prêt à 0 % » contre « recalcul allégé »
-  (`docs/DESIGN.md` § 7). *Paquet 4 du 14/10 : les trois premières appliquées aux couleurs du jeu ; la mesure
-  « éventail prêt à 0 % » reste pour le paquet 6.*
+- [x] Pistes de perf du gel : thème / palette en un recalcul, pas de View Transition à chaque changement de jeu,
+  couleurs du moteur par la palette — fait le 2026-10-14 (couleurs du jeu). La mesure « éventail prêt à 0 % » contre
+  « recalcul allégé » passe à l'étape 18.
 - [x] « Couleurs du jeu » (`color_mode`) : réafficher le réglage quand il aura un effet — fait le 2026-10-14 (Visuel,
   avec ses variantes en Personnalisation avancée et le choix par app).
 
@@ -129,6 +131,8 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 - [ ] Verre des barres, du dock et des boutons (`glassBars`, `glassDock`, `glassButtons`, éteints) : gardés au gel,
   car ils portent l'imbrication de la pastille de sélection ; à simplifier avec une mesure avant / après au pixel.
 - [ ] Tuile de grain CSS non assombrie autour de l'anneau pendant la pulsation C (rien vu à l'œil).
+- [ ] Liaison et onglets : mesurer « éventail prêt à 0 % » contre « recalcul allégé » (piste du gel, reportée de
+  l'étape 14 ; `docs/DESIGN.md` § 7). Banc : `--exe` permet l'A/B de deux builds dans les mêmes conditions.
 
 ### Avant l'étape 19 — Fonctions et finitions
 - [ ] Qualité « Auto » adaptative, pour les PC plus faibles : proposition chiffrée dans `docs/PERF-ETAPE13.md`
@@ -149,7 +153,11 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 - [ ] Scènes : Échap dans l'éditeur (aujourd'hui seul « ‹ Scènes » revient).
 - [ ] Bouton « Parcourir » pour choisir un exe (plugin dialog).
 - [ ] Suivi des jeux Steam (processus sans `match.exe`) pour que `waitReady`, `focus` et `close` marchent aussi sur eux.
-- [ ] Test d'Epic avec un vrai jeu installé (URI de lancement et `.item` réels).
+- [ ] Test d'Epic avec un vrai jeu installé (URI de lancement et `.item` réels ; icône par l'exe du manifeste, étape 14).
+- [ ] Couleurs du jeu (limites de l'étape 14) : « Au lancement » gardé après un redémarrage ; héros de l'Immersif en
+  repli CSS ; une marée lancée pendant une autre repart de l'état visible (aujourd'hui, les bords sautent).
+- [ ] Images d'app : retour visuel pendant le glisser d'une image sur une carte ou une case ; dossier `art/<id>` d'une
+  app retirée (gardé aujourd'hui) ; jeux GOG (icône `goggame-*.ico`, images locales de Galaxy) à voir avec un vrai jeu.
 - [ ] Menu « Quitter » du tray et rafraîchissement de l'icône quand seul le thème système Windows change.
 - [ ] Comportement du clic carte (sélection puis lancement) à confirmer à l'usage.
 - [ ] Message de lancement raté dans le widget (il faudrait agrandir sa fenêtre).
