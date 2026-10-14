@@ -22,9 +22,17 @@ npm run perf -- --cases A2 --compare <ancien results.jsonl>   # tableau « avant
 npm run perf -- --trace A2 --quality high      # trace d'une occurrence (fichier .json + résumé)
 npm run perf -- --memory 10 --quality eco       # mémoire après 10 changements de thème, puis 20 s au repos
 npm run perf -- --dry                          # essai à blanc : fenêtres de 2 s, un essai
+npm run perf -- --cases G1,G2,G3,G4,G5         # étape 14 : couleurs du jeu et affiches (images générées)
 ```
 
-Autres options : `--trials 2` (essais par case ; un 3e s'ajoute tout seul si les deux s'écartent) et `--keep-data` (garde le dossier de test).
+Autres options : `--trials 2` (essais par case ; un 3e s'ajoute tout seul si les deux s'écartent), `--keep-data` (garde le dossier de test) et `--art` (images générées sans case G).
+
+**Cases G (étape 14, `cases14.mjs`)** : elles se jouent sur l'onglet « Stream », dont les 4 apps de test reçoivent des images **générées** (affiche, héros, logo : dégradés de `data.mjs`, jamais l'art d'un jeu). Les images ne sont écrites que si une case G est demandée (ou `--art`) : les autres cases restent comparables aux mesures du 14/10.
+
+- **G1** : flèches dans le carrousel, une marée par changement (fenêtre « marée » de 1,1 s après chaque touche).
+- **G2** : rafales de 3 flèches à 40 ms : aucune marée pendant la rafale, une seule à la fin.
+- **G3** / **G3-imm** : liaison éventail → Stream et retour, couleurs en Léger puis en Immersif (héros).
+- **G4** : carrousel au repos avec affiches ; **G5** : survol qui change avec affiches.
 
 ## Ce qui est mesuré
 
@@ -50,13 +58,15 @@ Autres options : `--trials 2` (essais par case ; un 3e s'ajoute tout seul si les
 
 ## Fichiers
 
-| Fichier      | Rôle                                                                                                     |
-| ------------ | -------------------------------------------------------------------------------------------------------- |
-| `bench.mjs`  | options, blocs L et M, essais, trace                                                                     |
-| `cases.mjs`  | les cases (bloc M), dans leur ordre de passage                                                           |
-| `states.mjs` | les états à atteindre (éventail, carrousel, réglages, éditeur, fenêtre, widget) et les scénarios communs |
-| `lib.mjs`    | exe, CDP, sonde d'images, statistiques                                                                   |
-| `report.mjs` | médianes, tableau Markdown, avant / après                                                                |
-| `trace.mjs`  | résumé d'une trace (tâches > 8 ms du fil principal)                                                      |
-| `data.mjs`   | dossier de test                                                                                          |
-| `win.ps1`    | premier plan, coût CPU / GPU / dwm, maintien d'éveil                                                     |
+| Fichier       | Rôle                                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------------- |
+| `bench.mjs`   | options, blocs L et M, essais, trace                                                                     |
+| `cases.mjs`   | les cases (bloc M), dans leur ordre de passage                                                           |
+| `cases14.mjs` | les cases G de l'étape 14 (couleurs du jeu, affiches)                                                    |
+| `png.mjs`     | écriture PNG minimale pour les images de test                                                            |
+| `states.mjs`  | les états à atteindre (éventail, carrousel, réglages, éditeur, fenêtre, widget) et les scénarios communs |
+| `lib.mjs`     | exe, CDP, sonde d'images, statistiques                                                                   |
+| `report.mjs`  | médianes, tableau Markdown, avant / après                                                                |
+| `trace.mjs`   | résumé d'une trace (tâches > 8 ms du fil principal)                                                      |
+| `data.mjs`    | dossier de test                                                                                          |
+| `win.ps1`     | premier plan, coût CPU / GPU / dwm, maintien d'éveil                                                     |

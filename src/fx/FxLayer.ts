@@ -17,6 +17,19 @@ export interface FxPalette {
    * instead of reading the page's computed style, which forced a full restyle at each theme change).
    */
   bg?: readonly [string, string, string];
+  /** Glass tint of the cards, rgb (step 14; the theme's `card`, which is A in the 6 themes). */
+  card?: readonly [number, number, number];
+  /**
+   * Immersive mode (step 14): the game's hero picture (`kayro-art` URL); `blurred` when the picture
+   * is already blurred (Steam's), else the engine blurs it. Null or absent = none.
+   */
+  hero?: { url: string; blurred: boolean } | null;
+  /**
+   * How to go from the previous palette (step 14): « tide » spreads the new colours from the focus
+   * target (`setFocusTarget`); « instant » (default) changes them at once (a theme change already
+   * plays its own wave, a reduced-motion user gets no movement).
+   */
+  passage?: "tide" | "instant";
 }
 
 /**

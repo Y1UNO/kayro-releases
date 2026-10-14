@@ -9,7 +9,7 @@ import { installUserPrefs } from "./app/userPrefs";
 import { ThemeProvider } from "./design";
 import { installDa } from "./design/da";
 import { applyDefaultLogoColours } from "./brand";
-import { Atmosphere } from "./fx";
+import { GameAtmosphere } from "./features/gameColors/GameAtmosphere";
 import { WidgetApp } from "./features/widget/WidgetApp";
 import { artStore, desktopStore, hubStore, sceneStore } from "./store";
 import "./index.css";
@@ -100,7 +100,7 @@ if (DevPage) {
           initialThemeId={settings?.themeId}
           onThemeChange={(themeId) => void hubStore.getState().setSettings({ themeId })}
         >
-          <Atmosphere />
+          <GameAtmosphere />
           <App />
         </ThemeProvider>
       </StrictMode>,

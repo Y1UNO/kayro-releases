@@ -60,6 +60,11 @@
   --grad-a: rgb(163, 176, 222);
   --grad-b: rgb(114, 130, 188);
   --text-soft: var(--accent-light);
+  /* Step 14 (V2 b): accents in the selected game's colours (title rule, hover rims; the focus ring
+     is written with them), set on the home's containers only (useHomeGameColors.ts). Here, and so
+     in the dialogs and the settings (V4 a), the theme's. */
+  --game-a: var(--grad-a);
+  --game-b: var(--grad-b);
 
   /* Derived from the accent (the mock-ups use a lighter tint for fills and active labels). */
   --accent-light: color-mix(in srgb, var(--accent) 60%, white);

@@ -5,7 +5,7 @@
 /* Short strokes running round the rim along an offset-path (offset-distance written by
    rimRender.ts), the head in colour A, the tail towards B. */
 .thread {
-  --tc: color-mix(in srgb, var(--grad-a), var(--grad-b) calc(var(--k, 0) * 100%));
+  --tc: color-mix(in srgb, var(--game-a), var(--game-b) calc(var(--k, 0) * 100%));
   position: absolute;
   left: 0;
   top: 0;
@@ -27,9 +27,9 @@
   inset: 0;
   border-radius: var(--rim-r, var(--radius-fan));
   box-shadow:
-    0 0 0 1.5px color-mix(in srgb, var(--grad-a), #fff 55%),
-    0 0 22px color-mix(in srgb, var(--grad-a) 70%, transparent),
-    inset 0 0 18px color-mix(in srgb, var(--grad-b) 45%, transparent);
+    0 0 0 1.5px color-mix(in srgb, var(--game-a), #fff 55%),
+    0 0 22px color-mix(in srgb, var(--game-a) 70%, transparent),
+    inset 0 0 18px color-mix(in srgb, var(--game-b) 45%, transparent);
   opacity: 0;
   pointer-events: none;
 }
@@ -45,7 +45,7 @@
   background: radial-gradient(
     closest-side,
     rgba(255, 255, 255, 0.9),
-    color-mix(in srgb, var(--grad-a), var(--grad-b) calc(var(--k, 0) * 100%)) 35%,
+    color-mix(in srgb, var(--game-a), var(--game-b) calc(var(--k, 0) * 100%)) 35%,
     transparent
   );
   offset-path: inset(0 round var(--rim-r, 24px));
@@ -65,7 +65,7 @@
   background: radial-gradient(
     closest-side,
     #fff,
-    color-mix(in srgb, var(--grad-a), var(--grad-b) calc(var(--k, 0) * 100%)) 45%,
+    color-mix(in srgb, var(--game-a), var(--game-b) calc(var(--k, 0) * 100%)) 45%,
     transparent
   );
   opacity: 0;

@@ -29,6 +29,19 @@ export const BG_UNIFORMS = [
   "uIHalo",
   "uIRing",
   "uIRing2",
+  // Step 14: the old palette and the tide (paletteTween.ts), the immersive hero (heroTexture.ts).
+  "uA0",
+  "uB0",
+  "uBg00",
+  "uBg01",
+  "uBg02",
+  "uTide",
+  "uTideW",
+  "uHero0",
+  "uHero1",
+  "uHeroK",
+  "uHeroA",
+  "uHeroM",
 ] as const;
 
 export const BG_FRAGMENT = `#version 300 es
@@ -60,13 +73,35 @@ uniform float uIntro;   // background fade 0–1 (1 = no opening)
 uniform vec4 uIHalo;    // halo: centre x, y, radius x (y = 0.794 x), opacity
 uniform vec4 uIRing;    // ring: centre x, y, radius, opacity (0 = off)
 uniform vec4 uIRing2;   // drawn fraction 0–1, glint angle (rad), glint opacity, scale
+// Step 14, game colours: the old palette, mixed with the new one by the distance to the tide's
+// centre (soft edge), and a band of light on its edge (V7 c).
+uniform vec3 uA0;
+uniform vec3 uB0;
+uniform vec3 uBg00;
+uniform vec3 uBg01;
+uniform vec3 uBg02;
+uniform vec4 uTide;     // centre x, y, radius (px, huge = no tide), band opacity
+uniform vec2 uTideW;    // soft edge, band width (px)
+// Immersive (V3 b): the old and the new hero, opacity, mip level (blur), aspect, fade into the night.
+uniform sampler2D uHero0;
+uniform sampler2D uHero1;
+uniform vec4 uHeroK;    // opacity old, new; mip level old, new
+uniform vec2 uHeroA;    // aspect (w / h) old, new
+uniform vec2 uHeroM;    // the picture fades out between these heights (px)
+
+// The palette at this pixel (old → new by the tide), set at the start of main.
+vec3 gA;
+vec3 gB;
+vec3 gBg0;
+vec3 gBg1;
+vec3 gBg2;
 
 vec3 base(vec2 p) {
   float t;
   if (uRadial > 0.5) t = length((p - vec2(uView.x * 0.5, 0.0)) / vec2(0.9 * uView.x, 0.75 * uView.y));
   else t = p.y / uView.y;
   float mid = uRadial > 0.5 ? 0.5 : 0.55;
-  return t < mid ? mix(uBg0, uBg1, t / mid) : mix(uBg1, uBg2, clamp((t - mid) / (1.0 - mid), 0.0, 1.0));
+  return t < mid ? mix(gBg0, gBg1, t / mid) : mix(gBg1, gBg2, clamp((t - mid) / (1.0 - mid), 0.0, 1.0));
 }
 
 float moon(vec2 p) {
@@ -131,7 +166,7 @@ vec3 liquidRing(vec2 p) {
   float ph = uLRing2.z;
   float hl = 0.3 + 0.7 * pow(0.5 + 0.5 * cos(a - ph), 4.0)
     + 0.35 * pow(0.5 + 0.5 * cos(a + ph * 0.6 + 2.1), 6.0);
-  vec3 col = mix(mix(uA, uB, 0.5 + 0.5 * sin(a)), vec3(1.0), 0.45);
+  vec3 col = mix(mix(gA, gB, 0.5 + 0.5 * sin(a)), vec3(1.0), 0.45);
   return col * lum * hl * uLRing.w;
 }
 
@@ -154,8 +189,8 @@ vec3 introRing(vec2 p, vec3 c) {
   if (th < 0.0) th += 6.28318531;
   float drawn = uIRing2.x <= 0.0 ? 0.0 : clamp((uIRing2.x * 6.28318531 - th) * r / aa + 0.5, 0.0, 1.0);
   float o = uIRing.w * drawn;
-  c = mix(c, uB, 0.7 * o * strokeAt(r - (R - 4.0 * s), 1.0 * s, aa));
-  c = mix(c, uA, 0.9 * o * strokeAt(r - R, 1.6 * s, aa));
+  c = mix(c, gB, 0.7 * o * strokeAt(r - (R - 4.0 * s), 1.0 * s, aa));
+  c = mix(c, gA, 0.9 * o * strokeAt(r - R, 1.6 * s, aa));
   c = mix(c, vec3(1.0), 0.55 * o * strokeAt(r - (R + 3.0 * s), 0.8 * s, aa));
   if (uIRing2.z > 0.0) {
     // 70 px of a 200 px radius = 0.35 rad, round caps, white drop shadow of 6 px.
@@ -183,33 +218,59 @@ vec3 bands(vec2 p) {
     float w = uBands.z * (0.6 + 0.5 * fract(fi * 0.618));
     float along = dot(p - c, dir) / (span * 0.45);
     float lit = (exp(-q * q / (w * w)) + 0.45 * exp(-q * q / 5.0)) * exp(-along * along * 1.5);
-    acc += mix(uA, uB, fi / 3.0) * lit * sin(e * 3.14159265);
+    acc += mix(gA, gB, fi / 3.0) * lit * sin(e * 3.14159265);
   }
   return acc * uBands.y;
 }
 
+// The hero picture, as wide as the view, from its top (the night hides its lower part).
+vec3 heroAt(sampler2D t, vec2 p, float aspect, float lod) {
+  return textureLod(t, vec2(p.x / uView.x, p.y * aspect / uView.x), lod).rgb;
+}
+
+vec3 hero(vec2 p, vec3 c, float w) {
+  float m = 1.0 - smoothstep(uHeroM.x, uHeroM.y, p.y);
+  if (m <= 0.0) return c;
+  if (uHeroK.x > 0.0) c = mix(c, heroAt(uHero0, p, uHeroA.x, uHeroK.z), uHeroK.x * m * (1.0 - w));
+  if (uHeroK.y > 0.0) c = mix(c, heroAt(uHero1, p, uHeroA.y, uHeroK.w), uHeroK.y * m * w);
+  return c;
+}
+
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) * uView / uRes;
+  float dt = length(p - uTide.xy);
+  float w = clamp((uTide.z - dt) / uTideW.x, 0.0, 1.0);
+  gA = mix(uA0, uA, w);
+  gB = mix(uB0, uB, w);
+  gBg0 = mix(uBg00, uBg0, w);
+  gBg1 = mix(uBg01, uBg1, w);
+  gBg2 = mix(uBg02, uBg2, w);
   vec3 c = base(p);
-  c = mix(c, mix(uBg0, uA, 0.35), uAir.y);
-  c = mix(c, uA, moon(p));
-  c = mix(c, uA, veil(p, uVeilA, uVeil.x) * uVeil.z);
-  c = mix(c, uB, veil(p, uVeilB, uVeil.y) * uVeil.w);
+  c = mix(c, mix(gBg0, gA, 0.35), uAir.y);
+  if (uHeroK.x + uHeroK.y > 0.0) c = hero(p, c, w);
+  c = mix(c, gA, moon(p));
+  c = mix(c, gA, veil(p, uVeilA, uVeil.x) * uVeil.z);
+  c = mix(c, gB, veil(p, uVeilB, uVeil.y) * uVeil.w);
   c += bands(p);
   if (uLRing.w > 0.0) c += liquidRing(p);
   if (uLight.z > 0.0) {
     vec2 d = (p - uLight.xy) / uLight.w;
-    c += mix(vec3(1.0), mix(uA, uB, 0.5), 0.45) * uLight.z * 0.32 * exp(-dot(d, d) * 2.2);
+    c += mix(vec3(1.0), mix(gA, gB, 0.5), 0.45) * uLight.z * 0.32 * exp(-dot(d, d) * 2.2);
   }
   // CSS vignette: ellipse at 50% 42%, clear until 48 %, then towards rgb(4, 2, 8).
   vec2 v = (p - uView * vec2(0.5, 0.42)) / (uView * vec2(0.5, 0.58));
   float t = length(v) / 1.41421356;
   c = mix(c, vec3(4.0, 2.0, 8.0) / 255.0, uVig * clamp((t - 0.48) / 0.52, 0.0, 1.0));
   // Opening: the page starts on the darkest colour; halo and ring sit above the background.
-  if (uIntro < 1.0) c = mix(uBg2, c, uIntro);
+  // The tide's band of light, on its edge (half its opacity: added light, not a mix).
+  if (uTide.w > 0.0) {
+    float e = (dt - uTide.z) / uTideW.y;
+    c += mix(gA, vec3(1.0), 0.35) * uTide.w * 0.5 * exp(-e * e);
+  }
+  if (uIntro < 1.0) c = mix(gBg2, c, uIntro);
   if (uIHalo.w > 0.0) {
     vec2 q = (p - uIHalo.xy) / vec2(uIHalo.z, uIHalo.z * 0.794);
-    c = mix(c, uA, 0.3 * uIHalo.w * clamp(1.0 - length(q), 0.0, 1.0));
+    c = mix(c, gA, 0.3 * uIHalo.w * clamp(1.0 - length(q), 0.0, 1.0));
   }
   if (uIRing.w > 0.0) c = introRing(p, c);
   outColor = vec4(c, 1.0);

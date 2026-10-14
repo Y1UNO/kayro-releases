@@ -31,6 +31,7 @@ import { useCategoryLink } from "./fan/useCategoryLink";
 import { cardGeometry, useDa } from "../../design/da";
 import { useHomeKeys } from "./useHomeKeys";
 import { usePosterDrop } from "./usePosterDrop";
+import { useHomeGameColors } from "../gameColors/useHomeGameColors";
 import styles from "./HomeScreen.module.css";
 
 const launch = (app: AppEntry) => void hubStore.getState().launchApp(app.id);
@@ -139,6 +140,8 @@ export function HomeScreen({
     carousel: !grid,
   });
   const onFan = link.mode === "fan";
+  // Step 14: the selected app's colours (the fan has none: back to the theme's).
+  useHomeGameColors(onFan ? null : (list[focus]?.id ?? null));
   const { fanMounted, fanParked, config: linkCfg } = link;
   const { fan: fanRef, area: areaRef, ask: askRef, title: titleRef, back: backRef } = link.bind;
   const { bottom: bottomRef, card: onFanCard } = link.bind;
@@ -264,13 +267,13 @@ export function HomeScreen({
             backRef={backRef}
           />
           <div className={styles.titles}>
-            <div ref={titleRef} aria-hidden={onFan || undefined}>
+            <div ref={titleRef} aria-hidden={onFan || undefined} data-game-accents="">
               <CategoryTitle category={state.category} compact={grid && count > 0} />
             </div>
             <FanTitle askRef={askRef} shown={onFan} />
           </div>
 
-          <div ref={areaRef} className={styles.area}>
+          <div ref={areaRef} className={styles.area} data-game-accents="">
             {fanMounted && (
               <CategoryFan
                 counts={counts}
@@ -330,7 +333,7 @@ export function HomeScreen({
             </div>
           </div>
 
-          <div ref={bottomRef} className={styles.bottom} inert={onFan}>
+          <div ref={bottomRef} className={styles.bottom} inert={onFan} data-game-accents="">
             <CategoryTabs
               category={state.category}
               view={state.view}

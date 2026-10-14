@@ -15,6 +15,7 @@ import {
   type Target,
 } from "./gl";
 import { GLASS_FRAGMENT, GLASS_UNIFORMS } from "./glassShader";
+import { HERO_UNITS } from "./heroTexture";
 import { MAX_POSTERS } from "./posterTextures";
 import { MAX_SPRITES, SPRITE_FLOATS } from "./scene";
 
@@ -22,7 +23,14 @@ import { MAX_SPRITES, SPRITE_FLOATS } from "./scene";
 const POSTER_UNITS: Uniforms = Object.fromEntries(
   Array.from({ length: MAX_POSTERS }, (_, i) => [`uP${i}`, i + 1]),
 );
-const INT_UNIFORMS = new Set(["uTex", "uN", "uNS", "uNested", ...Object.keys(POSTER_UNITS)]);
+const INT_UNIFORMS = new Set([
+  "uTex",
+  "uN",
+  "uNS",
+  "uNested",
+  ...Object.keys(POSTER_UNITS),
+  ...Object.keys(HERO_UNITS),
+]);
 
 /** Uniform values: name → numbers (vec2/3/4 or arrays as flat lists). */
 export type Uniforms = Record<string, number | readonly number[] | Float32Array>;
@@ -94,14 +102,16 @@ export class Renderer {
     sprites: { data: Float32Array; count: number; u: Uniforms },
     glass: Uniforms,
     bindPosters: (() => void) | null = null,
+    bindHero: (() => void) | null = null,
   ): void {
     const { gl, a } = this;
     if (!a) return;
     gl.viewport(0, 0, a.w, a.h);
     gl.disable(gl.BLEND);
 
-    // 1. Background → A.
+    // 1. Background → A (the immersive hero on units 7–8, step 14).
     gl.bindFramebuffer(gl.FRAMEBUFFER, a.fb);
+    bindHero?.();
     this.use(this.bg, bg);
     gl.bindVertexArray(this.quad);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);

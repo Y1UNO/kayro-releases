@@ -110,6 +110,25 @@ valeur initiale : la première image n'attend pas le JS), `html` / `body` peints
 - aucune lecture forcée après l'écriture (`getComputedStyle`, `offsetHeight`) ;
 - le moteur reçoit ses couleurs par la palette (`themePalette` → `FxPalette` : `a`, `b`, `bg`), jamais en relisant le CSS.
 
+**Couleurs du jeu** (étape 14, décisions de la planche du 14/10 dans `DA-JOURNAL.md` ; `src/features/gameColors/`,
+jetons `GAME_COLORS` dans `src/design/motion/tokens14.ts`) :
+- **Calcul** (`derive.ts`) : la palette brute du cœur (OKLab, `palettes.json`) donne A = dominante, B = accent
+  (une image d'une seule couleur prend l'accent de l'autre image du jeu, sinon du thème) ; bornées comme les thèmes
+  (L 0,72–0,85, C ≤ 0,12) puis mêlées au thème à **60 %**. Contraste ≥ 4,5:1 testé sur les 6 thèmes.
+- **Ce qui se teinte** (réglage `color_mode`, **Léger** par défaut) : l'ambiance du moteur (fond, lune, anneau, bokeh,
+  braises, teinte du verre des cartes et des pastilles, prise dans la palette : `FxPalette.card`) et les accents de
+  l'accueil (`--game-a`, `--game-b` : filet du titre, filets de survol ; anneau de focus réécrit avec eux), posés
+  sur 3 conteneurs (`data-game-accents`), jamais sur `:root` : texte, dialogues et Réglages restent au thème.
+  **Immersif** : en plus, la nuit aux couleurs du jeu (`FxPalette.bg`) et le héros flouté de Steam en haut
+  (`FxPalette.hero`, texture du moteur, opacité 0,75, fondu dans la nuit de 18 à 60 % de la hauteur).
+- **Passage d'un jeu à l'autre : la marée** (`paletteTween.ts`, shader du fond) : 180 ms après que la sélection se
+  pose (rien pendant une rafale), les nouvelles couleurs partent de la carte active en cercle, **700 ms**, courbe
+  `standard`, bord doux 90 px et bande de lumière (0,55, pleine jusqu'à 80 %) ; sans View Transition ; les accents
+  changent une fois, quand le bord atteint le titre. Premier affichage, thème, réglage : changement direct.
+  « Réduire les animations » : direct. Repli CSS : lune et anneau en fondu, nuit de l'Immersif sur `Backdrop`.
+- **Sortie des jeux** (éventail, autre écran) : retour au thème par la même marée. **App sans image** : face et
+  ambiance aux couleurs de son icône. **Carte active avec affiche** : le logo du jeu à la place du nom (fondu micro).
+
 ---
 
 ## 3. Mouvement : langage « Vivant »
@@ -256,7 +275,8 @@ onglets verticaux (`src/features/settings/`, textes `src/i18n/fr-settings.json`)
   enfin « Revenir aux réglages par défaut » (tout Visuel sauf l'affichage), avec « Annuler » tant qu'aucun réglage
   Visuel n'a été changé ensuite.
 - **Thèmes** : grille des 6 cartes 240 × 150 ; un clic applique et joue l'onde.
-- « Couleurs du jeu » (`color_mode`) reste **masqué** jusqu'à l'étape 14 (valeur gardée dans le schéma).
+- « Couleurs du jeu » (`color_mode`) : actif depuis l'étape 14 (défaut Léger), encore sans ligne dans les Réglages
+  (paquet 5 de l'étape 14).
 Défauts : `VISUAL_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::default` (`src-tauri/src/config/schema.rs`).
 
 ---
@@ -290,7 +310,8 @@ Défauts : `VISUAL_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::def
 3. **Aucune signature** (§ 4) ne change sans décision de l'utilisateur ; un dosage se change par son jeton et se note
    dans `DA-JOURNAL.md` (date, avant → après, jeton, pourquoi).
 4. Tout nouvel effet : derrière `FxLayer`, avec repli CSS, coût mesuré par `npm run perf` en Élevée et Éco.
-5. **Pistes notées pour l'étape 14** (couleurs du jeu, ambiances par jeu) :
+5. **Pistes notées pour l'étape 14** (couleurs du jeu, ambiances par jeu ; les trois premières sont appliquées aux
+   couleurs du jeu, § 2) :
    - changer les couleurs **en un recalcul** : variables écrites d'un coup, sans transition déclarée en permanence, sans
      lecture forcée après l'écriture ;
    - **pas de View Transition à chaque changement de jeu** (une capture plein écran = 1 à 2 images lentes) ;

@@ -17,6 +17,7 @@ import {
   toggleEvery,
 } from "./states.mjs";
 export { ensure } from "./states.mjs";
+import { GAME_CASES } from "./cases14.mjs";
 
 // ---------- the cases, in run order (grouped by state: the fewest moves between them) ----------
 export const CASES = [
@@ -95,6 +96,7 @@ export const CASES = [
     at: "carousel",
     scenario: hoverFlood,
   },
+  ...GAME_CASES, // step 14 (cases14.mjs): game colours and posters, on the « Stream » tab
   {
     id: "I5",
     title: "Changement d'onglet",
