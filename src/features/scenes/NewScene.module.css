@@ -1,0 +1,108 @@
+/* « Nouvelle scène » (round 4b): name, three ways to start. Rows come in a cascade (data-cascade). */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: min(480px, 80vw);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--radius-row);
+  border: 1px solid transparent;
+  background: var(--field);
+  box-shadow: var(--field-inset);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-15);
+  color-scheme: dark;
+}
+
+/* The name field is active at once; its halo comes in "micro" (R4b-Etats). */
+.input:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus);
+  transition: box-shadow var(--m1-micro) var(--m-ease-in);
+}
+
+.starts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font: var(--eyebrow);
+  letter-spacing: var(--eyebrow-tracking);
+  text-transform: uppercase;
+  color: var(--eyebrow-color);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 12px 14px;
+  border-radius: var(--radius-row);
+  border: 1px solid var(--glass-border);
+  background: var(--fill-soft);
+  cursor: pointer;
+  transition: border-color var(--m1-court) var(--m-ease-in);
+}
+
+.option:hover,
+.option[data-checked] {
+  border-color: var(--accent-light);
+}
+
+.option:has(input:disabled) {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.optionTitle {
+  font-size: var(--fs-15);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.optionSub {
+  font-size: var(--fs-13);
+  color: var(--text-2);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.hint {
+  margin-right: auto;
+  font-size: var(--fs-13);
+  color: var(--text-2);
+}

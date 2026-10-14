@@ -7,13 +7,20 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use specta::Type;
 
+use super::migrate::{current_version, Migration};
 pub use super::scene::SceneFile;
 use super::store::{lenient_merge, Document, LoadReport};
 use super::validate::validate_settings;
+use super::visual::{settings_v1_to_v2, DEFAULT_THEME};
+pub use super::visual::{
+    CardFloat, CardHoverStyle, Elasticity, MotionStyle, OpeningStyle, ThemeTransition, WidgetUnroll,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]
 pub enum Quality {
+    /// « Auto »: high, with the engine's automatic fallback (full adaptive quality: step 13).
+    Auto,
     Eco,
     #[default]
     Balanced,
@@ -42,17 +49,6 @@ pub enum DisplayMode {
     Widget,
 }
 
-/// Look of the widget bar (reference/Widget.dc.html); provisional until the art direction is frozen.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
-#[serde(rename_all = "lowercase")]
-pub enum WidgetStyle {
-    Aurore,
-    Sillage,
-    #[default]
-    Brume,
-    Orbe,
-}
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
@@ -62,37 +58,60 @@ pub struct Settings {
     pub color_mode: ColorMode,
     pub hotkey: String,
     pub language: String,
-    /// Strength of the animated atmosphere (fog, light, dust), 0.3–1 (DESIGN.md « intensité »).
+    /// Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »).
     pub atmosphere_intensity: f32,
     pub display_mode: DisplayMode,
-    pub widget_style: WidgetStyle,
     /// Escape hides the hub once there is nothing left to close.
     pub hide_on_escape: bool,
     /// Losing the focus hides the hub (the widget only folds its panel).
     pub hide_on_blur: bool,
     /// « Mode économe »: the window is destroyed while hidden (less memory, slower to come back).
     pub economy_mode: bool,
+    pub motion_style: MotionStyle,
+    /// Follow Windows « Effets d'animation » (reduce motion); off = Kayro ignores it.
+    pub follow_system_motion: bool,
+    pub card_float: CardFloat,
+    pub opening_style: OpeningStyle,
+    pub theme_transition: ThemeTransition,
+    pub widget_unroll: WidgetUnroll,
+    pub widget_spring: Elasticity,
+    pub card_hover: CardHoverStyle,
+    pub bokeh: bool,
+    pub particles: bool,
+    pub cursor_light: bool,
 }
 
 /// Bounds of [`Settings::atmosphere_intensity`].
 pub const ATMOSPHERE_MIN: f32 = 0.3;
-pub const ATMOSPHERE_MAX: f32 = 1.0;
+pub const ATMOSPHERE_MAX: f32 = 1.3;
+/// « Normale »: the validated look.
+pub const ATMOSPHERE_DEFAULT: f32 = 1.0;
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            schema_version: 1,
-            theme_id: "crepuscule".into(),
+            schema_version: current_version(SETTINGS_MIGRATIONS),
+            theme_id: DEFAULT_THEME.into(),
             quality: Quality::default(),
             color_mode: ColorMode::default(),
             hotkey: "Ctrl+Alt+H".into(),
             language: "fr".into(),
-            atmosphere_intensity: ATMOSPHERE_MAX,
+            atmosphere_intensity: ATMOSPHERE_DEFAULT,
             display_mode: DisplayMode::default(),
-            widget_style: WidgetStyle::default(),
             hide_on_escape: true,
             hide_on_blur: false,
             economy_mode: false,
+            motion_style: MotionStyle::default(),
+            follow_system_motion: true,
+            card_float: CardFloat::default(),
+            opening_style: OpeningStyle::default(),
+            theme_transition: ThemeTransition::default(),
+            widget_unroll: WidgetUnroll::default(),
+            widget_spring: Elasticity::default(),
+            card_hover: CardHoverStyle::default(),
+            bokeh: true,
+            particles: true,
+            cursor_light: true,
         }
     }
 }
@@ -108,52 +127,63 @@ pub struct SettingsPatch {
     pub language: Option<String>,
     pub atmosphere_intensity: Option<f32>,
     pub display_mode: Option<DisplayMode>,
-    pub widget_style: Option<WidgetStyle>,
     pub hide_on_escape: Option<bool>,
     pub hide_on_blur: Option<bool>,
     pub economy_mode: Option<bool>,
+    pub motion_style: Option<MotionStyle>,
+    pub follow_system_motion: Option<bool>,
+    pub card_float: Option<CardFloat>,
+    pub opening_style: Option<OpeningStyle>,
+    pub theme_transition: Option<ThemeTransition>,
+    pub widget_unroll: Option<WidgetUnroll>,
+    pub widget_spring: Option<Elasticity>,
+    pub card_hover: Option<CardHoverStyle>,
+    pub bokeh: Option<bool>,
+    pub particles: Option<bool>,
+    pub cursor_light: Option<bool>,
 }
 
 impl Settings {
     pub fn apply(&mut self, patch: SettingsPatch) {
-        if let Some(v) = patch.theme_id {
-            self.theme_id = v;
+        macro_rules! take {
+            ($($field:ident),* $(,)?) => {
+                $(if let Some(v) = patch.$field {
+                    self.$field = v;
+                })*
+            };
         }
-        if let Some(v) = patch.quality {
-            self.quality = v;
-        }
-        if let Some(v) = patch.color_mode {
-            self.color_mode = v;
-        }
-        if let Some(v) = patch.hotkey {
-            self.hotkey = v;
-        }
-        if let Some(v) = patch.language {
-            self.language = v;
-        }
-        if let Some(v) = patch.atmosphere_intensity {
-            self.atmosphere_intensity = v;
-        }
-        if let Some(v) = patch.display_mode {
-            self.display_mode = v;
-        }
-        if let Some(v) = patch.widget_style {
-            self.widget_style = v;
-        }
-        if let Some(v) = patch.hide_on_escape {
-            self.hide_on_escape = v;
-        }
-        if let Some(v) = patch.hide_on_blur {
-            self.hide_on_blur = v;
-        }
-        if let Some(v) = patch.economy_mode {
-            self.economy_mode = v;
-        }
+        take!(
+            theme_id,
+            quality,
+            color_mode,
+            hotkey,
+            language,
+            atmosphere_intensity,
+            display_mode,
+            hide_on_escape,
+            hide_on_blur,
+            economy_mode,
+            motion_style,
+            follow_system_motion,
+            card_float,
+            opening_style,
+            theme_transition,
+            widget_unroll,
+            widget_spring,
+            card_hover,
+            bokeh,
+            particles,
+            cursor_light,
+        );
     }
 }
 
+/// v1 → v2 (R5): Mauve became Encre, the five pre-logo themes fall back to Bleu-gris.
+pub const SETTINGS_MIGRATIONS: &[Migration] = &[settings_v1_to_v2];
+
 impl Document for Settings {
     const NAME: &'static str = "settings.json";
+    const MIGRATIONS: &'static [Migration] = SETTINGS_MIGRATIONS;
     fn from_value(value: Value, report: &mut LoadReport) -> Result<Self, String> {
         Ok(lenient_merge(value, report, |s: &Settings| {
             validate_settings(s).map_err(|e| e.to_string())

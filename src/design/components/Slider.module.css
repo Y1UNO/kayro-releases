@@ -27,7 +27,7 @@
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  transition: transform var(--dur-hover) var(--ease);
+  transition: transform var(--m1-court) var(--m-ease-in); /* level 1 (motion.css) */
 }
 
 .slider:active::-webkit-slider-thumb {
@@ -36,11 +36,12 @@
 
 .slider:focus-visible {
   outline: none;
+  box-shadow: none; /* the ring goes on the thumb */
 }
 
 .slider:focus-visible::-webkit-slider-thumb {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  outline: none;
+  box-shadow: var(--m-focus);
 }
 
 .slider:disabled {

@@ -55,6 +55,27 @@ export function newDraft(links: Record<string, string>): EditorDraft {
   };
 }
 
+/** How a new scene starts (« Nouvelle scène », round 4b): its name, and maybe another's steps. */
+export interface NewSceneSeed {
+  name: string;
+  /** Id of the scene whose steps it takes (a copy, new keys, no shortcut); null = empty. */
+  from: string | null;
+}
+
+/** The draft of a new scene from its seed. */
+export function seededDraft(
+  seed: NewSceneSeed,
+  scenes: readonly SceneFile[],
+  links: Record<string, string>,
+  apps: readonly AppEntry[],
+): EditorDraft {
+  const scene = seed.from ? scenes.find((s) => s.id === seed.from) : undefined;
+  const base = scene
+    ? { ...draftFromScene(scene, links, apps), id: null, hotkey: null }
+    : newDraft({ ...links });
+  return { ...base, name: seed.name };
+}
+
 /** A saved scene opens in simple mode when the simple mode can make exactly its steps. */
 export function draftFromScene(
   scene: SceneFile,

@@ -20,27 +20,33 @@ use tauri::Manager;
 use tauri_plugin_global_shortcut::ShortcutState;
 
 pub(crate) const SILENT_FLAG: &str = "--silent";
+/// `Kayro.exe --quit`: the running Kayro quits as with « Quitter » (the update script, which must
+/// replace the exe, never kills it); with no Kayro running, this one ends at once.
+pub(crate) const QUIT_FLAG: &str = "--quit";
+
+fn asks_to_quit<S: AsRef<str>>(args: &[S]) -> bool {
+    args.iter().any(|a| a.as_ref() == QUIT_FLAG)
+}
 
 pub fn run() {
     // Before the logger: it creates the new data folder, which would hide the old one.
     let migration = legacy::migrate_legacy_data(&paths::appdata_base());
-    let _log_guard = logging::init();
+    logging::init();
     legacy::log_outcome(&migration);
     tracing::info!(version = env!("CARGO_PKG_VERSION"), "starting");
 
+    // The TypeScript bindings are written by `npm run gen:types` only, never by a running app: an
+    // old debug exe started by mistake rewrote them with stale types (2026-10-13). The test
+    // `ipc::tests` fails when they drift from the Rust types.
     let ipc = ipc::builder();
-    // Keeps the committed TypeScript bindings in step while developing.
-    #[cfg(debug_assertions)]
-    if let Err(e) = ipc.export(
-        specta_typescript::Typescript::default(),
-        concat!(env!("CARGO_MANIFEST_DIR"), "/../src/ipc/bindings.ts"),
-    ) {
-        tracing::warn!(error = %e, "could not export the TypeScript bindings");
-    }
 
     tauri::Builder::default()
         // Must be the first plugin registered.
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if asks_to_quit(&args) {
+                tracing::info!("second instance: asked to quit");
+                return desktop::quit(app);
+            }
             tracing::info!(?args, "second instance: showing the window");
             desktop::show(app);
         }))
@@ -59,6 +65,11 @@ pub fn run() {
         )
         .invoke_handler(ipc.invoke_handler())
         .setup(move |app| {
+            if asks_to_quit(&std::env::args().collect::<Vec<_>>()) {
+                tracing::info!("asked to quit, no Kayro was running");
+                app.handle().exit(0);
+                return Ok(());
+            }
             tracing::info!(app_name = %app.package_info().name, "setup done");
             ipc.mount_events(app);
             app.manage(ConfigState::load(paths::DataPaths::default_location()));
@@ -83,15 +94,17 @@ pub fn run() {
         })
         .build(tauri::generate_context!())
         .expect("error while building the application")
-        .run(|_app, event| {
+        .run(|_app, event| match event {
             // The hub lives in the notification area: destroying the last window (economy mode)
             // must not end it. Only the menu's « Quitter » (`app.exit`) does.
-            if let tauri::RunEvent::ExitRequested {
+            tauri::RunEvent::ExitRequested {
                 api, code: None, ..
-            } = event
-            {
-                api.prevent_exit();
-            }
+            } => api.prevent_exit(),
+            tauri::RunEvent::ExitRequested {
+                code: Some(code), ..
+            } => tracing::info!(code, "exit requested: the event loop ends"),
+            tauri::RunEvent::Exit => desktop::on_exit(),
+            _ => {}
         });
 }
 
@@ -100,5 +113,12 @@ mod tests {
     #[test]
     fn ping_answers_pong() {
         assert_eq!(super::ipc::ping(), "pong");
+    }
+
+    #[test]
+    fn only_the_quit_flag_asks_to_quit() {
+        assert!(super::asks_to_quit(&["Kayro.exe", "--quit"]));
+        assert!(!super::asks_to_quit(&["Kayro.exe", "--silent"]));
+        assert!(!super::asks_to_quit::<&str>(&[]));
     }
 }

@@ -1,4 +1,4 @@
-import type { KeyboardEvent, PointerEvent } from "react";
+import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
 import { GripIcon, IconButton, TrashIcon } from "../../design";
 import { t } from "../../i18n";
 import type { Step } from "../../ipc/bindings";
@@ -7,6 +7,8 @@ import { KIND_LABELS, stepRowText, type Linking } from "./describe";
 import type { DraftStep } from "./draft";
 import { MAX_WAIT_MS, parseSeconds, slotLabel } from "./model";
 import { RunMark } from "./RunMark";
+import type { ChainLink } from "./chain/chainState";
+import chainStyles from "./chain/Chain.module.css";
 import styles from "./Steps.module.css";
 
 interface Props {
@@ -16,16 +18,22 @@ interface Props {
   link: Linking;
   slots: readonly string[];
   selected: boolean;
-  dropBefore: boolean;
   dragging: boolean;
+  /** Vertical shift while a drag is going on (px): the carried card, or a neighbour making room. */
+  shiftY: number;
   view: StepView | undefined;
+  /** Its point and the thread to the next one (round 4b chain). */
+  chain: ChainLink;
+  hasNext: boolean;
   onSelect: () => void;
   onPatch: (patch: Partial<Step>) => void;
   onRemove: () => void;
   onGripDown: (e: PointerEvent) => void;
-  /** Arrow keys on the grip: -1 up, +1 down. */
-  onNudge: (delta: number) => void;
+  /** Arrow keys on the grip, or Alt + arrows on the row: -1 up, +1 down; where the focus goes. */
+  onNudge: (delta: number, focus: "grip" | "body") => void;
 }
+
+const FIELDS = "input, select, textarea";
 
 const seconds = (ms: number) => String(Math.round(ms) / 1000).replace(".", ",");
 
@@ -36,26 +44,62 @@ export function StepRow(p: Props) {
   const tone = step.type === "wait" || step.type === "waitReady" ? "wait" : "go";
 
   function onGripKey(e: KeyboardEvent) {
+    if (e.altKey) return; // the row's Alt + arrows
     if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
-      p.onNudge(e.key === "ArrowUp" ? -1 : 1);
+      p.onNudge(e.key === "ArrowUp" ? -1 : 1, "grip");
     }
+  }
+
+  // Alt + arrows move the step from anywhere on the row (not from its fields).
+  function onRowKey(e: KeyboardEvent) {
+    if (!e.altKey || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+    if (e.target instanceof Element && e.target.closest(FIELDS)) return;
+    e.preventDefault();
+    const onGrip = e.target instanceof Element && e.target.closest("[aria-describedby]") !== null;
+    p.onNudge(e.key === "ArrowUp" ? -1 : 1, onGrip ? "grip" : "body");
   }
 
   return (
     <li
-      className={styles.step}
+      className={`${styles.step} ${chainStyles.lit}`}
+      style={p.shiftY ? ({ translate: `0 ${p.shiftY}px` } as CSSProperties) : undefined}
       data-step-row
+      data-row-key={p.item.key}
+      data-run={p.chain.point}
       data-selected={p.selected || undefined}
-      data-drop-before={p.dropBefore || undefined}
       data-dragging={p.dragging || undefined}
       data-warn={text.warn || undefined}
+      onKeyDown={onRowKey}
     >
+      {p.hasNext && (
+        <span className={chainStyles.seg} data-chain-seg aria-hidden="true">
+          <span className={chainStyles.fill} data-on={p.chain.filled || undefined} />
+        </span>
+      )}
       <div className={styles.stepMain}>
-        <span className={styles.stepNumber}>{p.index + 1}</span>
+        {/* Round 5 (proposal 4): the handle on the left of the number. */}
+        <button
+          type="button"
+          className={styles.grip}
+          aria-label={t("scenes.step.move", { n: p.index + 1 })}
+          aria-describedby="scenes-move-help"
+          onPointerDown={p.onGripDown}
+          onKeyDown={onGripKey}
+        >
+          <GripIcon size={18} />
+        </button>
+        <span
+          className={`${styles.stepNumber} ${chainStyles.point}`}
+          data-chain-point
+          data-point={p.chain.point}
+        >
+          {p.index + 1}
+        </span>
         <button
           type="button"
           className={styles.stepBody}
+          data-step-body
           aria-expanded={p.selected}
           onClick={p.onSelect}
         >
@@ -70,16 +114,6 @@ export function StepRow(p: Props) {
           </span>
         </button>
         <RunMark view={p.view} />
-        <button
-          type="button"
-          className={styles.grip}
-          aria-label={t("scenes.step.move", { n: p.index + 1 })}
-          aria-describedby="scenes-move-help"
-          onPointerDown={p.onGripDown}
-          onKeyDown={onGripKey}
-        >
-          <GripIcon size={18} />
-        </button>
       </div>
       {p.selected && (
         <div className={styles.details}>

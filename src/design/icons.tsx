@@ -121,6 +121,21 @@ export const ShareIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** Open larger (the widget's « ↗ »: back to a window). */
+export const ExpandIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M14 4h6v6M20 4l-8 8M10 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-4" />
+  </Icon>
+);
+
+/** Display mode (round 5): a screen with a small window in it. */
+export const DisplayModeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="18" height="13" rx="2" />
+    <path d="M8 21h8M12 17v4M7 8h6v5H7z" />
+  </Icon>
+);
+
 export const ScenesIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="m12 4 9 5-9 5-9-5zM3 14l9 5 9-5" />

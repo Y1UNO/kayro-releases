@@ -6,10 +6,17 @@
   height: 26px;
   padding: 3px;
   border: 0;
-  border-radius: 13px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   background: rgba(0, 0, 0, 0.35);
-  transition: transform var(--dur-hover) var(--ease);
+  /* Press in "micro" (level 1), released on the "liaison" spring (motion.css). */
+  transition: scale var(--m-press-dur) var(--m-press-ease);
+}
+
+.toggle:active:not(:disabled) {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
 }
 
 /* 44 px hit area */
@@ -23,10 +30,11 @@
   display: block;
   width: 20px;
   height: 20px;
-  border-radius: 10px;
+  border-radius: var(--radius-pill);
   background: #fff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  transition: transform var(--dur-panel) var(--ease);
+  /* Level 2: the thumb crosses in "court" on the "liaison" spring (passes a hair, settles). */
+  transition: transform var(--m2-court) var(--m-ease-move);
 }
 
 /* Fill follows --accent directly (no background transition: the theme fade animates it). */

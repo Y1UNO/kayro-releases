@@ -1,19 +1,22 @@
 .group {
+  --_track: var(--field);
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   flex-shrink: 0;
   padding: 3px;
-  background: var(--field);
+  background: var(--_track);
 }
 
 .md {
-  border-radius: 19px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-13);
   font-weight: 600;
 }
 
 .sm {
-  border-radius: 16px;
-  background: var(--track);
+  border-radius: var(--radius-pill);
+  --_track: var(--track);
   font-size: var(--fs-12);
   font-weight: 700;
 }
@@ -24,20 +27,34 @@
   cursor: pointer;
   background: transparent;
   color: var(--text-2);
+  /* Level 1 (motion.css): hover in "court"; press in "micro", released on the "liaison" spring. */
   transition:
-    background-color var(--dur-hover) var(--ease),
-    color var(--dur-hover) var(--ease);
+    background-color var(--m1-court) var(--m-ease-in),
+    color var(--m1-court) var(--m-ease-in),
+    translate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease);
   font: inherit;
+}
+
+/* The selected segment stays on its pill (no rise). */
+.segment:not(.selected):hover {
+  translate: 0 var(--m-hover-rise-k);
+}
+
+.segment:active {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
 }
 
 .md .segment {
   padding: 7px 14px;
-  border-radius: 16px;
+  border-radius: var(--radius-pill);
 }
 
 .sm .segment {
   padding: 6px 10px;
-  border-radius: 13px;
+  border-radius: var(--radius-pill);
 }
 
 /* Vertical hit area reaches 44 px. */
@@ -65,4 +82,40 @@
 .group[aria-disabled="true"] {
   opacity: 0.55;
   pointer-events: none;
+}
+
+/* Glass selection pill drawn by the engine (`glassPill`): the track is cut where the pill is and
+   the selected segment loses its CSS fill (see SelectionPill and Surface.module.css). */
+.group:has(> [data-glass="gpu"]) {
+  background: none;
+}
+
+.group:has(> [data-glass="gpu"])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--_track);
+  pointer-events: none;
+  /* Everything but the pill: full layer XOR (two round ends + the middle). --hole-*: SelectionPill. */
+  mask-image:
+    linear-gradient(#000 0 0), radial-gradient(circle closest-side, #000 97%, transparent),
+    radial-gradient(circle closest-side, #000 97%, transparent), linear-gradient(#000 0 0);
+  mask-size:
+    100% 100%,
+    var(--hole-h, 0px) var(--hole-h, 0px),
+    var(--hole-h, 0px) var(--hole-h, 0px),
+    max(0px, calc(var(--hole-w, 0px) - var(--hole-h, 0px))) var(--hole-h, 0px);
+  mask-position:
+    0 0,
+    var(--hole-x, 0px) var(--hole-y, 0px),
+    calc(var(--hole-x, 0px) + var(--hole-w, 0px) - var(--hole-h, 0px)) var(--hole-y, 0px),
+    calc(var(--hole-x, 0px) + var(--hole-h, 0px) / 2) var(--hole-y, 0px);
+  mask-repeat: no-repeat;
+  mask-composite: exclude, add, add, add;
+}
+
+.group:has(> [data-glass="gpu"]) .selected {
+  background: transparent;
 }

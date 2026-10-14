@@ -8,7 +8,7 @@ import type { AppEntry } from "../../ipc/bindings";
  * CSP) is opened in step 9, when apps are added with their art. Until then `art.poster` is always
  * empty for real data, and this stays the single place to change.
  */
-export function posterUrl(app: Pick<AppEntry, "art">): string | null {
+export function posterUrl(app: Pick<AppEntry, "art"> & { id?: string }): string | null {
   void app.art.poster;
   return null;
 }

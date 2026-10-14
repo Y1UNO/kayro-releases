@@ -1,23 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./App.module.css";
 import { HomeScreen } from "./features/home/HomeScreen";
 import { SceneEditor } from "./features/scenes/SceneEditor";
 import { ScenesScreen } from "./features/scenes/ScenesScreen";
 import { SceneToast } from "./features/scenes/SceneToast";
+import type { NewSceneSeed } from "./features/scenes/draft";
 import { t } from "./i18n";
 import { errorText } from "./ipc/errors";
 import { desktopStore, sceneStore, useHub } from "./store";
 import { announceReady, useWindowShown } from "./app/useWindowShown";
 import { usePlayScene } from "./features/scenes/usePlayScene";
 import { useSceneHotkey } from "./features/scenes/useSceneHotkey";
+import { Opening } from "./features/opening/Opening";
+import { useOpening } from "./features/opening/useOpening";
+import { usePassage } from "./features/modes/usePassage";
 
 /** Where the user is: the home screen, the list of scenes, or the editor of one scene. */
-type Screen = { name: "home" } | { name: "scenes" } | { name: "editor"; sceneId: string | null };
+type Screen =
+  | { name: "home"; back?: boolean }
+  | { name: "scenes" }
+  | { name: "editor"; sceneId: string | null; seed?: NewSceneSeed };
 
 export function App() {
   const status = useHub((s) => s.status);
   const error = useHub((s) => s.lastError);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
+  const opening = useOpening();
+  const under = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Show the (hidden) window only once the first frame is painted: no white flash.
@@ -37,6 +46,8 @@ export function App() {
 
   // Reports the paint time when a measurement is running; confirms a scene a shortcut asked for.
   useWindowShown();
+  // Round 4b: a change of display mode on screen fades the page out and back in.
+  usePassage("main");
   const { request, dialog } = usePlayScene();
   useSceneHotkey(request);
 
@@ -55,16 +66,31 @@ export function App() {
   const toScenes = () => setScreen({ name: "scenes" });
   return (
     <>
-      {screen.name === "home" && <HomeScreen onOpenScenes={toScenes} />}
-      {screen.name === "scenes" && (
-        <ScenesScreen
-          onBack={() => setScreen({ name: "home" })}
-          onEdit={(sceneId) => setScreen({ name: "editor", sceneId })}
-        />
-      )}
-      {screen.name === "editor" && (
-        <SceneEditor key={screen.sceneId ?? "new"} sceneId={screen.sceneId} onBack={toScenes} />
-      )}
+      <div
+        ref={under}
+        className={opening.hidden ? styles.under : styles.screens}
+        style={opening.hidden && !opening.play ? { opacity: 0 } : undefined}
+      >
+        {screen.name === "home" && (
+          // Back from the scenes (round 5): the carousel that was left, never the fan again.
+          <HomeScreen onOpenScenes={toScenes} startOnFan={opening.fan && !screen.back} />
+        )}
+        {screen.name === "scenes" && (
+          <ScenesScreen
+            onBack={() => setScreen({ name: "home", back: true })}
+            onEdit={(sceneId, seed) => setScreen({ name: "editor", sceneId, seed })}
+          />
+        )}
+        {screen.name === "editor" && (
+          <SceneEditor
+            key={screen.sceneId ?? "new"}
+            sceneId={screen.sceneId}
+            seed={screen.seed}
+            onBack={toScenes}
+          />
+        )}
+      </div>
+      {opening.play && <Opening under={under} onDone={opening.finish} />}
       <SceneToast />
       {dialog}
     </>

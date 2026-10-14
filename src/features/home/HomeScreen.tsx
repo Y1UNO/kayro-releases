@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { AnimatePresence, LazyMotion, MotionConfig, domAnimation, m } from "motion/react";
-import { EASE, SPRING } from "../../design";
+import { useMotionTokens } from "../../design/motion/current";
+import { fmTransition } from "../../design/motion/tokens";
+import { prefersReducedMotion } from "../../fx/motionPref";
+import { useReducedMotion } from "../../fx/useReducedMotion";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
-import { DisplaySettings } from "../settings/DisplaySettings";
+import { SettingsDialog } from "../settings/SettingsDialog";
 import type { AppEntry } from "../../ipc/bindings";
 import { hubStore, useHub } from "../../store";
 import { AddAppsDialog } from "../add-app/AddAppsDialog";
@@ -17,12 +20,15 @@ import { CategoryTabs } from "./CategoryTabs";
 import { CategoryTitle } from "./CategoryTitle";
 import { CommandPalette } from "./CommandPalette";
 import { EmptyState } from "./EmptyState";
-import { homeReducer, initialHomeState } from "./homeState";
+import { homeLeft, homeReducer, initialHomeState, rememberHome } from "./homeState";
 import { LaunchToast } from "./LaunchToast";
 import { DragGhost, Notice } from "./Overlays";
 import { SceneDock } from "./SceneDock";
 import { TopBar } from "./TopBar";
 import { useCategoryDrag } from "./useCategoryDrag";
+import { CategoryFan, FanTitle } from "./fan/CategoryFan";
+import { useCategoryLink } from "./fan/useCategoryLink";
+import { cardGeometry, useDa } from "../../design/da";
 import { useHomeKeys } from "./useHomeKeys";
 import styles from "./HomeScreen.module.css";
 
@@ -36,14 +42,43 @@ function cardCentre(id: string): { x: number; y: number } {
   return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: 120, y: 160 };
 }
 
-/** The home screen: top bar, category title, carousel (or grid), category tabs, scene dock. */
-export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
+/** Moves the keyboard focus along the cards of the category fan. */
+function focusFanCard(delta: number): void {
+  const cards = [...document.querySelectorAll<HTMLElement>("[data-fan-card]")];
+  const at = cards.indexOf(document.activeElement as HTMLElement);
+  const next = at < 0 ? Math.floor(cards.length / 2) : at + delta;
+  cards[Math.min(cards.length - 1, Math.max(0, next))]?.focus();
+}
+
+/**
+ * The home screen: top bar, category title, carousel (or grid), category tabs, scene dock.
+ * Round 3b: at start-up, the categories in a fan first (`startOnFan`), linked to the carousel.
+ */
+export function HomeScreen({
+  onOpenScenes,
+  startOnFan = false,
+}: {
+  onOpenScenes: () => void;
+  startOnFan?: boolean;
+}) {
   const apps = useHub((s) => s.apps);
   const running = useHub((s) => s.running);
+  const motion = useMotionTokens();
+  const reduced = useReducedMotion();
   const groups = useMemo(() => groupByCategory(apps), [apps]);
 
-  const [state, dispatch] = useReducer(homeReducer, groups, (g) =>
-    initialHomeState(CATEGORY_IDS.find((id) => g[id].length > 0) ?? "jeux"),
+  const [state, dispatch] = useReducer(
+    homeReducer,
+    groups,
+    (g) =>
+      homeLeft() ??
+      initialHomeState(
+        CATEGORY_IDS.find((id) => g[id].length > 0) ?? "jeux",
+        Object.fromEntries(CATEGORY_IDS.map((id) => [id, g[id].length])) as Record<
+          CategoryId,
+          number
+        >,
+      ),
   );
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -59,6 +94,7 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
   const count = list.length;
   const focus = Math.min(state.focus[state.category], Math.max(0, count - 1));
   const grid = state.view === "grid";
+  useEffect(() => rememberHome(state), [state]);
 
   // The confirmation disappears by itself; the timer exists only while one is shown.
   useEffect(() => {
@@ -95,6 +131,26 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
     (category: CategoryId) => dispatch({ type: "setCategory", category }),
     [],
   );
+  const link = useCategoryLink({
+    category: state.category,
+    setCategory,
+    startOnFan,
+    carousel: !grid,
+  });
+  const onFan = link.mode === "fan";
+  const { fanMounted, fanParked, config: linkCfg } = link;
+  const { fan: fanRef, area: areaRef, ask: askRef, title: titleRef, back: backRef } = link.bind;
+  const { bottom: bottomRef, card: onFanCard } = link.bind;
+  const slotH = cardGeometry(useDa((s) => s.values.cards)).activeH;
+  const fill = useDa((s) => s.values.categoryLink?.fill);
+  const counts = useMemo(
+    () =>
+      Object.fromEntries(CATEGORY_IDS.map((id) => [id, groups[id].length])) as Record<
+        CategoryId,
+        number
+      >,
+    [groups],
+  );
   const onColumns = useCallback((n: number) => {
     columns.current = n;
   }, []);
@@ -102,28 +158,36 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
   useHomeKeys(
     {
       onArrow: (dx, dy) => {
-        if (dx) move(dx);
+        if (onFan) focusFanCard(dx || dy);
+        else if (dx) move(dx);
         else if (grid) move(dy * columns.current);
       },
       onEdge: (edge) =>
-        dispatch({ type: "setFocus", index: edge === "first" ? 0 : count - 1, count }),
-      onCategoryStep: (delta) => dispatch({ type: "stepCategory", delta }),
+        onFan || dispatch({ type: "setFocus", index: edge === "first" ? 0 : count - 1, count }),
+      onCategoryStep: (delta) => {
+        if (onFan) return;
+        const i = CATEGORY_IDS.indexOf(state.category) + delta;
+        const next = CATEGORY_IDS[Math.min(CATEGORY_IDS.length - 1, Math.max(0, i))];
+        if (next) link.tab(next);
+      },
       onEnter: () => {
-        const app = list[focus];
+        const app = onFan ? undefined : list[focus];
         if (app) launch(app);
       },
       // Escape closes what is open (grid view); with nothing left to close it hides the hub.
+      // On the fan: the last category's carousel (the link plays towards its card).
       onEscape: () => {
-        if (grid) dispatch({ type: "setView", view: "carousel" });
+        if (onFan) link.pick(state.category);
+        else if (grid) dispatch({ type: "setView", view: "carousel" });
         else if (hideOnEscape) void desktopIpc.hide();
       },
       onSearch: () => setPaletteOpen(true),
       onEdit: () => {
-        const app = list[focus];
+        const app = onFan ? undefined : list[focus];
         if (app) setEditing({ app, remove: false });
       },
       onMenu: () => {
-        const app = list[focus];
+        const app = onFan ? undefined : list[focus];
         if (app) setMenu({ app, ...cardCentre(app.id) });
       },
     },
@@ -179,50 +243,101 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
         onFocus={setFocus}
         onMove={move}
         onLaunch={launch}
+        dragging={drag !== null}
+        floating={!onFan}
       />
     );
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <MotionConfig reducedMotion="user">
+      <MotionConfig reducedMotion={reduced ? "always" : "never"}>
         <main className={styles.screen}>
           <TopBar
             onSearch={() => setPaletteOpen(true)}
             onAdd={() => setAddOpen(true)}
             onSettings={() => setSettingsOpen(true)}
+            onAllCategories={() => link.back()}
+            allCategories={!onFan}
+            backRef={backRef}
           />
-          <CategoryTitle category={state.category} compact={grid && count > 0} />
-
-          <div
-            className={styles.area}
-            id={panelId}
-            role="tabpanel"
-            onPointerDown={onPointerDown}
-            onContextMenu={onAreaContextMenu}
-            onClick={onAreaClick}
-          >
-            <AnimatePresence initial={false}>
-              <m.div
-                key={`${state.category}:${count === 0 ? "empty" : state.view}`}
-                className={styles.layer}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0, transition: SPRING }}
-                exit={{ opacity: 0, transition: { duration: 0.18, ease: EASE } }}
-              >
-                {body}
-              </m.div>
-            </AnimatePresence>
+          <div className={styles.titles}>
+            <div ref={titleRef} aria-hidden={onFan || undefined}>
+              <CategoryTitle category={state.category} compact={grid && count > 0} />
+            </div>
+            <FanTitle askRef={askRef} shown={onFan} />
           </div>
 
-          <CategoryTabs
-            category={state.category}
-            view={state.view}
-            dropTarget={drag?.over ?? null}
-            panelId={panelId}
-            onCategory={setCategory}
-            onView={(view) => dispatch({ type: "setView", view })}
-          />
-          <SceneDock onManage={onOpenScenes} />
+          <div ref={areaRef} className={styles.area}>
+            {fanMounted && (
+              <CategoryFan
+                counts={counts}
+                slotH={slotH}
+                pivot={linkCfg.pivot}
+                fill={typeof fill === "number" ? fill : 0.85}
+                blur={linkCfg.blur}
+                interactive={onFan}
+                parked={fanParked}
+                onPick={(cat) => link.pick(cat)}
+                onHover={link.hover}
+                onCard={onFanCard}
+                fanRef={fanRef}
+              />
+            )}
+            <div
+              className={styles.panel}
+              id={panelId}
+              role="tabpanel"
+              inert={onFan}
+              onPointerDown={onPointerDown}
+              onContextMenu={onAreaContextMenu}
+              onClick={onAreaClick}
+            >
+              <AnimatePresence initial={false}>
+                <m.div
+                  // The carousel stays mounted across tabs (round 3b: the deck reuses its cards).
+                  key={
+                    count > 0 && !grid
+                      ? "carousel"
+                      : `${state.category}:${count === 0 ? "empty" : state.view}`
+                  }
+                  data-home-layer=""
+                  className={styles.layer}
+                  // A list that enters (level 2 of the motion table): rises on "liaison".
+                  initial={{ opacity: 0, y: motion.rise }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    transition: fmTransition(motion, 2, "moyen", "move", prefersReducedMotion()),
+                  }}
+                  exit={{
+                    opacity: 0,
+                    transition: fmTransition(
+                      motion,
+                      2,
+                      "court",
+                      "out",
+                      prefersReducedMotion(),
+                      true,
+                    ),
+                  }}
+                >
+                  {body}
+                </m.div>
+              </AnimatePresence>
+            </div>
+          </div>
+
+          <div ref={bottomRef} className={styles.bottom} inert={onFan}>
+            <CategoryTabs
+              category={state.category}
+              view={state.view}
+              dropTarget={drag?.over ?? null}
+              panelId={panelId}
+              onCategory={(cat) => link.tab(cat)}
+              onView={(view) => dispatch({ type: "setView", view })}
+            />
+            <SceneDock onManage={onOpenScenes} />
+          </div>
         </main>
 
         <CommandPalette
@@ -239,7 +354,7 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
             setNotice(t(count === 1 ? "addApps.addedOne" : "addApps.addedMany", { count }))
           }
         />
-        <DisplaySettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
         <EditAppDialog
           app={editing?.app ?? null}
           startWithRemove={editing?.remove}
@@ -258,7 +373,7 @@ export function HomeScreen({ onOpenScenes }: { onOpenScenes: () => void }) {
         )}
         {drag && <DragGhost name={drag.app.name} x={drag.x} y={drag.y} />}
         {notice && <Notice text={notice} />}
-        <LaunchToast />
+        <LaunchToast onFix={(app) => setEditing({ app, remove: false })} />
       </MotionConfig>
     </LazyMotion>
   );

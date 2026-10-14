@@ -5,6 +5,7 @@ import {
   type AppRunState,
   type DetectProgress,
   type HotkeysReport,
+  type ModePassage,
   type ProgressEvent,
   type Settings,
 } from "./bindings";
@@ -97,4 +98,9 @@ export function onWindowVisibility(
 /** A shortcut asks to confirm a scene that closes apps. */
 export function onSceneHotkey(handler: (sceneId: string) => void): Promise<Unlisten> {
   return listenTo(events.sceneHotkey.listen, handler);
+}
+
+/** A step of a passage between display modes (round 4b), for the page of window `label`. */
+export function onModePassage(handler: (e: ModePassage) => void): Promise<Unlisten> {
+  return listenTo(events.modePassage.listen, handler);
 }

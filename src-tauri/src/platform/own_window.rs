@@ -1,6 +1,7 @@
 //! Styles of Kayro's own windows (the widget must stay out of the taskbar and Alt+Tab).
 
 use windows::Win32::Foundation::HWND;
+use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_TRANSITIONS_FORCEDISABLED};
 use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::Input::KeyboardAndMouse::{keybd_event, KEYEVENTF_KEYUP, VK_MENU};
 use windows::Win32::UI::WindowsAndMessaging::{
@@ -21,6 +22,23 @@ pub fn set_tool_window(raw: isize) {
         let style = GetWindowLongPtrW(hwnd(raw), GWL_EXSTYLE);
         let wanted = (style & !(WS_EX_APPWINDOW.0 as isize)) | WS_EX_TOOLWINDOW.0 as isize;
         SetWindowLongPtrW(hwnd(raw), GWL_EXSTYLE, wanted);
+    }
+}
+
+/// Windows' own fade when the window is shown or hidden (round 5). Off for the immersive hub: it
+/// makes its own entrance (the opening, the passages), and the system fade let the previous screen
+/// show through it for ~200 ms at launch. On for a normal window, like any program.
+pub fn set_show_animation(raw: isize, on: bool) {
+    // A Win32 BOOL.
+    let disabled: i32 = (!on).into();
+    // SAFETY: a DWM attribute of a window of this process; a stale handle just fails.
+    unsafe {
+        let _ = DwmSetWindowAttribute(
+            hwnd(raw),
+            DWMWA_TRANSITIONS_FORCEDISABLED,
+            &disabled as *const _ as *const _,
+            std::mem::size_of_val(&disabled) as u32,
+        );
     }
 }
 

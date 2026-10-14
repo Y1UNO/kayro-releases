@@ -9,7 +9,7 @@
   position: relative;
   isolation: isolate; /* the highlight sits behind the content, above the glass */
   box-sizing: border-box;
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-panel);
   background: var(--_bg);
   /* Unprefixed only: WebView2 is Chromium. With both forms, the production CSS minifier merged the two
      identical declarations into the `-webkit-` one, which Chromium ignores (no blur in release builds). */
@@ -39,4 +39,69 @@
   border-radius: inherit;
   background: var(--glass-highlight);
   pointer-events: none;
+}
+
+/* Drawn by the liquid glass engine (src/fx/gpu): refraction, rim, shadow and tint come from the
+   canvas under the interface, the element only keeps its content. */
+.glass[data-glass="gpu"] {
+  --_filter: none;
+  --_highlight: none;
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* A selection pill drawn by the engine inside (SelectionPill): the frosted backing moves to a
+   pseudo-element cut out where the pill is, so the pill shows the sharp refraction below while
+   the bar itself keeps its CSS look. Coordinates of the hole: border box (inset -1px = border). */
+.glass:not([data-glass="gpu"]):has([data-glass-kind="pill"][data-glass="gpu"]) {
+  background: none;
+  backdrop-filter: none;
+}
+
+.glass:not([data-glass="gpu"]):has([data-glass-kind="pill"][data-glass="gpu"])::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--_bg);
+  backdrop-filter: var(--_filter);
+  pointer-events: none;
+  /* Everything but the pill: full layer XOR (two round ends + the middle). --hole-*: SelectionPill. */
+  mask-image:
+    linear-gradient(#000 0 0), radial-gradient(circle closest-side, #000 97%, transparent),
+    radial-gradient(circle closest-side, #000 97%, transparent), linear-gradient(#000 0 0);
+  mask-size:
+    100% 100%,
+    var(--hole-h, 0px) var(--hole-h, 0px),
+    var(--hole-h, 0px) var(--hole-h, 0px),
+    max(0px, calc(var(--hole-w, 0px) - var(--hole-h, 0px))) var(--hole-h, 0px);
+  mask-position:
+    0 0,
+    var(--hole-x, 0px) var(--hole-y, 0px),
+    calc(var(--hole-x, 0px) + var(--hole-w, 0px) - var(--hole-h, 0px)) var(--hole-y, 0px),
+    calc(var(--hole-x, 0px) + var(--hole-h, 0px) / 2) var(--hole-y, 0px);
+  mask-repeat: no-repeat;
+  mask-composite: exclude, add, add, add;
+}
+
+.glass:not([data-glass="gpu"]):has([data-glass-kind="pill"][data-glass="gpu"])::before {
+  inset: -1px;
+  /* Everything but the pill: full layer XOR (two round ends + the middle). --hole-*: SelectionPill. */
+  mask-image:
+    linear-gradient(#000 0 0), radial-gradient(circle closest-side, #000 97%, transparent),
+    radial-gradient(circle closest-side, #000 97%, transparent), linear-gradient(#000 0 0);
+  mask-size:
+    100% 100%,
+    var(--hole-h, 0px) var(--hole-h, 0px),
+    var(--hole-h, 0px) var(--hole-h, 0px),
+    max(0px, calc(var(--hole-w, 0px) - var(--hole-h, 0px))) var(--hole-h, 0px);
+  mask-position:
+    0 0,
+    var(--hole-x, 0px) var(--hole-y, 0px),
+    calc(var(--hole-x, 0px) + var(--hole-w, 0px) - var(--hole-h, 0px)) var(--hole-y, 0px),
+    calc(var(--hole-x, 0px) + var(--hole-h, 0px) / 2) var(--hole-y, 0px);
+  mask-repeat: no-repeat;
+  mask-composite: exclude, add, add, add;
 }

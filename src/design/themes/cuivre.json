@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "cuivre",
+  "name": "Cuivre",
+  "author": "Kayro",
+  "description": "Cuivre chaud et vieux rose.",
+  "bg": ["#24160F", "#150D09", "#0A0605"],
+  "accent": "#D99A6C",
+  "glow": "rgba(176,122,120,.35)",
+  "fog": ["rgba(217,154,108,.34)", "rgba(217,154,108,.16)", "rgba(176,122,120,.14)"],
+  "card": [217, 154, 108],
+  "beam": [176, 122, 120],
+  "gradient": ["#D99A6C", "#B07A78"],
+  "soft": "#F0D2BC"
+}

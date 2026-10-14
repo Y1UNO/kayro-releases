@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef } from "react";
 import type { AppEntry, AppRunState } from "../../ipc/bindings";
-import { targetOf, useFxTarget } from "../../fx";
 import { t } from "../../i18n";
+import { useDa } from "../../design/da";
 import { AppCard } from "./AppCard";
 import styles from "./AppGrid.module.css";
 
@@ -43,12 +43,7 @@ export function AppGrid({ apps, focus, running, onColumns, onFocus, onLaunch }: 
     if (activeDomId) document.getElementById(activeDomId)?.scrollIntoView({ block: "nearest" });
   }, [activeDomId]);
 
-  // The light glides to the selected cell (declared after the scroll: measured once it is done).
-  useFxTarget(
-    () => (activeDomId ? targetOf(document.getElementById(activeDomId)) : null),
-    [activeDomId],
-  );
-
+  const hoverOff = useDa((s) => s.values.cardHover?.style === "none");
   return (
     <div className={styles.scroller}>
       <div
@@ -58,6 +53,10 @@ export function AppGrid({ apps, focus, running, onColumns, onFocus, onLaunch }: 
         tabIndex={0}
         aria-label={t("home.apps")}
         aria-activedescendant={activeDomId}
+        // The cells enter in a cascade (level 2, motion.css).
+        data-cascade=""
+        // « Survol des cartes : Aucun » (round 5): no lift.
+        data-hover-off={hoverOff ? "" : undefined}
       >
         {apps.map((app, i) => (
           <AppCard

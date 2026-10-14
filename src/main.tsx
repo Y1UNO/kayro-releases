@@ -1,17 +1,22 @@
-import "@fontsource-variable/fraunces/opsz.css"; // wght + opsz axes (optical size, as in the mock-ups)
-import "@fontsource-variable/dm-sans";
+// Art direction fonts (docs/DESIGN.md): Cormorant Garamond (titles) + Manrope (interface).
+import "@fontsource-variable/cormorant-garamond";
+import "@fontsource-variable/manrope";
 import { StrictMode, Suspense, lazy } from "react";
 import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { ThemeProvider, applyQuality } from "./design";
+import { installUserPrefs } from "./app/userPrefs";
+import { ThemeProvider } from "./design";
+import { installDa } from "./design/da";
 import { applyDefaultLogoColours } from "./brand";
 import { Atmosphere } from "./fx";
 import { WidgetApp } from "./features/widget/WidgetApp";
 import { desktopStore, hubStore, sceneStore } from "./store";
 import "./index.css";
+import "./design/themeSwap.css";
 
 applyDefaultLogoColours();
+installDa();
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root not found");
@@ -22,16 +27,9 @@ const Catalogue: ComponentType | null =
     ? lazy(() => import("./dev/Catalogue"))
     : null;
 
-// Launcher test bench (step 6): development builds only, like the catalogue.
-const LauncherBench: ComponentType | null =
-  import.meta.env.DEV && location.pathname === "/dev/launcher"
-    ? lazy(() => import("./dev/Launcher"))
-    : null;
-
-// Home screen with fake data and a frame-time bench (step 7): development builds, and the
-// `vite build --mode bench` build used to measure with production React (never in a normal build).
+// Home screen with fake data (step 7): development builds only.
 const HomeDev: ComponentType | null =
-  (import.meta.env.DEV || import.meta.env.MODE === "bench") && location.pathname === "/dev/home"
+  import.meta.env.DEV && location.pathname === "/dev/home"
     ? lazy(() => import("./dev/Home"))
     : null;
 
@@ -41,8 +39,27 @@ const ScenesDev: ComponentType | null =
     ? lazy(() => import("./dev/Scenes"))
     : null;
 
+// Motion language lab (art direction round 4a): every interaction of the three levels. Dev only.
+const MotionDev: ComponentType | null =
+  import.meta.env.DEV && location.pathname === "/dev/motion"
+    ? lazy(() => import("./dev/MotionLab"))
+    : null;
+
+// The widget (art direction round 4b: its glass unrolls) with fake data. Dev only.
+const WidgetDev: ComponentType | null =
+  import.meta.env.DEV && location.pathname === "/dev/widget"
+    ? lazy(() => import("./dev/Widget"))
+    : null;
+
 const appRoot = createRoot(root);
-const DevPage = Catalogue ?? LauncherBench ?? HomeDev ?? ScenesDev;
+
+// A window built for a passage between display modes (round 4b, `?enter=1`): the page starts
+// faded out and comes in on its first show (src/features/modes/usePassage.ts).
+if (new URLSearchParams(location.search).get("enter") === "1") {
+  document.documentElement.dataset.entering = "";
+  document.body.style.opacity = "0";
+}
+const DevPage = Catalogue ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev;
 
 if (DevPage) {
   appRoot.render(
@@ -60,6 +77,7 @@ if (DevPage) {
     sceneStore.getState().init(),
     desktopStore.getState().init(),
   ]).finally(() => {
+    installUserPrefs({ quality: false });
     appRoot.render(
       <StrictMode>
         <ThemeProvider initialThemeId={hubStore.getState().settings?.themeId}>
@@ -76,12 +94,7 @@ if (DevPage) {
     .init()
     .finally(() => {
       const settings = hubStore.getState().settings;
-      if (settings) applyQuality(settings.quality);
-      hubStore.subscribe((s, prev) => {
-        if (s.settings && s.settings.quality !== prev.settings?.quality) {
-          applyQuality(s.settings.quality);
-        }
-      });
+      installUserPrefs({ quality: true });
       appRoot.render(
         <StrictMode>
           <ThemeProvider

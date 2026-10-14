@@ -16,15 +16,17 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 10 | Moteur de scènes (Rust) | 6 | C |
 | [x] 11 | Éditeur de scènes (modes simple et avancé), dock, import/export `.hubscene` | 7, 10 | C |
 | [x] 12 | Modes immersif/fenêtre/widget, raccourci, tray | 2, 7 | C |
-| [ ] 12b | Atelier de direction artistique (DA officielle v1), itératif, fini quand je dis « je fige la DA » | 8, 12 | C |
-| [ ] 13 | Performance : états, qualité adaptative, benchmark, réglages, sans échec | 6, 8, 12 | D |
+| [x] 12b | Atelier de direction artistique (DA officielle v1), itératif, fini quand je dis « je fige la DA » | 8, 12 | C |
+| [x] 13 | Performance : états, qualité adaptative, benchmark, réglages, sans échec | 6, 8, 12 | D |
 | [ ] 14 | Couleurs du jeu : art local, palette OKLab, modes | 5, 8 | E |
 | [ ] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
 | [ ] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
 | [ ] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
-| [ ] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages, onglet « Sons » de l'atelier, `docs/SONS.md` | 12b, 13 | E |
+| [ ] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages des sons, à définir à l'étape 17b, `docs/SONS.md` | 12b, 13 | E |
 | [ ] 18 | Audit : perf, sécurité, robustesse, accessibilité | 1–16 | F |
 | [ ] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis | 18 | F |
+
+**DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
 
 **Extensions après v1.0** : A voix FR · B mains (webcam) · C intégrations (OBS, Discord, lumières) · D moteur WebGL.
 
@@ -73,18 +75,90 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 - **Chore renommage Hub → Kayro — 2026-10-10** (branche `chore-kayro`) : `productName`/titre de fenêtre/`index.html`/thèmes/Cargo = Kayro ; `{app}` est un paramètre toujours rempli par `t()` (fr.json) ; exe `Kayro.exe` (`[[bin]]`), identifiant `fr.yiuno.hub` et crate `hub` inchangés. `src-tauri/src/legacy.rs` : si `%APPDATA%/Hub` existe et pas `Kayro`, copie dans `Kayro.migrating` puis renomme (jamais de `Kayro` à moitié copié), journalisée ; l'ancien dossier n'est ni modifié ni supprimé. Logs (`kayro.*.log`) et cache d'icônes vivent dans ce dossier. 4 tests dans un dossier temporaire.
 - **Chore raccourci bureau — 2026-10-10** (branche `chore-raccourci`) : `scripts/build-local.ps1` (build `--no-bundle` → `target/release/Kayro.exe`, `Kayro.lnk` réécrit sur place avec icône `icon.ico` et dossier de travail de l'exe ; Kayro ouvert → question o/N, `-CloseRunning`, ou arrêt avec message ; fermeture douce seulement, jamais de kill). Testé : build, raccourci (cible/icône/dossier), démarrage par le raccourci, cas « ouvert » avec et sans `-CloseRunning`, pas de doublon.
 
-## Petits ajustements et vérification finale
-À lancer avant l'étape 19 (« Passe de finition », voir `_kit/PROMPTS.md`).
-- [ ] Détection : filtres de bruit renforcés (désinstallateurs, aide/documentation, « Check For Updates », « About/Configure Java », « Module Docs », « Report a Problem », « Windows App Cert Kit », variantes mode compatibilité / sans échec, doublons de même nom et même cible)
-- [ ] Détection : bouton « Ignorer » par app (`ignoredDetections` dans settings.json, case « Afficher les ignorées »)
-- [ ] Détection : groupe « Lanceurs et outils » (Riot Client, Epic Games Launcher, Steam, Roblox Studio, Unity Hub, GOG Galaxy, Battle.net…) replié et décoché par défaut
-- [ ] Détection : meilleure suggestion de catégorie par liste de motifs locale
-- [ ] Scènes : mesurer en local le temps de démarrage réel de chaque app lors des tests de scène (`launchTimings.json` dans le dossier de données) pour proposer des délais calibrés sur la machine
-- [ ] Scènes : réglage de séquence par app, renommage d'un emplacement, glisser depuis le carrousel, accents conservés dans les noms d'emplacements, bouton « Parcourir » pour importer un `.hubscene`
-- [ ] Bouton « Parcourir » pour choisir un exe (plugin dialog)
-- [ ] Suivi des jeux Steam (processus sans `match.exe`) pour que `waitReady`, `focus` et `close` marchent aussi sur eux
-- [ ] Test d'Epic avec un vrai jeu installé (URI de lancement et `.item` réels)
-- [ ] Menu « Quitter » du tray et rafraîchissement de l'icône au changement de thème système (si pas fait à l'étape 12)
-- [ ] Comportement du clic carte (sélection puis lancement) à confirmer à l'usage
-- [ ] Tests : Windows 10, mise à l'échelle 125/150 %, écran 60 Hz, premier lancement sans config
-- [x] Journal du renommage Hub → Kayro : dossier de données migré (`%APPDATA%/Hub` copié une fois vers `Kayro`), identifiant `fr.yiuno.hub` conservé (voir l'entrée « Chore renommage » du journal ci-dessus)
+- **Étape 13, séance de mesures en production — 2026-10-13** (avant le gel de la DA ; **étape cochée le 2026-10-14** : mesures et corrections faites, banc livré. Hors de cette étape : la qualité « Auto », reportée avant l'étape 19, ainsi que la machine d'états et les réglages de performance) : `docs/PERF-ETAPE13.md`. Budget p95 ≤ 5,4 ms tenu partout sauf l'onde de thème en Éco (Fondu : p95 jusqu'à 10,7 ms). Pulsation C : 0 image > 8 ms. Repos visible : 1,2–4,2 % de CPU (cible < 1 % non tenue) ; hub masqué : 0,05 % / 0 % de GPU. `--quit` : 11 sur 11 en 38–53 ms. Corrections proposées classées par gain, non appliquées.
+  - **Corrections — 2026-10-14** (4 paquets, rendu identique ; remesure dans `docs/PERF-ETAPE13.md` § « Après corrections ») :
+    - banc `npm run perf` (`scripts/perf/`) ;
+    - plafonds de cadence du moteur en tokens et pointeur regroupé par image ;
+    - Fondu Éco en View Transition (p95 10,7 → 3,7 ms) et thème appliqué en un seul recalcul ;
+    - clics de liaison, retour et onglets allégés (1–2 images > 8 ms par occurrence en Élevée, aucune > 16 ms) et passages dont les grosses images tombent dans le noir ;
+    - A10 retiré.
+    - Restent : le CPU au repos du carrousel avec flottaison (3,3 %, audit de l'étape 18) et les pistes de l'étape 14 (journal).
+- **Étape 12b — Atelier de DA, gel le 2026-10-14** (branche `step-12b-atelier-da`, rondes 1 à 5 + relecture finale, tags `da-r1` … `da-r5-fix-b`) : `docs/DESIGN.md` écrit (DA telle qu'elle est dans le code) ; nettoyage en deux paquets au rendu identique : atelier, préréglages, anciens bancs de dev, 5 anciens thèmes, polices Fraunces / DM Sans, `widgetStyle`, couches « croquis » de l'étape 8, anneau en tube, effets 2b non retenus (matière, particules éclairées, voile périodique) et options de comparaison retirés (récupérables au tag `perf-13-fix`). Gardés : le repli CSS complet, les affiches dans le verre (étape 14), le verre des barres (imbrication de la pastille).
+  - Mesures (`npm run perf`, R1 / R2 / I1 / A2, Élevée et Éco) : p95 3,7 ms partout comme avant ; carrousel au repos ≈ −45 Mo de mémoire ; onde 2–3 images > 8 ms par changement en Élevée (3–6 avant). Tests : vitest 527, cargo 198.
+
+## Plus tard (liste unique)
+Seul endroit des choses à faire plus tard (regroupées au gel de la DA, le 2026-10-14). Elles viennent de l'ancienne liste
+« Plus tard » et des « Petits ajustements » de ce fichier, de `docs/DA-JOURNAL.md` (« Plus tard hors ronde 5 »,
+« À retenter plus tard », points ouverts), de `docs/PROPOSITIONS-DA.md` (« Idées pour plus tard »), de
+`docs/RETOUCHES.md` et de `docs/PERF-ETAPE13.md`. Une ligne cochée = faite, avec la date. La passe de finition avant
+l'étape 19 est décrite dans `_kit/PROMPTS.md`.
+
+### Étape 14 — Couleurs du jeu
+- [ ] Affiches en production : `posterUrl` renvoie `null` hors dev ; dossier local d'affiches + ajout par glisser-déposer
+  sur une carte. L'élément `posterGlass` (affiches dans le verre, éteint) attend cet art local.
+- [ ] Icônes dans le carrousel pour les apps sans icône (Steam, Epic, UWP) et dans la palette.
+- [ ] Pistes de perf du gel : thème / palette en un recalcul, pas de View Transition à chaque changement de jeu,
+  couleurs du moteur par la palette ; liaison et onglets : mesurer « éventail prêt à 0 % » contre « recalcul allégé »
+  (`docs/DESIGN.md` § 7).
+- [ ] « Couleurs du jeu » (`color_mode`) : réafficher le réglage quand il aura un effet.
+
+### Étape 15 — Réglages · Apparence
+- [ ] « Créer mon thème », import / export de thèmes (la grille des 6 thèmes existe déjà, R5).
+- [ ] Réglage « Écran d'ouverture » : écran principal · écran de la souris · dernier utilisé (aujourd'hui, sans
+  placement enregistré, l'app s'ouvre sur l'écran de la souris).
+
+### Étapes 16–17 — Ambiances
+- [ ] Design propre à chaque carte de catégorie.
+- [ ] `FxLayer.setFocusTarget` : point d'extension gardé (le faisceau de l'étape 8 a été retiré au gel).
+- [ ] Cartes spéciales avec art local fourni par moi (personnages détourés à gauche et à droite, logo, fond) : couches
+  avec profondeur, personnages teintés par l'ambiance, bords fondus dans la brume, centre libre. Kayro n'embarque aucune
+  image de jeu : un dossier d'images par carte, rempli par l'utilisateur. Références dans reference/ambiances/.
+
+### Étape 18 — Audit
+- [ ] CPU au repos : carrousel avec flottaison « Visible » 3,2–3,3 % en Élevée (cible CLAUDE.md < 1 %).
+- [ ] Mesures non faites à l'étape 13 : 60 Hz, Équilibré et Ultra, repli CSS (ouverture, moteur coupé), replis
+  « budget » et « contexte perdu » en vrai, CPU / GPU pendant l'ouverture, instant exact des images lentes.
+- [ ] Tests : Windows 10, mise à l'échelle 125 / 150 %, écran 60 Hz, premier lancement sans config.
+- [ ] `spikes/` (étape 2, membres du workspace Cargo) et `src-tauri/examples/spike_launch.rs` : garder ou archiver.
+- [ ] Écarts `cargo fmt` connus (`scene_ops.rs`, `share.rs`, `platform/mod.rs`) et prettier (`widgetModel.ts`,
+  `passage.test.ts`) ; ligne `dist-bench/` de `.gitignore` (plus aucun build « bench »).
+- [ ] Verre des barres, du dock et des boutons (`glassBars`, `glassDock`, `glassButtons`, éteints) : gardés au gel,
+  car ils portent l'imbrication de la pastille de sélection ; à simplifier avec une mesure avant / après au pixel.
+- [ ] Tuile de grain CSS non assombrie autour de l'anneau pendant la pulsation C (rien vu à l'œil).
+
+### Avant l'étape 19 — Fonctions et finitions
+- [ ] Qualité « Auto » adaptative, pour les PC plus faibles : proposition chiffrée dans `docs/PERF-ETAPE13.md`
+  § « Qualité Auto » (décision du 14/10 : pas maintenant).
+- [ ] Gestion des apps qui démarrent avec Windows au premier lancement.
+- [ ] Détection : filtres de bruit renforcés (désinstallateurs, aide/documentation, « Check For Updates », « About/Configure
+  Java », « Module Docs », « Report a Problem », « Windows App Cert Kit », variantes mode compatibilité / sans échec,
+  doublons de même nom et même cible).
+- [ ] Détection : bouton « Ignorer » par app (`ignoredDetections` dans settings.json, case « Afficher les ignorées »).
+- [ ] Détection : groupe « Lanceurs et outils » (Riot Client, Epic Games Launcher, Steam, Roblox Studio, Unity Hub, GOG
+  Galaxy, Battle.net…) replié et décoché par défaut.
+- [ ] Détection : meilleure suggestion de catégorie par liste de motifs locale.
+- [ ] Fil lumineux (`GlideThread`) pendant « Recherche de vos applications… » et « Chargement de vos données… ».
+- [ ] Scènes : mesurer en local le temps de démarrage réel de chaque app lors des tests de scène (`launchTimings.json`
+  dans le dossier de données) pour proposer des délais calibrés sur la machine.
+- [ ] Scènes : réglage de séquence par app, renommage d'un emplacement, glisser depuis le carrousel, accents conservés
+  dans les noms d'emplacements, bouton « Parcourir » pour importer un `.hubscene`.
+- [ ] Scènes : Échap dans l'éditeur (aujourd'hui seul « ‹ Scènes » revient).
+- [ ] Bouton « Parcourir » pour choisir un exe (plugin dialog).
+- [ ] Suivi des jeux Steam (processus sans `match.exe`) pour que `waitReady`, `focus` et `close` marchent aussi sur eux.
+- [ ] Test d'Epic avec un vrai jeu installé (URI de lancement et `.item` réels).
+- [ ] Menu « Quitter » du tray et rafraîchissement de l'icône quand seul le thème système Windows change.
+- [ ] Comportement du clic carte (sélection puis lancement) à confirmer à l'usage.
+- [ ] Message de lancement raté dans le widget (il faudrait agrandir sa fenêtre).
+- [ ] Option « masquer les univers vides » dans l'éventail.
+- [ ] Raccourcis clavier : G pour la grille, 1–9 pour les scènes du dock.
+- [ ] « Exporter les logs » dans les réglages (prévu par les conventions).
+- [ ] DA, détails non faits de la ronde 5 : petit texte secondaire unifié (`--fs-13`), carte vide 176 × 246 (aujourd'hui
+  150 × 180), éventail descendu de 60 px, ligne d'aide « Entrée · ouvrir   Échap · dernière catégorie ».
+- [ ] DA, retouches à l'œil (ex-`RETOUCHES.md`) : cadrage des titres de catégorie (comparer aux captures 01 à 11) ;
+  verre plus sombre que les maquettes (écart de l'étape 3 pour le contraste), s'en rapprocher sans passer sous 4,5:1 ;
+  mouvement lent de l'atmosphère à juger sur l'écran à ~280 Hz (cadence d'ambiance 30 i/s au repos depuis l'étape 13).
+- [x] Texte du thème Lavande-pêche : sa description ne dit plus « Le thème par défaut » (c'est Bleu-gris depuis R5) — fait le 2026-10-14.
+- [ ] À retenter : fenêtre d'ouverture transparente en environnement WebView2 partagé (4b-3.0 bis : +68 / +72 Mo à
+  30 s pour une limite de 50) si une version de WebView2 libère mieux la mémoire du processus GPU ; même protocole.
+- [x] Journal du renommage Hub → Kayro : dossier de données migré (`%APPDATA%/Hub` copié une fois vers `Kayro`),
+  identifiant `fr.yiuno.hub` conservé (voir l'entrée « Chore renommage » du journal ci-dessus).

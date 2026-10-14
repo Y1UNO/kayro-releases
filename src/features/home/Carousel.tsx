@@ -1,10 +1,19 @@
-import { useId, useLayoutEffect, useRef } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { WheelEvent } from "react";
 import type { AppEntry, AppRunState } from "../../ipc/bindings";
-import { useFxTarget } from "../../fx";
 import { t } from "../../i18n";
 import { AppCard } from "./AppCard";
-import { SLOT, mountedRange } from "./carouselGeometry";
+import { cardGeometry, useDa } from "../../design/da";
+import { useMotionTokens } from "../../design/motion/current";
+import { isEco } from "../../design/quality";
+import { useReducedMotion } from "../../fx/useReducedMotion";
+import { useHub } from "../../store";
+import { CardHoverFx, cardHoverConfig } from "./rim/cardHoverFx";
+import { geometryVars, mountedRange, type Geometry } from "./carouselGeometry";
+import { inheritKeys } from "./deckKeys";
+import { cssVars } from "./cssVars";
+import { hoverCardOf } from "./float/carouselFloat";
+import { useCarouselFloat } from "./float/useCarouselFloat";
 import styles from "./Carousel.module.css";
 
 interface Props {
@@ -14,6 +23,10 @@ interface Props {
   onFocus: (index: number) => void;
   onMove: (delta: number) => void;
   onLaunch: (app: AppEntry) => void;
+  /** A card is being dragged towards a tab (no decorative hover meanwhile). */
+  dragging?: boolean;
+  /** The carousel is the one shown (not the category fan): its cards may float (review A4a). */
+  floating?: boolean;
 }
 
 const WHEEL_STEP = 60;
@@ -31,22 +44,67 @@ const FAST_HOLD_MS = 200;
  * reader follows through `aria-activedescendant`. No `focus()` call per key press: it would force a
  * style and layout pass while the cards are moving.
  */
-export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Props) {
+export function Carousel({
+  apps,
+  focus,
+  running,
+  onFocus,
+  onMove,
+  onLaunch,
+  dragging = false,
+  floating = true,
+}: Props) {
   const wheel = useRef({ acc: 0, last: 0 });
   const stage = useRef<HTMLDivElement>(null);
   const fast = useRef({ last: 0, timer: 0 });
   const listId = useId();
   const active = apps[focus];
+  // Card sizes come from the art direction (`cards` element).
+  const cards = useDa((s) => s.values.cards);
+  const geometry = useMemo<Geometry>(() => {
+    const c = cardGeometry(cards);
+    return { slotW: c.activeW, slotH: c.activeH, sideW: c.sideW, gap: c.gap };
+  }, [cards]);
 
-  // The active card always sits at the centre of the stage: the light stays there while the
-  // cards slide under it (measured from the stage, not the moving card).
-  useFxTarget(() => {
-    const el = stage.current;
-    if (!el) return null;
-    const r = el.getBoundingClientRect();
-    const top = r.top + (r.height - SLOT.h) / 2;
-    return { x: r.left + r.width / 2, top, bottom: top + SLOT.h };
+  // Level 3 of the motion table (round 4a): hover of the cards (veil, light threads), launch flash.
+  const motion = useMotionTokens();
+  const cardHover = useDa((s) => s.values.cardHover);
+  const fanHover = useDa((s) => s.values.categoryHover);
+  const eco = useHub((s) => isEco(s.settings?.quality));
+  const windowMode = useHub((s) => s.settings?.displayMode === "window");
+  const reduced = useReducedMotion();
+  const hoverCfg = useMemo(
+    () =>
+      cardHoverConfig(cardHover, fanHover, motion, {
+        eco,
+        windowMode,
+        reduced,
+      }),
+    [cardHover, fanHover, motion, eco, windowMode, reduced],
+  );
+  const fx = useRef<CardHoverFx | null>(null);
+  useLayoutEffect(() => {
+    if (!stage.current) return;
+    const f = new CardHoverFx(stage.current, hoverCfg);
+    fx.current = f;
+    return () => {
+      f.dispose();
+      fx.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => {
+    if (fx.current) fx.current.config = hoverCfg;
+  }, [hoverCfg]);
+  useEffect(() => {
+    if (fx.current) fx.current.dragging = dragging;
+  }, [dragging]);
+  // Round 5: the cards float at the settings' level (paused on hover, wheel, fast scroll, drag).
+  const float = useCarouselFloat(stage, dragging, floating);
+  const cardOf = (app: AppEntry) =>
+    stage.current?.querySelector<HTMLElement>(
+      `[data-app-id="${CSS.escape(app.id)}"] [data-stage]`,
+    ) ?? null;
 
   // Fast scrolling: while the selection changes faster than the eye can follow, the dimming, the
   // glow and the name plate switch instantly (`data-fast`, see AppCard.module.css) and only the
@@ -69,7 +127,19 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
     return () => window.clearTimeout(state.timer);
   }, []);
 
+  // « Mouvement : Complet » (round 5): the card chosen with the keyboard lights up as if hovered.
+  const complete = motion.style === "complete";
+  useEffect(() => {
+    const st = stage.current;
+    if (!complete || !st || !active || document.activeElement !== st || st.matches(":hover"))
+      return;
+    fx.current?.pointer(cardOf(active));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- on a new selection only
+  }, [focus, complete]);
+
   function onWheel(e: WheelEvent) {
+    fx.current?.wheel();
+    float.current?.wheel();
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     const w = wheel.current;
     if (Math.sign(delta) !== Math.sign(w.acc)) w.acc = 0;
@@ -84,30 +154,78 @@ export function Carousel({ apps, focus, running, onFocus, onMove, onLaunch }: Pr
 
   const [from, to] = mountedRange(focus, apps.length);
   const mounted = apps.slice(from, to + 1);
+  // Same cards across a tab change (round 3b): the deck gathers and unfolds these elements.
+  // Derived state, updated during render when the list or the selection changes.
+  const [keyed, setKeyed] = useState(() => ({
+    apps,
+    focus,
+    s: inheritKeys(
+      null,
+      apps.map((a) => a.id),
+      focus,
+    ),
+  }));
+  let keys = keyed.s.keys;
+  if (keyed.apps !== apps || keyed.focus !== focus) {
+    const s = inheritKeys(
+      keyed.s,
+      apps.map((a) => a.id),
+      focus,
+    );
+    keys = s.keys;
+    setKeyed({ apps, focus, s });
+  }
 
   return (
     <div
       ref={stage}
       className={styles.stage}
+      style={cssVars(geometryVars(geometry))}
       role="listbox"
+      data-carousel-stage=""
       tabIndex={0}
       aria-label={t("home.apps")}
       aria-orientation="horizontal"
       aria-activedescendant={active ? `${listId}-${active.id}` : undefined}
+      data-motion-cap={
+        (windowMode && motion.style !== "complete") || cardHover?.style === "simple"
+          ? "2"
+          : undefined
+      }
+      data-hover-off={cardHover?.style === "none" ? "" : undefined}
+      data-no-pointer-sheen={hoverCfg.magic ? "" : undefined}
       onWheel={onWheel}
+      onPointerOver={(e) => {
+        const card = hoverCardOf(e.target as Element);
+        fx.current?.pointer(card);
+        float.current?.hover(card);
+      }}
+      onPointerLeave={() => {
+        fx.current?.pointer(null);
+        float.current?.hover(null);
+      }}
+      onBlur={() => {
+        if (complete && !stage.current?.matches(":hover")) fx.current?.pointer(null);
+      }}
     >
       {mounted.map((app, k) => {
         const i = from + k;
         return (
           <AppCard
-            key={app.id}
+            key={keys.get(app.id) ?? app.id}
             app={app}
             mode="stage"
             d={i - focus}
+            geometry={geometry}
             active={i === focus}
             running={running[app.id]?.running === true}
             domId={`${listId}-${app.id}`}
-            onClick={() => (i === focus ? onLaunch(app) : onFocus(i))}
+            onClick={() => {
+              if (i !== focus) return onFocus(i);
+              const card = cardOf(app);
+              if (card) fx.current?.launch(card);
+              onLaunch(app);
+            }}
           />
         );
       })}

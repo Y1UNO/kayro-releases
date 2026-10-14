@@ -4,7 +4,21 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bottom) 100%);
+  /* --da-bg: shape chosen in the art direction (radial in V4). */
+  background: var(
+    --da-bg,
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bottom) 100%)
+  );
+}
+
+/* "Plus aéré" (backdrop.lift): the whole background lifted towards a light mix of the theme. Under
+   the atmosphere layers; the glass engine draws its own (its canvas covers this one). */
+.root::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg-top) 65%, var(--grad-a));
+  opacity: var(--da-bg-lift, 0);
 }
 
 /* 256 px noise tile (scripts/make-noise.mjs), repeated. */
@@ -14,11 +28,21 @@
   background-image: url("./assets/noise-256.png");
   background-size: 256px 256px;
   mix-blend-mode: overlay;
-  opacity: 0.09;
+  opacity: var(--da-grain, 0.09);
 }
 
 .vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 48%, rgba(4, 2, 8, 0.62) 100%);
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    rgba(0, 0, 0, 0) 48%,
+    rgba(4, 2, 8, var(--da-vignette, 0.62)) 100%
+  );
+}
+
+/* The glass engine draws the vignette into its background (so the glass refracts it and is not
+   darkened by it). */
+:global(:root[data-glass-engine]) .vignette {
+  display: none;
 }

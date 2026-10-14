@@ -29,7 +29,7 @@
   height: 46px;
   box-sizing: border-box;
   padding: 0 var(--space-4);
-  border-radius: 23px;
+  border-radius: var(--radius-pill);
   background: var(--field);
   box-shadow: var(--field-inset);
   color: var(--text-2);
@@ -53,8 +53,8 @@
 
 /* The field takes the focus ring instead of the bare input. */
 .field:has(.input:focus-visible) {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  outline: none;
+  box-shadow: var(--m-focus);
 }
 
 .list {
@@ -78,7 +78,7 @@
   flex-shrink: 0;
   box-sizing: border-box;
   padding: 0 14px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-row);
   cursor: pointer;
 }
 
@@ -93,7 +93,7 @@
   flex-shrink: 0;
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-row);
   font-family: var(--font-title);
   font-size: 18px;
   font-weight: 500;
@@ -141,7 +141,8 @@
   font-size: var(--fs-15);
 }
 
-/* Beats the global focus ring (tokens.css): the ring is drawn around the whole field (above). */
+/* Beats the global focus ring (motion.css): the ring is drawn around the whole field (above). */
 .input:focus-visible {
   outline: none;
+  box-shadow: none;
 }

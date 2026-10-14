@@ -20,14 +20,19 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 232px;
-  height: 328px;
-  margin-left: -116px;
+  /* Geometry from the art direction (Carousel.tsx sets --slot-w / --slot-h / --side-w / --side-scale). */
+  width: var(--slot-w, 232px);
+  height: var(--slot-h, 328px);
+  margin-left: calc(var(--slot-w, 232px) / -2);
+  perspective: 900px;
   pointer-events: none; /* only the (scaled) card takes the mouse */
   transform: translate3d(var(--x), -50%, 0);
+  /* translate / scale: hover of the carousel card (AppCardMotion.module.css). */
   transition:
     transform var(--dur-card) var(--ease),
-    opacity var(--dur-card) ease;
+    opacity var(--dur-card) ease,
+    translate var(--lift-dur, 0s) var(--lift-ease, ease),
+    scale var(--lift-dur, 0s) var(--lift-ease, ease);
 }
 
 .slot[data-hidden] {
@@ -44,6 +49,13 @@
   aspect-ratio: 172 / 246;
 }
 
+/* The card and its edit button (round 5): the carousel's floating moves this box only. */
+.float {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .card {
   position: absolute;
   inset: 0;
@@ -51,7 +63,7 @@
   box-sizing: border-box;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 28px;
+  border-radius: var(--radius-card);
   color: #fff;
   cursor: pointer;
   pointer-events: auto;
@@ -66,22 +78,65 @@
     0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
+/* Hover (art direction « survol des cartes »): `rotate` tilts towards the pointer (cardTilt.ts),`
+   `translate` lifts a grid card (level 1; a carousel card lifts with its slot, level 3), `scale` =
+   press. Each on its own property so the carousel's `transform` keeps its own timing. */
+.card {
+  transition:
+    transform var(--dur-card) var(--ease),
+    translate var(--m1-court) var(--m-ease-in),
+    rotate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease),
+    border-color var(--dur-card) ease;
+}
+
+/* Not with « Survol des cartes : Aucun » (round 5, `data-hover-off` on the grid). */
+.cell .card:hover:not([data-hover-off] *) {
+  translate: 0 calc(var(--da-hover-lift, -3px) * var(--m-rm));
+}
+
+/* Press: ×0.94 in "micro", released on "rebond" (carousel) or "liaison" (grid). */
 .slot .card {
-  transform: scale(0.7414); /* SIDE_SCALE */
-  transition: transform var(--dur-card) var(--ease);
+  --m-press-dur: var(--card-hover-dur);
+  --m-press-ease: var(--card-hover-ease);
+}
+
+.card:active {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
+}
+
+.slot .card {
+  transform: scale(var(--side-scale, 0.7414)); /* SIDE_SCALE */
 }
 
 .slot[data-active] .card {
   transform: scale(1);
+  border-color: var(--da-card-edge, rgba(255, 255, 255, 0.22));
 }
 
 .cell .card {
-  border-radius: var(--radius-2xl);
-  transition: transform var(--dur-hover) var(--ease);
+  border-radius: var(--radius-card);
 }
 
-.cell .card:hover {
-  transform: translateY(-3px);
+/* Soft reflection following the pointer (--sheen-x / --sheen-y from useCardTilt.ts). */
+.sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    60% 50% at var(--sheen-x, 50%) var(--sheen-y, 0%),
+    rgba(255, 255, 255, var(--da-hover-sheen, 0)),
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  transition: opacity var(--m1-court) var(--m-ease-in);
+  pointer-events: none;
+}
+
+.card:hover .sheen {
+  opacity: 1;
 }
 
 /* Fast scrolling (Carousel.tsx sets `data-fast` on the list): only the sliding is animated. */
@@ -98,7 +153,7 @@
   position: absolute;
   inset: 0;
   background: var(--bg-mid);
-  opacity: 0.3;
+  opacity: var(--da-card-dim, 0.3);
   transition: opacity var(--dur-card) ease;
   pointer-events: none;
 }
@@ -108,7 +163,7 @@
 }
 
 .slot:not([data-active]) .card:hover .veil {
-  opacity: 0.2;
+  opacity: calc(var(--da-card-dim, 0.3) * 0.66);
   transition-duration: var(--dur-hover);
 }
 
@@ -128,36 +183,24 @@
 }
 
 .slot[data-active] .glow {
-  opacity: 1;
+  opacity: var(--da-card-pool, 1);
 }
 
-/* Big serif monogram, 100 px (74 px once scaled on a side card). */
-.letter {
-  position: absolute;
-  left: 18px;
-  top: 18px;
-  font-family: var(--font-title);
-  font-size: 100px;
-  font-weight: 300;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.94);
-}
-
-/* Program icon in place of the monogram (same corner, about the same weight). */
-.icon {
-  position: absolute;
-  left: 20px;
-  top: 20px;
-  width: 84px;
-  height: 84px;
-  object-fit: contain;
-}
-
-.cell .icon {
-  left: 14px;
-  top: 14px;
-  width: 54px;
-  height: 54px;
+/* The engine draws the poster (round 2b): the canvas is under the DOM, so the pool of light would
+   veil it. Its padding makes its content box the card's box, cut out (rounded) from the mask. */
+.slot:has(.card[data-glass-poster="gpu"]) .glow {
+  padding: 40px 70px 110px;
+  mask-image:
+    linear-gradient(#000, #000),
+    var(
+      --da-card-hole,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' rx='28'/%3E%3C/svg%3E")
+    );
+  mask-origin: border-box, content-box;
+  mask-clip: border-box, content-box;
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  mask-composite: exclude;
 }
 
 /* "Edit" button: only on the active card (carousel) or on hover / focus (grid). */
@@ -177,10 +220,13 @@
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--dur-hover) var(--ease);
+  transition: opacity var(--m1-court) var(--m-ease-in);
 }
 
-.slot[data-active] .edit,
+/* Round 5 (proposal 6): on the active card only while it is hovered, or the carousel has the
+   keyboard focus (F2 edits it anyway); in the grid, on hover / focus as before. */
+.slot[data-active]:hover .edit,
+:global([data-carousel-stage]:focus-visible) .slot[data-active] .edit,
 .cell:hover .edit,
 .cell:focus-within .edit {
   opacity: 1;
@@ -195,25 +241,6 @@
   background: rgba(8, 5, 12, 0.8);
 }
 
-.cell .letter {
-  font-size: 56px;
-}
-
-.poster {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Keeps the name plate readable on any poster. */
-.posterShade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(8, 5, 12, 0.6));
-}
-
 /*
  * Name plate: the glass look without backdrop-filter (the card behind is a smooth gradient, so the
  * blur would show nothing, and a blurred layer under the moving shine is recomputed every frame).
@@ -226,11 +253,11 @@
   right: 0;
   bottom: 18px;
   margin: 0 auto;
-  width: 136px;
+  width: calc(var(--side-w, 172px) - 36px);
   box-sizing: border-box;
   padding: 10px 14px;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-row);
   background:
     var(--glass-highlight),
     linear-gradient(
@@ -249,7 +276,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transform: scale(1.3488); /* 1 / SIDE_SCALE */
+  transform: scale(calc(1 / var(--side-scale, 0.7414))); /* 1 / SIDE_SCALE */
   transform-origin: 50% 100%;
   transition:
     transform var(--dur-card) var(--ease),
@@ -257,7 +284,7 @@
 }
 
 .slot[data-active] .plate {
-  width: 196px;
+  width: calc(var(--slot-w, 232px) - 36px);
   transform: scale(1);
 }
 
@@ -285,26 +312,11 @@
     0 0 12px var(--accent);
 }
 
-.shineClip {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-/* A soft band crosses the active card every 6 s (moved by Shine.tsx: transform only, the mock-up animates `left`). */
-.shine {
-  position: absolute;
-  top: -20%;
-  left: -60%;
-  width: 40%;
-  height: 140%;
-  background: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0.3),
-    rgba(255, 255, 255, 0)
-  );
-  transform: translateX(0) skewX(-14deg);
+/* Liquid glass card (engine running): the canvas under the interface draws the glass slab tinted
+   with the card colour; the poster sits inside the thick rim, slightly see-through so that the
+   refraction shows through its middle (art direction `glassCards`). */
+.card[data-glass="gpu"] {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
 }

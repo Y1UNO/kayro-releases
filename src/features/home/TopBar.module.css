@@ -25,6 +25,45 @@
   flex-shrink: 0;
 }
 
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-shrink: 0;
+}
+
+/* Mock-up R3-Liaison-A: border .18, radius 12, padding 9 14, 13/600, faded by the sequences. */
+.back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  cursor: pointer;
+  /* Level 1 (motion.css): hover in "court"; press in "micro", released on the "liaison" spring. */
+  transition:
+    background-color var(--m1-court) var(--m-ease-in),
+    translate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease);
+}
+
+.back:hover {
+  background: rgba(255, 255, 255, 0.12);
+  translate: 0 var(--m-hover-rise-k);
+}
+
+.back:active,
+.search:active {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
+}
+
 .search {
   display: flex;
   align-items: center;
@@ -35,7 +74,7 @@
   box-sizing: border-box;
   padding: 0 16px;
   border: 0;
-  border-radius: 19px;
+  border-radius: var(--radius-pill);
   background: var(--field);
   box-shadow: var(--field-inset);
   color: var(--text-2);
@@ -44,6 +83,14 @@
   text-align: left;
   cursor: text;
   position: relative;
+  transition:
+    color var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease);
+}
+
+/* Its own inset shadow would hide the global focus ring (motion.css). */
+.search:focus-visible {
+  box-shadow: var(--m-focus);
 }
 
 /* 44 px hit area around the 38 px field. */

@@ -229,7 +229,7 @@ pub fn validate_settings(s: &Settings) -> Check {
     }
     let a = s.atmosphere_intensity;
     if !(ATMOSPHERE_MIN..=ATMOSPHERE_MAX).contains(&a) {
-        return err("atmosphereIntensity", "must be between 0.3 and 1");
+        return err("atmosphereIntensity", "must be between 0.3 and 1.3");
     }
     Ok(())
 }

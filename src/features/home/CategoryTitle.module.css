@@ -1,4 +1,5 @@
-/* Mock-up: label 13/600 tracking .22em in the accent colour, title 92/300 with a soft glow. */
+/* Label: the small capitals title of the system (`--eyebrow`, round 5); title 92/300 with a soft
+   glow. */
 .block {
   margin-top: var(--space-2);
   display: flex;
@@ -8,11 +9,10 @@
 }
 
 .label {
-  font-size: var(--fs-13);
-  font-weight: 600;
-  letter-spacing: 0.22em;
+  font: var(--eyebrow);
+  letter-spacing: var(--eyebrow-tracking);
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--eyebrow-color);
 }
 
 /* Fixed box: titles are stacked in it while they cross-fade, so nothing around moves. */
@@ -24,6 +24,8 @@
 }
 
 .title {
+  /* Own layer: animated from script (see HomeScreen.module.css .layer). */
+  will-change: transform, opacity;
   position: absolute;
   left: 0;
   right: 0;
@@ -33,11 +35,50 @@
   font-family: var(--font-title);
   font-size: var(--fs-title-xl);
   line-height: 1.05;
-  font-weight: 300;
+  font-weight: var(--da-title-weight, 300);
   letter-spacing: var(--tracking-title);
   text-shadow: 0 0 70px var(--glow);
   white-space: nowrap;
   transition: font-size var(--dur-card) var(--ease);
+}
+
+/* Gradient rule under the title (art direction `categoryTitle.underline`; 0 px = none): brighter
+   in the middle, a soft glow of colour A (round 3b), a light gliding along it now and then. */
+.underline {
+  position: relative;
+  width: var(--da-underline, 0px);
+  height: var(--da-underline-h, 1px);
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--grad-a) 22%,
+    color-mix(in srgb, var(--grad-a), #fff 45%) 50%,
+    var(--grad-b) 78%,
+    transparent
+  );
+  box-shadow: 0 0 calc(10px * var(--da-underline-glow, 0))
+    color-mix(in srgb, var(--grad-a) calc(var(--da-underline-glow, 0) * 100%), transparent);
+  transition: width var(--dur-card) var(--ease);
+}
+
+.underlineClip {
+  position: absolute;
+  inset: -2px 0;
+  overflow: hidden;
+  border-radius: 2px;
+  mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+}
+
+/* The light: a short white stroke, moved by a one-shot Web Animation (transform only). */
+.underlineShine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 26%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  transform: translateX(-110%);
 }
 
 .block[data-compact] .box {

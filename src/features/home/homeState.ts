@@ -1,5 +1,5 @@
 import { CATEGORY_IDS, type CategoryId } from "./categories";
-import { clampIndex } from "./carouselGeometry";
+import { clampIndex, VISIBLE_RADIUS } from "./carouselGeometry";
 
 export type HomeView = "carousel" | "grid";
 
@@ -17,11 +17,23 @@ export type HomeAction =
   | { type: "moveFocus"; delta: number; count: number }
   | { type: "setView"; view: HomeView };
 
-export function initialHomeState(category: CategoryId = "jeux"): HomeState {
+/**
+ * A category opens on its third app (round 3b): two cards on each side, the five places of the
+ * carousel filled at once (fewer apps: the last one). `counts` = apps per category.
+ */
+export function initialHomeState(
+  category: CategoryId = "jeux",
+  counts?: Readonly<Record<CategoryId, number>>,
+): HomeState {
+  const start = (id: CategoryId) =>
+    counts ? clampIndex(VISIBLE_RADIUS, counts[id]) : VISIBLE_RADIUS;
   return {
     category,
     view: "carousel",
-    focus: { jeux: 0, stream: 0, creativite: 0, logiciels: 0, autres: 0 },
+    focus: Object.fromEntries(CATEGORY_IDS.map((id) => [id, start(id)])) as Record<
+      CategoryId,
+      number
+    >,
   };
 }
 
@@ -45,4 +57,18 @@ export function homeReducer(state: HomeState, action: HomeAction): HomeState {
     case "setView":
       return action.view === state.view ? state : { ...state, view: action.view };
   }
+}
+
+/**
+ * The home screen as it was left for the scenes (round 5): coming back shows that carousel, not
+ * the fan. Kept for the life of the page.
+ */
+let left: HomeState | null = null;
+
+export function rememberHome(state: HomeState): void {
+  left = state;
+}
+
+export function homeLeft(): HomeState | null {
+  return left;
 }

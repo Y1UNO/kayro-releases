@@ -8,6 +8,7 @@ pub mod own_window;
 pub mod startup;
 pub mod shell;
 pub mod theme;
+pub mod veil;
 pub mod window;
 
 /// A failed Win32 call, reduced to its error code.

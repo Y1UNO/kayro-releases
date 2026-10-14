@@ -15,7 +15,7 @@ export function DragGhost({ name, x, y }: { name: string; x: number; y: number }
 /** A short confirmation ("3 apps added…"), announced politely to screen readers. */
 export function Notice({ text }: { text: string }) {
   return (
-    <Surface flat radius="var(--radius-xl)" className={styles.notice} role="status">
+    <Surface flat radius="var(--radius-panel)" className={styles.notice} role="status">
       {text}
     </Surface>
   );

@@ -3,9 +3,11 @@ import type { AppEntry, AppError, NewApp, Settings } from "../ipc/bindings";
 import type { Ipc, Outcome } from "../ipc/commands";
 import type { EventSource } from "../ipc/events";
 import { createHubStore } from "./hubStore";
+import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
 
 const SETTINGS: Settings = {
-  schemaVersion: 1,
+  ...VISUAL_DEFAULTS,
+  schemaVersion: 2,
   themeId: "crepuscule",
   quality: "balanced",
   colorMode: "light",
@@ -13,7 +15,6 @@ const SETTINGS: Settings = {
   language: "fr",
   atmosphereIntensity: 1,
   displayMode: "immersive",
-  widgetStyle: "brume",
   hideOnEscape: true,
   hideOnBlur: false,
   economyMode: false,
@@ -249,6 +250,20 @@ describe("launching and run state", () => {
     const r = await failing.getState().launchApp("one");
     expect(r.ok).toBe(false);
     expect(failing.getState().lastError).toEqual(REFUSED);
+    // Round 4b: the message names the app and its card shakes.
+    expect(failing.getState().failedApp).toBe("one");
+    failing.getState().clearError();
+    expect(failing.getState().failedApp).toBeNull();
+  });
+
+  it("an error that is not a launch is about no app", async () => {
+    const store = await ready({
+      appLaunch: async () => refused(),
+      appFocus: async () => refused(),
+    });
+    await store.getState().launchApp("one");
+    await store.getState().focusApp("one");
+    expect(store.getState().failedApp).toBeNull();
   });
 
   it("focus goes through the core too", async () => {

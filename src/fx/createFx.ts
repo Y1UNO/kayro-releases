@@ -1,35 +1,63 @@
 import type { Quality } from "../design";
-import { DustLayer } from "./canvas/dust";
-import { CssFxLayer, cls } from "./css/cssFx";
-import type { FxLayer, FxPalette, FxTarget } from "./FxLayer";
+import { cls } from "./css/host";
+import type { FxLayer, FxPalette, FxParams, FxTarget } from "./FxLayer";
+import { MoonLayer } from "./css/moonFx";
+import { RingLayer } from "./css/ringFx";
+import { ParticlesLayer } from "./canvas/particles";
+import { GlassEngine, type EngineState } from "./gpu/engine";
 import { frameLoop } from "./loop";
+import { onReducedMotionChange } from "./motionPref";
 
 /** Fade before a pause / after a resume (ARCHITECTURE.md §5: « Atténué », 400 ms). */
 export const FADE_MS = 400;
 
 export const INTENSITY_MIN = 0.3;
-export const INTENSITY_MAX = 1;
+/** « Forte » (round 5); « Normale » = 1, the validated look. */
+export const INTENSITY_MAX = 1.3;
 
 export function clampIntensity(v: number | null | undefined): number {
-  if (v == null || !Number.isFinite(v)) return INTENSITY_MAX;
+  if (v == null || !Number.isFinite(v)) return 1;
   return Math.min(INTENSITY_MAX, Math.max(INTENSITY_MIN, v));
+}
+
+/** Layers the glass engine draws itself while it runs (they are hidden and paused meanwhile). */
+function replacedBy(engine: EngineState, l: FxLayer): boolean {
+  if (!engine.active) return false;
+  if (l instanceof RingLayer) return engine.ring;
+  return l instanceof MoonLayer || l instanceof ParticlesLayer;
 }
 
 /**
  * The atmosphere: every layer behind one `FxLayer`, plus the fade and the real stop of `pause`.
- * Layers are stacked in order (CSS fog and light, then the dust canvas). `make` lets a test or a
- * future WebGL engine supply other layers.
+ * Layers are stacked in order (moon and veils, ring, embers and stars): they are the CSS and 2D
+ * fallback of the glass engine, which puts its canvas under them and, while it runs, pauses the
+ * layers it replaces. `make` lets a test supply other layers.
  */
 export function createFx(
-  make: () => FxLayer[] = () => [new CssFxLayer(), new DustLayer()],
+  make: (onEngine: (s: EngineState) => void) => FxLayer[] = (onEngine) => [
+    new MoonLayer(),
+    new RingLayer(),
+    new ParticlesLayer(),
+    new GlassEngine(onEngine),
+  ],
 ): FxLayer {
-  const layers = make();
+  let engine: EngineState = { active: false, ring: false };
+  const onEngine = (s: EngineState) => {
+    const before = engine;
+    engine = s;
+    for (const l of layers) {
+      const was = replacedBy(before, l);
+      const now = replacedBy(s, l);
+      if (now && !was) l.pause();
+      else if (was && !now && !paused) l.resume();
+    }
+  };
+  const layers = make(onEngine);
   let host: HTMLDivElement | null = null;
   let fadeTimer = 0;
   let paused = false;
   let quality: Quality = "balanced";
-  const motion =
-    typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+  let offMotion: (() => void) | null = null;
   const onMotion = () => fx.setQuality(quality);
 
   const fx: FxLayer = {
@@ -39,7 +67,7 @@ export function createFx(
       host.setAttribute("aria-hidden", "true");
       parent.appendChild(host);
       for (const l of layers) l.mount(host);
-      motion?.addEventListener("change", onMotion);
+      offMotion = onReducedMotionChange(onMotion);
     },
     setQuality(q) {
       quality = q;
@@ -54,6 +82,9 @@ export function createFx(
     },
     setFocusTarget(t: FxTarget | null) {
       for (const l of layers) l.setFocusTarget(t);
+    },
+    setParams(p: FxParams) {
+      for (const l of layers) l.setParams(p);
     },
     pause() {
       if (paused || !host) return;
@@ -70,14 +101,15 @@ export function createFx(
       paused = false;
       window.clearTimeout(fadeTimer);
       frameLoop().resume();
-      for (const l of layers) l.resume();
+      for (const l of layers) if (!replacedBy(engine, l)) l.resume();
       delete host.dataset.fx; // opacity → 1 in FADE_MS
     },
     dispose() {
       window.clearTimeout(fadeTimer);
       if (paused) frameLoop().resume(); // the loop is shared: never leave it stopped behind us
       paused = false;
-      motion?.removeEventListener("change", onMotion);
+      offMotion?.();
+      offMotion = null;
       for (const l of layers) l.dispose();
       host?.remove();
       host = null;

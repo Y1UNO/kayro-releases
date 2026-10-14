@@ -3,17 +3,25 @@
 //!
 //! One window exists at a time. « Instantané » keeps it loaded while hidden; « Mode économe »
 //! destroys it and builds it again on demand. Changing to or from the widget builds the new
-//! window first and retires the old one once the new one is painted, so nothing flickers.
+//! window first and retires the old one once the new one is painted, so nothing flickers; on
+//! screen, a mode change is a passage (round 4b: the page fades out, the window changes, the page
+//! comes back, see `passage`).
 
 pub mod geometry;
 pub mod hotkeys;
+mod modes;
+pub mod passage;
 mod placement;
+mod quit;
 mod shortcuts;
 pub mod tray;
+mod veil_play;
 mod windows;
 
+pub use modes::settings_changed;
 use placement::save_placement;
 pub use placement::{choose_immersive_screen, fit_widget, screen_names};
+pub use quit::{on_exit, quit};
 pub use shortcuts::{on_hotkey, scenes_changed, take_pending_scene, trigger_scene};
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -60,6 +68,10 @@ pub struct DesktopState {
     pressed_at: Mutex<Option<Instant>>,
     /// When the window being built was asked for (logged when its page is ready).
     building_since: Mutex<Option<Instant>>,
+    /// The passage between modes whose fade-out is awaited (round 4b).
+    passage: passage::Waiting,
+    /// A passage that builds a window is in flight: mode changes wait for its end.
+    mode_gate: Mutex<modes::ModeGate>,
 }
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -78,9 +90,12 @@ fn settings<R: Runtime>(app: &AppHandle<R>) -> Settings {
 // ───────────────────────────── start-up and windows ─────────────────────────────
 
 /// Called once from `setup`, after the notification-area icon exists. A silent start (Windows
-/// login) creates the window hidden, or nothing at all in economy mode.
+/// login) creates the window hidden, or nothing at all in economy mode, and plays no opening.
 pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
     hotkeys::init(app);
+    if silent {
+        crate::ipc_desktop::OPENING.silent_start();
+    }
     let s = settings(app);
     if silent && s.economy_mode {
         tracing::info!("silent start, economy mode: no window yet");
@@ -89,15 +104,17 @@ pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
     app.state::<DesktopState>()
         .want_visible
         .store(!silent, Ordering::SeqCst);
-    if let Err(e) = create_for(app, s.display_mode) {
+    if let Err(e) = create_for(app, s.display_mode, false) {
         tracing::error!(error = %e, "could not create the window");
     }
 }
 
-/// Builds the hidden window of `mode`, wired to the window events.
+/// Builds the hidden window of `mode`, wired to the window events. `entering`: built for a
+/// passage between modes, its page fades in on its first show.
 fn create_for<R: Runtime>(
     app: &AppHandle<R>,
     mode: DisplayMode,
+    entering: bool,
 ) -> Result<WebviewWindow<R>, AppError> {
     let screens = windows::screens(app);
     if screens.is_empty() {
@@ -107,15 +124,15 @@ fn create_for<R: Runtime>(
     let window = match mode {
         DisplayMode::Immersive => {
             let i = windows::choose_screen(app, &screens, &ui.immersive, None);
-            windows::create_main(app, mode, &screens[i], &ui.window)?
+            windows::create_main(app, mode, &screens[i], &ui.window, entering)?
         }
         DisplayMode::Window => {
             let i = windows::choose_screen(app, &screens, &ui.window, None);
-            windows::create_main(app, mode, &screens[i], &ui.window)?
+            windows::create_main(app, mode, &screens[i], &ui.window, entering)?
         }
         DisplayMode::Widget => {
             let i = windows::choose_screen(app, &screens, &ui.widget, None);
-            windows::create_widget(app, &screens[i], &ui.widget)?
+            windows::create_widget(app, &screens[i], &ui.widget, entering)?
         }
     };
     attach_events(app, &window);
@@ -169,8 +186,12 @@ fn reveal<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
     let _ = window.set_focus();
     finish_show(window);
     if let Some(label) = lock(&state.retire).take() {
-        retire(app, label);
+        // Never the window just shown (a passage given up may still name it).
+        if label != window.label() {
+            retire(app, label);
+        }
     }
+    modes::passage_ended(app, window);
     crate::ipc::notify(
         WindowVisibility {
             visible: true,
@@ -224,7 +245,7 @@ pub fn show<R: Runtime>(app: &AppHandle<R>) {
             let state = app.state::<DesktopState>();
             state.want_visible.store(true, Ordering::SeqCst);
             *lock(&state.building_since) = Some(Instant::now());
-            if let Err(e) = create_for(app, mode) {
+            if let Err(e) = create_for(app, mode, false) {
                 tracing::error!(error = %e, "could not create the window");
             } else if let Some(t0) = *lock(&state.building_since) {
                 tracing::info!(ms = t0.elapsed().as_millis() as u64, "window built");
@@ -283,19 +304,6 @@ pub fn toggle<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
-/// « Quitter »: remembers the placement, then ends the process.
-pub fn quit<R: Runtime>(app: &AppHandle<R>) {
-    if let Some(w) = windows::visible(app) {
-        let mode = if w.label() == WIDGET {
-            DisplayMode::Widget
-        } else {
-            settings(app).display_mode
-        };
-        save_placement(app, &w, mode);
-    }
-    app.exit(0);
-}
-
 /// Called by the page after its first paint. True when the window was shown because of a
 /// shortcut being measured: the page then reports its own paint (see `painted`).
 pub fn page_ready<R: Runtime>(app: &AppHandle<R>, label: &str) -> bool {
@@ -306,8 +314,11 @@ pub fn page_ready<R: Runtime>(app: &AppHandle<R>, label: &str) -> bool {
     if !state.want_visible.swap(false, Ordering::SeqCst) {
         return false;
     }
-    if let Some(window) = windows::get(app, label) {
-        reveal(app, &window);
+    // A passage to or from the widget: the window on screen fades out before this one shows.
+    if !modes::swap_after_fade(app, label) {
+        if let Some(window) = windows::get(app, label) {
+            reveal(app, &window);
+        }
     }
     let measuring = lock(&state.pressed_at).is_some();
     measuring
@@ -328,86 +339,6 @@ pub fn painted<R: Runtime>(app: &AppHandle<R>) {
             .open(path)
         {
             let _ = writeln!(f, "{ms:.2}");
-        }
-    }
-}
-
-// ───────────────────────────── settings that act on windows ─────────────────────────────
-
-/// Applies what changed between two settings: the display mode, the economy mode, the menu.
-pub fn settings_changed<R: Runtime>(app: &AppHandle<R>, old: &Settings, new: &Settings) {
-    if old.display_mode != new.display_mode {
-        mode_changed(app, old.display_mode, new.display_mode);
-    }
-    if old.economy_mode != new.economy_mode {
-        economy_changed(app, new);
-    }
-    if old.display_mode != new.display_mode {
-        tray::rebuild_menu(app);
-    }
-}
-
-fn mode_changed<R: Runtime>(app: &AppHandle<R>, old: DisplayMode, new: DisplayMode) {
-    let state = app.state::<DesktopState>();
-    let old_label = windows::label_for(old);
-    let old_window = windows::get(app, old_label);
-    if let Some(w) = &old_window {
-        save_placement(app, w, old);
-    }
-    if old_label == windows::label_for(new) {
-        // Immersive ⇄ window: the same window, reconfigured.
-        let Some(window) = old_window else { return };
-        let screens = windows::screens(app);
-        if screens.is_empty() {
-            return;
-        }
-        let ui = app.state::<ConfigState>().ui_state();
-        let saved = if new == DisplayMode::Immersive {
-            &ui.immersive
-        } else {
-            &ui.window
-        };
-        let i = windows::choose_screen(app, &screens, saved, Some(&window));
-        windows::configure_main(&window, new, &screens[i], &ui.window);
-        if new == DisplayMode::Immersive && window.is_focused().unwrap_or(false) {
-            let _ = window.set_always_on_top(true);
-        }
-        return;
-    }
-    // The widget is involved: another window.
-    let shown = windows::visible(app).is_some();
-    if shown {
-        *lock(&state.retire) = Some(old_label);
-        state.want_visible.store(true, Ordering::SeqCst);
-        if let Err(e) = create_for(app, new) {
-            tracing::error!(error = %e, "could not create the window");
-            *lock(&state.retire) = None;
-            state.want_visible.store(false, Ordering::SeqCst);
-        }
-    } else {
-        if let Some(w) = old_window {
-            let _ = w.destroy();
-        }
-        if !settings(app).economy_mode {
-            if let Err(e) = create_for(app, new) {
-                tracing::error!(error = %e, "could not create the window");
-            }
-        }
-    }
-}
-
-fn economy_changed<R: Runtime>(app: &AppHandle<R>, now: &Settings) {
-    let shown = windows::visible(app).is_some();
-    if now.economy_mode && !shown {
-        for label in [MAIN, WIDGET] {
-            if let Some(w) = windows::get(app, label) {
-                let _ = w.destroy();
-            }
-        }
-    } else if !now.economy_mode && windows::get(app, windows::label_for(now.display_mode)).is_none()
-    {
-        if let Err(e) = create_for(app, now.display_mode) {
-            tracing::error!(error = %e, "could not create the window");
         }
     }
 }

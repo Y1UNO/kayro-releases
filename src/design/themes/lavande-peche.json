@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "lavande-peche",
+  "name": "Lavande-pêche",
+  "author": "Kayro",
+  "description": "Lavande et pêche du logo.",
+  "bg": ["#15112B", "#0C0A1A", "#06050D"],
+  "accent": "#B7A2F2",
+  "glow": "rgba(246,169,138,.35)",
+  "fog": ["rgba(183,162,242,.34)", "rgba(183,162,242,.16)", "rgba(246,169,138,.14)"],
+  "card": [183, 162, 242],
+  "beam": [246, 169, 138],
+  "gradient": ["#B7A2F2", "#F6A98A"],
+  "soft": "#D9CEFA"
+}

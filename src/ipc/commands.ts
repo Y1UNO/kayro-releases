@@ -3,6 +3,7 @@
 import { commands, type AppEntry, type AppError, type NewApp, type Settings } from "./bindings";
 import type {
   AddReport,
+  OpeningDue,
   ImportPreview,
   SceneFile,
   SlotsFile,
@@ -14,6 +15,7 @@ import type {
   SettingsPatch,
   HotkeysReport,
   MonitorInfo,
+  VeilFade,
 } from "./bindings";
 
 export type Outcome<T> = { ok: true; value: T } | { ok: false; error: AppError };
@@ -121,6 +123,14 @@ export const desktopIpc = {
   setAutostart: (enabled: boolean): Promise<Outcome<boolean>> =>
     checked(commands.autostartSet(enabled)),
   recents: (): Promise<Outcome<string[]>> => plain(commands.recentsGet()),
+  /** Once per run of the program, at the first show: the opening animation (round 3). */
+  openingDue: (): Promise<Outcome<OpeningDue>> => plain(commands.openingDue()),
+  /**
+   * The page has faded out for a passage between modes (round 4b): the core goes on. `veil`: how
+   * the native veil fades when `main` gives way to the widget or takes over from it.
+   */
+  passageFaded: (id: number, veil: VeilFade | null = null): Promise<Outcome<void>> =>
+    plain(commands.passageFaded(id, veil)),
 };
 
 export type DesktopIpc = typeof desktopIpc;

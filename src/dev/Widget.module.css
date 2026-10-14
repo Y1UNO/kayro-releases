@@ -1,0 +1,29 @@
+/* Dev page of the widget: a fake desktop (CSS only) under the transparent widget page. */
+
+.desktop {
+  position: fixed;
+  inset: 0;
+  overflow: auto;
+  background:
+    radial-gradient(ellipse 60% 50% at 25% 80%, #3c6e8f 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 80% 30%, #8f5b7a 0%, transparent 70%),
+    linear-gradient(160deg, #2a3546, #1b2230 60%, #2e2a3c);
+}
+
+/* Where the real widget window sits: centred, 12 px from the top. */
+.window {
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+}
+
+.note {
+  position: fixed;
+  left: 16px;
+  bottom: 12px;
+  margin: 0;
+  font:
+    12px/1.4 system-ui,
+    sans-serif;
+  color: rgba(255, 255, 255, 0.6);
+}

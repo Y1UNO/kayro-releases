@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
+import { PointerFrame } from "../../fx/pointerFrame";
 import type { AppEntry } from "../../ipc/bindings";
 import { CATEGORY_IDS, type CategoryId } from "./categories";
 
@@ -48,8 +49,13 @@ export function useCategoryDrag(
 
     const start = { x: e.clientX, y: e.clientY };
     let active = false;
+    // Once per frame whatever the mouse sends (step 13).
+    const frame = new PointerFrame<number>((_k, _el, x, y) =>
+      setDrag({ app, x, y, over: categoryAt(x, y) }),
+    );
 
     const stop = () => {
+      frame.dispose();
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", cancel);
@@ -58,7 +64,7 @@ export function useCategoryDrag(
     const move = (ev: PointerEvent) => {
       if (!active && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < THRESHOLD) return;
       active = true;
-      setDrag({ app, x: ev.clientX, y: ev.clientY, over: categoryAt(ev.clientX, ev.clientY) });
+      frame.push(0, document.body, ev.clientX, ev.clientY);
     };
     const up = (ev: PointerEvent) => {
       stop();

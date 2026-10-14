@@ -9,22 +9,24 @@
   cursor: pointer;
   color: var(--text);
   background: var(--fill-soft);
+  /* Level 1 (motion.css): hover in "court"; press in "micro", released on the "liaison" spring. */
   transition:
-    transform var(--dur-hover) var(--ease),
-    background-color var(--dur-hover) var(--ease);
+    translate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease),
+    background-color var(--m1-court) var(--m-ease-in);
 }
 
 .md {
   width: 46px;
   height: 46px;
-  border-radius: 23px;
+  border-radius: var(--radius-pill);
 }
 
 /* Visible 38 px (top bar); the clickable area is extended to 44 px. */
 .sm {
   width: 38px;
   height: 38px;
-  border-radius: 19px;
+  border-radius: var(--radius-pill);
 }
 
 .sm::after {
@@ -35,13 +37,25 @@
 
 .button:hover:not(:disabled) {
   background: var(--fill-hover);
+  translate: 0 var(--m-hover-rise-k);
 }
 
 .button:active:not(:disabled) {
-  transform: scale(0.94);
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
 }
 
 .button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* Round liquid-glass button drawn by the glass engine: only a faint hover fill stays in CSS. */
+.button[data-glass="gpu"] {
+  background: none;
+}
+
+.button[data-glass="gpu"]:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
 }

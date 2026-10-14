@@ -1,0 +1,213 @@
+/*
+ * A scene as a card (round 5, proposal 4): the size of a side app card (176 × 246, the card radius
+ * × 176 / 240 ≈ 22), the glass drawn by the engine (its CSS look stays as the fallback), the face in
+ * the theme's A → B with the first app's icon or letter, a name plate. The actions (play, edit,
+ * export, delete) show on hover and keyboard focus, like the app cards' pencil.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 176px);
+  justify-content: center;
+  gap: 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+  width: 176px;
+  height: 246px;
+}
+
+.card {
+  --r: calc(var(--radius-card) * 176 / 240);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r);
+  background:
+    radial-gradient(120% 70% at 18% 0%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 52%),
+    linear-gradient(
+      170deg,
+      var(--card),
+      rgb(from var(--card) calc(r * 0.22) calc(g * 0.22) calc(b * 0.3))
+    );
+  box-shadow: var(--glass-shadow);
+  color: var(--text-active);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    translate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur, var(--m1-micro)) var(--m-press-ease, var(--m-ease-in));
+}
+
+.card[data-glass="gpu"] {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Not with « Survol des cartes : Aucun » (review A7, `data-hover-off` on the grid). */
+.card:hover:not([data-hover-off] *) {
+  translate: 0 calc(var(--da-hover-lift, -3px) * var(--m-rm));
+}
+
+.card:active {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
+}
+
+.card:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus);
+}
+
+/* The same face as the app cards without a poster (AppCardFace.module.css). */
+.face {
+  --f1: color-mix(in srgb, var(--grad-a), var(--grad-b) var(--mix, 50%));
+  --f2: rgb(
+    from var(--f1) calc(r * var(--face-foot)) calc(g * var(--face-foot)) calc(b * var(--face-foot))
+  );
+  position: absolute;
+  inset: var(--da-poster-inset, 3px);
+  border-radius: max(0px, calc(var(--r) - var(--da-poster-inset, 3px)));
+  background:
+    linear-gradient(180deg, transparent 55%, rgba(8, 5, 12, 0.55)),
+    radial-gradient(120% 70% at 20% 0%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(165deg, var(--f1), var(--f2) 85%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.letter {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  font-family: var(--font-title);
+  font-size: 74px;
+  font-weight: 300;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.icon {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+}
+
+.key {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(8, 5, 12, 0.55);
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* Name plate (the app cards' look, AppCard.module.css .plate). */
+.plate {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-row);
+  background:
+    var(--glass-highlight),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0.05) 55%,
+      rgba(255, 255, 255, 0.12)
+    );
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1.5px 0 rgba(255, 255, 255, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.name {
+  overflow: hidden;
+  font-size: var(--fs-15);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.steps {
+  font-size: var(--fs-13);
+  color: var(--text-2);
+}
+
+/* Actions: above the plate, shown on hover / keyboard focus (always while the scene runs). Review
+   B6 (they breathe): buttons 34 → 30 px, 6 → 8 px apart (16 px of margin on a 176 px card), 74 →
+   80 px from the bottom, and they rise 4 px as they appear (was a dry fade). */
+.actions {
+  --action-size: 30px;
+  --action-gap: 8px;
+  --action-rise: 4px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 80px;
+  display: flex;
+  justify-content: center;
+  gap: var(--action-gap);
+  opacity: 0;
+  translate: 0 calc(var(--action-rise) * var(--m-rm));
+  pointer-events: none;
+  transition:
+    opacity var(--m1-court) var(--m-ease-in),
+    translate var(--m1-court) var(--m-ease-in);
+}
+
+.item:hover .actions,
+.item:focus-within .actions,
+.item[data-playing] .actions {
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+}
+
+.action {
+  display: grid;
+  place-items: center;
+  width: var(--action-size);
+  height: var(--action-size);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: rgba(8, 5, 12, 0.6);
+  color: #fff;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: rgba(8, 5, 12, 0.82);
+}
+
+.action:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.action:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus);
+}

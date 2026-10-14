@@ -1,17 +1,21 @@
 import { CheckIcon, CloseIcon } from "../../design";
 import { t } from "../../i18n";
 import type { StepView } from "../../store";
+import { GlideThread } from "./chain/GlideThread";
 import { REASON_LABELS } from "./describe";
 import styles from "./Steps.module.css";
 
-/** State of one step during a run: a mark, and for failed or skipped steps the reason in words. */
+/**
+ * State of one step during a run: a mark, and for failed or skipped steps the reason in words.
+ * A running step shows a light thread that glides (round 4b: never a spinning wheel).
+ */
 export function RunMark({ view }: { view: StepView | undefined }) {
   if (!view || view.state === "pending") return null;
   const reason = view.reason ? t(REASON_LABELS[view.reason]) : null;
   const label = t(`scenes.state.${view.state}`);
   return (
     <span className={styles.mark} data-state={view.state} title={reason ?? label}>
-      {view.state === "running" && <span className={styles.spinner} aria-hidden="true" />}
+      {view.state === "running" && <GlideThread />}
       {view.state === "ok" && <CheckIcon size={14} />}
       {view.state === "failed" && <CloseIcon size={14} />}
       {view.state === "skipped" && <span className={styles.dash} aria-hidden="true" />}

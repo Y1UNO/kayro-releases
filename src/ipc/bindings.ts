@@ -104,6 +104,18 @@ export const commands = {
 	autostartGet: () => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_get")),
 	autostartSet: (enabled: boolean) => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_set", { enabled })),
 	recentsGet: () => __TAURI_INVOKE<string[]>("recents_get"),
+	openingDue: () => __TAURI_INVOKE<OpeningDue>("opening_due"),
+	/**
+	 *  The page has faded out for passage `id` (round 4b: a change of display mode on screen); the
+	 *  core goes on with the window. `veil`: how the native veil fades when the widget is involved.
+	 */
+	passageFaded: (id: number, veil: {
+	r: number,
+	g: number,
+	b: number,
+	ms: number,
+	curve: (number | null)[],
+} | null) => __TAURI_INVOKE<void>("passage_faded", { id, veil }),
 };
 
 /** Events */
@@ -112,6 +124,7 @@ export const events = {
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
+	modePassage: makeEvent<ModePassage>("mode-passage"),
 	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
 	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
@@ -192,6 +205,12 @@ export type Candidate = {
 	alreadyAdded: boolean,
 };
 
+/**  « Flottaison des cartes » of the category fan and of the carousel. */
+export type CardFloat = "none" | "light" | "visible" | "strong";
+
+/**  « Survol des cartes » (app cards): threads + sheen, lift only, or nothing. */
+export type CardHoverStyle = "full" | "simple" | "none";
+
 /**  How much the colours of the selected game tint the interface (DESIGN.md). */
 export type ColorMode = "off" | "light" | "immersive";
 
@@ -226,6 +245,9 @@ export type DetectedApp = {
  *  or a small bar at the top of the screen (ARCHITECTURE.md §4).
  */
 export type DisplayMode = "immersive" | "window" | "widget";
+
+/**  « Élasticité du widget »: overshoot of its springs. */
+export type Elasticity = "soft" | "normal" | "strong";
 
 export type ErrorCode = 
 /**  The input was refused by validation (`field` tells which one when known). */
@@ -307,6 +329,15 @@ export type MatchRule = {
 	exe: string | null,
 };
 
+/**  A step of a passage, for the page of window `label`. */
+export type ModePassage = {
+	id: number,
+	step: PassageStep,
+	label: string,
+	/**  « in » only: the window's size or zoom changed (the page waits for its new layout). */
+	resized: boolean,
+};
+
 export type MonitorInfo = {
 	name: string,
 	width: number,
@@ -314,6 +345,13 @@ export type MonitorInfo = {
 	/**  The screen the immersive mode uses. */
 	chosen: boolean,
 };
+
+/**  « Mouvement »: `Lively` is the validated « Vivant intelligent » language. */
+export type MotionStyle = 
+/**  The « magic » level also where the intelligence rule cuts it (window mode, big grid…). */
+"complete" | "lively" | 
+/**  No bounce and no magic: entrance curve everywhere, card hover = lift only. */
+"crisp";
 
 /**  An app to add: the id is chosen by the core, never by the caller. */
 export type NewApp = {
@@ -327,6 +365,31 @@ export type NewApp = {
 	favorite: boolean,
 };
 
+/**
+ *  Whether the opening animation plays now: once per run of the program, at the first time the
+ *  main window is on screen (in economy mode the window is built again at every show, so the page
+ *  cannot remember it itself). A silent start (Windows login) plays none (round 4b).
+ */
+export type OpeningDue = 
+/**  Play it now (asked once: the next answers are `No`). */
+"now" | 
+/**  Not played yet but the window is hidden: ask again when it is shown. */
+"later" | 
+/**
+ *  Silent start: no opening, but it is still the program's start (asked once, at once, even
+ *  hidden, so that the home screen is ready under the first show).
+ */
+"quiet" | "no";
+
+/**  « Ouverture au lancement »: V1-A with the C pulse, V1-A alone, or nothing. */
+export type OpeningStyle = "pulse" | "classic" | "none";
+
+export type PassageStep = 
+/**  Fade your content out, then call `passage_faded(id)`. */
+"out" | 
+/**  The window is ready (new size, or shown): bring your content back. */
+"in";
+
 /**  Payload of the `scene_progress` event. */
 export type ProgressEvent = {
 	runId: number,
@@ -336,7 +399,9 @@ export type ProgressEvent = {
 
 export type ProgressUpdate = { kind: "started"; total: number } | { kind: "step"; index: number; state: StepState; reason: Reason | null } | { kind: "finished"; status: RunStatus };
 
-export type Quality = "eco" | "balanced" | "high" | "ultra";
+export type Quality = 
+/**  « Auto »: high, with the engine's automatic fallback (full adaptive quality: step 13). */
+"auto" | "eco" | "balanced" | "high" | "ultra";
 
 /**  Why a step failed or was skipped (the interface picks its own wording). */
 export type Reason = 
@@ -431,16 +496,27 @@ export type Settings = {
 	colorMode: ColorMode,
 	hotkey: string,
 	language: string,
-	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1 (DESIGN.md « intensité »). */
+	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
 	displayMode: DisplayMode,
-	widgetStyle: WidgetStyle,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */
 	hideOnBlur: boolean,
 	/**  « Mode économe »: the window is destroyed while hidden (less memory, slower to come back). */
 	economyMode: boolean,
+	motionStyle: MotionStyle,
+	/**  Follow Windows « Effets d'animation » (reduce motion); off = Kayro ignores it. */
+	followSystemMotion: boolean,
+	cardFloat: CardFloat,
+	openingStyle: OpeningStyle,
+	themeTransition: ThemeTransition,
+	widgetUnroll: WidgetUnroll,
+	widgetSpring: Elasticity,
+	cardHover: CardHoverStyle,
+	bokeh: boolean,
+	particles: boolean,
+	cursorLight: boolean,
 };
 
 /**  Emitted after every successful change of the settings (also to the window that made it). */
@@ -455,10 +531,20 @@ export type SettingsPatch = {
 	language?: string | null,
 	atmosphereIntensity?: number | null,
 	displayMode?: DisplayMode | null,
-	widgetStyle?: WidgetStyle | null,
 	hideOnEscape?: boolean | null,
 	hideOnBlur?: boolean | null,
 	economyMode?: boolean | null,
+	motionStyle?: MotionStyle | null,
+	followSystemMotion?: boolean | null,
+	cardFloat?: CardFloat | null,
+	openingStyle?: OpeningStyle | null,
+	themeTransition?: ThemeTransition | null,
+	widgetUnroll?: WidgetUnroll | null,
+	widgetSpring?: Elasticity | null,
+	cardHover?: CardHoverStyle | null,
+	bokeh?: boolean | null,
+	particles?: boolean | null,
+	cursorLight?: boolean | null,
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */
@@ -488,8 +574,24 @@ export type StepState = "pending" | "running" | "ok" | "failed" |
 /**  Not run: unlinked slot, nothing to follow, scene cancelled or aborted… */
 "skipped";
 
-/**  Look of the widget bar (reference/Widget.dc.html); provisional until the art direction is frozen. */
-export type WidgetStyle = "aurore" | "sillage" | "brume" | "orbe";
+/**  « Changement de thème »: the wave with its impact, a cross-fade, or a direct switch. */
+export type ThemeTransition = "wave" | "fade" | "direct";
+
+/**
+ *  How the native veil fades when `main` gives way to the widget or takes over from it (round
+ *  4b): sent by the page that faded out. The colour it faded to (its opaque background), how long,
+ *  and the motion table's curve sampled evenly from 0 to 1.
+ */
+export type VeilFade = {
+	r: number,
+	g: number,
+	b: number,
+	ms: number,
+	curve: (number | null)[],
+};
+
+/**  « Dépliage du widget ». */
+export type WidgetUnroll = "unroll" | "sober";
 
 /**  The hub appeared (or went away). `bench` asks the page to report when it painted. */
 export type WindowVisibility = {

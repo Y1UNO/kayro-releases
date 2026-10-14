@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "opale",
+  "name": "Opale",
+  "author": "Kayro",
+  "description": "Bleu opale et reflets roses.",
+  "bg": ["#10202A", "#0A131A", "#05090D"],
+  "accent": "#9FD0E8",
+  "glow": "rgba(242,162,184,.35)",
+  "fog": ["rgba(159,208,232,.34)", "rgba(159,208,232,.16)", "rgba(242,162,184,.14)"],
+  "card": [159, 208, 232],
+  "beam": [242, 162, 184],
+  "gradient": ["#9FD0E8", "#F2A2B8"],
+  "soft": "#D2ECF6"
+}

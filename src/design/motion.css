@@ -1,0 +1,131 @@
+/*
+ * Motion language "Vivant intelligent" (art direction round 4a). The token values are written on
+ * <html> by the `motion` element of the catalogue (src/design/motion/tokens.ts); the values below
+ * are the same defaults (tokens.test.ts checks it), used when that element is off.
+ *
+ * Per-level durations: `--mN-<duration>` = the token × the level's switch × "reduce motion"
+ * (0 = final state at once). Level 1 "net": hover / press of buttons, tabs, fields. Level 2
+ * "vivant": pill, switches, panels, notifications, list entries. Level 3 "magie": app cards of
+ * the carousel only.
+ */
+:root {
+  --m-micro: 140ms;
+  --m-court: 240ms;
+  --m-moyen: 360ms;
+  --m-long: 540ms;
+  --m-out: 0.7;
+  --m-ease-in: cubic-bezier(0.16, 1, 0.3, 1);
+  --m-ease-out: cubic-bezier(0.7, 0, 0.84, 0);
+  --m-ease-move: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --m-ease-bounce: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --m-cascade: 45ms;
+  --m-rise: 14px;
+  --m-hover-rise: 1px;
+  --m-press: 0.94;
+  --m-panel-scale: 0.96;
+  --m-l1: 1;
+  --m-l2: 1;
+  --m-l3: 1;
+  --m-focus:
+    0 0 0 3px var(--bg-mid), 0 0 0 5px var(--grad-a),
+    0 0 0 7px color-mix(in srgb, var(--grad-b) 50%, transparent),
+    0 0 26px color-mix(in srgb, var(--grad-a) 45%, transparent);
+  --m-card-lift: 10px;
+  --m-card-grow: 1.03;
+  /* Round 4b: the widget's glass unrolls on two springs (vertical here; the horizontal one is
+     played by script, unroll.ts; « normale »). */
+  /* prettier-ignore */
+  --m-spring-v: linear(0, 0.0272, 0.0965, 0.1923, 0.302, 0.4159, 0.5269, 0.6302, 0.7227, 0.8027, 0.8698, 0.9241, 0.9667, 0.9987, 1.0215, 1.0366, 1.0455, 1.0495, 1.0497, 1.0474, 1.0433, 1.0381, 1.0325, 1.0268, 1.0214, 1.0165, 1.0121, 1.0084, 1.0053, 1.0028, 1.0009, 0.9995, 0.9986, 0.9979, 0.9976, 0.9975, 0.9976, 0.9977, 0.9979, 0.9982, 1);
+  --m-widget-chevron: 520ms;
+
+  /* "Reduce motion": every level stops (set below). */
+  --m-rm: 1;
+  --m-k1: calc(var(--m-l1) * var(--m-rm));
+  --m-k2: calc(var(--m-l2) * var(--m-rm));
+  --m-k3: calc(var(--m-l3) * var(--m-rm));
+
+  --m1-micro: calc(var(--m-micro) * var(--m-k1));
+  --m1-court: calc(var(--m-court) * var(--m-k1));
+  --m2-court: calc(var(--m-court) * var(--m-k2));
+  --m2-moyen: calc(var(--m-moyen) * var(--m-k2));
+  --m2-court-out: calc(var(--m-court) * var(--m-out) * var(--m-k2));
+  --m2-moyen-out: calc(var(--m-moyen) * var(--m-out) * var(--m-k2));
+  --m2-cascade: calc(var(--m-cascade) * var(--m-k2));
+  --m3-court: calc(var(--m-court) * var(--m-k3));
+
+  /* Distances and scales: none with "reduce motion" (no decorative effect at all). */
+  --m-rise-k: calc(var(--m-rise) * var(--m-rm));
+  --m-hover-rise-k: calc(var(--m-hover-rise) * var(--m-rm) * -1);
+  --m-press-k: calc(1 - (1 - var(--m-press)) * var(--m-rm));
+  --m-panel-scale-k: calc(1 - (1 - var(--m-panel-scale)) * var(--m-rm));
+
+  /* Press of anything clickable: pressed in "micro" (level 1), released on the "liaison" spring
+     (level 2). Components write `scale: var(--m-press-k)` on :active and use these two. */
+  --m-press-dur: var(--m2-court);
+  --m-press-ease: var(--m-ease-move);
+}
+
+/* « Suivre Windows » off (round 5): `data-rm-ignore` on <html>, the system setting is ignored. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-rm-ignore]) {
+    --m-rm: 0;
+  }
+}
+
+/* One visible focus style everywhere (keyboard only), at once: a gap in the background colour,
+   ring A, ring B, halo A (theme colours). Zero specificity: a component with its own focus look
+   overrides it. Elements focused only by script (tabindex -1: dialog panels…) keep no ring. */
+:where(button, [role="radio"], [role="switch"], input, select, textarea, a, [tabindex]):where(
+    :not([tabindex="-1"])
+  ):focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus);
+}
+
+/* Rows of a list that appears (level 2): they rise 14 px in a cascade of 45 ms (12 rows at most;
+   the next ones come with the twelfth). `data-cascade` on the parent; one-shot animations. */
+[data-cascade] > * {
+  animation: m-row-in var(--m2-moyen) var(--m-ease-in) both;
+  animation-delay: calc(var(--m2-cascade) * var(--m-i, 0));
+}
+
+[data-cascade] > :nth-child(2) {
+  --m-i: 1;
+}
+[data-cascade] > :nth-child(3) {
+  --m-i: 2;
+}
+[data-cascade] > :nth-child(4) {
+  --m-i: 3;
+}
+[data-cascade] > :nth-child(5) {
+  --m-i: 4;
+}
+[data-cascade] > :nth-child(6) {
+  --m-i: 5;
+}
+[data-cascade] > :nth-child(7) {
+  --m-i: 6;
+}
+[data-cascade] > :nth-child(8) {
+  --m-i: 7;
+}
+[data-cascade] > :nth-child(9) {
+  --m-i: 8;
+}
+[data-cascade] > :nth-child(10) {
+  --m-i: 9;
+}
+[data-cascade] > :nth-child(11) {
+  --m-i: 10;
+}
+[data-cascade] > :nth-child(n + 12) {
+  --m-i: 11;
+}
+
+@keyframes m-row-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--m-rise-k);
+  }
+}

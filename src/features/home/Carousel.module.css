@@ -2,17 +2,70 @@
 .stage {
   position: relative;
   width: 100%;
-  height: 340px;
+  margin-top: var(--stage-drop, 0px);
+  height: max(340px, calc(var(--slot-h, 328px) + 12px));
   flex-shrink: 0;
   outline: none;
 }
 
-.stage:focus-visible [data-active] > button {
-  outline: var(--focus-ring);
-  outline-offset: 4px;
+/* The card is in a floating box since round 5: `[data-stage]`, not `> button` (the edit button). */
+.stage:focus-visible [data-active] [data-stage] {
+  outline: none;
+  box-shadow: var(--m-focus);
 }
 
-/* Beats the global focus ring (tokens.css): the ring is drawn on the selected card instead. */
+/* A category sequence moves the cards from script (src/features/home/fan): no CSS transition. */
+.stage[data-seq] [data-d],
+.stage[data-seq] [data-stage] {
+  transition: none;
+}
+
+/* Edit button and light under the card stay full size outside the deck: away meanwhile. */
+.stage[data-seq] [data-d] [data-edit-app],
+.stage[data-seq] [data-d] [data-glow] {
+  opacity: 0;
+}
+
+/* Beats the global focus ring (motion.css): the ring is drawn on the selected card instead. */
 .stage:focus-visible {
   outline: none;
+  box-shadow: none;
+}
+
+/* Hover of an app card (level 3 of the motion table, round 4a): the slot lifts and grows on the
+   "rebond" spring, so the card, its light threads (CardHoverFx), its glow and the engine's glass
+   all follow; back to rest without a bounce. Not during a category sequence, nor while the
+   selection scrolls fast (`data-fast`: the card passing under a still pointer would lift for
+   30 ms, a spring nobody sees). */
+.stage {
+  --card-hover-dur: var(--m3-court);
+  --card-hover-ease: var(--m-ease-bounce);
+  --card-leave-dur: calc(var(--m3-court) * var(--m-out));
+}
+
+/* Window mode, or « Survol des cartes : Simple » (round 5): levels 1 and 2 only (the "liaison"
+   spring, no veil, no threads). */
+.stage[data-motion-cap] {
+  --card-hover-dur: var(--m2-court);
+  --card-hover-ease: var(--m-ease-move);
+  --card-leave-dur: var(--m2-court-out);
+}
+
+.stage [data-d] {
+  --lift-dur: var(--card-leave-dur);
+  --lift-ease: var(--m-ease-in);
+}
+
+/* « Survol des cartes : Aucun » (round 5): `data-hover-off`, no lift at all. */
+.stage:not([data-seq]):not([data-fast]):not([data-hover-off]) [data-d]:has([data-stage]:hover) {
+  --lift-dur: var(--card-hover-dur);
+  --lift-ease: var(--card-hover-ease);
+  translate: 0 calc(var(--m-card-lift) * -1 * var(--m-rm));
+  scale: calc(1 + (var(--m-card-grow) - 1) * var(--m-rm));
+}
+
+/* Level 3: the veil and the threads are the hovered card's effects; the reflection that follows
+   the pointer would be a third one (rule 1), at level 3 the pointer's reflection is off. */
+.stage[data-no-pointer-sheen] [data-pointer-sheen] {
+  display: none;
 }

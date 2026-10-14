@@ -189,7 +189,7 @@ fn settings() {
     assert_eq!(bad(&|s| s.hotkey = "Ctrl+".into()), "hotkey");
     assert_eq!(bad(&|s| s.hotkey = "Foo+H".into()), "hotkey");
     assert_eq!(bad(&|s| s.language = "xx".into()), "language");
-    for v in [0.29, 1.01, f32::NAN, f32::INFINITY] {
+    for v in [0.29, 1.31, f32::NAN, f32::INFINITY] {
         assert_eq!(bad(&|s| s.atmosphere_intensity = v), "atmosphereIntensity");
     }
     let low = Settings {

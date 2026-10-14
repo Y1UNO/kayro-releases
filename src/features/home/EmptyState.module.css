@@ -2,17 +2,10 @@
 .wrap {
   height: 340px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.card {
-  display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
-  max-width: 460px;
-  padding: var(--space-8) var(--space-10);
+  justify-content: center;
+  gap: var(--space-2);
   text-align: center;
 }
 
@@ -24,8 +17,75 @@
 }
 
 .text {
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-4);
+  max-width: 460px;
   font-size: var(--fs-16);
   line-height: 1.45;
   color: var(--text-2);
+}
+
+/* Round 4b: the dotted « Ajouter une app » card (150 × 180). Hover: a lighter edge (level 1);
+   press: × 0.94 in micro, released on "liaison". */
+.add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex: none;
+  width: 150px;
+  height: 180px;
+  box-sizing: border-box;
+  border-radius: var(--radius-fan);
+  border: 2px dashed color-mix(in srgb, var(--text) 30%, transparent);
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease);
+}
+
+.add:hover {
+  border-color: color-mix(in srgb, var(--text) 62%, transparent);
+}
+
+.add:active {
+  scale: var(--m-press-k);
+  transition-duration: var(--m1-micro);
+}
+
+/* The « + » in the theme's gradient (two bars). */
+.plus {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.plus::before,
+.plus::after {
+  content: "";
+  position: absolute;
+  border-radius: 2px;
+  background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+}
+
+.plus::before {
+  left: 18px;
+  top: 0;
+  width: 4px;
+  height: 40px;
+}
+
+.plus::after {
+  left: 0;
+  top: 18px;
+  width: 40px;
+  height: 4px;
+}
+
+.label {
+  font-size: var(--fs-14);
+  font-weight: 600;
 }

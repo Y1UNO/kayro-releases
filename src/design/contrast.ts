@@ -14,6 +14,16 @@ import type { Theme } from "./theme";
  *    are not covered by this test (limit reported in ROADMAP).
  *  - not modelled: saturate(190%) (changes chroma more than luminance), the vignette (only darkens).
  */
+/** `--face-foot` (tokens.css): the dark end of a face's gradient, × its colour (review B5). */
+const FACE_FOOT = 0.28;
+/**
+ * How far along a face's gradient (towards its dark end at 85 %) a name sits: × 0.37 under a fan
+ * card's name and × 0.3 at the top-left of an app plate's text when the foot was 0.2.
+ */
+const FAN_NAME_AT = 0.7875;
+const APP_PLATE_AT = 0.875;
+const faceAt = (along: number) => 1 - along * (1 - FACE_FOOT);
+
 export const MODEL = {
   text: "#f6efe8",
   text2: "rgba(246,239,232,.88)",
@@ -30,6 +40,24 @@ export const MODEL = {
   field: 0.22,
   navActive: 0.22,
   tooltip: "rgba(20,14,28,.94)",
+  /** Dialog panel (round 5, `--panel-bg`): the theme's middle background at this opacity. */
+  panelMix: 0.92,
+  faceFoot: FACE_FOOT,
+  /**
+   * Face of a category card (CategoryFan.module.css), at the top-left of its name (round 5): the
+   * A → B colour darkened by the face's gradient there (× 0.43 with the foot at 0.28), the fill
+   * opacity, then the foot shade (black at .29 at that height).
+   */
+  faceGradAtName: faceAt(FAN_NAME_AT),
+  faceFill: 0.85,
+  faceShadeAtName: 0.29,
+  /**
+   * Face of an app card without a poster (AppCardFace.module.css), at the left end of its name
+   * plate: the colour × 0.37 (foot at 0.28), the foot shade there (.4 × the face's .85), then the
+   * plate's own white (.12, as the glass).
+   */
+  appFaceAtPlate: faceAt(APP_PLATE_AT),
+  appFaceShade: 0.34,
 } as const;
 
 const WHITE = (a: number): Rgba => ({ r: 255, g: 255, b: 255, a });
@@ -49,6 +77,14 @@ export interface Surfaces {
   softButton: Rgba;
   tooltip: Rgba;
   accent: Rgba;
+  /** Dialog panel over the page (round 5), pessimistic white .12 like the glass. */
+  panel: Rgba;
+  /** Lightest face of the category fan under a card's name (round 5). */
+  fanFace: Rgba;
+  /** Bottom of a theme card in the settings (its name), with the same foot shade. */
+  themeCardFoot: Rgba;
+  /** Name plate on the face of an app without a poster (round 5). */
+  appPlate: Rgba;
 }
 
 /**
@@ -87,7 +123,29 @@ export function surfacesOf(theme: Theme): Surfaces {
     softButton: flatten([glass, WHITE(MODEL.fillSoft)]),
     tooltip: flatten([page, mustParse(MODEL.tooltip)]),
     accent: mustParse(theme.accent),
+    panel: flatten([page, { ...mid, a: MODEL.panelMix }, WHITE(MODEL.glassWhiteUnderText)]),
+    fanFace: fanFaceOf(theme, glass),
+    themeCardFoot: flatten([mustParse(theme.bg[2]), BLACK(MODEL.faceShadeAtName)]),
+    appPlate: appPlateOf(theme, glass),
   };
+}
+
+/** The app face under its name plate: the lighter gradient end, darkened, shaded, the plate's white. */
+function appPlateOf(theme: Theme, glass: Rgba): Rgba {
+  const ends = (theme.gradient ?? [theme.accent, theme.accent]).map(mustParse);
+  const light = ends.reduce((a, b) => (luminance(b) > luminance(a) ? b : a));
+  const k = MODEL.appFaceAtPlate;
+  const face: Rgba = { r: light.r * k, g: light.g * k, b: light.b * k, a: MODEL.faceFill };
+  return flatten([glass, face, BLACK(MODEL.appFaceShade), WHITE(MODEL.glassWhiteUnderText)]);
+}
+
+/** The lighter of the gradient's two ends, darkened as under a fan card's name, over the glass. */
+function fanFaceOf(theme: Theme, glass: Rgba): Rgba {
+  const ends = (theme.gradient ?? [theme.accent, theme.accent]).map(mustParse);
+  const light = ends.reduce((a, b) => (luminance(b) > luminance(a) ? b : a));
+  const k = MODEL.faceGradAtName;
+  const face: Rgba = { r: light.r * k, g: light.g * k, b: light.b * k, a: MODEL.faceFill };
+  return flatten([glass, face, BLACK(MODEL.faceShadeAtName)]);
 }
 
 export interface ContrastPair {
@@ -102,6 +160,11 @@ function accentLight(accent: Rgba): Rgba {
   return { r: mix(accent.r), g: mix(accent.g), b: mix(accent.b), a: 1 };
 }
 
+/** `--text-soft`: the theme's own soft colour, else `--accent-light`. */
+function softOf(theme: Theme, accent: Rgba): Rgba {
+  return theme.soft ? mustParse(theme.soft) : accentLight(accent);
+}
+
 /** Every text / surface couple used by the design system, for one theme. */
 export function contrastPairs(theme: Theme): ContrastPair[] {
   const s = surfacesOf(theme);
@@ -113,7 +176,9 @@ export function contrastPairs(theme: Theme): ContrastPair[] {
     { name: "text on page", fg: text, bg: s.page },
     { name: "text-2 on page", fg: text2, bg: s.page },
     { name: "text-3 on page", fg: text3, bg: s.page },
-    { name: "accent on page top (category label)", fg: s.accent, bg: s.pageTop },
+    // Round 5: every small capitals title is `--eyebrow`, in the soft colour.
+    { name: "soft on page top (category label)", fg: softOf(theme, s.accent), bg: s.pageTop },
+    { name: "soft (eyebrow) on dialog panel", fg: softOf(theme, s.accent), bg: s.panel },
     { name: "text on glass", fg: text, bg: s.glass },
     { name: "text-2 on glass", fg: text2, bg: s.glass },
     { name: "text-3 on glass", fg: text3, bg: s.glass },
@@ -128,6 +193,12 @@ export function contrastPairs(theme: Theme): ContrastPair[] {
     { name: "accent-light on active nav item", fg: accentLight(s.accent), bg: s.field },
     { name: "text on accent (primary button)", fg: mustParse(MODEL.textOnAccent), bg: s.accent },
     { name: "text on tooltip", fg: text, bg: s.tooltip },
+    { name: "text-2 on dialog panel", fg: text2, bg: s.panel },
+    { name: "text-3 on dialog panel", fg: text3, bg: s.panel },
+    { name: "name on a category card face", fg: active, bg: s.fanFace },
+    { name: "text-2 on a category card face", fg: text2, bg: s.fanFace },
+    { name: "name on a theme card", fg: active, bg: s.themeCardFoot },
+    { name: "name plate on an app face (no poster)", fg: active, bg: s.appPlate },
   ];
 }
 

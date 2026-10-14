@@ -1,66 +1,5 @@
-/* reference/Editeur.dc.html: column, padding 28 48, gap 20; bar 64 px; steps 72 px; side column 380 px. */
-.screen {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  box-sizing: border-box;
-  height: 100%;
-  padding: 28px var(--space-10);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  min-height: 64px;
-  box-sizing: border-box;
-  padding: 8px 14px;
-  flex-shrink: 0;
-}
-
-.spacer {
-  flex: 1;
-}
-
-.title,
-.name {
-  margin: 0;
-  font-family: var(--font-title);
-  font-size: 30px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--text);
-}
-
-.name {
-  flex: 1 1 200px;
-  min-width: 140px;
-  max-width: 420px;
-  padding: 2px 8px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-}
-
-.name:hover {
-  background: var(--fill-soft);
-}
-
-.name::placeholder {
-  color: var(--text-3);
-  font-style: italic;
-}
-
-.name:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
-
+/* Scene editor and its dialogs (reference/Editeur.dc.html: steps 72 px, side column 380 px). The
+   screen, its bar and title live in Screens.module.css since round 5. */
 .hotkey {
   display: flex;
   align-items: center;
@@ -70,7 +9,7 @@
 .hotkeyButton {
   padding: 6px 12px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   background: var(--track);
   color: var(--text-2);
   font: inherit;
@@ -103,7 +42,7 @@
 .problem {
   margin: 0;
   padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-row);
   background: var(--track);
   font-size: var(--fs-14);
   color: var(--text);
@@ -125,16 +64,7 @@
   white-space: nowrap;
 }
 
-.label {
-  margin: 0;
-  font-size: var(--fs-12);
-  font-weight: 700;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--text-2);
-}
-
-/* ---- dialogs, list, import ---- */
+/* ---- dialogs, import ---- */
 
 .confirmBody {
   display: flex;
@@ -174,7 +104,7 @@
   justify-content: center;
   gap: var(--space-2);
   min-height: 96px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-row);
   border: 2px dashed rgba(255, 255, 255, 0.28);
   color: var(--text-2);
   font-weight: 600;
@@ -184,60 +114,4 @@
   border-color: var(--accent);
   background: var(--fill-soft);
   color: var(--text);
-}
-
-.sceneList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.sceneCard {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 72px;
-  box-sizing: border-box;
-  padding: 8px 14px 8px 20px;
-}
-
-.sceneText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.sceneName {
-  font-size: var(--fs-17);
-  font-weight: 600;
-}
-
-.keyPill {
-  padding: 5px 10px;
-  border-radius: 12px;
-  background: var(--track);
-  font-size: var(--fs-12);
-  font-weight: 600;
-  color: var(--text-2);
-}
-
-.emptyList {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-14) 0;
-  text-align: center;
-}
-
-.emptyTitle {
-  margin: 0;
-  font-family: var(--font-title);
-  font-size: var(--fs-title-md);
-  font-weight: 500;
 }

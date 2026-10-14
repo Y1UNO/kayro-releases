@@ -17,12 +17,14 @@
   outline: none;
 }
 
-.grid:focus-visible [data-active] > button {
-  outline: var(--focus-ring);
-  outline-offset: 4px;
+/* The card is in a box since round 5 (role="option"; not the edit button). */
+.grid:focus-visible [data-active] [role="option"] {
+  outline: none;
+  box-shadow: var(--m-focus);
 }
 
-/* Same specificity as the global focus ring (tokens.css): this one wins, the ring moves to the card. */
+/* Same specificity as the global focus ring (motion.css): this one wins, the ring moves to the card. */
 .grid:focus-visible {
   outline: none;
+  box-shadow: none;
 }

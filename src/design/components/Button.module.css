@@ -1,5 +1,6 @@
 .button {
   position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -8,10 +9,30 @@
   cursor: pointer;
   white-space: nowrap;
   letter-spacing: -0.005em;
+  /* Level 1 (motion.css): hover in "court" without a bounce; press in "micro", released on the
+     "liaison" spring. */
   transition:
-    transform var(--dur-hover) var(--ease),
-    filter var(--dur-hover) var(--ease),
-    background-color var(--dur-hover) var(--ease);
+    translate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease),
+    background-color var(--m1-court) var(--m-ease-in);
+}
+
+.button:hover:not(:disabled) {
+  translate: 0 var(--m-hover-rise-k);
+}
+
+/* Hover light of the primary button: an overlay in opacity (no animated filter, and no background
+   transition: the theme cross-fade already animates --accent). */
+.button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1; /* above the button's fill (isolated), under its label */
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--m1-court) var(--m-ease-in);
 }
 
 /* Hit area >= 44 px even when the visible button is smaller. */
@@ -27,7 +48,9 @@
 }
 
 .button:active:not(:disabled) {
-  transform: scale(0.97);
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
 }
 
 .button:disabled {
@@ -37,13 +60,13 @@
 
 .md {
   padding: 13px 26px;
-  border-radius: 28px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-15);
 }
 
 .sm {
   padding: 9px 14px;
-  border-radius: 18px;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-13);
 }
 
@@ -52,11 +75,11 @@
   color: var(--text-on-accent);
   font-weight: 700;
   /* No background transition: the theme cross-fade already animates --accent. */
-  transition-property: transform, filter;
+  transition-property: translate, scale;
 }
 
-.primary:hover:not(:disabled) {
-  filter: brightness(1.07);
+.primary:hover:not(:disabled)::before {
+  opacity: 0.07;
 }
 
 .soft {

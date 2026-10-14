@@ -1,34 +1,34 @@
-import { useState } from "react";
-import {
-  Button,
-  ChevronLeftIcon,
-  EditIcon,
-  IconButton,
-  PlayIcon,
-  PlusIcon,
-  ShareIcon,
-  StopIcon,
-  Surface,
-  TrashIcon,
-  UploadIcon,
-} from "../../design";
+import { useMemo, useState } from "react";
+import { Button, PlusIcon, SearchIcon, UploadIcon } from "../../design";
+import { useDa } from "../../design/da";
 import { t } from "../../i18n";
 import type { SceneFile } from "../../ipc/bindings";
 import { sceneStore, useHub, useScenes } from "../../store";
 import { Notice } from "../home/Overlays";
+import bar from "../home/TopBar.module.css";
+import { BarBack, TopBarShell } from "../home/TopBarShell";
 import { ConfirmDialog } from "./ConfirmDialog";
+import type { NewSceneSeed } from "./draft";
 import { ImportDialog } from "./ImportDialog";
+import { NewSceneDialog } from "./NewSceneDialog";
 import { slotsOf } from "./model";
+import { SceneCard } from "./SceneCard";
+import { ScreenTitle } from "./ScreenTitle";
 import { usePlayScene } from "./usePlayScene";
-import styles from "./Editor.module.css";
+import cards from "./SceneCard.module.css";
+import styles from "./Screens.module.css";
 
 interface Props {
   onBack: () => void;
-  /** null = a new scene. */
-  onEdit: (id: string | null) => void;
+  /** null = a new scene (with how it starts). */
+  onEdit: (id: string | null, seed?: NewSceneSeed) => void;
 }
 
-/** All scenes: play, edit, export, delete, import. */
+/**
+ * All scenes (round 5, proposal 4: in the home screen's language): the shared top bar (back home,
+ * a search that filters the scenes, import, new scene), the title signature, the scenes as cards
+ * like the apps — play, edit, export, delete on hover and keyboard focus.
+ */
 export function ScenesScreen({ onBack, onEdit }: Props) {
   const apps = useHub((s) => s.apps);
   const scenes = useScenes((s) => s.scenes);
@@ -37,8 +37,16 @@ export function ScenesScreen({ onBack, onEdit }: Props) {
   const { request, dialog } = usePlayScene();
   const [deleting, setDeleting] = useState<SceneFile | null>(null);
   const [importing, setImporting] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  // « Survol des cartes : Aucun » holds for the scene cards too (review A7).
+  const hoverOff = useDa((s) => s.values.cardHover?.style === "none");
   const busy = run !== null && run.status === null;
+  const shown = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase();
+    return q ? scenes.filter((s) => s.name.toLocaleLowerCase().includes(q)) : scenes;
+  }, [scenes, query]);
 
   function say(text: string) {
     setNotice(text);
@@ -50,93 +58,79 @@ export function ScenesScreen({ onBack, onEdit }: Props) {
     if (r.ok) say(t("scenes.list.exported", { file: r.value.split(/[\\/]/).pop() ?? r.value }));
   }
 
+  /** The app its first launched slot points to: its icon or letter is the card's face. */
+  const firstApp = (scene: SceneFile) => {
+    const slot = slotsOf(scene.steps)[0];
+    return (slot && apps.find((a) => a.id === slots[slot])) || null;
+  };
+
   return (
     <main className={styles.screen}>
-      <Surface as="header" radius="32px" className={styles.bar}>
-        <Button size="sm" onClick={onBack}>
-          <ChevronLeftIcon size={16} />
-          {t("scenes.list.back")}
-        </Button>
-        <h1 className={styles.title}>{t("scenes.list.title")}</h1>
-        <div className={styles.spacer} />
-        <Button onClick={() => setImporting(true)}>
-          <UploadIcon size={16} />
-          {t("scenes.list.import")}
-        </Button>
-        <Button variant="primary" onClick={() => onEdit(null)}>
-          <PlusIcon size={16} />
-          {t("scenes.list.new")}
-        </Button>
-      </Surface>
-
-      {scenes.length === 0 ? (
-        <div className={styles.emptyList}>
-          <p className={styles.emptyTitle}>{t("scenes.list.emptyTitle")}</p>
-          <p className={styles.muted}>{t("scenes.list.emptyText")}</p>
+      <TopBarShell
+        left={<BarBack label={t("scenes.list.back")} onClick={onBack} />}
+        center={
+          <label className={`${bar.search} ${styles.searchBox}`}>
+            <SearchIcon size={16} />
+            <input
+              className={styles.searchInput}
+              value={query}
+              placeholder={t("scenes.list.search")}
+              aria-label={t("scenes.list.search")}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </label>
+        }
+        right={
+          <>
+            <Button size="sm" onClick={() => setImporting(true)}>
+              <UploadIcon size={16} />
+              {t("scenes.list.import")}
+            </Button>
+            <Button size="sm" variant="primary" onClick={() => setCreating(true)}>
+              <PlusIcon size={16} />
+              {t("scenes.list.new")}
+            </Button>
+          </>
+        }
+      />
+      <div className={styles.scroll}>
+        <div className={styles.frame}>
+          <ScreenTitle eyebrow={t("scenes.list.eyebrow")}>
+            <h1 className={styles.title}>{t("scenes.list.heading")}</h1>
+          </ScreenTitle>
+          {scenes.length === 0 ? (
+            <div className={styles.empty}>
+              <p className={styles.emptyTitle}>{t("scenes.list.emptyTitle")}</p>
+              <p className={styles.muted}>{t("scenes.list.emptyText")}</p>
+            </div>
+          ) : shown.length === 0 ? (
+            <p className={`${styles.muted} ${styles.empty}`} role="status">
+              {t("scenes.list.noMatch", { query: query.trim() })}
+            </p>
+          ) : (
+            <ul
+              className={cards.grid}
+              aria-label={t("scenes.list.title")}
+              data-hover-off={hoverOff ? "" : undefined}
+            >
+              {shown.map((scene) => (
+                <SceneCard
+                  key={scene.id}
+                  scene={scene}
+                  app={firstApp(scene)}
+                  playing={busy && run?.sceneId === scene.id}
+                  busy={busy}
+                  onPlay={() => request(scene)}
+                  onCancel={() => void sceneStore.getState().cancel()}
+                  onEdit={() => onEdit(scene.id)}
+                  onExport={() => void exportScene(scene)}
+                  onDelete={() => setDeleting(scene)}
+                />
+              ))}
+            </ul>
+          )}
         </div>
-      ) : (
-        <ul className={styles.sceneList} aria-label={t("scenes.list.title")}>
-          {scenes.map((scene) => {
-            const names = slotsOf(scene.steps).map(
-              (s) => apps.find((a) => a.id === slots[s])?.name ?? s,
-            );
-            const playing = busy && run?.sceneId === scene.id;
-            return (
-              <li key={scene.id}>
-                <Surface flat radius="var(--radius-xl)" className={styles.sceneCard}>
-                  <div className={styles.sceneText}>
-                    <span className={styles.sceneName}>{scene.name}</span>
-                    <span className={styles.stepSub}>
-                      {t(
-                        scene.steps.length === 1 ? "scenes.list.stepOne" : "scenes.list.stepMany",
-                        {
-                          count: scene.steps.length,
-                        },
-                      )}
-                      {names.length > 0 && ` · ${names.join(", ")}`}
-                    </span>
-                  </div>
-                  {scene.hotkey && <span className={styles.keyPill}>{scene.hotkey}</span>}
-                  {playing ? (
-                    <IconButton
-                      label={t("scenes.list.cancel", { name: scene.name })}
-                      onClick={() => void sceneStore.getState().cancel()}
-                    >
-                      <StopIcon />
-                    </IconButton>
-                  ) : (
-                    <IconButton
-                      label={t("scenes.list.play", { name: scene.name })}
-                      disabled={busy}
-                      onClick={() => request(scene)}
-                    >
-                      <PlayIcon />
-                    </IconButton>
-                  )}
-                  <IconButton
-                    label={t("scenes.list.edit", { name: scene.name })}
-                    onClick={() => onEdit(scene.id)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    label={t("scenes.list.export", { name: scene.name })}
-                    onClick={() => void exportScene(scene)}
-                  >
-                    <ShareIcon />
-                  </IconButton>
-                  <IconButton
-                    label={t("scenes.list.delete", { name: scene.name })}
-                    onClick={() => setDeleting(scene)}
-                  >
-                    <TrashIcon />
-                  </IconButton>
-                </Surface>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      </div>
 
       <ConfirmDialog
         open={deleting !== null}
@@ -151,6 +145,19 @@ export function ScenesScreen({ onBack, onEdit }: Props) {
       >
         <p>{t("scenes.list.deleteText")}</p>
       </ConfirmDialog>
+      <NewSceneDialog
+        open={creating}
+        scenes={scenes}
+        onClose={() => setCreating(false)}
+        onCreate={(seed) => {
+          setCreating(false);
+          onEdit(null, seed);
+        }}
+        onImport={() => {
+          setCreating(false);
+          setImporting(true);
+        }}
+      />
       <ImportDialog
         open={importing}
         apps={apps}

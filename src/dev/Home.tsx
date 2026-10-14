@@ -1,20 +1,79 @@
 // Development page for the home screen (step 7): `/dev/home`, dev builds only (see main.tsx).
 // It fills the store with fake apps, so the screen can be checked in a plain browser:
-//   ?theme=crepuscule|boreale|ocean|rose|graphite   ?apps=60 (all in "jeux")   ?empty=1
-//   ?view=grid   ?bench=1 (frame-time measurement while scrolling fast)   ?bench=idle (no input)
-//   ?fx=eco|balanced|high|ultra (quality, default high)   ?intensity=0.3…1   ?nodust=1 (CSS layer only)
+//   ?theme=<theme id> (default: the art direction's)   ?apps=60 (all in "jeux")   ?empty=1   ?view=grid
+//   ?fx=eco|balanced|high|ultra (quality, default high)   ?intensity=0.3…1
 //   ?addmock=1 (fake core for the add / edit dialogs: detected apps, drop, add, edit, remove)
-//   ?fps=N (cadence of the continuous layers, instead of the budget's)
-import { useEffect, useState } from "react";
+//   ?cycle=ms (clicks the next category tab every ms: watch the glass selection pill slide)
+//   ?opening=1 (the opening above the home screen)   ?seek=ms (one moment of it, still)
+//   ?loop=ms (plays the opening again every ms)   ?fan=1 (round 3b: start on the category fan)
+//   ?seq=link|tab|back&seek=ms (one moment of a category sequence, still)
+//   ?loop=ms&seq=link|tab|back (that sequence again every ms; link starts on the fan)
+//   ?fan=1&hover=i (card i of the fan hovered: lift, threads, sparks)
+import { useEffect, useRef, useState } from "react";
 import { QUALITIES, ThemeProvider, applyQuality } from "../design";
 import { Atmosphere } from "../fx";
-import { DustLayer } from "../fx/canvas/dust";
-import { CssFxLayer } from "../fx/css/cssFx";
 import { HomeScreen } from "../features/home/HomeScreen";
 import type { AppEntry } from "../ipc/bindings";
 import { ipc } from "../ipc/commands";
 import { hubStore } from "../store";
 import { installAddAppsMock } from "./addAppsMock";
+import { Opening } from "../features/opening/Opening";
+import { ACTIVE_THEME_ID } from "../design/da";
+import type { CategoryId } from "../features/home/categories";
+import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
+import { effectiveQuality } from "../design/quality";
+
+/** The category journey, as exposed by useCategoryLink.ts in development builds. */
+interface LinkDev {
+  pick: (cat: CategoryId, seek?: number) => void;
+  tab: (cat: CategoryId, seek?: number) => void;
+  back: (seek?: number) => void;
+  mode: () => "fan" | "home";
+  fan: () => void;
+  home: () => void;
+  hover: (i: number) => void;
+}
+const linkDev = () => (window as unknown as { __categoryLink?: LinkDev }).__categoryLink;
+const CATS: CategoryId[] = ["jeux", "stream", "creativite", "logiciels", "autres"];
+
+/** Category sequences on demand (round 3b): still moments and loops. */
+function useCategoryDev(params: URLSearchParams): void {
+  useEffect(() => {
+    const seq = params.get("seq");
+    const seek = params.has("seek") ? Number(params.get("seek")) : undefined;
+    const loop = Number(params.get("loop"));
+    const timers: number[] = [];
+    let n = 0;
+    const step = () => {
+      const l = linkDev();
+      if (!l) return;
+      const cat = CATS[n++ % CATS.length]!;
+      if (seq === "tab") l.tab(CATS[n % CATS.length]!);
+      else if (seq === "back") {
+        if (l.mode() === "fan") l.home();
+        else l.back();
+      } else if (l.mode() === "fan") l.pick(cat);
+      else l.fan();
+    };
+    // ?hover=i: card i of the fan stays hovered (threads, sparks).
+    const hover = params.has("hover") ? Number(params.get("hover")) : -1;
+    if (hover >= 0) timers.push(window.setTimeout(() => linkDev()?.hover(hover), 900));
+    if (seq && seek !== undefined) {
+      timers.push(
+        window.setTimeout(() => {
+          const l = linkDev();
+          if (seq === "link") l?.pick("jeux", seek);
+          else if (seq === "tab") l?.tab("stream", seek);
+          else l?.back(seek);
+        }, 800),
+      );
+    } else if (loop > 0 && (params.has("fan") || seq)) {
+      timers.push(window.setInterval(step, loop));
+    }
+    return () => timers.forEach((t) => window.clearTimeout(t));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
 
 const MOCK: Record<string, string[]> = {
   jeux: ["Riot Client", "Minecraft", "Steam", "Epic Games", "Battle.net"],
@@ -45,87 +104,27 @@ function seed(params: URLSearchParams): AppEntry[] {
   return Object.entries(MOCK).flatMap(([cat, names]) => names.map((nm, i) => entry(nm, cat, i)));
 }
 
-interface BenchResult {
-  frames: number;
-  p50: number;
-  p95: number;
-  p99: number;
-  max: number;
-  over25ms: number;
-  /** Frames longer than 1.5× the median frame (a frame missed at this refresh rate). */
-  dropped: number;
-  hz: number;
-}
-
-/** Sends ArrowRight / ArrowLeft at `keyHz` keys per second (30 = a held key, 0 = none) for `ms`, and records every frame time. */
-function runBench(ms: number, keyHz = 30): Promise<BenchResult> {
-  return new Promise((resolve) => {
-    const deltas: number[] = [];
-    let last = performance.now();
-    const start = last;
-    let dir = "ArrowRight";
-    let sinceKey = 0;
-    let steps = 0;
-    const loop = (now: number) => {
-      deltas.push(now - last);
-      sinceKey += now - last;
-      last = now;
-      if (sinceKey >= 1000 / keyHz) {
-        sinceKey = 0;
-        if (++steps % Math.max(4, Math.round(keyHz * 1.3)) === 0)
-          dir = dir === "ArrowRight" ? "ArrowLeft" : "ArrowRight";
-        window.dispatchEvent(new KeyboardEvent("keydown", { key: dir, bubbles: true }));
-      }
-      if (now - start < ms) requestAnimationFrame(loop);
-      else {
-        const sorted = [...deltas.slice(1)].sort((a, b) => a - b);
-        const q = (p: number) =>
-          sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
-        resolve({
-          frames: sorted.length,
-          p50: q(0.5),
-          p95: q(0.95),
-          p99: q(0.99),
-          max: sorted[sorted.length - 1] ?? 0,
-          over25ms: sorted.filter((d) => d > 25).length,
-          dropped: sorted.filter((d) => d > 1.5 * q(0.5)).length,
-          hz: Math.round(1000 / (q(0.5) || 16.7)),
-        });
-      }
-    };
-    requestAnimationFrame(loop);
-  });
-}
-
-/** Bench variants of the atmosphere layers (undefined = the normal ones). */
-function benchLayers(params: URLSearchParams) {
-  const fps = Number(params.get("fps")) || undefined;
-  const noDust = params.has("nodust");
-  if (!fps && !noDust) return undefined;
-  return () =>
-    noDust ? [new CssFxLayer({ fps })] : [new CssFxLayer({ fps }), new DustLayer({ fps })];
-}
-
-(window as unknown as { __runBench: typeof runBench }).__runBench = runBench;
-
 export default function HomeDev() {
   const params = new URLSearchParams(location.search);
-  const [bench, setBench] = useState<BenchResult | null>(null);
+  const [opening, setOpening] = useState({ on: params.has("opening"), run: 0 });
+  const under = useRef<HTMLDivElement>(null);
+  const seek = params.has("seek") && params.has("opening") ? Number(params.get("seek")) : null;
+  useCategoryDev(params);
   const [ready] = useState(() => {
     const apps = seed(params);
     hubStore.setState({
       status: "ready",
       apps,
       settings: {
-        schemaVersion: 1,
-        themeId: params.get("theme") ?? "crepuscule",
+        ...VISUAL_DEFAULTS,
+        schemaVersion: 2,
+        themeId: params.get("theme") ?? ACTIVE_THEME_ID,
         quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
         colorMode: "light",
         hotkey: "Ctrl+Alt+H",
         language: "fr",
         atmosphereIntensity: Number(params.get("intensity")) || 1,
         displayMode: "immersive",
-        widgetStyle: "brume",
         hideOnEscape: true,
         hideOnBlur: false,
         economyMode: false,
@@ -142,7 +141,7 @@ export default function HomeDev() {
       },
     });
     if (params.has("addmock")) installAddAppsMock(() => hubStore.getState().apps);
-    applyQuality(hubStore.getState().settings?.quality ?? "high");
+    applyQuality(effectiveQuality(hubStore.getState().settings?.quality ?? "high"));
     if (params.has("running")) {
       const first = apps[2];
       if (first)
@@ -159,42 +158,46 @@ export default function HomeDev() {
   }, []);
 
   useEffect(() => {
-    if (!params.has("bench")) return;
-    const id = window.setTimeout(() => {
-      if (params.get("view") === "grid")
-        window.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
-      void runBench(10_000, params.get("bench") === "idle" ? 0 : 30).then((r) => {
-        (window as unknown as { __bench: BenchResult }).__bench = r;
-        setBench(r);
-      });
-    }, 1500);
-    return () => window.clearTimeout(id);
+    const ms = Number(params.get("cycle"));
+    if (!(ms > 0)) return;
+    let i = 0;
+    const id = window.setInterval(() => {
+      const tabs = document.querySelectorAll<HTMLElement>("[role=tab]");
+      i = (i + 1) % Math.max(1, tabs.length);
+      tabs[i]?.click();
+    }, ms);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!params.has("opening")) return;
+    const replay = () => setOpening((o) => ({ on: true, run: o.run + 1 }));
+    const loop = params.has("fan") ? 0 : Number(params.get("loop"));
+    const id = loop > 0 ? window.setInterval(replay, loop) : 0;
+    return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!ready) return null;
-  const themeId = params.get("theme") ?? "crepuscule";
+  const themeId = params.get("theme") ?? ACTIVE_THEME_ID;
   return (
     <ThemeProvider initialThemeId={themeId}>
-      <Atmosphere layers={benchLayers(params)} />
-      <HomeScreen key={params.get("view")} onOpenScenes={() => {}} />
-      {bench && (
-        <pre
-          id="bench"
-          style={{
-            position: "fixed",
-            right: 8,
-            bottom: 8,
-            zIndex: 999,
-            margin: 0,
-            padding: 8,
-            background: "#000c",
-            color: "#fff",
-            font: "12px monospace",
-          }}
-        >
-          {JSON.stringify(bench, (_, v) => (typeof v === "number" ? Math.round(v * 10) / 10 : v))}
-        </pre>
+      <Atmosphere />
+      <div ref={under} style={{ height: "100%" }}>
+        <HomeScreen
+          key={params.get("view")}
+          onOpenScenes={() => {}}
+          startOnFan={params.has("fan") || params.get("seq") === "link"}
+        />
+      </div>
+      {opening.on && (
+        <Opening
+          key={opening.run}
+          under={under}
+          seek={seek}
+          onDone={() => setOpening((o) => ({ ...o, on: false }))}
+        />
       )}
     </ThemeProvider>
   );

@@ -3,14 +3,23 @@
   border: 0;
   cursor: pointer;
   padding: 10px 22px;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--text-2);
   font-size: var(--fs-15);
   font-weight: 600;
+  /* Level 1 (motion.css): hover in "court"; press in "micro", released on the "liaison" spring. */
   transition:
-    background-color var(--dur-hover) var(--ease),
-    color var(--dur-hover) var(--ease);
+    background-color var(--m1-court) var(--m-ease-in),
+    color var(--m1-court) var(--m-ease-in),
+    translate var(--m1-court) var(--m-ease-in),
+    scale var(--m-press-dur) var(--m-press-ease);
+}
+
+.chip:active {
+  --m-press-dur: var(--m1-micro);
+  --m-press-ease: var(--m-ease-in);
+  scale: var(--m-press-k);
 }
 
 /* 44 px hit area */
@@ -22,6 +31,7 @@
 
 .chip:hover {
   background: rgba(255, 255, 255, 0.1);
+  translate: 0 var(--m-hover-rise-k);
 }
 
 .selected,

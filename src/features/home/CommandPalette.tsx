@@ -2,7 +2,11 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, m } from "motion/react";
-import { EASE, SearchIcon, SPRING, Surface } from "../../design";
+import { SearchIcon, Surface } from "../../design";
+import { useMotionTokens } from "../../design/motion/current";
+import { fmTransition } from "../../design/motion/tokens";
+import { useDialogCap } from "../../fx/cadenceCap";
+import { prefersReducedMotion } from "../../fx/motionPref";
 import { t } from "../../i18n";
 import type { AppEntry } from "../../ipc/bindings";
 import { monogram, shadeOf } from "./cardLook";
@@ -32,6 +36,17 @@ function Palette({ apps, onClose, onPickApp, onPickCategory }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const listId = useId();
+  useDialogCap(true); // the scene under the palette needs fewer frames (step 13)
+  // Level 2 panel (motion token table): appears in "moyen" (scale 0.96 → 1, rises 14 px), rows in a
+  // cascade at the opening only (not at every key stroke), closes in 0.7 × without a cascade.
+  const motion = useMotionTokens();
+  const reduced = prefersReducedMotion();
+  const [entering, setEntering] = useState(true);
+  const [enterMs] = useState(() => motion.dur.moyen + 12 * motion.cascade);
+  useEffect(() => {
+    const id = window.setTimeout(() => setEntering(false), enterMs);
+    return () => window.clearTimeout(id);
+  }, [enterMs]);
 
   const results = useMemo(() => searchHome(query, apps, labelOf), [query, apps]);
   const current = Math.min(active, Math.max(0, results.length - 1));
@@ -96,21 +111,31 @@ function Palette({ apps, onClose, onPickApp, onPickCategory }: Props) {
     <m.div
       className={styles.scrim}
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.15, ease: EASE } }}
+      animate={{ opacity: 1, transition: fmTransition(motion, 2, "moyen", "in", reduced) }}
+      exit={{ opacity: 0, transition: fmTransition(motion, 2, "moyen", "out", reduced, true) }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <m.div
         className={styles.motion}
-        initial={{ opacity: 0, y: -14, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1, transition: SPRING }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.15, ease: EASE } }}
+        initial={{ opacity: 0, y: motion.rise, scale: motion.panelScale }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          transition: fmTransition(motion, 2, "moyen", "in", reduced),
+        }}
+        exit={{
+          opacity: 0,
+          y: motion.rise,
+          scale: motion.panelScale,
+          transition: fmTransition(motion, 2, "moyen", "out", reduced, true),
+        }}
       >
         <Surface
           as="section"
-          radius="var(--radius-3xl)"
+          radius="var(--radius-panel)"
           className={styles.panel}
           role="dialog"
           aria-modal="true"
@@ -144,6 +169,7 @@ function Palette({ apps, onClose, onPickApp, onPickCategory }: Props) {
             role="listbox"
             aria-label={t("home.palette.results")}
             className={styles.list}
+            data-cascade={entering ? "" : undefined}
           >
             {results.map((r, i) => (
               <li

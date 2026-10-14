@@ -12,6 +12,7 @@ pub mod share;
 pub mod store;
 pub mod ui_state;
 pub mod validate;
+pub mod visual;
 
 use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard};
@@ -297,6 +298,10 @@ fn unique_id(name: &str, apps: &AppsFile) -> String {
         .unwrap_or(slug)
 }
 
+#[cfg(test)]
+mod scene_tests;
+#[cfg(test)]
+mod settings_r5_tests;
 #[cfg(test)]
 mod store_tests;
 #[cfg(test)]
