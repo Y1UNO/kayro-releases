@@ -9,8 +9,10 @@ use windows::Win32::Graphics::Gdi::{
 };
 use windows::Win32::Storage::FileSystem::FILE_FLAGS_AND_ATTRIBUTES;
 use windows::Win32::UI::Controls::IImageList;
+use windows::Win32::UI::Shell::Common::ITEMIDLIST;
 use windows::Win32::UI::Shell::{
-    SHGetFileInfoW, SHGetImageList, SHFILEINFOW, SHGFI_SYSICONINDEX, SHIL_JUMBO,
+    ILFree, SHGetFileInfoW, SHGetImageList, SHParseDisplayName, SHFILEINFOW, SHGFI_PIDL,
+    SHGFI_SYSICONINDEX, SHIL_JUMBO,
 };
 use windows::Win32::UI::WindowsAndMessaging::{DestroyIcon, GetIconInfo, HICON, ICONINFO};
 
@@ -96,27 +98,61 @@ fn read_bgra(bitmap: &Bitmap) -> Option<(u32, u32, Vec<u8>)> {
     }
 }
 
-/// The large (up to 256 px) Shell icon of `path`, with its transparency. `None` when the file has
-/// no icon the Shell can give. Needs no window; call it off the interface thread.
+/// Owns an item id list from `SHParseDisplayName` and frees it.
+struct ItemIds(*mut ITEMIDLIST);
+
+impl Drop for ItemIds {
+    fn drop(&mut self) {
+        // SAFETY: the list came from `SHParseDisplayName` and is freed exactly once, here.
+        unsafe { ILFree(Some(self.0)) }
+    }
+}
+
+/// Packaged (UWP) apps are no files: the Shell names them `shell:AppsFolder\<AUMID>`.
+pub const APPS_FOLDER: &str = "shell:AppsFolder\\";
+
+/// Index of the icon of `path` in the system image list (a file, or a `shell:AppsFolder` item).
+fn icon_index(path: &str) -> Option<i32> {
+    let name = wide(path);
+    let mut info = SHFILEINFOW::default();
+    let size = size_of::<SHFILEINFOW>() as u32;
+    // SAFETY: `name` is NUL-terminated and outlives the calls; `info` is a valid out structure;
+    // the item id list is freed by its guard after the last call that reads it.
+    let ok = unsafe {
+        if path.starts_with(APPS_FOLDER) {
+            let mut ids: *mut ITEMIDLIST = std::ptr::null_mut();
+            SHParseDisplayName(PCWSTR(name.as_ptr()), None, &mut ids, 0, None).ok()?;
+            let ids = ItemIds(ids);
+            SHGetFileInfoW(
+                PCWSTR(ids.0.cast::<u16>()),
+                FILE_FLAGS_AND_ATTRIBUTES(0),
+                Some(&mut info),
+                size,
+                SHGFI_SYSICONINDEX | SHGFI_PIDL,
+            )
+        } else {
+            SHGetFileInfoW(
+                PCWSTR(name.as_ptr()),
+                FILE_FLAGS_AND_ATTRIBUTES(0),
+                Some(&mut info),
+                size,
+                SHGFI_SYSICONINDEX,
+            )
+        }
+    };
+    (ok != 0).then_some(info.iIcon)
+}
+
+/// The large (up to 256 px) Shell icon of `path` (a file, or `shell:AppsFolder\<AUMID>` for a
+/// packaged app), with its transparency. `None` when the Shell gives none. Needs no window; call
+/// it off the interface thread.
 pub fn shell_icon(path: &str) -> Option<Rgba> {
     let _com = ComGuard::init();
-    let file = wide(path);
-    let mut info = SHFILEINFOW::default();
-    // SAFETY: `file` is NUL-terminated and outlives the calls; `info` is a valid out structure;
-    // every handle obtained below is wrapped in a guard that frees it.
+    let index = icon_index(path)?;
+    // SAFETY: every handle obtained below is wrapped in a guard that frees it.
     unsafe {
-        let ok = SHGetFileInfoW(
-            PCWSTR(file.as_ptr()),
-            FILE_FLAGS_AND_ATTRIBUTES(0),
-            Some(&mut info),
-            size_of::<SHFILEINFOW>() as u32,
-            SHGFI_SYSICONINDEX,
-        );
-        if ok == 0 {
-            return None;
-        }
         let list: IImageList = SHGetImageList(SHIL_JUMBO as i32).ok()?;
-        let icon = Icon(list.GetIcon(info.iIcon, 1).ok()?); // 1 = ILD_TRANSPARENT
+        let icon = Icon(list.GetIcon(index, 1).ok()?); // 1 = ILD_TRANSPARENT
         let mut parts = ICONINFO::default();
         GetIconInfo(icon.0, &mut parts).ok()?;
         let colour = Bitmap(parts.hbmColor);
@@ -153,6 +189,14 @@ mod tests {
         assert!(icon.width >= 16 && icon.height >= 16);
         assert_eq!(icon.pixels.len(), (icon.width * icon.height * 4) as usize);
         assert!(icon.pixels.as_chunks::<4>().0.iter().any(|p| p[3] > 0));
+    }
+
+    #[test]
+    #[ignore = "needs the Calculator app of Windows (run by hand)"]
+    fn a_packaged_app_has_an_icon() {
+        let calc = format!("{APPS_FOLDER}Microsoft.WindowsCalculator_8wekyb3d8bbwe!App");
+        let icon = shell_icon(&calc).expect("icon");
+        assert!(icon.width >= 16 && icon.pixels.as_chunks::<4>().0.iter().any(|p| p[3] > 0));
     }
 
     #[test]

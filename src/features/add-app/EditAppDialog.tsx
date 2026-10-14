@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button, Dialog } from "../../design";
 import { t } from "../../i18n";
 import type { AppEntry } from "../../ipc/bindings";
-import { hubStore } from "../../store";
+import { artIpc } from "../../ipc/commands";
+import { hubStore, imageOf, useArt } from "../../store";
 import { applyDraft, entryToDraft, isTargetLocked } from "./draft";
 import { ManualForm } from "./ManualForm";
 import { refusalOf } from "./refusal";
@@ -41,6 +42,8 @@ function Editor({
   onClose: () => void;
 }) {
   const [removing, setRemoving] = useState(startWithRemove);
+  // Step 14: a poster the user dropped on the card can be taken back (Steam's comes back).
+  const userPoster = useArt((s) => imageOf(s, app.id, "poster")?.origin === "user");
   const draft = entryToDraft(app);
 
   if (removing) {
@@ -73,11 +76,23 @@ function Editor({
 
   return (
     <div className={styles.body}>
+      <p className={styles.hint}>
+        {userPoster ? t("addApps.edit.posterMine") : t("addApps.edit.posterHint")}
+      </p>
       <ManualForm
         initial={draft}
         lockedTarget={isTargetLocked(app) ? draft.target : null}
         submitLabel={t("addApps.edit.save")}
-        extra={<Button onClick={() => setRemoving(true)}>{t("addApps.edit.delete")}</Button>}
+        extra={
+          <>
+            {userPoster && (
+              <Button onClick={() => void artIpc.clearUser(app.id, "poster")}>
+                {t("addApps.edit.posterReset")}
+              </Button>
+            )}
+            <Button onClick={() => setRemoving(true)}>{t("addApps.edit.delete")}</Button>
+          </>
+        }
         onSubmit={async (values) => {
           const result = await hubStore.getState().updateApp(applyDraft(app, values));
           if (!result.ok) {

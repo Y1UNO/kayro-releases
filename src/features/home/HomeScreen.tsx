@@ -30,6 +30,7 @@ import { CategoryFan, FanTitle } from "./fan/CategoryFan";
 import { useCategoryLink } from "./fan/useCategoryLink";
 import { cardGeometry, useDa } from "../../design/da";
 import { useHomeKeys } from "./useHomeKeys";
+import { usePosterDrop } from "./usePosterDrop";
 import styles from "./HomeScreen.module.css";
 
 const launch = (app: AppEntry) => void hubStore.getState().launchApp(app.id);
@@ -155,6 +156,8 @@ export function HomeScreen({
     columns.current = n;
   }, []);
 
+  // Step 14: an image dropped on a card becomes its poster.
+  usePosterDrop();
   useHomeKeys(
     {
       onArrow: (dx, dy) => {

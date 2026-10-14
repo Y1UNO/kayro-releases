@@ -67,6 +67,10 @@ Hors familles : traits de 1–2 px, case à cocher, piste du curseur, logo de la
 font le tour du bord en sens opposés, cœur blanc à 55 %, 2,2 px, intensité 1,8, longueur 0,2, halo 0,9, 0,25 tr/s,
 12 étincelles au plus sur l'éventail, 4 sur le carrousel (catalogue `categoryHover`, `cardHover`).
 
+**Affiches** (étape 14, `src/features/home/art.ts`) : une carte d'app montre l'affiche locale de l'app quand elle en a
+une (image déposée sur la carte, copiée dans `%APPDATA%/Kayro/art/<appId>/`, sinon le cache Steam lu en place),
+servie par le protocole `kayro-art` (id d'app + rôle, jamais un chemin) ; nom sur `.posterShade`. Sinon :
+
 **Faces sans affiche** (cartes d'apps, de scènes, éventail) : dégradé A → B du thème tiré par carte, 0,85, bout sombre
 × `--face-foot` 0,28, ombre de pied sous le nom, icône du programme sinon la lettre.
 

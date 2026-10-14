@@ -11,7 +11,7 @@ import { installDa } from "./design/da";
 import { applyDefaultLogoColours } from "./brand";
 import { Atmosphere } from "./fx";
 import { WidgetApp } from "./features/widget/WidgetApp";
-import { desktopStore, hubStore, sceneStore } from "./store";
+import { artStore, desktopStore, hubStore, sceneStore } from "./store";
 import "./index.css";
 import "./design/themeSwap.css";
 
@@ -76,6 +76,7 @@ if (DevPage) {
     hubStore.getState().init(),
     sceneStore.getState().init(),
     desktopStore.getState().init(),
+    artStore.getState().init(),
   ]).finally(() => {
     installUserPrefs({ quality: false });
     appRoot.render(
@@ -89,22 +90,20 @@ if (DevPage) {
 } else {
   // Load the user's data first (a few ms, local): the first paint already has the right theme
   // and quality level. A failed load still renders the app (defaults, error shown by <App />).
-  void hubStore
-    .getState()
-    .init()
-    .finally(() => {
-      const settings = hubStore.getState().settings;
-      installUserPrefs({ quality: true });
-      appRoot.render(
-        <StrictMode>
-          <ThemeProvider
-            initialThemeId={settings?.themeId}
-            onThemeChange={(themeId) => void hubStore.getState().setSettings({ themeId })}
-          >
-            <Atmosphere />
-            <App />
-          </ThemeProvider>
-        </StrictMode>,
-      );
-    });
+  // The art index too (folder listings only, a few ms): posters are there on the first paint.
+  void Promise.all([hubStore.getState().init(), artStore.getState().init()]).finally(() => {
+    const settings = hubStore.getState().settings;
+    installUserPrefs({ quality: true });
+    appRoot.render(
+      <StrictMode>
+        <ThemeProvider
+          initialThemeId={settings?.themeId}
+          onThemeChange={(themeId) => void hubStore.getState().setSettings({ themeId })}
+        >
+          <Atmosphere />
+          <App />
+        </ThemeProvider>
+      </StrictMode>,
+    );
+  });
 }

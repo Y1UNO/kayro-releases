@@ -73,6 +73,11 @@ impl DataPaths {
         self.root.join("themes")
     }
 
+    /// Images the user gave apps (`art/<appId>/<role>.<ext>`): copies, never exported.
+    pub fn art_dir(&self) -> PathBuf {
+        self.root.join("art")
+    }
+
     /// Icons extracted from programs and shortcuts (`cache/icons/`), rebuilt on demand.
     pub fn icons_dir(&self) -> PathBuf {
         self.root.join("cache").join("icons")

@@ -17,7 +17,7 @@ use crate::intake::{inspect, shortcut_target, InspectReport};
 use crate::launcher::system::SystemLauncher;
 use crate::launcher::{launch_app, LaunchResult};
 use crate::procwatch::{AppRunState, ProcWatch, RunningApps};
-use crate::{icons, ipc_desktop, ipc_scenes, platform};
+use crate::{icons, ipc_art, ipc_desktop, ipc_scenes, platform};
 
 /// Emitted after every successful change of the settings (also to the window that made it).
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -330,6 +330,9 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_desktop::recents_get,
             ipc_desktop::opening_due::<tauri::Wry>,
             ipc_desktop::passage_faded::<tauri::Wry>,
+            ipc_art::art_index,
+            ipc_art::art_set_user::<tauri::Wry>,
+            ipc_art::art_clear_user::<tauri::Wry>,
         ])
         .events(collect_events![
             SettingsChanged,
@@ -341,7 +344,8 @@ pub fn builder() -> Builder<tauri::Wry> {
             crate::desktop::passage::ModePassage,
             crate::desktop::SceneHotkey,
             crate::desktop::hotkeys::HotkeysChanged,
-            ipc_desktop::RecentsChanged
+            ipc_desktop::RecentsChanged,
+            ipc_art::ArtChanged
         ])
 }
 

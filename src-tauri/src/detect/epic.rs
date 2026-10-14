@@ -31,6 +31,34 @@ impl EpicSource {
     pub fn with_dir(manifests: PathBuf) -> Self {
         Self { manifests }
     }
+
+    pub fn manifests(&self) -> &Path {
+        &self.manifests
+    }
+}
+
+/// The program of the installed Epic game `app_name` (`InstallLocation` + `LaunchExecutable` of
+/// its manifest), for its icon only: Epic keeps no picture of its games on the PC.
+pub fn installed_exe(manifests: &Path, app_name: &str) -> Option<PathBuf> {
+    fs::read_dir(manifests).ok()?.flatten().find_map(|entry| {
+        let path = entry.path();
+        if !path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("item"))
+        {
+            return None;
+        }
+        let v = read_item(&path).ok()?;
+        if string(&v, "AppName") != Some(app_name) {
+            return None;
+        }
+        let exe =
+            PathBuf::from(string(&v, "InstallLocation")?).join(string(&v, "LaunchExecutable")?);
+        let is_exe = exe
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("exe"));
+        (is_exe && exe.is_file()).then_some(exe)
+    })
 }
 
 impl DetectSource for EpicSource {
@@ -245,5 +273,29 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let src = EpicSource::with_dir(dir.path().join("nope"));
         assert!(src.scan(&ScanCtx::default()).unwrap().is_empty());
+    }
+
+    #[test]
+    fn the_installed_program_of_a_game_is_found_for_its_icon() {
+        let dir = tempfile::tempdir().unwrap();
+        let game = dir.path().join("Game");
+        fs::create_dir_all(game.join("Bin")).unwrap();
+        fs::write(game.join("Bin/Game.exe"), b"MZ").unwrap();
+        let item = json!({
+            "AppName": "Fortune",
+            "DisplayName": "Fortune",
+            "InstallLocation": game.to_string_lossy(),
+            "LaunchExecutable": "Bin/Game.exe"
+        });
+        let manifests = dir.path().join("Manifests");
+        fs::create_dir_all(&manifests).unwrap();
+        fs::write(manifests.join("A.item"), item.to_string()).unwrap();
+        fs::write(manifests.join("B.item"), "{ not json").unwrap();
+        let exe = installed_exe(&manifests, "Fortune").unwrap();
+        assert!(exe.ends_with("Bin/Game.exe"));
+        assert!(installed_exe(&manifests, "Other").is_none());
+        // The program is gone (uninstalled by hand): no icon rather than a generic one.
+        fs::remove_file(game.join("Bin/Game.exe")).unwrap();
+        assert!(installed_exe(&manifests, "Fortune").is_none());
     }
 }

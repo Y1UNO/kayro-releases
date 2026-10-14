@@ -36,6 +36,7 @@ pas définitif : des détails peuvent encore bouger aux étapes suivantes, mais 
 | Date | Quoi | Avant → après | Jeton / fichier | Pourquoi | Décidé par |
 |---|---|---|---|---|---|
 | 2026-10-14 | Description du thème Lavande-pêche (sous sa carte, Réglages › Thèmes) | « Lavande et pêche du logo. Le thème par défaut. » → « Lavande et pêche du logo. » | `src/design/themes/lavande-peche.json` | Bleu-gris est le défaut depuis R5 | l'utilisateur |
+| 2026-10-14 | Affiches sur les cartes d'apps (carrousel, grille) | toutes les cartes en face A → B + icône ou lettre → **affiche locale** quand l'app en a une (image déposée sur la carte, sinon cache Steam : 600 × 900 ou capsule 300 × 450, variante française d'abord), avec le rendu d'affiche déjà présent (`.poster` + `.posterShade`, opacité `--da-poster-opacity` dans le verre) ; sans image, face inchangée. Jeux Steam sans icône du Shell : petite icône Steam (32 px) au lieu de la lettre (scènes, palette, widget) | `src/features/home/art.ts`, `AppCardFace.module.css`, `useAppIcon.ts` | étape 14, paquet 1 (art local) ; le rendu de l'affiche (V9) sera tranché sur la planche | l'utilisateur (plan de l'étape 14) |
 
 **Avant le gel** : tout ce qui suit est l'historique de l'atelier (rondes 1 à 5, relecture finale, étape 13). Les
 fichiers de préréglages et l'atelier qu'il cite n'existent plus dans l'arbre (tag `perf-13-fix` pour les retrouver).

@@ -3,7 +3,7 @@ import type { AppEntry } from "../../ipc/bindings";
 import { t } from "../../i18n";
 import { EditIcon, useGlass } from "../../design";
 import { markGlassDirtyFor } from "../../design/glass/glassRegistry";
-import { posterUrl } from "./art";
+import { usePosterUrl } from "./art";
 import { faceMixOf, monogram, shadeOf } from "./cardLook";
 import { currentMotion } from "../../design/motion/current";
 import { durOf } from "../../design/motion/tokens";
@@ -82,7 +82,7 @@ export function AppCard({
     // Added to the card's own transform (the carousel's scale stays).
     el.animate([x(0), x(-a), x(a), x(-b), x(b), x(0)], { duration: ms, composite: "add" });
   }, [failed]);
-  const poster = posterUrl(app);
+  const poster = usePosterUrl(app);
   const icon = useAppIcon(app);
   const stage = mode === "stage";
   const hidden = stage && !isVisible(d);

@@ -27,6 +27,8 @@ export function LaunchToast({ onFix }: { onFix: (app: AppEntry) => void }) {
 
   const content = useMemo(() => {
     if (!error) return null;
+    // A dropped image the core refused as a poster (step 14, usePosterDrop).
+    if (error.field === "artImage") return { id: error, text: t("home.artDrop.refused") };
     const app = failedApp ? apps.find((a) => a.id === failedApp) : undefined;
     const reason = LAUNCH_REASONS[error.code];
     if (!app || !reason) return { id: error, text: errorText(error) };

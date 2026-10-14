@@ -109,7 +109,8 @@ HUB/
 **Installeur** : `webviewInstallMode = embedBootstrapper` (+~1,8 Mo ; réseau nécessaire à l'installation seulement si WebView2 manque). `offlineInstaller` écarté (+~127 Mo) [S3].
 
 **CSP** :
-- `default-src 'self'` ; images depuis `'self'` + protocole asset limité à `%APPDATA%/Kayro/cache/art/**`.
+- `default-src 'self'` ; images depuis `'self'`, `data:` et `http://kayro-art.localhost` (étape 14 : protocole maison
+  `kayro-art`, id d'app + rôle, fichiers limités au cache Steam et à `%APPDATA%/Kayro/art` ; pas d'`assetProtocol`).
 - Aucune source distante. Polices locales.
 - Capacités Tauri : liste blanche par fenêtre.
 

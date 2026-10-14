@@ -116,12 +116,19 @@ export const commands = {
 	ms: number,
 	curve: (number | null)[],
 } | null) => __TAURI_INVOKE<void>("passage_faded", { id, veil }),
+	/**  The images of every app (folder listings only, no image is read). */
+	artIndex: () => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_index")),
+	/**  Copies a dropped image as the app's poster (or hero, logo), replacing the previous one. */
+	artSetUser: (id: string, role: ArtRole, path: string) => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_set_user", { id, role, path })),
+	/**  Forgets the user's image for `role` (Steam's comes back, if there is one). */
+	artClearUser: (id: string, role: ArtRole) => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_clear_user", { id, role })),
 };
 
 /** Events */
 export const events = {
 	appStateChanged: makeEvent<AppStateChanged>("app-state-changed"),
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
+	artChanged: makeEvent<ArtChanged>("art-changed"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
 	modePassage: makeEvent<ModePassage>("mode-passage"),
@@ -143,6 +150,12 @@ export type AddFailure = {
 export type AddReport = {
 	added: AppEntry[],
 	failed: AddFailure[],
+};
+
+/**  The images of one app (apps without any are left out of the index). */
+export type AppArt = {
+	id: string,
+	images: ArtImage[],
 };
 
 export type AppEntry = {
@@ -192,6 +205,34 @@ export type Art = {
 	poster: string | null,
 	hero: string | null,
 };
+
+/**  Emitted when the user's images change (the whole index: a few hundred bytes per app). */
+export type ArtChanged = AppArt[];
+
+/**  One image of an app, as the interface sees it. */
+export type ArtImage = {
+	role: ArtRole,
+	origin: ArtOrigin,
+	/**  Size and modification time of the file: changes when the image changes (URL `?v=`). */
+	stamp: string,
+	lowRes: boolean,
+};
+
+/**  Where an image comes from. */
+export type ArtOrigin = "user" | "steam";
+
+/**  What an image is for. */
+export type ArtRole = 
+/**  Vertical poster (cards). */
+"poster" | 
+/**  Wide hero picture (background of the immersive mode, later). */
+"hero" | 
+/**  The hero already blurred by Steam. */
+"heroBlur" | 
+/**  Transparent title logo. */
+"logo" | 
+/**  Small square icon (Steam's 32 px one): for apps the Shell gives no icon for. */
+"icon";
 
 /**  An app the user could add. */
 export type Candidate = {

@@ -95,8 +95,10 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 
 ### Étape 14 — Couleurs du jeu
 - [ ] Affiches en production : `posterUrl` renvoie `null` hors dev ; dossier local d'affiches + ajout par glisser-déposer
-  sur une carte. L'élément `posterGlass` (affiches dans le verre, éteint) attend cet art local.
-- [ ] Icônes dans le carrousel pour les apps sans icône (Steam, Epic, UWP) et dans la palette.
+  sur une carte. *Paquet 1 du 14/10 : fait (cache Steam en place + image déposée, protocole `kayro-art`) ; reste
+  `posterGlass` (V9).* L'élément `posterGlass` (affiches dans le verre, éteint) attend cet art local.
+- [x] Icônes dans le carrousel pour les apps sans icône (Steam, Epic, UWP) et dans la palette — fait le 2026-10-14
+  (UWP par le Shell, Epic par l'exe de son manifeste (non testé sur un vrai jeu), Steam : sa petite icône 32 px).
 - [ ] Pistes de perf du gel : thème / palette en un recalcul, pas de View Transition à chaque changement de jeu,
   couleurs du moteur par la palette ; liaison et onglets : mesurer « éventail prêt à 0 % » contre « recalcul allégé »
   (`docs/DESIGN.md` § 7).

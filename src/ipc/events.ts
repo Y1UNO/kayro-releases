@@ -1,6 +1,7 @@
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import {
   events,
+  type AppArt,
   type AppEntry,
   type AppRunState,
   type DetectProgress,
@@ -104,3 +105,14 @@ export function onSceneHotkey(handler: (sceneId: string) => void): Promise<Unlis
 export function onModePassage(handler: (e: ModePassage) => void): Promise<Unlisten> {
   return listenTo(events.modePassage.listen, handler);
 }
+
+/** Events the art index follows: the user's images changed, or the app list did. */
+export interface ArtEvents {
+  onArtChanged(handler: (index: AppArt[]) => void): Promise<Unlisten>;
+  onAppsChanged(handler: () => void): Promise<Unlisten>;
+}
+
+export const artEvents: ArtEvents = {
+  onArtChanged: (handler) => listenTo(events.artChanged.listen, handler),
+  onAppsChanged: (handler) => listenTo(events.appsChanged.listen, () => handler()),
+};

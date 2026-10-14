@@ -90,6 +90,9 @@
       "list": "Catégories"
     },
     "allCategories": "Toutes les catégories",
+    "artDrop": {
+      "refused": "Cette image ne peut pas servir d’affiche : il faut un fichier JPEG, PNG ou WebP de 16 Mo au plus."
+    },
     "launchFail": {
       "title": "{name} ne s’est pas lancé.",
       "launchNotFound": "Le chemin n’existe plus.",
@@ -222,7 +225,10 @@
       "deleteConfirm": "Retirer « {name} » de {app} ?",
       "deleteExplain": "Le programme lui-même reste sur votre ordinateur.",
       "deleteYes": "Retirer",
-      "deleteNo": "Garder"
+      "deleteNo": "Garder",
+      "posterHint": "Pour changer l’affiche, glissez une image sur sa carte.",
+      "posterMine": "Affiche choisie par vous.",
+      "posterReset": "Revenir à l’affiche d’origine"
     }
   },
   "widget": {

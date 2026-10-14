@@ -16,6 +16,8 @@ import type {
   HotkeysReport,
   MonitorInfo,
   VeilFade,
+  AppArt,
+  ArtRole,
 } from "./bindings";
 
 export type Outcome<T> = { ok: true; value: T } | { ok: false; error: AppError };
@@ -134,3 +136,15 @@ export const desktopIpc = {
 };
 
 export type DesktopIpc = typeof desktopIpc;
+
+/** Local images of the apps (step 14). The images themselves come through `kayro-art` URLs. */
+export const artIpc = {
+  index: (): Promise<Outcome<AppArt[]>> => checked(commands.artIndex()),
+  /** Copies a dropped image as the app's poster (or hero, logo); answers the new index. */
+  setUser: (id: string, role: ArtRole, path: string): Promise<Outcome<AppArt[]>> =>
+    checked(commands.artSetUser(id, role, path)),
+  clearUser: (id: string, role: ArtRole): Promise<Outcome<AppArt[]>> =>
+    checked(commands.artClearUser(id, role)),
+};
+
+export type ArtIpc = typeof artIpc;
