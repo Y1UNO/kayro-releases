@@ -38,6 +38,22 @@ pas définitif : des détails peuvent encore bouger aux étapes suivantes, mais 
 | 2026-10-14 | Description du thème Lavande-pêche (sous sa carte, Réglages › Thèmes) | « Lavande et pêche du logo. Le thème par défaut. » → « Lavande et pêche du logo. » | `src/design/themes/lavande-peche.json` | Bleu-gris est le défaut depuis R5 | l'utilisateur |
 | 2026-10-14 | Affiches sur les cartes d'apps (carrousel, grille) | toutes les cartes en face A → B + icône ou lettre → **affiche locale** quand l'app en a une (image déposée sur la carte, sinon cache Steam : 600 × 900 ou capsule 300 × 450, variante française d'abord), avec le rendu d'affiche déjà présent (`.poster` + `.posterShade`, opacité `--da-poster-opacity` dans le verre) ; sans image, face inchangée. Jeux Steam sans icône du Shell : petite icône Steam (32 px) au lieu de la lettre (scènes, palette, widget) | `src/features/home/art.ts`, `AppCardFace.module.css`, `useAppIcon.ts` | étape 14, paquet 1 (art local) ; le rendu de l'affiche (V9) sera tranché sur la planche | l'utilisateur (plan de l'étape 14) |
 
+**Étape 14 — décisions tranchées sur la planche (2026-10-14)** : planche locale `reference/planches-14/` (non suivie :
+vrais thèmes, vraies affiches Steam de ce PC lues en place). L'utilisateur retient toutes les options recommandées :
+- « Couleurs du jeu » : **Léger** par défaut ;
+- V1 b : 60 % de la couleur du jeu mêlée au thème ;
+- V2 b : en Léger, l'ambiance (lune, anneau, bokeh, braises, teinte du verre) et les accents (filet du titre, onglet
+  actif, anneau de focus, filets de survol) ;
+- V3 b : en Immersif, en plus, fond et brume aux couleurs du jeu, et héros flouté de Steam en haut, fondu dans la nuit ;
+- V4 a : jamais teintés : texte, dialogues, Réglages ;
+- V5 a : A = dominante, B = accent ; une image d'une seule couleur prend l'accent de l'autre image du jeu, sinon du thème ;
+- V6 a : bornes des thèmes (L 0,72–0,85, C ≤ 0,12) ;
+- V7 c : « marée » depuis la carte active, 700 ms, courbe `standard`, sans View Transition ;
+- V8 b : 180 ms après que la sélection se pose, rien pendant un défilement rapide ;
+- V9 c : affiche plate, nom sur l'ombre de pied ; logo du jeu à la place du nom sur la carte active ;
+- V10 : en sortant des jeux, fondu vers le thème ; app sans image : couleurs de son icône.
+Les lignes du tableau ci-dessus suivent au fil du code (paquets 4 et 5).
+
 **Avant le gel** : tout ce qui suit est l'historique de l'atelier (rondes 1 à 5, relecture finale, étape 13). Les
 fichiers de préréglages et l'atelier qu'il cite n'existent plus dans l'arbre (tag `perf-13-fix` pour les retrouver).
 

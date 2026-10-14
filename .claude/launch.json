@@ -4,8 +4,19 @@
     {
       "name": "vite-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 1420
+    },
+    {
+      "name": "planches-14",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "reference/planches-14/serve.mjs"
+      ],
+      "port": 4173
     }
   ]
 }

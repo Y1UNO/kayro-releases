@@ -93,6 +93,15 @@ fn jpeg_posters_are_read_too() {
 }
 
 #[test]
+fn webp_images_dropped_by_the_user_are_read_too() {
+    let img = bands(40, &[(BLUE, 30), (RED, 10)]);
+    let p = extract(&encoded(&img, ImageFormat::WebP)).unwrap();
+    // The encoder of the image crate writes lossless WebP: exact colours.
+    assert_eq!(p.colors[p.dominant as usize].hex, "#2846d2");
+    assert_eq!(p.colors[p.accent as usize].hex, "#c82828");
+}
+
+#[test]
 fn transparent_pixels_are_left_out_and_a_grey_image_has_one_colour() {
     let logo = bands(40, &[([0, 0, 0, 0], 30), (RED, 10)]);
     let p = extract(&encoded(&logo, ImageFormat::Png)).unwrap();

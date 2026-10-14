@@ -106,7 +106,7 @@ fn distance2(p: &Lab, q: &Lab) -> f32 {
     (p[0] - q[0]).powi(2) + (p[1] - q[1]).powi(2) + (p[2] - q[2]).powi(2)
 }
 
-/// Decodes `bytes` (JPEG or PNG) and shrinks it to at most 64 × 64.
+/// Decodes `bytes` (JPEG, PNG or WebP) and shrinks it to at most 64 × 64.
 pub fn decode(bytes: &[u8]) -> Result<DynamicImage, PaletteError> {
     let mut reader = ImageReader::new(std::io::Cursor::new(bytes))
         .with_guessed_format()
@@ -238,7 +238,7 @@ fn roles(colors: &[(Lab, f32)]) -> (u8, u8, u8, u8) {
     )
 }
 
-/// Palette of an image's bytes (JPEG or PNG).
+/// Palette of an image's bytes (JPEG, PNG or WebP).
 pub fn extract(bytes: &[u8]) -> Result<Palette, PaletteError> {
     let points = pixels(&decode(bytes)?);
     let groups = kmeans(&points, K);
