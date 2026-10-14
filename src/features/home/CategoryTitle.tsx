@@ -68,10 +68,13 @@ function UnderlineShine({ category }: { category: CategoryId }) {
     const el = band.current;
     if (!el || every <= 0 || reduced || !shown) return;
     let timer = 0;
+    // Its own sweep, cancelled by reference: `getAnimations()` would flush the style in the middle
+    // of a tab's commit (step 13).
+    let sweep: Animation | null = null;
     const play = () => {
       // Never more than one (a hidden window may not advance them: they must not pile up).
-      for (const x of el.getAnimations()) x.cancel();
-      el.animate([{ transform: "translateX(-110%)" }, { transform: "translateX(400%)" }], {
+      sweep?.cancel();
+      sweep = el.animate([{ transform: "translateX(-110%)" }, { transform: "translateX(400%)" }], {
         duration: sweepMs,
         easing: ease,
       });
@@ -80,7 +83,7 @@ function UnderlineShine({ category }: { category: CategoryId }) {
     timer = window.setTimeout(play, firstAt);
     return () => {
       window.clearTimeout(timer);
-      for (const a of el.getAnimations()) a.cancel();
+      sweep?.cancel();
     };
   }, [every, category, shown, reduced, sweepMs, firstAt, ease]);
   return (

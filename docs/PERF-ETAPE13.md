@@ -4,6 +4,8 @@ Séance unique avant le gel de la DA. Rien n'a été corrigé pendant la séance
 Fusion des deux listes : `_kit/PROMPTS.md` (étape 13) et toutes les cases « à mesurer à l'étape 13 » de `docs/DA-JOURNAL.md`.
 
 ## Verdict
+> Corrections appliquées le 14/10, puis remesurées : voir **« Après corrections (2026-10-14) »** en fin de document.
+
 - **Budget p95 ≤ 5,4 ms tenu dans toutes les cases, sauf une** : l'**onde de changement de thème en Éco** (le « Fondu » de 0,9 s). Son p95 vaut 7,2 à 10,7 ms, avec 94 à 136 images > 8 ms par 10 s.
 - Hors budget p95, il y a **trop d'images > 8 ms** pendant :
   - la liaison, les onglets, l'onde, le survol qui change, le panneau, en Élevée ;
@@ -213,7 +215,87 @@ Aujourd'hui, « Auto » vaut Élevé, avec le repli du moteur. Proposition, d'ap
 - **Instant exact des images lentes** dans l'ouverture et dans les passages : la sonde ne donne que des comptes par fenêtre.
 - **Cadence réelle du moteur** pour P5 : elle a été déduite du GPU, pas relevée.
 
+## Après corrections (2026-10-14)
+Séance de remesure en production, exe du 14/10 à 18:08, avec le banc `scripts/perf/` (`npm run perf -- --cases … --compare <13/10>`).
+- **Conditions** : PC libre ; jeux, launchers, Comet et Modrinth fermés ; Wallpaper Engine en pause ; pas de capture CDP.
+- **Essais** : 2 par case (3 pour I8, I5, A2 et A4), aucun écarté pour perte de focus.
+- **Fond hors Kayro** : CPU 5–15 % de la machine, GPU 1,3–1,8 %.
+
+**Ce qui a été corrigé**, en 4 paquets, avec un rendu identique à l'œil (validé par toi à chaque arrêt) :
+1. **Banc `scripts/perf/`** : données de test recréées à chaque séance, une seule commande, comparaison avant / après, traces et profils sans capture. **A10 retiré.**
+2. **Cadence** :
+   - plafonds du moteur en tokens (`CADENCE`) : 60 i/s pour le pointeur seul, 30 au repos, 30 sous un dialogue, 60 pendant une séquence, 60 pour le verre qui suit. Ultra n'est plafonné que par le dialogue ;
+   - travail du pointeur regroupé à une fois par image (inclinaison, éventail, glisser).
+3. **Thème** :
+   - le Fondu en Éco devient une View Transition en simple fondu (`THEME_SWAP.fade`) ;
+   - un thème s'applique en **un** recalcul au lieu de deux (`:root[data-theme-fade]`, couleurs du moteur par la palette) ;
+   - mémoire : pic de +300 à +750 Mo pendant 10 changements, puis retour à la base. C'est un pic, pas une fuite.
+4. **Liaison, retour, onglets, passages** :
+   - aucun `getAnimations()` ni second rendu React dans un clic ;
+   - pastille des onglets qui n'écrit que des styles ;
+   - éventail gardé monté et caché après la liaison ;
+   - passages : retour de la page après la fin du redimensionnement, noir à 0,004, calque de la page gardé.
+
+### Par case (Élevée, puis Éco) — 13/10 → 14/10
+Images > 8 ms : par fenêtre de 10 s, plage des essais. Max : pire intervalle sur tous les essais.
+
+| Case | p95 (ms) | > 8 ms | max (ms) | CPU % | GPU app % | dwm % | Mém. Mo |
+|---|---|---|---|---|---|---|---|
+| R1 éventail au repos | 3,7 → 3,7 | 0 → 0 | 3,8 → 3,9 | 2,16 → **1,69** | 4,03 → 3,18 | 1,17 → 1,22 | 468 → 480 |
+| R2 carrousel au repos (Visible) | 3,7 → 3,7 | 0–1 → 0 | 17,7 → **3,9** | 3,65 → 3,32 | 7,09 → 5,84 | 1,23 → 1,34 | 604 → 570 |
+| R2-max (Marquée + particules) | 3,7 → 3,7 | 0 → 0 | 3,9 → 7,1 | 4,24 → **2,83** | 6,02 → 3,81 | 2,25 → 0,72 | 589 → 577 |
+| R3 carrousel (Aucune flottaison) | 3,7 → 3,7 | 0 → 0 | 3,8 → 4,0 | 2,47 → **1,53** | 4,49 → 2,33 | 1,38 → 0,67 | 512 → 530 |
+| I1 survol continu, carrousel | 3,7 → 3,7 | 1–2 → 0 | 10,8 → **4,0** | 12,3 → 10,9 | 15,9 → **8,4** | 3,18 → 2,81 | 692 → 589 |
+| I2 survol continu, éventail | 3,7 → 3,7 | 0 → 0 | 7,2 → 7,2 | 4,09 → 3,39 | 5,68 → 3,62 | 1,51 → 1,25 | 491 → 492 |
+| I3 survol qui change, carrousel | 3,7 → 3,7 | 7–8 → **0–1** | 14,3 → 10,7 | 8,46 → 7,86 | 9,90 → 8,27 | 2,02 → 2,25 | 792 → 719 |
+| I4 survol qui change, éventail | 3,7 → 3,7 | 0 → 0 | 7,2 → 7,2 | 3,99 → 3,32 | 5,26 → 3,69 | 1,40 → 1,23 | 505 → 520 |
+| I9 survol rapide (nouveau) | — → 3,7 | — → 0–1 | — → 10,6 | — → 25,7 | — → 8,5 | — → 2,84 | — → 593 |
+| I8 liaison + retour | 3,7 → 3,7 | 11–13 → **4–7** | 21,5 → **14,4** | 8,09 → 4,96 | 9,00 → 4,60 | 1,94 → 1,58 | 1012 → 944 |
+| I5 onglets | 3,7 → 3,7 | 18–30 → **4–7** | 17,9 → 14,3 | 13,4 → 9,3 | 15,1 → 8,4 | 3,24 → 3,06 | 1122 → 1054 |
+| A2 onde de thème | 3,7 → 3,7 | 18–19 → 9–13 | 28,7 → 25,1 | 11,1 → 9,9 | 13,4 → 11,9 | 2,47 → 2,43 | 1342 → 1229 |
+| A4 passages | 3,7 → 3,7 | 9–11 → 11–14 | 35,7 → 42,8 | 4,87 → 4,72 | 9,68 → 8,12 | 5,59 → 4,34 | 1039 → 986 |
+| **Éco** — I8 liaison + retour | 3,7 → 3,7 | 2–5 → 4 | 21,4 → 14,3 | 3,44 → 3,42 | 1,71 → 1,83 | 0,76 → 0,91 | 911 → 805 |
+| **Éco** — I5 onglets | 3,7 → 3,7 | 2–4 → 1 | 10,7 → 10,7 | 6,74 → 6,45 | 4,60 → 4,77 | 2,58 → 2,91 | 880 → 850 |
+| **Éco** — A2 Fondu de thème | **10,7 → 3,7** | **94–136 → 5–8** | **50 → 21,4** | 8,89 → 6,83 | 6,08 → 7,91 | 1,50 → 2,38 | **1707 → 1007** |
+| **Éco** — A4 passages | 3,7 → 3,7 | 7–8 → 6–7 | 32,2 → 39,3 | 2,95 → 2,76 | 2,74 → 2,47 | 2,80 → 1,33 | 1004 → 865 |
+
+I9 : 12 000 à 12 600 mouvements de souris envoyés par seconde, 2 200 à 2 400 reçus par la page, aucune image > 16 ms.
+
+### Pendant les animations — pire nombre d'images > 8 ms par occurrence / max (ms)
+| Animation | Élevée 13/10 | Élevée 14/10 | Éco 13/10 | Éco 14/10 |
+|---|---|---|---|---|
+| Liaison | 3–4 / 18 | **1–2 / 14,4** | 0–1 / 10,8 | 1 / 10,7 |
+| Retour | 2–3 / 21,5 | **2 / 14,4** | 1 / 21,4 | **1 / 14,3** |
+| Onglet | 4–10 / 17,8 | **1–2 / 14,3** | 1 / 10,7 | 1 / 10,7 |
+| Survol qui change (carrousel) | 1–2 / 14,3 | **0–1 / 10,7** | 0 / 3,8 | non remesuré |
+| Onde de thème | 5–9 / 28,7 | 3–6 / 25,1 | **30–36 / 50** | **2 / 21,4** |
+| Passage (3 passages par essai) | 3–6 / 35,7 | 5–6 / 42,8 (images lentes visibles : 3–6 par essai, max 21,3) | 3 / 32,2 | 2–3 / 39,3 |
+
+### Lecture
+- **Tenu** :
+  - le budget p95 ≤ 5,4 ms, partout, y compris le Fondu en Éco (p95 3,7 ms au lieu de 10,7) ;
+  - aucune image > 16 ms pendant la liaison, le retour, les onglets ou le survol ;
+  - l'objectif « au plus 1 image > 8 ms par occurrence » est tenu **en Éco** pour la liaison, le retour et les onglets, et en Élevée pour le survol qui change.
+- **Accepté** (ta décision du 14/10, fluide à l'œil) :
+  - en Élevée, la liaison, le retour et les onglets gardent **1 à 2 images de 10 à 14 ms**. C'est le clic lui-même : environ 9 à 14 ms au profil CPU, surtout le recalcul et la mise en page de ce que React vient de changer ;
+  - l'onde garde **1 à 2 images de 15 à 25 ms** à l'impact. C'est la capture de la View Transition, cachée sous l'image figée ;
+  - pistes notées dans `docs/DA-JOURNAL.md` pour l'étape 14.
+- **Passages** :
+  - les plus grosses images (jusqu'à 43 ms) viennent du redimensionnement de la fenêtre et du premier dessin à la nouvelle taille ; elles tombent maintenant **dans le noir** ;
+  - en Élevée, il reste 1 à 2 images lentes visibles par passage au début du fondu d'entrée (max 21 ms au lieu de 36) ;
+  - en Éco, le passage n'a pas de fondu : les images lentes sont le redimensionnement lui-même.
+- **Repos** :
+  - le CPU baisse partout (R1 1,7 %, R3 1,5 %, R2-max 2,8 %) ;
+  - avec la flottaison Visible, le carrousel reste à **3,3 %**. La cible < 1 % n'est toujours pas tenue : point ouvert pour l'audit de l'étape 18.
+- **Points clos** :
+  - image blanche : close (filet `--bg-bottom` gardé ; à rouvrir si elle se revoit) ;
+  - `--quit` (P1) et flash (P3) : clos ;
+  - A10 : retiré ;
+  - Qualité « Auto » : plus tard, avant l'étape 19 (ROADMAP).
+
 ## Reproduire
-- Outils de la séance : dans le scratchpad de la session, hors dépôt (`bench/run.mjs`, `lib.mjs`, `win.ps1`, `make-data.mjs`, `awake.ps1`). Proposition : les verser dans `scripts/perf/` (correction 8).
-- Résultats bruts JSON : `out/L.jsonl`, `out/M.jsonl`, plus `M-agg.json` pour les médianes.
-- Commande : `node run.mjs L`, puis `node run.mjs M` (reprise possible : `node run.mjs M I3`).
+- **Depuis le 14/10** : `npm run perf` (banc `scripts/perf/`, mode d'emploi dans `scripts/perf/README.md`). Exemples :
+  - `npm run perf -- --cases I8,I5 --quality high,eco --trials 2 --compare <ancien results.jsonl>` ;
+  - `--trace I8 --invalidations` pour une trace.
+  - Résultats dans `%TEMP%\kayro-perf\<date>\` (`results.jsonl`, `report.md`).
+- **Séance du 13/10** : ses outils sont restés hors dépôt (scratchpad). Ses résultats bruts servent de base de comparaison (`baseline-2026-10-13/results.jsonl`, dans le même dossier temporaire).

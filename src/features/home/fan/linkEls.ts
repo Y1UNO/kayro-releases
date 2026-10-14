@@ -13,6 +13,8 @@ export interface LinkEls {
   bottom: HTMLElement | null;
 }
 
+const NONE: readonly (FanCardEls | null)[] = [];
+
 type Named = "fan" | "area" | "ask" | "title" | "back" | "bottom";
 
 /** Elements of the home screen the category director moves, registered by ref callbacks. */
@@ -26,6 +28,16 @@ export class LinkElements {
     bottom: null,
   };
   readonly cards: (FanCardEls | null)[] = [];
+  /**
+   * The fan is mounted but put away (`display: none`, step 13): for the director it is not there.
+   * Kept mounted after a link, so that "All categories" does not mount it in its click.
+   */
+  parked = false;
+
+  /** The fan cards on screen (none while the fan is put away). */
+  shown(): readonly (FanCardEls | null)[] {
+    return this.parked ? NONE : this.cards;
+  }
 
   /** Ref callbacks for the components (stable functions). */
   readonly bind = {
@@ -36,6 +48,7 @@ export class LinkElements {
     back: (e: HTMLElement | null) => void (this.found.back = e),
     bottom: (e: HTMLElement | null) => void (this.found.bottom = e),
     card: (i: number, els: FanCardEls | null) => void (this.cards[i] = els),
+    parked: (on: boolean) => void (this.parked = on),
   };
 
   /** The elements of now: the carousel stage, or the grid / empty state faded as a whole. */
@@ -43,8 +56,8 @@ export class LinkElements {
     const f = this.found;
     const stage = f.area?.querySelector<HTMLElement>("[data-carousel-stage]") ?? null;
     return {
-      fan: f.fan,
-      cards: this.cards,
+      fan: this.parked ? null : f.fan,
+      cards: this.shown(),
       stage,
       body: stage ? null : (f.area?.querySelector<HTMLElement>("[data-home-layer]") ?? null),
       ask: f.ask,

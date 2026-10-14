@@ -8,8 +8,15 @@ const QUERY = "(prefers-reduced-motion: reduce)";
 let followSystem = true;
 const listeners = new Set<() => void>();
 
+/** One query object, kept: `matchMedia()` costs ~0.5 ms a call (step 13, in the click of a link). */
+let query: MediaQueryList | null | undefined;
+function systemQuery(): MediaQueryList | null {
+  if (query === undefined) query = typeof matchMedia === "function" ? matchMedia(QUERY) : null;
+  return query;
+}
+
 function systemReduced(): boolean {
-  return typeof matchMedia === "function" && matchMedia(QUERY).matches;
+  return systemQuery()?.matches ?? false;
 }
 
 /** True when motion must be reduced (false where matchMedia does not exist, e.g. in tests). */
@@ -31,7 +38,7 @@ export function setFollowSystemMotion(follow: boolean): void {
 /** Called when the answer of `prefersReducedMotion()` may have changed (Windows or the setting). */
 export function onReducedMotionChange(onChange: () => void): () => void {
   listeners.add(onChange);
-  const mq = typeof matchMedia === "function" ? matchMedia(QUERY) : null;
+  const mq = systemQuery();
   mq?.addEventListener("change", onChange);
   return () => {
     listeners.delete(onChange);

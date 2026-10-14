@@ -73,3 +73,28 @@ export function pillAt(a: PillBox, b: PillBox, p: number, stretch: number, bounc
   const h = hh * (1 - squash);
   return { x: left, y: cy - h / 2, w, h };
 }
+
+/** Where a pill's box (0, 0) sits in a host, and the pill's scale on screen (one reading). */
+export interface HoleOrigin {
+  x: number;
+  y: number;
+  k: number;
+}
+
+/** From the screen boxes of the pill (placed at `b`) and of a host. */
+export function holeOrigin(
+  pill: { left: number; top: number; width: number },
+  host: { left: number; top: number },
+  b: PillBox,
+): HoleOrigin {
+  const k = b.w > 0 ? pill.width / b.w : 1;
+  return { x: pill.left - host.left - b.x * k, y: pill.top - host.top - b.y * k, k };
+}
+
+/**
+ * The hole a host cuts under the pill placed at `b`, without reading the layout again (step 13:
+ * the pill's frames only write).
+ */
+export function holeAt(o: HoleOrigin, b: PillBox): PillBox {
+  return { x: o.x + b.x * o.k, y: o.y + b.y * o.k, w: b.w * o.k, h: b.h * o.k };
+}

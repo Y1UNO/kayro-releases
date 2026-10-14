@@ -4,7 +4,7 @@ import { prefersReducedMotion } from "../../fx/motionPref";
 import { currentMotion } from "../motion/current";
 import { durOf, springOf } from "../motion/tokens";
 import { useGlass } from "./glassRegistry";
-import { pillAt, type PillBox } from "./pillMotion";
+import { holeAt, holeOrigin, pillAt, type HoleOrigin, type PillBox } from "./pillMotion";
 import styles from "./SelectionPill.module.css";
 
 interface Props {
@@ -39,19 +39,26 @@ export function SelectionPill({ value, selector }: Props) {
     for (let a = parent as HTMLElement | null; a; a = a.parentElement) {
       if (a.dataset.holeHost !== undefined) hosts.push(a);
     }
-    const place = (b: PillBox) => {
+    // Where the pill box (0, 0) sits in each host, and its scale on screen.
+    const origins = (b: PillBox): HoleOrigin[] => {
+      const r = pill.getBoundingClientRect();
+      return hosts.map((h) => holeOrigin(r, h.getBoundingClientRect(), b));
+    };
+    // `known`: the origins read before the move, so that its frames only write (step 13: a layout
+    // read after the writes of each frame forced a layout per frame). Else read once placed.
+    const place = (b: PillBox, known: HoleOrigin[] | null = null) => {
       box.current = b;
       pill.style.width = `${b.w}px`;
       pill.style.height = `${b.h}px`;
       pill.style.transform = `translate3d(${b.x}px, ${b.y}px, 0)`;
-      const r = pill.getBoundingClientRect();
-      for (const h of hosts) {
-        const hr = h.getBoundingClientRect();
-        h.style.setProperty("--hole-x", `${r.left - hr.left}px`);
-        h.style.setProperty("--hole-y", `${r.top - hr.top}px`);
-        h.style.setProperty("--hole-w", `${r.width}px`);
-        h.style.setProperty("--hole-h", `${r.height}px`);
-      }
+      const o = known ?? origins(b);
+      hosts.forEach((h, i) => {
+        const hole = holeAt(o[i]!, b);
+        h.style.setProperty("--hole-x", `${hole.x}px`);
+        h.style.setProperty("--hole-y", `${hole.y}px`);
+        h.style.setProperty("--hole-w", `${hole.w}px`);
+        h.style.setProperty("--hole-h", `${hole.h}px`);
+      });
     };
     const target = (): PillBox | null => {
       const el = parent.querySelector<HTMLElement>(selector);
@@ -70,11 +77,13 @@ export function SelectionPill({ value, selector }: Props) {
         const duration = durOf(m, 2, "moyen", false);
         const stretch = num(getComputedStyle(pill).getPropertyValue("--da-pill-stretch"), 0.35);
         const bounce = springOf(m.easeNames.move);
+        // Read with the target (one layout), before the first write.
+        const known = origins(from);
         let elapsed = 0;
         stop = frameLoop().subscribe((dt) => {
           elapsed += dt;
           const p = Math.min(1, elapsed / duration);
-          place(pillAt(from, to, p, stretch, bounce));
+          place(pillAt(from, to, p, stretch, bounce), known);
           if (p >= 1) {
             stop?.();
             stop = null;

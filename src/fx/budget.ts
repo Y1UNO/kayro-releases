@@ -37,6 +37,66 @@ export const FX_MAX_FPS = 144;
 /** Eco frame limit (ARCHITECTURE.md §5). */
 export const ECO_MAX_FPS = 30;
 
+/**
+ * Frame-rate caps of the glass engine and what follows it (step 13, measured in production:
+ * docs/PERF-ETAPE13.md). High and Balanced only; Ultra keeps the uncapped cadence (only the
+ * dialog cap applies), Eco stays at 30. Raise a value if the eye sees it stutter.
+ */
+export const CADENCE = {
+  /** Only the pointer moves (cursor light, card tilt, the fan's hover): was the display rate. */
+  pointerOnly: 60,
+  /** A dialog covers the scene under its scrim (not frozen: the ambience keeps breathing). */
+  underDialog: 30,
+  /** At rest, only the ambience moves (particles, bokeh, ring, moon): was 60. */
+  restHigh: 30,
+  /** A scripted sequence (category link, return, tab): DOM and engine on the same grid. */
+  sequence: 60,
+  /**
+   * A glass element moved in the DOM (float, tilt, hover lift, scroll): the engine measures every
+   * glass box at this rate (forced layouts: the main cost of a hover, step 13 trace). Was 144. If
+   * the glass is seen lagging behind a card that moves, raise it back to 144 (`FX_MAX_FPS`).
+   */
+  glassFollow: 60,
+} as const;
+
+/** Cadences in use at a quality level (frames per second; 0 never: every value is a cap). */
+export interface Cadence {
+  ambient: number;
+  pointer: number;
+  sequence: number;
+  /** A glass element moved in the DOM (CSS transition, scroll): follow it at this rate. */
+  glass: number;
+}
+
+export function cadenceFor(quality: Quality): Cadence {
+  if (quality === "eco")
+    return {
+      ambient: ECO_MAX_FPS,
+      pointer: ECO_MAX_FPS,
+      sequence: ECO_MAX_FPS,
+      glass: ECO_MAX_FPS,
+    };
+  if (quality === "ultra")
+    return { ambient: AMBIENT_FPS, pointer: FX_MAX_FPS, sequence: FX_MAX_FPS, glass: FX_MAX_FPS };
+  return {
+    ambient: CADENCE.restHigh,
+    pointer: CADENCE.pointerOnly,
+    sequence: CADENCE.sequence,
+    glass: CADENCE.glassFollow,
+  };
+}
+
+/** Every cadence held at `CADENCE.underDialog` at most (a dialog is open). */
+export function underDialog(c: Cadence): Cadence {
+  const cap = (x: number) => Math.min(x, CADENCE.underDialog);
+  return {
+    ambient: cap(c.ambient),
+    pointer: cap(c.pointer),
+    sequence: cap(c.sequence),
+    glass: cap(c.glass),
+  };
+}
+
 const BUDGETS: Record<Quality, FxBudget> = {
   eco: {
     fog: "static",

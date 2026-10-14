@@ -24,7 +24,7 @@ function rgbOf(css: string): [number, number, number] {
 
 export function themePalette(theme: Theme): FxPalette {
   const [a, b] = themeGradient(theme);
-  return { beam: theme.beam, fog: theme.fog, a: rgbOf(a), b: rgbOf(b) };
+  return { beam: theme.beam, fog: theme.fog, a: rgbOf(a), b: rgbOf(b), bg: theme.bg };
 }
 
 /**

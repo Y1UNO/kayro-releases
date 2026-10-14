@@ -4,6 +4,9 @@ import { ipc } from "../../ipc/commands";
 
 /** Remembers each answer for the session (a missing icon too): one request per app and target. */
 const cache = new Map<string, Promise<string | null>>();
+/** The answers already in: read while rendering (step 13: a tab change shows them at once, with no
+ * second render of each card in the click). */
+const known = new Map<string, string | null>();
 
 /** Only programs and shortcuts have an icon; a not-yet-saved app (optimistic id) has none yet. */
 function iconKey(app: Pick<AppEntry, "id" | "launch">): string | null {
@@ -16,7 +19,11 @@ function iconKey(app: Pick<AppEntry, "id" | "launch">): string | null {
 function load(id: string, key: string): Promise<string | null> {
   let found = cache.get(key);
   if (!found) {
-    found = ipc.appIcon(id).then((r) => (r.ok ? r.value : null));
+    found = ipc.appIcon(id).then((r) => {
+      const url = r.ok ? r.value : null;
+      known.set(key, url);
+      return url;
+    });
     cache.set(key, found);
   }
   return found;
@@ -32,7 +39,7 @@ export function useAppIcon(app: Pick<AppEntry, "id" | "launch">): string | null 
   const [loaded, setLoaded] = useState<{ key: string; url: string | null } | null>(null);
 
   useEffect(() => {
-    if (!key) return;
+    if (!key || known.has(key)) return;
     let live = true;
     void load(id, key).then((url) => {
       if (live) setLoaded({ key, url });
@@ -42,5 +49,7 @@ export function useAppIcon(app: Pick<AppEntry, "id" | "launch">): string | null 
     };
   }, [id, key]);
 
-  return key && loaded?.key === key ? loaded.url : null;
+  if (!key) return null;
+  if (known.has(key)) return known.get(key) ?? null;
+  return loaded?.key === key ? loaded.url : null;
 }

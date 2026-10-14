@@ -105,6 +105,41 @@ function popCheck(card: HTMLElement, speed: number, delay: number, crisp: boolea
 }
 
 /**
+ * Eco and « Fondu » at the impact (step 13): the new page fades in over the frozen old one, on the
+ * compositor (a View Transition). The card is its own group, live, its old picture hidden: one card,
+ * never a frozen copy. Without View Transitions (or Eco set to « direct »): the change at once.
+ */
+function fadeTo(
+  apply: () => void,
+  card: HTMLElement,
+  speed: number,
+  check: () => void,
+  fade: boolean,
+): void {
+  if (!fade || typeof document.startViewTransition !== "function") {
+    flushSync(apply);
+    check();
+    return;
+  }
+  card.style.viewTransitionName = CARD_NAME;
+  const vt = document.startViewTransition(() => {
+    flushSync(apply);
+    check();
+  });
+  void vt.ready
+    .then(() => {
+      document.documentElement.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: S.fade.ms / speed,
+        easing: easing(S.fade.ease),
+        fill: "both",
+        pseudoElement: "::view-transition-new(root)",
+      });
+    })
+    .catch(() => {}); // skipped (another transition): the theme is applied anyway
+  void vt.finished.finally(() => (card.style.viewTransitionName = ""));
+}
+
+/**
  * A fixed 400 px ring drawn like the opening's wave, centred on the moon (C pulse, round 4b);
  * `band`: its glow at the start (review B1, then animated to stay `haloPx` on screen).
  */
@@ -123,8 +158,9 @@ function makeWave(x: number, y: number, band: string): HTMLElement {
  * The theme change of Réglages › Thèmes. `choose(id, card)`: the card rises and is squashed, at the
  * impact the theme changes — revealed in a circle from the card's moon behind the C pulse's wave
  * (View Transitions: the old page frozen, the new one live, canvas included), or by the 0.9 s
- * cross-fade (Eco, « Fondu », no View Transitions, engine in CSS fallback), or directly (reduced
- * motion, « Direct »). Clicks are ignored until it ends.
+ * fade of the new page over the old (Eco, « Fondu », engine in CSS fallback: `fadeTo`; at the
+ * impact without View Transitions), or directly (reduced motion, « Direct »). Clicks are ignored
+ * until it ends.
  */
 export function useThemeSwap(): (id: string, card: HTMLElement) => void {
   const { theme, setThemeId } = useTheme();
@@ -143,7 +179,7 @@ export function useThemeSwap(): (id: string, card: HTMLElement) => void {
         viewTransitions: typeof document.startViewTransition === "function",
         engineFallback: document.documentElement.dataset.glassFallback !== undefined,
       });
-      if (way === "direct") {
+      if (way === "direct" && !withCard) {
         setThemeId(id, { instant: true });
         return;
       }
@@ -153,9 +189,14 @@ export function useThemeSwap(): (id: string, card: HTMLElement) => void {
       const checkDelay = S.check.at - S.impact;
 
       window.setTimeout(() => {
-        if (way === "fade") {
-          flushSync(() => setThemeId(id));
-          popCheck(card, speed, checkDelay, crisp);
+        if (way !== "wave") {
+          fadeTo(
+            () => setThemeId(id, { instant: true }),
+            card,
+            speed,
+            () => popCheck(card, speed, checkDelay, crisp),
+            way === "fade",
+          );
           return;
         }
         const moon = part(card, "moon")?.getBoundingClientRect();

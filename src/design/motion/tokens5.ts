@@ -61,12 +61,6 @@ export const FLOAT_RHYTHM = {
    * 0.66 × `floatHover` 6 = 3.96, at every level).
    */
   fanHoverDrift: 4,
-  /**
-   * Review A10: the carousel's float boxes as layers of their own (`will-change`) while the loop
-   * runs, so that the script's transform does not repaint the card. Off until step 13 measures it
-   * useful (p95 with and without, rule « will-change seulement si mesuré utile »).
-   */
-  promote: false,
 } as const;
 
 /**
@@ -122,6 +116,12 @@ export const THEME_SWAP = {
   wave: { at: 400, ms: 850, ease: "standard", size: 400, full: 0.8, haloPx: 40 },
   check: { at: 620, ms: 380, peak: 1.35, ease: "rebond" },
   end: 1250,
-  /** Eco and « Fondu »: the cross-fade of the theme variables, from the impact. */
-  fadeMs: 900,
+  /**
+   * Eco and « Fondu » (step 13): from the impact, the new page fades in over the frozen old one
+   * (a View Transition: one capture, then opacity on the compositor). Before: the theme variables
+   * cross-faded on <html> for 0.9 s, the whole page restyled and repainted at every frame.
+   */
+  fade: { ms: 900, ease: "standard" },
+  /** How Eco changes theme: « fade » (above), or « direct » if the fade ever misses the budget. */
+  ecoWay: "fade" as "fade" | "direct",
 } as const;

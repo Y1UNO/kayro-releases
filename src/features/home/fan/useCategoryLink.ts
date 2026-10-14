@@ -34,6 +34,9 @@ interface Options {
 export function useCategoryLink({ category, setCategory, startOnFan, carousel }: Options) {
   const [mode, setMode] = useState<HomeMode>(startOnFan ? "fan" : "home");
   const [fanMounted, setFanMounted] = useState(startOnFan);
+  // Step 13: once mounted, the fan stays; after a link it is put away (`display: none`, no loop),
+  // so that "All categories" does not mount it in its click (the slowest frame of the journey).
+  const [fanParked, setFanParked] = useState(false);
   const [request, setRequest] = useState<{ n: number; r: Request }>({
     n: 0,
     r: { kind: startOnFan ? "fan" : "jump", cat: category },
@@ -65,9 +68,14 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
   useEffect(() => {
     director.setMotion(motion, eco, hoverConfig(hoverValues, eco, reduced, crisp));
   }, [director, motion, hoverValues, eco, reduced, crisp]);
+  // Before the sequences below read the elements: put away or back.
   useLayoutEffect(() => {
-    if (fanMounted) director.wake();
-  }, [director, fanMounted]);
+    director.bind.parked(fanParked);
+    if (fanParked) director.sync();
+  }, [director, fanParked]);
+  useLayoutEffect(() => {
+    if (fanMounted && !fanParked) director.wake();
+  }, [director, fanMounted, fanParked]);
   useEffect(() => () => director.dispose(), [director]);
   useEffect(() => {
     const onResize = () => director.relayout();
@@ -87,21 +95,17 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
     const off = daStore.getState().values.categoryLink?.on === false;
     const reduced = prefersReducedMotion() || off;
     void director.play(kind, i, shuf.current, { eco, reduced }).then((done) => {
-      if (done && kind === "link") setFanMounted(false);
+      if (done && kind === "link") setFanParked(true);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request]);
-
-  // The fan left or came: the director forgets / finds its cards.
-  useLayoutEffect(() => {
-    if (!fanMounted) director.sync();
-  }, [fanMounted, director]);
 
   // Start-up answer from the core arriving after the first render (silent start, opening).
   useEffect(() => {
     if (!startOnFan || modeRef.current === "fan") return;
     setMode("fan");
     setFanMounted(true);
+    setFanParked(false);
     ask({ kind: "fan", cat: category });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startOnFan]);
@@ -111,7 +115,7 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
     const unlisten = onWindowVisibility(({ visible }) => {
       if (visible || modeRef.current !== "fan") return;
       setMode("home");
-      setFanMounted(false);
+      setFanParked(true);
       ask({ kind: "jump", cat: category });
     });
     return () => void unlisten.then((off) => off());
@@ -146,6 +150,7 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
       if (modeRef.current === "fan") return;
       setMode("fan");
       setFanMounted(true);
+      setFanParked(false);
       ask({ kind: "back", cat: category, seek });
     },
     [ask, category],
@@ -164,11 +169,12 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
       fan: () => {
         setMode("fan");
         setFanMounted(true);
+        setFanParked(false);
         ask({ kind: "fan", cat: category });
       },
       home: () => {
         setMode("home");
-        setFanMounted(false);
+        setFanParked(true);
         ask({ kind: "jump", cat: category });
       },
       // Hover of fan card i (bench, captures): -1 = none.
@@ -183,6 +189,7 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
   return {
     mode,
     fanMounted,
+    fanParked,
     config,
     bind: director.bind,
     hover: director.hoverFn,

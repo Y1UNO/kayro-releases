@@ -147,19 +147,14 @@ describe("carousel floating (round 5)", () => {
     expect(ticks.size).toBe(1);
   });
 
-  it("the float boxes are layers only while the loop runs, when asked (review A10)", () => {
+  it("the float boxes never get a will-change (review A10 measured useless at step 13)", () => {
     const { loop } = fakeLoop();
     const { stage, boxes } = fakeStage(["steam", "discord"]);
-    // Off by default (`FLOAT_RHYTHM.promote`): not measured yet.
-    const plain = fakeStage(["steam"]);
-    new CarouselFloat(plain.stage, CONFIG, () => loop).refresh();
-    expect((plain.boxes[0]!.el.style as { willChange?: string }).willChange).toBeUndefined();
-    const f = new CarouselFloat(stage, { ...CONFIG, layers: true }, () => loop);
+    const f = new CarouselFloat(stage, CONFIG, () => loop);
     f.refresh();
-    const will = () => boxes.map((b) => (b.el.style as { willChange?: string }).willChange);
-    expect(will()).toEqual(["transform", "transform"]);
-    f.setConfig({ ...CONFIG, amp: 0 });
-    expect(will()).toEqual(["", ""]);
+    f.tick(16, 16);
+    for (const b of boxes)
+      expect((b.el.style as { willChange?: string }).willChange).toBeUndefined();
   });
 
   it("the active card floats × 0.7 of its neighbours (review B3)", () => {

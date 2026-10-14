@@ -31,8 +31,10 @@ export function Shine() {
     // Hidden window or reduced motion: no timer at all.
     if (!el || reduced || !shown) return;
     let timer = 0;
+    // Cancelled by reference: `getAnimations()` flushes the style (step 13: in a tab's commit).
+    let sweep: Animation | null = null;
     const play = () => {
-      el.animate([{ transform: REST }, { transform: END }], {
+      sweep = el.animate([{ transform: REST }, { transform: END }], {
         duration: SWEEP_MS,
         easing: EASES.glisse!,
       });
@@ -41,7 +43,7 @@ export function Shine() {
     timer = window.setTimeout(play, FIRST_DELAY_MS);
     return () => {
       window.clearTimeout(timer);
-      for (const animation of el.getAnimations()) animation.cancel();
+      sweep?.cancel();
     };
   }, [shown, reduced]);
 

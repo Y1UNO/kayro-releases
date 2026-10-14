@@ -1,10 +1,12 @@
 import type { Quality } from "../../design";
 import { markGlassDirty, type GlassKind } from "../../design/glass/glassRegistry";
-import { budgetFor, ECO_MAX_FPS, FX_MAX_FPS, fxFps } from "../budget";
+import { cadenceFor, underDialog, type Cadence } from "../budget";
+import { dialogOpen } from "../cadenceCap";
 import type { FxLayer, FxPalette, FxParams } from "../FxLayer";
-import { frameLoop, type FrameLoop } from "../loop";
+import { frameLoop, type FrameLoop, type Unsubscribe } from "../loop";
 import { prefersReducedMotion } from "../motionPref";
 import { BudgetWatch } from "./budgetWatch";
+import { engineFps, Pacer } from "./cadence";
 import {
   cueVersion,
   introCue,
@@ -52,10 +54,9 @@ const AUTO_SCALE: Record<Quality, number> = { ultra: 1, high: 1, balanced: 0.75,
  * ring), then the glass pass that refracts it under every element registered as glass
  * (src/design/glass/glassRegistry.ts), measured in the DOM at each frame it draws.
  *
- * Cadence: ambient frames at the atmosphere's rate (60, 30 in Eco) while something drifts; the
- * display rate (≤ 144) while a glass element moves or the pointer moves, so the glass follows the
- * DOM; nothing at all when still. Fallbacks: WebGL2 missing, shader refused or context lost → the
- * CSS look of round 1, reason in `data-glass-fallback` on <html>; frames dropped → see BudgetWatch.
+ * Cadence: see src/fx/gpu/cadence.ts (step 13, `CADENCE`); nothing at all when still. Fallbacks:
+ * WebGL2 missing, shader refused or context lost → the CSS look of round 1, reason in
+ * `data-glass-fallback` on <html>; frames dropped → see BudgetWatch.
  */
 export class GlassEngine implements FxLayer {
   private host: HTMLElement | null = null;
@@ -70,8 +71,8 @@ export class GlassEngine implements FxLayer {
   private failed: string | null = null;
   private paused = false;
   private dirty = true;
-  private ambientFps = 60;
-  private ambientSlot = -1;
+  private cadence: Cadence = cadenceFor("balanced");
+  private readonly pacer = new Pacer();
   private parallax = 0;
   private reduced = false;
   private sheen = -1;
@@ -81,8 +82,7 @@ export class GlassEngine implements FxLayer {
   private bg: number[][] = [];
   private view: View = { W: 1, H: 1, w: 1, h: 1 };
   private state: EngineState = { active: false, ring: false };
-  private unsubscribe: (() => void) | null = null;
-  private themeTimer = 0;
+  private unsubscribe: Unsubscribe | null = null;
   private readonly scene = new Scene();
   private readonly frame = new GlassFrame();
   private posters: PosterTextures | null = null;
@@ -123,13 +123,9 @@ export class GlassEngine implements FxLayer {
 
   setPalette(p: FxPalette): void {
     this.palette = p;
-    this.readTheme();
-    // An instant theme (the wave) is applied by the provider's layout effect, which runs after
-    // this one in the same commit: read once more before the next frame.
-    queueMicrotask(() => this.readTheme());
-    // The theme cross-fades for 0.9 s: read the colours again once it has settled.
-    window.clearTimeout(this.themeTimer);
-    this.themeTimer = window.setTimeout(() => this.readTheme(), 1000);
+    // Step 13: the theme's own colours, not the page's computed style (each read forced a restyle).
+    if (p.bg) this.setBg(p.bg.map(rgb01));
+    else this.readTheme();
   }
 
   setIntensity(k: number): void {
@@ -153,7 +149,6 @@ export class GlassEngine implements FxLayer {
   }
 
   dispose(): void {
-    window.clearTimeout(this.themeTimer);
     this.teardown();
     this.host = null;
   }
@@ -171,8 +166,7 @@ export class GlassEngine implements FxLayer {
     this.reduced = reduced;
     this.parallax = parallaxPx(this.params, reduced);
     this.pointer.parallax = this.parallax > 0;
-    const b = budgetFor(this.quality, reduced);
-    this.ambientFps = fxFps(b);
+    this.cadence = cadenceFor(this.quality);
     this.layout();
     this.dirty = true;
     this.stop();
@@ -252,7 +246,11 @@ export class GlassEngine implements FxLayer {
 
   private readTheme(): void {
     const s = getComputedStyle(document.documentElement);
-    this.bg = ["--bg-top", "--bg-mid", "--bg-bottom"].map((n) => rgb01(s.getPropertyValue(n)));
+    this.setBg(["--bg-top", "--bg-mid", "--bg-bottom"].map((n) => rgb01(s.getPropertyValue(n))));
+  }
+
+  private setBg(bg: number[][]): void {
+    this.bg = bg;
     markGlassDirty();
     this.dirty = true;
   }
@@ -280,8 +278,13 @@ export class GlassEngine implements FxLayer {
   private start(): void {
     if (this.unsubscribe || this.paused || !this.gl) return;
     this.pointer.attach();
-    const cap = this.quality === "eco" ? ECO_MAX_FPS : FX_MAX_FPS;
-    this.unsubscribe = this.loop.subscribe((dt, now) => this.tick(dt, now), cap);
+    this.pacer.fps = engineFps(this.live(), false);
+    this.unsubscribe = this.loop.subscribe((dt, now) => this.tick(dt, now), this.pacer.fps);
+  }
+
+  /** The quality's cadences, held lower while a dialog covers the scene. */
+  private live(): Cadence {
+    return dialogOpen() ? underDialog(this.cadence) : this.cadence;
   }
 
   private stop(): void {
@@ -315,12 +318,10 @@ export class GlassEngine implements FxLayer {
     // A poster just became a texture: draw (the DOM picture was hidden in this same frame).
     if (this.posters?.end())
       moved = this.frame.measure(this.drawn, this.tint, pass, poses, hoverEl) || true;
-    const slot = Math.floor(now / (1000 / this.ambientFps));
     // The glossy veil asks for frames only while it glides (and once more when it stops).
     const sheen = this.frame.hasSel ? sheenPos(this.params, now, this.reduced) : -1;
     const gliding = !this.reduced && (sheen >= 0 || this.sheen >= 0);
     this.sheen = sheen;
-    const ambient = (this.scene.animated || gliding) && slot !== this.ambientSlot;
     // A sequence of the interface (the opening) asks for every frame while its picture changes.
     const cue = introCue();
     const intro = cue ? cue(now) : null;
@@ -331,8 +332,15 @@ export class GlassEngine implements FxLayer {
     this.cueSeen = cueVersion();
     this.intro = intro;
     this.stage = stage;
-    if (!(moved || ambient || fading || cued || this.pointer.moved || this.dirty)) return;
-    this.ambientSlot = slot;
+    // A stage sequence (category link, tab) ticks on its own grid: the engine follows it.
+    const why = {
+      moved,
+      cued,
+      dirty: this.dirty,
+      ambient: this.scene.animated || gliding,
+      pointer: fading || this.pointer.moved,
+    };
+    if (!this.pacer.frame(why, now, this.live(), stage !== null, this.unsubscribe)) return;
     this.pointer.moved = false;
     this.dirty = false;
     this.draw();

@@ -46,6 +46,41 @@ export function resizeOrTimeout(
   });
 }
 
+/**
+ * Resolves after `frames` frames in a row with no `resize` of `target` (a resize starts the count
+ * again), or after `ms`. Step 13: a mode change resizes the window twice, 25–35 ms apart; each
+ * resize rebuilds the glass engine's buffers (6–29 ms), and the page came back after the first one,
+ * so the second one's slow frames fell in its fade-in. They now pass while the page is dark.
+ */
+export function quietFrames(
+  target: Pick<EventTarget, "addEventListener" | "removeEventListener">,
+  frame: () => Promise<void>,
+  frames: number,
+  ms: number,
+): Promise<void> {
+  return new Promise((resolve) => {
+    let count = 0;
+    let over = false;
+    const reset = () => void (count = 0);
+    const done = () => {
+      if (over) return;
+      over = true;
+      clearTimeout(timer);
+      target.removeEventListener("resize", reset);
+      resolve();
+    };
+    const timer = setTimeout(done, ms);
+    target.addEventListener("resize", reset);
+    const next = (): void =>
+      void frame().then(() => {
+        if (over) return;
+        if (++count >= frames) done();
+        else next();
+      });
+    next();
+  });
+}
+
 /** The core said the size changes, and the page does not have it yet: wait for it. */
 export function waitsForSize(before: Size, now: Size, resized: boolean): boolean {
   return resized && now.w === before.w && now.h === before.h;

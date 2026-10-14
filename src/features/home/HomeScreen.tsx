@@ -138,7 +138,7 @@ export function HomeScreen({
     carousel: !grid,
   });
   const onFan = link.mode === "fan";
-  const { fanMounted, config: linkCfg } = link;
+  const { fanMounted, fanParked, config: linkCfg } = link;
   const { fan: fanRef, area: areaRef, ask: askRef, title: titleRef, back: backRef } = link.bind;
   const { bottom: bottomRef, card: onFanCard } = link.bind;
   const slotH = cardGeometry(useDa((s) => s.values.cards)).activeH;
@@ -276,6 +276,7 @@ export function HomeScreen({
                 fill={typeof fill === "number" ? fill : 0.85}
                 blur={linkCfg.blur}
                 interactive={onFan}
+                parked={fanParked}
                 onPick={(cat) => link.pick(cat)}
                 onHover={link.hover}
                 onCard={onFanCard}

@@ -26,6 +26,8 @@ export interface SwapContext {
 /** How the change plays; `card`: the card's rise and squash play first (all but direct). */
 export function swapWay(c: SwapContext): { way: SwapWay; card: boolean } {
   if (c.reduced || c.setting === "direct") return { way: "direct", card: false };
+  if (c.eco && S.ecoWay === "direct") return { way: "direct", card: true };
+  // Without View Transitions the fade becomes a change at the impact (useThemeSwap).
   if (c.setting === "fade" || c.eco || !c.viewTransitions || c.engineFallback) {
     return { way: "fade", card: true };
   }

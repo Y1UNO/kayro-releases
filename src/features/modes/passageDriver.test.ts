@@ -5,6 +5,7 @@ import { passagePlan } from "./passage";
 import {
   ENTER_FALLBACK_MS,
   PassageDriver,
+  quietFrames,
   resizeOrTimeout,
   waitsForSize,
   type PassageIo,
@@ -189,5 +190,46 @@ describe("waiting for the new size (review A5)", () => {
     await resized;
     expect(listeners.size).toBe(0);
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe("the page comes back once the size stays (step 13)", () => {
+  /** A window whose frames come every 7 ms; `resize()` fires its resize listeners. */
+  function page() {
+    const listeners = new Set<() => void>();
+    return {
+      listeners,
+      target: {
+        addEventListener: (_t: string, f: unknown) => void listeners.add(f as () => void),
+        removeEventListener: (_t: string, f: unknown) => void listeners.delete(f as () => void),
+      },
+      frame: () => new Promise<void>((r) => setTimeout(r, 7)),
+      resize: () => listeners.forEach((f) => f()),
+    };
+  }
+
+  it("two frames with no resize, counted again after a late resize", async () => {
+    const p = page();
+    let done = false;
+    void quietFrames(p.target, p.frame, 2, 300).then(() => (done = true));
+    await vi.advanceTimersByTimeAsync(7);
+    p.resize(); // the second resize of a mode change
+    await vi.advanceTimersByTimeAsync(7);
+    expect(done).toBe(false);
+    await vi.advanceTimersByTimeAsync(7);
+    expect(done).toBe(true);
+    expect(p.listeners.size).toBe(0);
+  });
+
+  it("never waits more than its limit", async () => {
+    const p = page();
+    let done = false;
+    void quietFrames(p.target, p.frame, 2, 30).then(() => (done = true));
+    for (let t = 0; t < 30; t += 5) {
+      p.resize();
+      await vi.advanceTimersByTimeAsync(5);
+    }
+    expect(done).toBe(true);
+    expect(p.listeners.size).toBe(0);
   });
 });

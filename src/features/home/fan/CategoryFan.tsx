@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 import { useGlass } from "../../../design";
+import { PointerFrame } from "../../../fx/pointerFrame";
 import { t } from "../../../i18n";
 import { CATEGORY_IDS, CATEGORY_LABELS, type CategoryId } from "../categories";
 import { MAX_SPARKS } from "./fanFloat";
@@ -23,6 +24,8 @@ interface Props {
   blur: number;
   /** False while a sequence takes the fan away (no hover, no click, not focusable). */
   interactive: boolean;
+  /** Put away after a link (`display: none`: no style, no layout, nothing drawn; step 13). */
+  parked?: boolean;
   onPick: (category: CategoryId) => void;
   onHover: FanHover;
   /** Hands the elements of card i to the sequence director (null when it unmounts). */
@@ -36,7 +39,7 @@ interface Props {
  * director (linkDirector.ts / fanRender.ts), never by React: this renders once per category list.
  */
 export function CategoryFan(props: Props) {
-  const { counts, slotH, pivot, fill, blur, interactive, fanRef } = props;
+  const { counts, slotH, pivot, fill, blur, interactive, parked, fanRef } = props;
   return (
     <div
       ref={fanRef}
@@ -45,7 +48,12 @@ export function CategoryFan(props: Props) {
       aria-label={t("home.fan.list")}
       inert={!interactive}
       style={
-        { "--fan-fill": fill, "--fan-blur": `${blur}px`, "--slot-h": `${slotH}px` } as CSSProperties
+        {
+          "--fan-fill": fill,
+          "--fan-blur": `${blur}px`,
+          "--slot-h": `${slotH}px`,
+          display: parked ? "none" : undefined,
+        } as CSSProperties
       }
     >
       {CATEGORY_IDS.map((id, i) => (
@@ -66,10 +74,20 @@ export function CategoryFan(props: Props) {
 }
 
 function pointerOf(e: PointerEvent<HTMLElement>): [number, number] {
-  const r = e.currentTarget.getBoundingClientRect();
-  if (r.width === 0 || r.height === 0) return [0, 0];
-  return [((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1];
+  return relative(e.currentTarget, e.clientX, e.clientY);
 }
+
+function relative(el: HTMLElement, x: number, y: number): [number, number] {
+  const r = el.getBoundingClientRect();
+  if (r.width === 0 || r.height === 0) return [0, 0];
+  return [((x - r.left) / r.width) * 2 - 1, ((y - r.top) / r.height) * 2 - 1];
+}
+
+/** Moves over a card: once per frame whatever the mouse sends (step 13). */
+const moveHandlers = new WeakMap<HTMLElement, (nx: number, ny: number) => void>();
+export const fanMoves = new PointerFrame<HTMLElement>((el, _el, x, y) =>
+  moveHandlers.get(el)?.(...relative(el, x, y)),
+);
 
 function FanCard({
   i,
@@ -149,8 +167,14 @@ function FanCard({
         data-side={i > (FAN_SIZE - 1) / 2 ? "end" : undefined}
         onClick={() => onPick(id)}
         onPointerEnter={(e) => onHover(i, true, ...pointerOf(e))}
-        onPointerMove={(e) => onHover(i, true, ...pointerOf(e))}
-        onPointerLeave={() => onHover(i, false)}
+        onPointerMove={(e) => {
+          moveHandlers.set(e.currentTarget, (nx, ny) => onHover(i, true, nx, ny));
+          fanMoves.push(e.currentTarget, e.currentTarget, e.clientX, e.clientY);
+        }}
+        onPointerLeave={(e) => {
+          fanMoves.cancel(e.currentTarget);
+          onHover(i, false);
+        }}
         onFocus={() => onHover(i, true)}
         onBlur={() => onHover(i, false)}
       >

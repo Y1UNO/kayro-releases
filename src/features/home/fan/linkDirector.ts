@@ -1,9 +1,10 @@
 import { Choreo } from "../../../design/motion/choreo";
 import { ECO_MAX_FPS } from "../../../fx/budget";
+import { liveCadence } from "../../../fx/cadenceCap";
 import { setStageCue, type GlassPose, type StageFrame } from "../../../fx/gpu/cues";
 import { frameLoop } from "../../../fx/loop";
 import type { FanMotion, HoverConfig } from "./fanFloat";
-import { put, renderFan } from "./fanRender";
+import { put, renderFan, type FanCardEls } from "./fanRender";
 import { LinkElements, type LinkEls } from "./linkEls";
 import {
   deckOrder,
@@ -52,6 +53,8 @@ export class LinkDirector {
   private els: LinkEls | null = null;
   private fanOrigin = { x: 0, y: 0 };
   private stageOrigin = { x: 0, y: 0 };
+  /** `stageOrigin` was just measured: the next render need not read it (a second forced layout). */
+  private fresh = false;
   private slotBox = { w: 0, h: 0, r: 0 };
   private readonly poses = new Map<Element, GlassPose>();
   private frame: StageFrame | null = null;
@@ -65,7 +68,10 @@ export class LinkDirector {
   private readonly elements = new LinkElements();
   /** Ref callbacks for the components (stable functions). */
   readonly bind = this.elements.bind;
-  private readonly cards = this.elements.cards;
+  /** The fan cards on screen (none while the fan is put away). */
+  private get cards(): readonly (FanCardEls | null)[] {
+    return this.elements.shown();
+  }
   private getEls = (): LinkEls => this.elements.get();
 
   constructor(private config: LinkConfig) {}
@@ -128,8 +134,7 @@ export class LinkDirector {
   /**
    * The fan's own frame loop: only while the fan is on screen and something moves (floating,
    * hover, threads), at 60 images/s (30 in Eco, and 30 for the floating alone: round 5); stopped
-   * otherwise. A running sequence draws
-   * the fan itself (same values, floating included).
+   * otherwise. A running sequence draws the fan itself (same values, floating included).
    */
   wake(): void {
     if (this.motionOff || !this.motion || !this.cards.some((c) => c)) return;
@@ -160,10 +165,7 @@ export class LinkDirector {
     if (phase === "spread") this.release();
   }
 
-  /**
-   * Plays a sequence from the current picture. Resolves true when it ended, false when another
-   * one replaced it. `reduced`: final state at once.
-   */
+  /** Plays a sequence from the picture of now: true at its end, false if replaced. */
   async play(
     kind: SequenceKind,
     cat: number,
@@ -178,7 +180,8 @@ export class LinkDirector {
         this.values = seq.at(t, out);
         this.render(this.values, seq.phaseAt(t));
       },
-      opts,
+      // The engine follows on the same grid (src/fx/gpu/cadence.ts, step 13).
+      { ...opts, fps: liveCadence().sequence },
     );
     if (!done) return false;
     this.phase = kind === "back" ? "choose" : "spread";
@@ -262,6 +265,7 @@ export class LinkDirector {
     const els = this.els;
     this.fanOrigin = centre(els?.fan ?? null);
     this.stageOrigin = centre(els?.stage ?? null);
+    this.fresh = true;
     const s = this.slots[0];
     if (s) {
       this.slotBox = {
@@ -304,7 +308,7 @@ export class LinkDirector {
     this.publish();
   }
 
-  /** The fan was mounted or unmounted: draw the current picture on the elements of now. */
+  /** The fan was mounted, unmounted or put away: draw the current picture on the elements of now. */
   sync(): void {
     if (this.choreo.active) return;
     this.els = this.getEls();
@@ -317,9 +321,10 @@ export class LinkDirector {
     if (!els) return;
     const g = (k: string, d = 0) => v.get(k) ?? d;
     const c = this.config;
-    // The stage can move while a sequence runs (its layer enters with a short slide): its
-    // centre is read at every frame the cards are posed, so the glass never lags behind them.
-    if (this.slots.length > 0 && els.stage) this.stageOrigin = centre(els.stage);
+    // The stage can move during a sequence (its layer slides in): its centre is read at every
+    // posed frame (the glass never lags behind), unless just measured.
+    if (this.slots.length > 0 && els.stage && !this.fresh) this.stageOrigin = centre(els.stage);
+    this.fresh = false;
     this.poses.clear();
     // Category cards: turn around the pivot, lift and shrink, blur out by cross-fade; float.
     const hover = renderFan(

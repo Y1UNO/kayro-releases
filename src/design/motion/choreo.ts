@@ -9,8 +9,9 @@ import { frameLoop, type FrameLoop } from "../../fx/loop";
  *   straight on the elements (no React render per frame). The elements it moves must be on their
  *   own compositor layer while it runs (`will-change`), or each frame repaints the whole window
  *   (measured round 3: tab change p95 7.2 ms until the animated layers were promoted).
- * - Capped on the same time grid as the glass engine (FX_MAX_FPS, 30 in Eco): the DOM and the
- *   engine's canvas change on the same screen frames. The engine reads the same clock (`time`).
+ * - Capped on the same time grid as the glass engine (`fps`: the category links use
+ *   `CADENCE.sequence`, the opening the display rate; 30 in Eco): the DOM and the engine's canvas
+ *   change on the same screen frames. The engine reads the same clock (`time`).
  * - One sequence at a time: `play` cancels the one under way (cancellation token); the promise of
  *   the cancelled one resolves `false`.
  * - Reduced motion: `render(duration)` at once (final state), no frame loop at all.
@@ -23,6 +24,8 @@ export interface PlayOptions {
   reduced?: boolean;
   /** Start the sequence this many ms in (skips the beginning). */
   from?: number;
+  /** Frame cap (default: the display rate, ≤ 144); Eco wins. */
+  fps?: number;
 }
 
 let running = 0;
@@ -80,7 +83,7 @@ export class Choreo {
           render(t);
           if (t >= duration) this.finish(true);
         },
-        opts.eco ? ECO_MAX_FPS : FX_MAX_FPS,
+        opts.eco ? ECO_MAX_FPS : (opts.fps ?? FX_MAX_FPS),
         true, // before the glass engine: it measures what this frame wrote
       );
     });

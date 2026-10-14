@@ -1189,6 +1189,55 @@ Rapport complet : **`docs/PERF-ETAPE13.md`**.
 - Clore l'image blanche ?
 - Particules à moitié en Éco / Équilibré : rien ne justifie de les couper pour la perf (question de la ronde 1).
 
+**Piste pour l'étape 14 (couleurs du jeu), trouvée au paquet 3 des corrections (14/10)** :
+- **Ce qu'on a appris** : appliquer un thème coûtait **deux** recalculs complets du style (~6 ms chacun dans une page calme, ~20 ms dans la trace). Deux causes :
+  - `applyTheme` coupait la transition de `:root`, forçait une lecture, puis la remettait ;
+  - le moteur relisait les couleurs par `getComputedStyle`.
+- **Corrigé, sans changer le rendu** :
+  - la transition des couleurs n'est déclarée que pendant un vrai fondu de variables (`:root[data-theme-fade]`) ;
+  - le moteur prend ses couleurs de fond dans la palette (`FxPalette.bg`).
+  - Résultat : un seul recalcul, ~10–12 ms dans la trace au lieu de ~20.
+- **Ce qui reste** : à l'impact de l'onde ou du fondu, 1 à 2 images de 15 à 25 ms, dues à la capture de la page par la View Transition. Acceptées pour cette signature : elles sont cachées sous la capture figée.
+- **Règles pour les ambiances par jeu** (palette au changement de jeu, peut-être fréquent) :
+  - changer les variables d'un seul coup, sans transition déclarée en permanence, et sans lecture forcée (`getComputedStyle`, `offsetHeight`) après l'écriture ;
+  - donner les couleurs au moteur par la palette ;
+  - éviter une View Transition à chaque changement de jeu : une capture plein écran coûte 1 à 2 images lentes ;
+  - mesurer avec `npm run perf -- --trace … --invalidations`.
+
+**Paquet 4 des corrections (14/10) : liaison, retour, onglets, passages.** Chiffres acceptés pour l'étape 13 : à l'œil, tout est fluide.
+- **Fait, sans changer le rendu** :
+  - plus aucun `getAnimations()` dans un clic : le titre, le reflet et le voile annulent leur propre animation ;
+  - icônes déjà chargées rendues tout de suite ;
+  - `matchMedia` gardé, au lieu d'être recréé à chaque appel ;
+  - pas de seconde lecture de la scène au début d'une séquence ;
+  - pastille des onglets qui n'écrit que des styles pendant son animation ;
+  - éventail gardé monté et caché (`display: none`, aucune boucle) après la liaison ;
+  - passages : retour de la page après 2 images sans redimensionnement, noir à 0,004 au lieu de 0, calque de la page gardé le temps du passage.
+- **Restent** : 1 à 3 images > 8 ms par liaison, retour ou onglet, jusqu'à 14–21 ms, et 1 à 4 images lentes visibles au début du fondu d'entrée pour 3 passages.
+  - Le gros du coût est la tâche du clic : environ 9 à 14 ms au profil CPU, surtout le recalcul et la mise en page de ce que React vient de changer.
+  - En face de cette tâche, le traçage CDP gonfle les temps d'environ ×3 : prendre les profils CPU (`Profiler`) pour les ordres de grandeur.
+- **Écartés** :
+  - un calque de filets par emplacement : plus aucune image > 8 ms au survol qui change depuis le paquet 2, et ce calque alourdirait les changements de thème ;
+  - les tampons du moteur à la taille de l'écran : le flou lit les mips de toute la texture, donc le rendu changerait.
+
+**Piste pour l'étape 14 : liaison, retour, onglets.** Deux chemins s'opposent ; à trancher en mesurant les deux, avec les ambiances par jeu :
+- **éventail prêt à 0 % d'opacité** plutôt qu'en `display: none` : le clic n'aurait plus à recalculer ni à disposer l'éventail. En revanche, chaque changement de thème (ou d'ambiance de jeu) recalculerait aussi ses ~150 éléments ;
+- **ou alléger le recalcul au changement de thème ou de catégorie** : moins d'éléments touchés, moins de variables héritées, moins de travail React par onglet.
+
+**Remesure de fin (14/10, exe de 18:08)** : détail dans `docs/PERF-ETAPE13.md`, section « Après corrections ».
+- **Résultats** :
+  - budget p95 ≤ 5,4 ms tenu partout ; le Fondu en Éco passe de 10,7 à 3,7 ms ;
+  - liaison, retour, onglets : 1 à 2 images > 8 ms par occurrence en Élevée, 1 en Éco, aucune > 16 ms ;
+  - onde : 2 à 6 en Élevée, 2 en Éco (34 avant) ;
+  - repos : CPU de 1,5 à 3,3 %.
+- **Points clos** :
+  - image blanche (le filet `--bg-bottom` est gardé ; à rouvrir si elle se revoit) ;
+  - `--quit` (P1) et flash (P3) ;
+  - A10, retiré.
+- **Reporté** : la qualité « Auto », avant l'étape 19 (ROADMAP).
+
+**Point ouvert pour l'audit de l'étape 18** : le CPU au repos du carrousel est de 3,6 à 4,2 % en Élevée avec la flottaison « Visible » (R2), contre 1,4 % sans flottaison (R3). La cible CLAUDE.md est < 1 %.
+
 ## Éléments du catalogue
 | Élément | État | Remarque |
 |---|---|---|

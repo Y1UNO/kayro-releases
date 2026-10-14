@@ -32,16 +32,25 @@ export function themeVariables(theme: Theme): Record<string, string> {
   };
 }
 
-/** Writes the theme on <html>. `instant` skips the fade (first paint, restored theme). */
+/** The cross-fade of `:root[data-theme-fade]` (`--dur-theme` in tokens.css, 0.9 s), plus a margin. */
+export const THEME_FADE_MS = 1000;
+let fadeEnd = 0;
+
+/**
+ * Writes the theme on <html>. `instant` skips the fade (first paint, restored theme, the swaps of
+ * Réglages › Thèmes). Step 13: the colours' transition is only declared while a cross-fade runs
+ * (`data-theme-fade`), so an instant change restyles the page once, with no forced flush.
+ */
 export function applyTheme(theme: Theme, instant: boolean): void {
   const root = document.documentElement;
-  if (instant) root.style.setProperty("transition", "none");
+  window.clearTimeout(fadeEnd);
+  if (instant) delete root.dataset.themeFade;
+  else {
+    root.dataset.themeFade = "";
+    fadeEnd = window.setTimeout(() => delete root.dataset.themeFade, THEME_FADE_MS);
+  }
   for (const [name, value] of Object.entries(themeVariables(theme))) {
     root.style.setProperty(name, value);
   }
   root.dataset.theme = theme.id;
-  if (instant) {
-    void getComputedStyle(root).getPropertyValue("--accent"); // flush styles while transitions are off
-    root.style.removeProperty("transition");
-  }
 }

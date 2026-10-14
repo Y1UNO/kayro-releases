@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
+import { PointerFrame } from "../../fx/pointerFrame";
 
 /**
  * Drag and drop with pointer events. HTML5 drag and drop is turned off by Tauri's file-drop
@@ -73,17 +74,16 @@ export function useDrag<P>({ list, rows, onDrop, onEnd }: Options<P>) {
       const startX = e.clientX;
       const startY = e.clientY;
       let active = false;
+      // Once per frame whatever the mouse sends (step 13): the rows are measured once per frame.
+      const frame = new PointerFrame<number>((_k, _el, x, y) =>
+        setDrag({ payload, x, y, index: indexAt(x, y) }),
+      );
 
       const move = (ev: PointerEvent) => {
         if (!active && Math.hypot(ev.clientX - startX, ev.clientY - startY) < THRESHOLD) return;
         active = true;
         document.body.style.userSelect = "none";
-        setDrag({
-          payload,
-          x: ev.clientX,
-          y: ev.clientY,
-          index: indexAt(ev.clientX, ev.clientY),
-        });
+        frame.push(0, document.body, ev.clientX, ev.clientY);
       };
       const end = (ev: PointerEvent | null) => {
         ending.current?.();
@@ -104,6 +104,7 @@ export function useDrag<P>({ list, rows, onDrop, onEnd }: Options<P>) {
         }
       };
       const cleanup = () => {
+        frame.dispose();
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
         window.removeEventListener("pointercancel", cancel);

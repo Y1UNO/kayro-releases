@@ -22,8 +22,6 @@ export interface CarouselFloatConfig {
   /** Cadence while anything else moves; `idleFps` while the cards only float. */
   fps: number;
   idleFps: number;
-  /** The float boxes are layers while the loop runs (review A10, `FLOAT_RHYTHM.promote`). */
-  layers?: boolean;
 }
 
 /**
@@ -44,7 +42,6 @@ export function carouselFloatConfig(
     fps: eco ? ECO_MAX_FPS : AMBIENT_FPS,
     // Round 5: the floating alone at 30 i/s (the sine is slow, the eye does not see it).
     idleFps: ECO_MAX_FPS,
-    layers: R.promote,
   };
 }
 
@@ -103,10 +100,8 @@ export class CarouselFloat {
     for (const [el, b] of old) {
       if (this.boxes.some((x) => x.el === el)) continue;
       this.rest(b);
-      el.style.willChange = "";
     }
     this.start();
-    if (this.off) this.layers(true);
   }
 
   hover(card: Element | null): void {
@@ -132,7 +127,6 @@ export class CarouselFloat {
     if (this.off || this.config.amp <= 0 || this.boxes.length === 0) return;
     this.rate = rate;
     this.off = this.loop().subscribe((dt, now) => this.tick(dt, now), rate);
-    this.layers(true);
   }
 
   /** Runs at `rate` from now on (no change when it already does). */
@@ -147,16 +141,6 @@ export class CarouselFloat {
     this.off?.();
     this.off = null;
     for (const b of this.boxes) this.rest(b);
-    this.layers(false);
-  }
-
-  /**
-   * While the loop runs, each float box may be a layer of its own: a transform written by script
-   * every frame would otherwise repaint the whole card (review A10, off until measured useful).
-   */
-  private layers(on: boolean): void {
-    if (!this.config.layers && on) return;
-    for (const b of this.boxes) b.el.style.willChange = on ? "transform" : "";
   }
 
   private rest(b: Box): void {

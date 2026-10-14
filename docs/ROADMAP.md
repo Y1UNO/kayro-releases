@@ -17,7 +17,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 11 | Éditeur de scènes (modes simple et avancé), dock, import/export `.hubscene` | 7, 10 | C |
 | [x] 12 | Modes immersif/fenêtre/widget, raccourci, tray | 2, 7 | C |
 | [ ] 12b | Atelier de direction artistique (DA officielle v1), itératif, fini quand je dis « je fige la DA » | 8, 12 | C |
-| [ ] 13 | Performance : états, qualité adaptative, benchmark, réglages, sans échec | 6, 8, 12 | D |
+| [x] 13 | Performance : états, qualité adaptative, benchmark, réglages, sans échec | 6, 8, 12 | D |
 | [ ] 14 | Couleurs du jeu : art local, palette OKLab, modes | 5, 8 | E |
 | [ ] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
 | [ ] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
@@ -73,7 +73,18 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 - **Chore renommage Hub → Kayro — 2026-10-10** (branche `chore-kayro`) : `productName`/titre de fenêtre/`index.html`/thèmes/Cargo = Kayro ; `{app}` est un paramètre toujours rempli par `t()` (fr.json) ; exe `Kayro.exe` (`[[bin]]`), identifiant `fr.yiuno.hub` et crate `hub` inchangés. `src-tauri/src/legacy.rs` : si `%APPDATA%/Hub` existe et pas `Kayro`, copie dans `Kayro.migrating` puis renomme (jamais de `Kayro` à moitié copié), journalisée ; l'ancien dossier n'est ni modifié ni supprimé. Logs (`kayro.*.log`) et cache d'icônes vivent dans ce dossier. 4 tests dans un dossier temporaire.
 - **Chore raccourci bureau — 2026-10-10** (branche `chore-raccourci`) : `scripts/build-local.ps1` (build `--no-bundle` → `target/release/Kayro.exe`, `Kayro.lnk` réécrit sur place avec icône `icon.ico` et dossier de travail de l'exe ; Kayro ouvert → question o/N, `-CloseRunning`, ou arrêt avec message ; fermeture douce seulement, jamais de kill). Testé : build, raccourci (cible/icône/dossier), démarrage par le raccourci, cas « ouvert » avec et sans `-CloseRunning`, pas de doublon.
 
-- **Étape 13, séance de mesures en production — 2026-10-13** (avant le gel de la DA, **étape non cochée** : la machine d'états, Auto, le banc et les réglages restent à faire) : `docs/PERF-ETAPE13.md`. Budget p95 ≤ 5,4 ms tenu partout sauf l'onde de thème en Éco (Fondu : p95 jusqu'à 10,7 ms). Pulsation C : 0 image > 8 ms. Repos visible : 1,2–4,2 % de CPU (cible < 1 % non tenue) ; hub masqué : 0,05 % / 0 % de GPU. `--quit` : 11 sur 11 en 38–53 ms. Corrections proposées classées par gain, non appliquées.
+- **Étape 13, séance de mesures en production — 2026-10-13** (avant le gel de la DA ; **étape cochée le 2026-10-14** : mesures et corrections faites, banc livré. Hors de cette étape : la qualité « Auto », reportée avant l'étape 19, ainsi que la machine d'états et les réglages de performance) : `docs/PERF-ETAPE13.md`. Budget p95 ≤ 5,4 ms tenu partout sauf l'onde de thème en Éco (Fondu : p95 jusqu'à 10,7 ms). Pulsation C : 0 image > 8 ms. Repos visible : 1,2–4,2 % de CPU (cible < 1 % non tenue) ; hub masqué : 0,05 % / 0 % de GPU. `--quit` : 11 sur 11 en 38–53 ms. Corrections proposées classées par gain, non appliquées.
+  - **Corrections — 2026-10-14** (4 paquets, rendu identique ; remesure dans `docs/PERF-ETAPE13.md` § « Après corrections ») :
+    - banc `npm run perf` (`scripts/perf/`) ;
+    - plafonds de cadence du moteur en tokens et pointeur regroupé par image ;
+    - Fondu Éco en View Transition (p95 10,7 → 3,7 ms) et thème appliqué en un seul recalcul ;
+    - clics de liaison, retour et onglets allégés (1–2 images > 8 ms par occurrence en Élevée, aucune > 16 ms) et passages dont les grosses images tombent dans le noir ;
+    - A10 retiré.
+    - Restent : le CPU au repos du carrousel avec flottaison (3,3 %, audit de l'étape 18) et les pistes de l'étape 14 (journal).
+
+## Plus tard (avant l'étape 19)
+- [ ] Qualité « Auto » adaptative, pour les PC plus faibles : proposition chiffrée dans `docs/PERF-ETAPE13.md` § « Qualité Auto » (décision du 14/10 : pas maintenant).
+- [ ] Réglage « Écran d'ouverture » : écran principal · écran de la souris · dernier utilisé. Aujourd'hui, sans placement enregistré, l'app s'ouvre sur l'écran de la souris (vu au banc de l'étape 13).
 
 ## Petits ajustements et vérification finale
 À lancer avant l'étape 19 (« Passe de finition », voir `_kit/PROMPTS.md`).

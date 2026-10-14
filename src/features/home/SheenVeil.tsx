@@ -47,15 +47,17 @@ export function SheenVeil({ duration }: { duration: number }) {
     if (!shown) return;
     el.style.transform = at(0);
     let timer = 0;
+    // Cancelled by reference: `getAnimations()` flushes the style (step 13: in a tab's commit).
+    let glide: Animation | null = null;
     const play = () => {
-      sheenGlide(el, duration);
+      glide = sheenGlide(el, duration);
       timer = window.setTimeout(play, sheenCycle(duration));
     };
     // First glide a moment after the card became selected (as the engine's: rest share first).
     timer = window.setTimeout(play, duration * (1 / GLIDE_SHARE - 1) * 0.5);
     return () => {
       window.clearTimeout(timer);
-      for (const animation of el.getAnimations()) animation.cancel();
+      glide?.cancel();
       delete el.dataset.still;
     };
   }, [duration, shown, reduced]);

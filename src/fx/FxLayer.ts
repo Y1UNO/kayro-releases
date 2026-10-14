@@ -12,6 +12,11 @@ export interface FxPalette {
   /** The two colours of the theme gradient (moon, veils, ring, embers, stars), rgb. */
   a: readonly [number, number, number];
   b: readonly [number, number, number];
+  /**
+   * Background top / middle / bottom, CSS colours (step 13: the glass engine takes them from here
+   * instead of reading the page's computed style, which forced a full restyle at each theme change).
+   */
+  bg?: readonly [string, string, string];
 }
 
 /**

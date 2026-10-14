@@ -12,12 +12,18 @@
  */
 export type Tick = (dt: number, now: number) => void;
 
+/**
+ * Stops the subscription. `setFps` (the app's loop; optional for test fakes) changes its cap in
+ * place: no frame is skipped, unlike unsubscribing and subscribing again.
+ */
+export type Unsubscribe = (() => void) & { setFps?: (maxFps: number) => void };
+
 export interface FrameLoop {
   /**
    * Returns the unsubscribe function. `first`: ticks before the others on each frame (scripted
    * sequences write the DOM before the glass engine measures it, so both show the same moment).
    */
-  subscribe(tick: Tick, maxFps?: number, first?: boolean): () => void;
+  subscribe(tick: Tick, maxFps?: number, first?: boolean): Unsubscribe;
   pause(): void;
   resume(): void;
   /** True while a frame is requested (for tests and the bench). */
@@ -76,11 +82,19 @@ export function createFrameLoop(
       if (first) subs.unshift(sub);
       else subs.push(sub);
       schedule();
-      return () => {
+      const off = () => {
         const i = subs.indexOf(sub);
         if (i >= 0) subs.splice(i, 1);
         if (subs.length === 0) stop();
       };
+      return Object.assign(off, {
+        setFps(fps: number) {
+          const interval = fps > 0 ? 1000 / fps : 0;
+          if (interval === sub.interval) return;
+          sub.interval = interval;
+          sub.slot = -1; // the next frame ticks, then the new grid applies
+        },
+      });
     },
     pause() {
       paused = true;

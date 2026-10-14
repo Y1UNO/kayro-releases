@@ -9,6 +9,7 @@ import { openingOwnsEntrance } from "../opening/useOpening";
 import { cascadeDelay, parseRgb, passagePlan, veilFade, type PassagePlan } from "./passage";
 import {
   PassageDriver,
+  quietFrames,
   resizeOrTimeout,
   waitsForSize,
   type PassageIo,
@@ -19,6 +20,14 @@ import {
 const CARDS = "[data-home-layer] [data-app-id]";
 /** After the core's « in », how long to wait for the new size before coming back anyway. */
 const RESIZE_WAIT_MS = 300;
+/**
+ * The page's opacity in the dark of a passage: about 1/255, not 0. Step 13: at 0 the page is not
+ * drawn, so it was rasterised at its new size in the first frames of its fade-in (25–36 ms frames,
+ * seen at 12–49 %); just above 0 that work is done while it is dark.
+ */
+const DARK = 0.004;
+/** Passages faded out so far: a fade-in cut by the next passage leaves that one's layer alone. */
+let passages = 0;
 
 const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
@@ -49,8 +58,8 @@ function fadedColor(label: "main" | "widget"): [number, number, number] {
 async function settled(before: Size, resized: boolean): Promise<void> {
   const now = { w: innerWidth, h: innerHeight };
   if (waitsForSize(before, now, resized)) await resizeOrTimeout(window, RESIZE_WAIT_MS);
-  await frame();
-  await frame();
+  // Two frames painted at the final size (the window may be resized again meanwhile).
+  await quietFrames(window, frame, 2, RESIZE_WAIT_MS);
 }
 
 /**
@@ -62,21 +71,29 @@ function comeIn(label: "main" | "widget", p: PassagePlan, instant: boolean): voi
   const body = document.body;
   for (const a of body.getAnimations()) a.cancel();
   body.style.opacity = "";
-  if (p.instant || instant) return;
+  const mine = passages;
+  const layerOff = () => {
+    if (mine === passages) body.style.willChange = "";
+  };
+  if (p.instant || instant) return layerOff();
   if (label === "widget") {
-    body.animate(
-      [
-        { opacity: 0, transform: `scale(${p.widgetFrom})` },
-        { opacity: 1, transform: "scale(1)" },
-      ],
-      { duration: p.in.duration, easing: p.in.easing },
-    );
+    void body
+      .animate(
+        [
+          { opacity: DARK, transform: `scale(${p.widgetFrom})` },
+          { opacity: 1, transform: "scale(1)" },
+        ],
+        { duration: p.in.duration, easing: p.in.easing },
+      )
+      .finished.then(layerOff, layerOff);
     return;
   }
-  body.animate([{ opacity: 0 }, { opacity: 1 }], {
-    duration: p.in.duration,
-    easing: p.in.easing,
-  });
+  void body
+    .animate([{ opacity: DARK }, { opacity: 1 }], {
+      duration: p.in.duration,
+      easing: p.in.easing,
+    })
+    .finished.then(layerOff, layerOff);
   document.querySelectorAll<HTMLElement>(CARDS).forEach((card, i) =>
     card.animate(
       [{ transform: `translateY(${p.cascade.rise}px)` }, { transform: "translateY(0px)" }],
@@ -99,7 +116,11 @@ async function fadeOut(label: "main" | "widget", p: PassagePlan) {
   const body = document.body;
   const from = getComputedStyle(body).opacity;
   for (const a of body.getAnimations()) a.cancel();
-  const fade = body.animate([{ opacity: from }, { opacity: 0 }], {
+  // The page keeps its own layer for the whole passage (until its fade-in ends): it is drawn at
+  // its new size while dark, not in the first frame of its fade-in (step 13).
+  passages++;
+  body.style.willChange = "opacity";
+  const fade = body.animate([{ opacity: from }, { opacity: DARK }], {
     duration: p.out.duration,
     easing: p.out.easing,
     fill: "forwards",

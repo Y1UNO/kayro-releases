@@ -222,8 +222,15 @@
   color: var(--text);
   /* The darkest theme colour (round 5): the first image is the opening's own starting colour. */
   background: var(--bg-bottom);
+}
 
-  /* Cross-fade of the theme: every registered colour interpolates on :root, children inherit the animated value. */
+/*
+ * Cross-fade of the theme: every registered colour interpolates on :root, children inherit the
+ * animated value. Declared only while a cross-fade runs (`data-theme-fade`, applyTheme.ts): an
+ * instant change (the wave, the fade, « Direct ») then restyles the page once, not twice (step 13:
+ * turning a standing transition off and on again cost a second full restyle, ~6 ms).
+ */
+:root[data-theme-fade] {
   transition:
     --bg-top var(--dur-theme) var(--ease),
     --bg-mid var(--dur-theme) var(--ease),
