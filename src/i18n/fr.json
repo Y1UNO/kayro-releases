@@ -225,10 +225,26 @@
       "deleteConfirm": "Retirer « {name} » de {app} ?",
       "deleteExplain": "Le programme lui-même reste sur votre ordinateur.",
       "deleteYes": "Retirer",
-      "deleteNo": "Garder",
-      "posterHint": "Pour changer l’affiche, glissez une image sur sa carte.",
-      "posterMine": "Affiche choisie par vous.",
-      "posterReset": "Revenir à l’affiche d’origine"
+      "deleteNo": "Garder"
+    },
+    "look": {
+      "title": "Apparence",
+      "help": "Appliqué tout de suite. Glissez une image (JPEG, PNG ou WebP) sur une case.",
+      "poster": "Affiche",
+      "hero": "Fond",
+      "logo": "Logo",
+      "none": "Aucune",
+      "fromSteam": "Steam",
+      "fromYou": "vous",
+      "remove": "Retirer",
+      "colors": "Couleurs",
+      "auto": "Automatiques",
+      "chosen": "Choisies",
+      "theme": "Thème",
+      "colorA": "Couleur A",
+      "colorB": "Couleur B",
+      "noPalette": "Pas encore de couleurs pour cette app : ajoutez une image.",
+      "preview": "Aperçu des couleurs"
     }
   },
   "widget": {

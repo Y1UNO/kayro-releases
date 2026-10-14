@@ -18,6 +18,7 @@ fn app(id: &str, launch: Launch, exe: Option<&str>) -> AppEntry {
         art: Art::default(),
         mood_id: None,
         favorite: false,
+        colors: None,
     }
 }
 

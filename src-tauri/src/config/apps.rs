@@ -106,6 +106,10 @@ pub struct AppEntry {
     pub art: Art,
     pub mood_id: Option<String>,
     pub favorite: bool,
+    /// The user's choice of colours for this app (step 14); absent = automatic.
+    #[serde(default)]
+    #[specta(optional)]
+    pub colors: Option<super::game_colors::AppColors>,
 }
 
 /// Hand-edited files may leave out optional parts; fill them in before the strict parse so the
@@ -155,6 +159,7 @@ impl NewApp {
             art: self.art,
             mood_id: self.mood_id,
             favorite: self.favorite,
+            colors: None,
         }
     }
 }

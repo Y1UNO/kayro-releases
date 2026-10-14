@@ -103,7 +103,8 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   couleurs du moteur par la palette ; liaison et onglets : mesurer « éventail prêt à 0 % » contre « recalcul allégé »
   (`docs/DESIGN.md` § 7). *Paquet 4 du 14/10 : les trois premières appliquées aux couleurs du jeu ; la mesure
   « éventail prêt à 0 % » reste pour le paquet 6.*
-- [ ] « Couleurs du jeu » (`color_mode`) : réafficher le réglage quand il aura un effet.
+- [x] « Couleurs du jeu » (`color_mode`) : réafficher le réglage quand il aura un effet — fait le 2026-10-14 (Visuel,
+  avec ses variantes en Personnalisation avancée et le choix par app).
 
 ### Étape 15 — Réglages · Apparence
 - [ ] « Créer mon thème », import / export de thèmes (la grille des 6 thèmes existe déjà, R5).

@@ -11,7 +11,7 @@ export interface GameColorsState {
   origin: FxTarget | null;
   /** Time (`performance.now`) the shown app changed. */
   since: number;
-  /** The last change plays the tide (false: the first selection, shown at once). */
+  /** The last change plays the passage (false: the first selection, shown at once). */
   tide: boolean;
 }
 
@@ -28,10 +28,11 @@ let started = false;
 /**
  * The home's selection (`null`: nothing selected). Its colours follow once it has rested
  * `GAME_COLORS.delay` ms (V8 b): each new selection restarts the wait, so a burst of arrows or a
- * held key never changes them. The very first selection shows at once, without a tide (the opening
- * covers it). `locate` gives the selected card's place when the wait ends.
+ * held key never changes them; `wait: false` (setting « Tout de suite ») follows at once. The very
+ * first selection shows at once, without a passage (the opening covers it). `locate` gives the
+ * selected card's place when the wait ends.
  */
-export function selectGame(id: string | null, locate: () => FxTarget | null): void {
+export function selectGame(id: string | null, locate: () => FxTarget | null, wait = true): void {
   window.clearTimeout(timer);
   const state = gameColorsStore.getState();
   if (!started) {
@@ -40,10 +41,10 @@ export function selectGame(id: string | null, locate: () => FxTarget | null): vo
     return;
   }
   if (state.shown === id) return;
-  const wait = GAME_COLORS.delay / currentMotion().speed;
+  const ms = wait ? GAME_COLORS.delay / currentMotion().speed : 0;
   timer = window.setTimeout(() => {
     gameColorsStore.setState({ shown: id, origin: locate(), since: performance.now(), tide: true });
-  }, wait);
+  }, ms);
 }
 
 /** Tests: back to the state of a fresh start. */

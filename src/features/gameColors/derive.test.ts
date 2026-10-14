@@ -115,4 +115,18 @@ describe("game colours", () => {
     expect(chromaOf(hexToLab(a))).toBeLessThan(0.13);
     expect(a).not.toBe(b);
   });
+
+  it("follow the app's own choice: its two colours, or the theme's", () => {
+    const theme = BUILTIN_THEMES[0]!;
+    const src = { main: EXTREMES.hades!, other: null };
+    expect(deriveGameColors(theme, src, "light", undefined, { mode: "theme" })).toBeNull();
+    const own = { mode: "chosen" as const, a: "#c82828", b: "#2846d2" };
+    const chosen = deriveGameColors(theme, null, "light", undefined, own)!;
+    const auto = deriveGameColors(theme, src, "light")!;
+    expect(chosen.a).not.toBe(auto.a);
+    // Bounded and mixed like the automatic colours: red stays red-ish, never the raw #c82828.
+    expect(chosen.a).not.toBe("#c82828");
+    expect(hexToLab(chosen.a)[1]).toBeGreaterThan(hexToLab(auto.a)[1]);
+    expect(deriveGameColors(theme, src, "light", undefined, { mode: "auto" })).toEqual(auto);
+  });
 });

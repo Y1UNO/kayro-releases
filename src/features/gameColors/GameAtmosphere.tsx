@@ -15,9 +15,12 @@ export function GameAtmosphere() {
     () => gamePalette(theme, view.colors, { hero: view.hero, passage: "instant" }),
     [theme, view.colors, view.hero],
   );
+  // « Direct » plays nothing: every change is instant.
+  const kind: "tide" | "fade" = view.passage === "fade" ? "fade" : "tide";
   const change = useMemo(
-    () => (view.tide ? { id: view.since, origin: view.origin } : null),
-    [view.tide, view.since, view.origin],
+    () =>
+      view.tide && view.passage !== "direct" ? { id: view.since, origin: view.origin, kind } : null,
+    [view.tide, view.since, view.origin, view.passage, kind],
   );
   return <Atmosphere palette={palette} change={change} />;
 }

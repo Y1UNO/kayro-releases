@@ -1,6 +1,14 @@
 import { themeGradient, type Theme } from "../../design";
 import type { FxPalette } from "../../fx";
-import type { ColorMode, Palette, PaletteColor } from "../../ipc/bindings";
+import type {
+  AppColors,
+  ColorCharacter,
+  ColorIntensity,
+  ColorMode,
+  ColorPick,
+  Palette,
+  PaletteColor,
+} from "../../ipc/bindings";
 import {
   chromaOf,
   hexToLab,
@@ -15,16 +23,16 @@ import {
 /**
  * How a game's palette becomes Kayro's colours (step 14). The core gives raw colours (OKLab, with
  * their share and four roles); here they are picked, bounded like the themes' own colours and mixed
- * with the theme. Choices of the board (DA-JOURNAL, 14/10): V1 b, V5 a, V6 a; the other variants are
- * kept for the « Personnalisation avancée » (step 14, package 5).
+ * with the theme. Defaults = the board (DA-JOURNAL, 14/10): V1 b, V5 a, V6 a; the other variants are
+ * the « Personnalisation avancée » (settings `colorIntensity`, `colorCharacter`, `colorPick`).
  */
 export interface ColorChoice {
   /** V1: share of the game's colour mixed into the theme. */
-  intensity: "soft" | "normal" | "strong";
+  intensity: ColorIntensity;
   /** V6: bounds of lightness and chroma. */
-  character: "theme" | "vivid" | "faithful";
+  character: ColorCharacter;
   /** V5: which colours become A and B. */
-  pick: "dominant" | "vivid" | "themeB";
+  pick: ColorPick;
 }
 
 export const DEFAULT_CHOICE: ColorChoice = {
@@ -93,7 +101,7 @@ export function gamePair(source: GameSource, themeB: Lab, pick: ColorChoice["pic
   const dom = main.colors[main.dominant];
   const d = dom ? lab(dom) : themeB;
   const acc = accentOf(main) ?? accentOf(other) ?? themeB;
-  if (pick === "themeB") return [d, themeB];
+  if (pick === "theme") return [d, themeB];
   if (pick === "vivid") {
     const [first, ...rest] = vividOrder(main);
     if (!first) return [d, acc];
@@ -102,22 +110,31 @@ export function gamePair(source: GameSource, themeB: Lab, pick: ColorChoice["pic
   return [d, acc];
 }
 
-/** The game's colours for a theme, or null when the theme's own apply (mode off, no palette). */
+/**
+ * The game's colours for a theme, or null when the theme's own apply (mode off, no palette, or the
+ * app set to « thème »). The app's own choice (`AppColors`, its edit dialog) replaces the automatic
+ * pick only: its two colours are bounded and mixed like the others.
+ */
 export function deriveGameColors(
   theme: Theme,
   source: GameSource | null,
   mode: ColorMode,
   choice: ColorChoice = DEFAULT_CHOICE,
+  own: AppColors | null = null,
 ): GameColors | null {
-  if (!source || mode === "off") return null;
+  if (mode === "off" || own?.mode === "theme") return null;
+  const chosen = own?.mode === "chosen" ? own : null;
+  if (!source && !chosen) return null;
   const [ta, tb] = themeGradient(theme).map(hexToLab) as [Lab, Lab];
   const t = MIX[choice.intensity];
-  const [rawA, rawB] = gamePair(source, tb, choice.pick);
+  const [rawA, rawB] = chosen
+    ? [hexToLab(chosen.a), hexToLab(chosen.b)]
+    : gamePair(source!, tb, choice.pick);
   const a = labToHex(mixLab(ta, bounded(rawA, choice.character), t));
   const b = labToHex(mixLab(tb, bounded(rawB, choice.character), t));
   if (mode !== "immersive") return { a, b, night: null };
   // The night takes the hue of the dominant colour (or of A when the dominant one is grey).
-  const dom = source.main.colors[source.main.dominant];
+  const dom = chosen || !source ? undefined : source.main.colors[source.main.dominant];
   const hueFrom = dom && chromaOf(lab(dom)) > 0.02 ? lab(dom) : rawA;
   const C = Math.min(NIGHT_C, chromaOf(hueFrom));
   const h = hueOf(hueFrom);

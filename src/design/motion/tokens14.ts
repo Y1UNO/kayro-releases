@@ -14,6 +14,8 @@ export const GAME_COLORS = {
    * engine mixes the two palettes by the distance to the centre.
    */
   tide: { ms: 700, ease: "standard", band: 0.55, full: 0.8, bandPx: 70, softPx: 90 },
+  /** « Fondu » (setting `colorPassage`): the whole screen goes over to the new colours at once. */
+  fade: { ms: 600 },
   /** V3 b: the game's blurred hero at the top of the immersive night, fading into it. */
   hero: { opacity: 0.75, fadeFrom: 0.18, fadeTo: 0.6, sharpLod: 4.5, fadeMs: 360 },
 } as const;

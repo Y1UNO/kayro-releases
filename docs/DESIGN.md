@@ -128,6 +128,12 @@ jetons `GAME_COLORS` dans `src/design/motion/tokens14.ts`) :
   « Réduire les animations » : direct. Repli CSS : lune et anneau en fondu, nuit de l'Immersif sur `Backdrop`.
 - **Sortie des jeux** (éventail, autre écran) : retour au thème par la même marée. **App sans image** : face et
   ambiance aux couleurs de son icône. **Carte active avec affiche** : le logo du jeu à la place du nom (fondu micro).
+- **Variantes** (Personnalisation avancée, § 5) : intensité 35 / 60 / 100 %, caractère (comme le thème, fidèle,
+  vive), couleur principale (dominante, la plus vive, accordée au thème), passage (marée, fondu 600 ms, direct),
+  moment (sélection posée, tout de suite, au lancement seulement), image du jeu en Immersif, couleurs de l'icône.
+- **Par app** (dialogue de modification, panneau « Apparence », enregistré tout de suite) : ses images (affiche,
+  fond, logo : déposer une image sur une case, « Retirer » rend celle de Steam) et ses couleurs (Automatiques ·
+  Choisies : A et B parmi les couleurs de ses images, bornées et mêlées comme les autres · Thème : jamais teintée).
 
 ---
 
@@ -269,14 +275,17 @@ Pause en 240 ms (survol, molette, défilement rapide, glisser), reprise lente en
 onglets verticaux (`src/features/settings/`, textes `src/i18n/fr-settings.json`) :
 - **Général** : raccourci (Ctrl+Alt+H), mode économe, Échap cache Kayro, cliquer ailleurs cache Kayro, démarrer avec Windows.
 - **Visuel** : Qualité (Auto · Éco · **Équilibré** · Élevé · Ultra) ; Atmosphère (Douce 0,6 · **Normale 1** · Forte 1,3) ;
-  Mouvement (Complet · **Vivant** · Net) ; Suivre Windows ; Mode d'affichage (+ écran du mode immersif) ; puis
-  **Personnalisation avancée** : Flottaison des cartes, Ouverture au lancement, Changement de thème, Dépliage et
-  Élasticité du widget, Survol des cartes (**Complet** · Simple · Aucun), Bokeh du fond, Particules, Lumière du curseur ;
+  Couleurs du jeu (Désactivé · **Léger** · Immersif) ; Mouvement (Complet · **Vivant** · Net) ; Suivre Windows ;
+  Mode d'affichage (+ écran du mode immersif) ; puis **Personnalisation avancée** : Flottaison des cartes, Ouverture
+  au lancement, Changement de thème, Dépliage et Élasticité du widget, Survol des cartes (**Complet** · Simple ·
+  Aucun), Bokeh du fond, Particules, Lumière du curseur, puis les couleurs du jeu : Intensité (Douce · **Normale** ·
+  Forte), Caractère (**Comme le thème** · Fidèle à l'affiche · Vive), Couleur principale (**Dominante** · La plus
+  vive · Accordée au thème), Passage d'un jeu à l'autre (**Marée** · Fondu · Direct), Moment du changement
+  (**Sélection posée** · Tout de suite · Au lancement), Image du jeu en fond (Immersif, **oui**), Apps sans image
+  aux couleurs de leur icône (**oui**) ;
   enfin « Revenir aux réglages par défaut » (tout Visuel sauf l'affichage), avec « Annuler » tant qu'aucun réglage
   Visuel n'a été changé ensuite.
 - **Thèmes** : grille des 6 cartes 240 × 150 ; un clic applique et joue l'onde.
-- « Couleurs du jeu » (`color_mode`) : actif depuis l'étape 14 (défaut Léger), encore sans ligne dans les Réglages
-  (paquet 5 de l'étape 14).
 Défauts : `VISUAL_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::default` (`src-tauri/src/config/schema.rs`).
 
 ---

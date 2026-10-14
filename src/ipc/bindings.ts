@@ -161,6 +161,15 @@ export type AppArt = {
 	images: ArtImage[],
 };
 
+/**  The colours of one app, chosen by the user in its edit dialog. Absent = automatic. */
+export type AppColors = 
+/**  The palette of the app's images. */
+{ mode: "auto" } | 
+/**  Two colours picked among the palette's (`#rrggbb`), used as A and B. */
+{ mode: "chosen"; a: string; b: string } | 
+/**  Never tinted: the theme's colours. */
+{ mode: "theme" };
+
 export type AppEntry = {
 	id: string,
 	name: string,
@@ -171,6 +180,8 @@ export type AppEntry = {
 	art: Art,
 	moodId: string | null,
 	favorite: boolean,
+	/**  The user's choice of colours for this app (step 14); absent = automatic. */
+	colors?: AppColors | null,
 };
 
 /**
@@ -261,8 +272,23 @@ export type CardFloat = "none" | "light" | "visible" | "strong";
 /**  « Survol des cartes » (app cards): threads + sheen, lift only, or nothing. */
 export type CardHoverStyle = "full" | "simple" | "none";
 
+/**  Bounds of lightness and chroma (V6): like the themes', faithful to the picture, or vivid. */
+export type ColorCharacter = "theme" | "faithful" | "vivid";
+
+/**  Share of the game's colours mixed into the theme (V1). */
+export type ColorIntensity = "soft" | "normal" | "strong";
+
 /**  How much the colours of the selected game tint the interface (DESIGN.md). */
 export type ColorMode = "off" | "light" | "immersive";
+
+/**  How the colours go from one game to the next (V7): the tide, a fade, or at once. */
+export type ColorPassage = "tide" | "fade" | "direct";
+
+/**  Which colours become A and B (V5): dominant → accent, the two most vivid, dominant → theme B. */
+export type ColorPick = "dominant" | "vivid" | "theme";
+
+/**  When the colours change (V8): once the selection rests, at once, or only when an app starts. */
+export type ColorTrigger = "select" | "instant" | "launch";
 
 /**  Emitted while a scan runs, once per source and state change. */
 export type DetectProgress = {
@@ -597,6 +623,16 @@ export type Settings = {
 	bokeh: boolean,
 	particles: boolean,
 	cursorLight: boolean,
+	/**  Game colours (step 14, « Personnalisation avancée »): V1, V6, V5, V7, V8. */
+	colorIntensity: ColorIntensity,
+	colorCharacter: ColorCharacter,
+	colorPick: ColorPick,
+	colorPassage: ColorPassage,
+	colorTrigger: ColorTrigger,
+	/**  Immersive: the game's hero at the top of the night (V3 b); off = its colours only. */
+	colorHero: boolean,
+	/**  An app without a picture takes its icon's colours (V10 b); off = the theme's. */
+	colorFromIcon: boolean,
 };
 
 /**  Emitted after every successful change of the settings (also to the window that made it). */
@@ -625,6 +661,13 @@ export type SettingsPatch = {
 	bokeh?: boolean | null,
 	particles?: boolean | null,
 	cursorLight?: boolean | null,
+	colorIntensity?: ColorIntensity | null,
+	colorCharacter?: ColorCharacter | null,
+	colorPick?: ColorPick | null,
+	colorPassage?: ColorPassage | null,
+	colorTrigger?: ColorTrigger | null,
+	colorHero?: boolean | null,
+	colorFromIcon?: boolean | null,
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */

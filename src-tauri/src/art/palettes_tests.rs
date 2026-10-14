@@ -27,6 +27,7 @@ fn app(id: &str, steam: Option<&str>, launch: Launch) -> AppEntry {
         art: Art::default(),
         mood_id: None,
         favorite: false,
+        colors: None,
     }
 }
 

@@ -7,6 +7,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use specta::Type;
 
+pub use super::game_colors::{
+    ColorCharacter, ColorIntensity, ColorPassage, ColorPick, ColorTrigger,
+};
 use super::migrate::{current_version, Migration};
 pub use super::scene::SceneFile;
 use super::store::{lenient_merge, Document, LoadReport};
@@ -79,6 +82,16 @@ pub struct Settings {
     pub bokeh: bool,
     pub particles: bool,
     pub cursor_light: bool,
+    /// Game colours (step 14, « Personnalisation avancée »): V1, V6, V5, V7, V8.
+    pub color_intensity: ColorIntensity,
+    pub color_character: ColorCharacter,
+    pub color_pick: ColorPick,
+    pub color_passage: ColorPassage,
+    pub color_trigger: ColorTrigger,
+    /// Immersive: the game's hero at the top of the night (V3 b); off = its colours only.
+    pub color_hero: bool,
+    /// An app without a picture takes its icon's colours (V10 b); off = the theme's.
+    pub color_from_icon: bool,
 }
 
 /// Bounds of [`Settings::atmosphere_intensity`].
@@ -112,6 +125,13 @@ impl Default for Settings {
             bokeh: true,
             particles: true,
             cursor_light: true,
+            color_intensity: ColorIntensity::default(),
+            color_character: ColorCharacter::default(),
+            color_pick: ColorPick::default(),
+            color_passage: ColorPassage::default(),
+            color_trigger: ColorTrigger::default(),
+            color_hero: true,
+            color_from_icon: true,
         }
     }
 }
@@ -141,6 +161,13 @@ pub struct SettingsPatch {
     pub bokeh: Option<bool>,
     pub particles: Option<bool>,
     pub cursor_light: Option<bool>,
+    pub color_intensity: Option<ColorIntensity>,
+    pub color_character: Option<ColorCharacter>,
+    pub color_pick: Option<ColorPick>,
+    pub color_passage: Option<ColorPassage>,
+    pub color_trigger: Option<ColorTrigger>,
+    pub color_hero: Option<bool>,
+    pub color_from_icon: Option<bool>,
 }
 
 impl Settings {
@@ -174,6 +201,13 @@ impl Settings {
             bokeh,
             particles,
             cursor_light,
+            color_intensity,
+            color_character,
+            color_pick,
+            color_passage,
+            color_trigger,
+            color_hero,
+            color_from_icon,
         );
     }
 }

@@ -186,6 +186,7 @@ mod tests {
             art: Art::default(),
             mood_id: None,
             favorite: false,
+            colors: None,
         }
     }
 

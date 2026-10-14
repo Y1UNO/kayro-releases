@@ -81,7 +81,7 @@ uniform vec3 uBg00;
 uniform vec3 uBg01;
 uniform vec3 uBg02;
 uniform vec4 uTide;     // centre x, y, radius (px, huge = no tide), band opacity
-uniform vec2 uTideW;    // soft edge, band width (px)
+uniform vec3 uTideW;    // soft edge, band width (px), share of the new colours of a « fondu » (1: none)
 // Immersive (V3 b): the old and the new hero, opacity, mip level (blur), aspect, fade into the night.
 uniform sampler2D uHero0;
 uniform sampler2D uHero1;
@@ -239,7 +239,7 @@ vec3 hero(vec2 p, vec3 c, float w) {
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) * uView / uRes;
   float dt = length(p - uTide.xy);
-  float w = clamp((uTide.z - dt) / uTideW.x, 0.0, 1.0);
+  float w = min(clamp((uTide.z - dt) / uTideW.x, 0.0, 1.0), uTideW.z);
   gA = mix(uA0, uA, w);
   gB = mix(uB0, uB, w);
   gBg0 = mix(uBg00, uBg0, w);

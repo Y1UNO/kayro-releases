@@ -26,10 +26,10 @@ export interface FxPalette {
   hero?: { url: string; blurred: boolean } | null;
   /**
    * How to go from the previous palette (step 14): « tide » spreads the new colours from the focus
-   * target (`setFocusTarget`); « instant » (default) changes them at once (a theme change already
-   * plays its own wave, a reduced-motion user gets no movement).
+   * target (`setFocusTarget`); « fade » takes the whole screen over to them; « instant » (default)
+   * changes them at once (a theme change already plays its own wave, reduced motion: no movement).
    */
-  passage?: "tide" | "instant";
+  passage?: "tide" | "fade" | "instant";
 }
 
 /**

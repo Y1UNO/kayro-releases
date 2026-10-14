@@ -25,6 +25,8 @@ export interface HubState {
   lastError: AppError | null;
   /** The app whose launch `lastError` is about (null for any other error). */
   failedApp: string | null;
+  /** The last app started from Kayro (step 14: « Couleurs du jeu » can follow it). */
+  lastLaunched: string | null;
 
   init: () => Promise<void>;
   addApp: (app: NewApp) => Promise<Outcome<AppEntry>>;
@@ -69,6 +71,7 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
       running: {},
       lastError: null,
       failedApp: null,
+      lastLaunched: null,
 
       async init() {
         if (get().status === "loading" || get().status === "ready") return;
@@ -165,6 +168,7 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
       async launchApp(id) {
         const result = await ipc.appLaunch(id);
         if (!result.ok) set({ lastError: result.error, failedApp: id });
+        else set({ lastLaunched: id });
         return result;
       },
 

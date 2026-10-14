@@ -17,8 +17,11 @@ interface Props {
   layers?: () => FxLayer[];
   /** Colours other than the theme's (step 14: the selected game's). */
   palette?: FxPalette;
-  /** A change to play as a tide from `origin` (a new `id` each time); null: changes are instant. */
-  change?: { id: number; origin: FxTarget | null } | null;
+  /**
+   * A change to play from `origin` (a new `id` each time): a tide from there, or a fade of the whole
+   * screen; null: changes are instant.
+   */
+  change?: { id: number; origin: FxTarget | null; kind: "tide" | "fade" } | null;
 }
 
 function rgbOf(css: string): [number, number, number] {
@@ -74,10 +77,13 @@ export function Atmosphere({ quality, intensity, layers, palette, change = null 
   const played = useRef(0);
   useLayoutEffect(() => {
     if (!fx) return;
-    const tide = change !== null && change.id !== played.current;
+    const fresh = change !== null && change.id !== played.current;
     if (change) played.current = change.id;
-    if (tide) fx.setFocusTarget(change.origin);
-    fx.setPalette({ ...(palette ?? themePalette(theme)), passage: tide ? "tide" : "instant" });
+    if (fresh) fx.setFocusTarget(change.origin);
+    fx.setPalette({
+      ...(palette ?? themePalette(theme)),
+      passage: fresh ? change.kind : "instant",
+    });
   }, [fx, theme, palette, change]);
   useLayoutEffect(() => fx?.setQuality(q), [fx, q]);
   useLayoutEffect(() => fx?.setIntensity(k), [fx, k]);

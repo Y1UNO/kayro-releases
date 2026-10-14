@@ -74,6 +74,23 @@ describe("palette tide", () => {
   });
 });
 
+describe("palette fade", () => {
+  it("takes the whole screen over to the new colours, without a band", () => {
+    const t = started("fade");
+    expect(t.running).toBe(true);
+    t.step(1000 + GAME_COLORS.fade.ms / 2);
+    const w = t.weight(0, 0);
+    expect(w).toBeGreaterThan(0.2);
+    expect(w).toBeLessThan(0.9);
+    expect(t.weight(800, 450)).toBe(w);
+    const u = t.uniforms();
+    expect((u.uTide as number[])[3]).toBe(0);
+    expect((u.uTideW as number[])[2]).toBeCloseTo(w, 5);
+    expect(t.step(1000 + GAME_COLORS.fade.ms)).toBe(true);
+    expect(t.weight(0, 0)).toBe(1);
+  });
+});
+
 describe("tide timing", () => {
   it("finds when the edge reaches a distance (the curve inverted)", () => {
     const reach = tideReachPx(800, 450, W, H);

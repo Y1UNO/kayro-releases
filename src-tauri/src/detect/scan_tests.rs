@@ -63,6 +63,7 @@ fn entry_for(app: &DetectedApp) -> AppEntry {
         art: Art::default(),
         mood_id: None,
         favorite: false,
+        colors: None,
     }
 }
 

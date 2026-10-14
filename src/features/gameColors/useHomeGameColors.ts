@@ -4,6 +4,7 @@ import { currentMotion } from "../../design/motion/current";
 import { focusShadow } from "../../design/motion/tokens";
 import { GAME_COLORS, tideReach, tideReachPx } from "../../design/motion/tokens14";
 import type { FxTarget } from "../../fx";
+import { useHub } from "../../store";
 import { selectGame } from "./store";
 import { useGameColors, type GameColorsView } from "./useGameColors";
 
@@ -40,20 +41,28 @@ function write(view: GameColorsView): void {
   }
 }
 
-/** When the tide's edge reaches the first target (ms from now). */
+/**
+ * When the accents change (ms from now): as the tide's edge reaches the first target, halfway
+ * through a fade, at once for « Direct ».
+ */
 function waitFor(view: GameColorsView, first: HTMLElement | null): number {
+  const speed = currentMotion().speed;
+  const elapsed = performance.now() - view.since;
+  if (view.passage === "direct") return 0;
+  if (view.passage === "fade") return Math.max(0, GAME_COLORS.fade.ms / speed / 2 - elapsed);
   const o = view.origin;
   if (!o || !first) return 0;
-  const ms = GAME_COLORS.tide.ms / currentMotion().speed;
+  const ms = GAME_COLORS.tide.ms / speed;
   const oy = (o.top + o.bottom) / 2;
   const r = first.getBoundingClientRect();
   const d = Math.hypot(r.left + r.width / 2 - o.x, r.top + r.height / 2 - oy);
   const at = tideReach(d, ms, tideReachPx(o.x, oy, window.innerWidth, window.innerHeight));
-  return Math.max(0, at - (performance.now() - view.since));
+  return Math.max(0, at - elapsed);
 }
 
 /**
- * Step 14 on the home screen: publishes the selected app (`null` on the fan), and writes the game's
+ * Step 14 on the home screen: publishes the selected app (`null` on the fan; with the setting « Au
+ * lancement seulement », the last app started from Kayro instead), and writes the game's
  * accents (title rule, focus ring, hover rims) once, on the containers marked `data-game-accents`
  * only: never on `:root`, so the dialogs and the settings keep the theme (V4 a). With the tide, they
  * change when its edge reaches the first one (the title); otherwise at once, in the same frame.
@@ -61,8 +70,11 @@ function waitFor(view: GameColorsView, first: HTMLElement | null): number {
 export function useHomeGameColors(activeId: string | null): void {
   const { theme } = useTheme();
   const view = useGameColors(theme);
+  const trigger = useHub((s) => s.settings?.colorTrigger ?? "select");
+  const launched = useHub((s) => s.lastLaunched);
+  const shown = activeId === null ? null : trigger === "launch" ? launched : activeId;
 
-  useEffect(() => selectGame(activeId, () => locate(activeId)), [activeId]);
+  useEffect(() => selectGame(shown, () => locate(shown), trigger === "select"), [shown, trigger]);
   // Leaving the home (scenes, editor): back to the theme's colours.
   useEffect(() => () => selectGame(null, () => locate(null)), []);
 
