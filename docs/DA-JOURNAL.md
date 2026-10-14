@@ -1143,6 +1143,52 @@ Huit affinages par les jetons, aucune signature validée changée. **Pour reveni
 
 **Pour la suite** : le gel de la DA quand tu le décides (« je fige la DA ») : `docs/DESIGN.md` (DA officielle v1) et retrait de ce qui reste en essai.
 
+## Étape 13 — séance de mesures en production (2026-10-13, avant le gel)
+Rapport complet : **`docs/PERF-ETAPE13.md`**.
+
+**Conditions** :
+- Exe de production = HEAD `8c31414`, 2560×1440 à 280 Hz, Élevée et Éco, 2 ou 3 essais par case.
+- Dossier de données de test (15 apps ; tes réglages copiés) ; tes fichiers jamais ouverts, empreintes identiques.
+- Comet et Steam fermés avec ton accord.
+- Modrinth s'est ouvert à 21:18 : les mesures touchées ont été refaites. Wallpaper Engine (~20 % du GPU, bureau visible) est noté.
+- Aucun code modifié ; 230 captures supprimées.
+
+**Cases fermées** (toutes celles du journal ; tableau dans le rapport) :
+- Mesures 4a : repos, survol continu ou qui change, onglets, panneau, interrupteur.
+- Repos fenêtre, widget et hub masqué ; GPU de dwm.
+- Pendant un passage ; widget qui se déplie.
+- Éditeur : réordonner ; catégorie vide.
+- Coût par image de la pulsation C ; coût de l'onde à halo fixe.
+- Flottaison avec et sans particules ; A10 ; `--quit` en vrai ; premier flash ; image blanche.
+
+**Résultats clés** :
+- Budget p95 ≤ 5,4 ms tenu partout **sauf l'onde en Éco** (« Fondu » : p95 7,2–10,7 ms, 30–36 images > 8 ms par changement, pic de 2,1 Go).
+- Trop d'images > 8 ms (tolérance 1 par signature) en Élevée : liaison (3–4), retour (2–3), onde (5–9), onglets (4–10). Passages : 3–6 dans les deux qualités.
+- Pulsation C : 0 image > 8 ms (7 lancements sur 7).
+- Survol continu du carrousel en Élevée : 12,3 % de CPU, 15,9 % de GPU (le plus cher).
+- Repos visible : 1,2–4,2 % de CPU (cible < 1 % non tenue). Hub masqué : 0,05 % de CPU, 0 % de GPU. Widget : 0,03 % / 0.
+- A10 (`will-change`) : aucun gain → garder `promote: false`.
+- Particules coupées : aucun gain (le moteur garde sa cadence d'ambiance).
+- Carrousel, flottaison Visible contre Aucune : +1,2 pt de CPU et +2,6 pt de GPU en Élevée.
+- `--quit` : 11 fermetures sur 11, en 38–53 ms par la boucle, filet jamais utilisé. Deux `--quit` simultanés : OK.
+- Flash au lancement : aucun.
+- Image blanche : non reproduite (4 premiers changements, dont 2 avec capture CDP). **Constat** : une capture CDP fausse l'image affichée à l'écran pendant 70–150 ms. Le point peut être clos selon la règle du protocole (ta décision).
+- Preuve du filet A8 : **non faite** (masquer `::view-transition-old(root)` par une feuille injectée n'a rien changé à l'écran).
+
+**En attente de ta décision** :
+- Corrections proposées, classées par gain (rapport) :
+  1. Fondu de thème en Éco ;
+  2. plafonds de cadence du moteur ;
+  3. onde en Élevée ;
+  4. liaison et onglets ;
+  5. survol qui change ;
+  6. passages ;
+  7. retrait d'A10 ;
+  8. banc dans `scripts/perf/`.
+- Proposition « Auto » adaptative (rapport).
+- Clore l'image blanche ?
+- Particules à moitié en Éco / Équilibré : rien ne justifie de les couper pour la perf (question de la ronde 1).
+
 ## Éléments du catalogue
 | Élément | État | Remarque |
 |---|---|---|
