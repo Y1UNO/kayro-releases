@@ -17,8 +17,9 @@ import type { ElementValues } from "../../../design/da/daParams";
 import { springAt, SPRINGS } from "../../../design/glass/pillMotion";
 import { curveOf, lerp, type Curve } from "../../../design/motion/curve";
 import { MOTION_DEFAULTS as M } from "../../../design/motion/tokens";
+import { DANCE, danceOverlay, danceSpan } from "./fanDance";
 
-export type Phase = "choose" | "turn" | "deck" | "spread" | "close";
+export type Phase = "choose" | "turn" | "deck" | "dance" | "spread" | "close";
 export const FAN_SIZE = 5;
 /** Mock-up values (fixed by the spec). */
 export const CARD = { w: 210, h: 290, r: 24 } as const;
@@ -58,6 +59,8 @@ export interface LinkConfig {
   spring: Curve;
   stagger: number;
   regroup: number;
+  /** One card's dance at a tab change (ms, fanDance.ts); 0 = the plain gather and unfold. */
+  danceMs: number;
 }
 
 const n = (v: ElementValues | undefined, k: string, d: number) =>
@@ -82,6 +85,7 @@ export function linkConfig(v: ElementValues | undefined, eco = false, crisp = fa
     spring: crisp ? entrance : (t) => springAt(t, bounce),
     stagger: n(v, "stagger", 70),
     regroup: n(v, "regroup", 380),
+    danceMs: Math.max(0, n(v, "danceMs", 1250)),
   };
 }
 
@@ -114,7 +118,7 @@ export function deckOrder(k: number, shuf: number): number {
 export function phaseTargets(phase: Phase, ctx: LinkContext, c: LinkConfig): Targets {
   const m = new Map<string, Target>();
   const choose = phase === "choose";
-  const inside = phase === "deck" || phase === "spread";
+  const inside = phase !== "choose" && phase !== "turn" && phase !== "close";
   for (let i = 0; i < FAN_SIZE; i++) {
     const sel = i === ctx.cat;
     const d = i - 2;
@@ -153,6 +157,18 @@ export function phaseTargets(phase: Phase, ctx: LinkContext, c: LinkConfig): Tar
       m.set(`a${k}.o`, tg(1, 450, EASE_CSS, delay));
       // Faces (letter, name) of the cards under the top one come back as they leave the deck.
       m.set(`a${k}.f`, tg(1, 250, EASE_CSS, delay + c.unfoldMs * 0.2));
+    } else if (phase === "dance") {
+      // The carousel places: the dance (fanDance.ts) is laid over them, leaving and coming back.
+      for (const [key, to] of [
+        ["x", x],
+        ["y", 0],
+        ["rot", 0],
+        ["sc", s],
+        ["o", 1],
+        ["f", 1],
+      ] as const)
+        m.set(`a${k}.${key}`, tg(to, 500, SOFT));
+      m.set(`a${k}.z`, tg(-ad, 0, EASE_CSS));
     } else {
       const off = deckOrder(k, ctx.shuf) - 2;
       const delay = phase === "deck" ? (2 - ad) * BACK_STAGGER : 0;
@@ -163,6 +179,7 @@ export function phaseTargets(phase: Phase, ctx: LinkContext, c: LinkConfig): Tar
       m.set(`a${k}.o`, tg(phase === "deck" ? 1 : 0, 450, SOFT, delay));
       // A deck shows the face of its top card only (the DOM text sits above the engine's glass).
       m.set(`a${k}.f`, tg(off === 2 ? 1 : 0, 200, EASE_CSS));
+      m.set(`a${k}.z`, tg(off + 2, 0, EASE_CSS));
     }
   }
   const leave = (to: number) => tg(to, TITLE.out, TITLE.outEase);
@@ -204,10 +221,12 @@ export function stepsOf(kind: SequenceKind, c: LinkConfig): [number, Phase][] {
     ];
   }
   if (kind === "tab")
-    return [
-      [0, "deck"],
-      [c.regroup, "spread"],
-    ];
+    return c.danceMs > 0
+      ? [[0, "dance"]]
+      : [
+          [0, "deck"],
+          [c.regroup, "spread"],
+        ];
   return [
     [0, "close"],
     [c.regroup, "choose"],
@@ -231,7 +250,7 @@ export class Sequence {
 
   constructor(
     readonly kind: SequenceKind,
-    ctx: LinkContext,
+    private readonly ctx: LinkContext,
     readonly config: LinkConfig,
     start: Values,
     first: Values,
@@ -251,12 +270,20 @@ export class Sequence {
         end = Math.max(end, tw.at + tw.dur);
       }
     }
-    this.duration = end;
+    this.duration = Math.max(end, this.dancing ? danceSpan(config.danceMs) / k : 0);
+  }
+
+  private get dancing(): boolean {
+    return this.kind === "tab" && this.config.danceMs > 0;
   }
 
   /** Every track at time t. */
   at(t: number, out: Values = new Map()): Values {
     for (const [key, list] of this.tracks) out.set(key, valueOf(list, t));
+    if (this.dancing) {
+      const k = this.config.speed;
+      danceOverlay(out, this.ctx.slots, t, this.config.danceMs / k, DANCE.wave / k);
+    }
     return out;
   }
 

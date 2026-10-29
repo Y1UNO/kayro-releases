@@ -346,7 +346,9 @@ export class LinkDirector {
       const rot = g(`a${s.k}.rot`);
       const sc = g(`a${s.k}.sc`, s.s);
       const o = g(`a${s.k}.o`, 1);
-      const z = spread ? 10 - Math.abs(s.k - 2) : 10 + deckOrder(s.k, this.ctx.shuf);
+      const z = spread
+        ? 10 - Math.abs(s.k - 2)
+        : 10 + Math.round(g(`a${s.k}.z`, deckOrder(s.k, this.ctx.shuf)));
       put(
         s.slot,
         "transform",

@@ -211,7 +211,10 @@ Une fois par démarrage du programme, au premier affichage ; jamais au rappel pa
 rotation de sortie 15° / rang en **850 ms** `bascule` ; les autres cartes s'effacent et se floutent (500 ms, départ
 120 ms) ; la carte choisie −30 px × 1,06 puis × 0,6 ; **deck** empilé (±7 / ±4 px, 3,5° par rang, × 0,55, 700 ms
 `standard`) ; **dépliage** en carrousel en **700 ms** sur le ressort `liaison` (3,4 %), décalage 70 ms du centre vers
-les bords. Étapes 0 / 650 / 1 070 ms. Onglets : regroupement 380 ms puis redépliage ; retour (« Toutes les catégories »)
+les bords. Étapes 0 / 650 / 1 070 ms. Onglets : **ronde** (`fanDance.ts`) : les cartes quittent leur place pour un anneau
+en perspective large comme la scène (demi-largeur 92 % de la carte la plus éloignée, fond 92 px plus haut, × 0,84
+devant, × 0,5 au fond, penchées de 5°), en font un tour ensemble en se croisant, et retombent à leur place ; vague de
+45 ms de gauche à droite, 1 250 ms par carte (réglage `danceMs`, 0 = regroupement 380 ms puis redépliage) ; retour (« Toutes les catégories »)
 décalé de 35 ms par rang. Titres : celui qui part sort d'abord (168 ms, `sortie`), l'autre entre à +120 ms (moyen,
 `vive`). Échap sur l'éventail = liaison vers la dernière catégorie.
 - **Éco** : moteur à 30 i/s, mêmes étapes. **Réduire** : état final direct. **Net** : deck sur `vive`, sans dépassement.

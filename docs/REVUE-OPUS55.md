@@ -38,6 +38,10 @@ visuelles, Ambiance et Intro Hades II, moteur RAYKA, Orage, Sakura, RAYKA recrut
 
 **Rendu plus fini**
 - Tramage invisible dans le fond et le verre : plus de bandes dans les dégradés sombres.
+- **Changement d'onglet (après tes retours)** : plus de paquet au centre. Les cinq cartes partent en ronde sur un
+  grand anneau vu en perspective, sur toute la largeur : celles qui passent au fond rapetissent et montent, celles de
+  devant passent par-dessus. Elles font un tour ensemble, puis retombent à leur place, en vague de gauche à droite.
+  Environ 1,4 s.
 
 **Scan des apps : seulement ce qu'on lance**
 - Écartés du menu Démarrer : aides (« Check for updates », « About Java », docs, « Report a problem »), consoles
@@ -53,6 +57,7 @@ visuelles, Ambiance et Intro Hades II, moteur RAYKA, Orage, Sakura, RAYKA recrut
 1. « Kayro — mettre à jour », puis « Kayro ».
 2. Éventail : regarder les cartes flotter, puis en survoler une et promener le curseur sur ses bords.
 3. Carrousel des jeux : même chose. Passer d'un jeu à l'autre et regarder le fond changer de teinte.
+   Passer de Jeux à Créativité (et retour) : les cartes doivent faire une ronde sur toute la scène, puis se reposer.
 4. Ajouter des apps : la liste proposée doit être courte et propre.
 
 ## Vérifié dans l'exe (29/10 au soir)

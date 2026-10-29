@@ -120,6 +120,8 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       select("spring", LINK_SPRINGS, "liaison"),
       range("stagger", 0, 150, 5, 70, "ms"),
       range("regroup", 150, 900, 10, 380, "ms"),
+      // Tabs: one card's dance round the stage (fanDance.ts); 0 = gather and unfold.
+      range("danceMs", 0, 2400, 10, 1250, "ms"),
       // Opacity of the theme gradient (A → B by rank) inside the glass of a category card.
       range("fill", 0, 1, 0.05, 0.85),
     ],
