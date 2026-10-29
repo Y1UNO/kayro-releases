@@ -237,6 +237,32 @@ pub fn autostart_set<R: Runtime>(app: AppHandle<R>, enabled: bool) -> Result<boo
     autostart_get(app)
 }
 
+/// « Exporter les logs »: zips the log folder into the exports folder, selects it in Explorer
+/// and returns its path. Nothing leaves the PC.
+#[tauri::command]
+#[specta::specta]
+pub fn logs_export<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, ConfigState>,
+) -> Result<String, AppError> {
+    let info = app.package_info();
+    let infos = format!(
+        "{} {}\nWindows : {}\n",
+        info.name,
+        info.version,
+        sysinfo::System::long_os_version().unwrap_or_else(|| "inconnu".into()),
+    );
+    let path = crate::logs_export::write_zip(
+        &crate::paths::logs_dir(),
+        &state.paths().exports_dir(),
+        &crate::logs_export::today(),
+        &infos,
+    )?;
+    tracing::info!(file = %path.display(), "logs exported");
+    crate::ipc_scenes::reveal(&path);
+    Ok(path.display().to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::{OpeningDue, OpeningOnce};

@@ -12,6 +12,7 @@ pub mod ipc_scenes;
 pub mod launcher;
 mod legacy;
 mod logging;
+pub mod logs_export;
 pub mod paths;
 pub mod platform;
 pub mod procwatch;

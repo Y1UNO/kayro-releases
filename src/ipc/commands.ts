@@ -125,6 +125,8 @@ export const desktopIpc = {
   autostart: (): Promise<Outcome<boolean>> => checked(commands.autostartGet()),
   setAutostart: (enabled: boolean): Promise<Outcome<boolean>> =>
     checked(commands.autostartSet(enabled)),
+  /** Zips the logs into the exports folder and shows it in Explorer; returns the zip's path. */
+  exportLogs: (): Promise<Outcome<string>> => checked(commands.logsExport()),
   recents: (): Promise<Outcome<string[]>> => plain(commands.recentsGet()),
   /** Once per run of the program, at the first show: the opening animation (round 3). */
   openingDue: (): Promise<Outcome<OpeningDue>> => plain(commands.openingDue()),

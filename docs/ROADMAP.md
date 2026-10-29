@@ -19,6 +19,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 12b | Atelier de direction artistique (DA officielle v1), itératif, fini quand je dis « je fige la DA » | 8, 12 | C |
 | [x] 13 | Performance : états, qualité adaptative, benchmark, réglages, sans échec | 6, 8, 12 | D |
 | [x] 14 | Couleurs du jeu : art local, palette OKLab, modes | 5, 8 | E |
+| [x] P | Prétest : installeur NSIS, « Exporter les logs », version visible, note `docs/PRETEST.md` | 14 | F |
 | [ ] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
 | [ ] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
 | [ ] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
@@ -88,6 +89,8 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 - **Étape 14 — Couleurs du jeu, 2026-10-14 → 15** (branche `step-14-couleurs-du-jeu`, commits `182cf67` … `50aafe5`) : art local (cache Steam lu en place, variantes de langue, images déposées copiées dans `art/<appId>/`, protocole `kayro-art` id + rôle, CSP ouverte aux seules images), icônes UWP / Epic / Steam ; palettes OKLab côté Rust (k-means sur 64 × 64, `cache/palettes.json`, thread en arrière-plan, JPEG / PNG / WebP) ; planche V1–V10 (toutes les options recommandées) ; couleurs appliquées (moteur par la palette, marée sans View Transition, accents sur 3 conteneurs, Immersif avec nuit et héros, logo sur la carte active, faces aux couleurs de l'icône) ; réglages (Visuel + 7 variantes) et panneau « Apparence » par app.
   - Mesures (`docs/PERF-ETAPE14.md`) : p95 3,7 ms partout ; marée : 2 images > 8 ms par changement en Élevée (≤ 14,3 ms, acceptées le 15/10), 1 en Éco ; A/B avec l'exe d'avant l'étape : pas de régression sur l'onde et la liaison (les écarts avec le 14/10 viennent du fond) ; extraction : 2,6 ms par affiche, 8,8 ms par héros (hors thread d'interface). Tests : vitest 548, cargo 227. Dépendances : `image` (jpeg, png, webp → `zune-jpeg`, `image-webp`).
   - Limites : non testé sur un vrai jeu Epic ni GOG ; « Au lancement » non gardé après un redémarrage ; héros non dessiné en repli CSS ; une marée lancée pendant une autre fait sauter les bords à la couleur visée ; aucun retour visuel pendant le glisser d'une image.
+- **Étape prétest — 2026-10-29** (branche `step-pretest`, version 0.14.0) : installeur NSIS par utilisateur, français, WebView2 `embedBootstrapper` → `Kayro_0.14.0_x64-setup.exe` **7,5 Mo** (`scripts/build-installer.ps1`) ; la case « supprimer les données » du désinstalleur ne vise que `fr.yiuno.hub` (modèle NSIS lu), jamais `%APPDATA%\Kayro`. « Exporter les logs » (zip `exports/kayro-logs-<date>.zip` + `infos.txt`, crate `zip` deflate seul) ; « Kayro 0.14 prétest » en bas de Réglages › Général (`APP_VERSION` lu dans `tauri.conf.json`). Premier lancement vide vérifié dans l'exe (APPDATA redirigé) : accueil vide, détection 76 apps, ajout, export, démarrage Windows non activé.
+  - Limites : installeur ni installé ni désinstallé ici (SmartScreen non vu) ; le profil WebView2 (`%LOCALAPPDATA%\fr.yiuno.hub`) ne suit pas `LOCALAPPDATA` ; aucun assistant de premier lancement (l'utilisateur clique « + ») ; dates internes du zip à 1980. Tests : vitest 548, cargo 230.
 
 ## Plus tard (liste unique)
 Seul endroit des choses à faire plus tard (regroupées au gel de la DA, le 2026-10-14). Elles viennent de l'ancienne liste
@@ -163,7 +166,7 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 - [ ] Message de lancement raté dans le widget (il faudrait agrandir sa fenêtre).
 - [ ] Option « masquer les univers vides » dans l'éventail.
 - [ ] Raccourcis clavier : G pour la grille, 1–9 pour les scènes du dock.
-- [ ] « Exporter les logs » dans les réglages (prévu par les conventions).
+- [x] « Exporter les logs » dans les réglages (prévu par les conventions) — fait à l'étape prétest, le 2026-10-29.
 - [ ] DA, détails non faits de la ronde 5 : petit texte secondaire unifié (`--fs-13`), carte vide 176 × 246 (aujourd'hui
   150 × 180), éventail descendu de 60 px, ligne d'aide « Entrée · ouvrir   Échap · dernière catégorie ».
 - [ ] DA, retouches à l'œil (ex-`RETOUCHES.md`) : cadrage des titres de catégorie (comparer aux captures 01 à 11) ;

@@ -1,7 +1,7 @@
 # Kayro — Accueil
 
 > [!info] Où on en est
-> - **Dernière étape close** : 14 — Couleurs du jeu (le 2026-10-15)
+> - **Dernière étape close** : prétest — installeur et note pour les testeurs (le 2026-10-29)
 > - **Prochaine étape** : 15 — Réglages · Apparence
 > - **DA** : gelée le 2026-10-14 (v1)
 
@@ -11,6 +11,7 @@
 - [[DA-JOURNAL]] — décisions de DA et « Changements après le gel »
 - [[PLAN]] — choix techniques vérifiés
 - [[ARCHITECTURE]] — données, modules, perf
+- [[PRETEST]] — note pour les testeurs (version 0.14 prétest)
 - [[MACHINE]] — PC de test
 
 ## Mesures et relectures

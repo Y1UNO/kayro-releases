@@ -24,7 +24,15 @@
         "label": "Démarrer avec Windows",
         "help": "{app} démarre sans fenêtre, dans la zone de notification.",
         "failed": "Impossible de modifier le démarrage avec Windows."
-      }
+      },
+      "logs": {
+        "label": "Journal de {app}",
+        "help": "Crée un fichier .zip du journal (ce que {app} a fait ces derniers jours, sans vos images) et l’affiche dans l’Explorateur. Rien n’est envoyé : c’est vous qui le transmettez si vous le souhaitez.",
+        "action": "Exporter les logs",
+        "done": "Exporté : {file}",
+        "failed": "Impossible d’exporter les logs."
+      },
+      "version": "{app} {version} prétest"
     },
     "visual": {
       "quality": {

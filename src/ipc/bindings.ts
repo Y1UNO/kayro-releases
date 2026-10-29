@@ -103,6 +103,11 @@ export const commands = {
 	/**  Whether Windows starts the hub at login (the Run key is the source of truth). */
 	autostartGet: () => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_get")),
 	autostartSet: (enabled: boolean) => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_set", { enabled })),
+	/**
+	 *  « Exporter les logs »: zips the log folder into the exports folder, selects it in Explorer
+	 *  and returns its path. Nothing leaves the PC.
+	 */
+	logsExport: () => typedError<string, AppError>(__TAURI_INVOKE("logs_export")),
 	recentsGet: () => __TAURI_INVOKE<string[]>("recents_get"),
 	openingDue: () => __TAURI_INVOKE<OpeningDue>("opening_due"),
 	/**

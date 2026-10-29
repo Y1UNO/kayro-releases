@@ -330,6 +330,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_desktop::scene_hotkey_take::<tauri::Wry>,
             ipc_desktop::autostart_get::<tauri::Wry>,
             ipc_desktop::autostart_set::<tauri::Wry>,
+            ipc_desktop::logs_export::<tauri::Wry>,
             ipc_desktop::recents_get,
             ipc_desktop::opening_due::<tauri::Wry>,
             ipc_desktop::passage_faded::<tauri::Wry>,
