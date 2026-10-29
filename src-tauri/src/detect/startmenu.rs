@@ -18,6 +18,7 @@ use windows::Win32::System::Com::{
 use windows::Win32::UI::Shell::{IShellLinkW, ShellLink};
 
 use super::filters::is_noise_shortcut;
+use super::relevance::{clean_name, keep_mask, Candidate};
 use super::{short_hash, DetectError, DetectSource, DetectedApp, ScanCtx, SourceKind};
 use crate::config::apps::{AppSource, Launch, MatchRule};
 
@@ -129,6 +130,12 @@ fn find_shortcuts(root: &Path, out: &mut Vec<PathBuf>, ctx: &ScanCtx) {
     }
 }
 
+/// The Start Menu folder holding a shortcut (`None` at the root, `…\Programs`).
+fn folder_of(link: &Path) -> Option<String> {
+    let name = link.parent()?.file_name()?.to_string_lossy().into_owned();
+    (!name.eq_ignore_ascii_case("programs")).then_some(name)
+}
+
 fn shortcut_id(link_path: &Path) -> String {
     format!(
         "menu-{}",
@@ -151,7 +158,7 @@ impl DetectSource for StartMenuSource {
             links.extend(found);
         }
         let mut seen = HashSet::new();
-        let mut apps = Vec::new();
+        let mut found: Vec<(Candidate, DetectedApp)> = Vec::new();
         for link in links {
             if ctx.cancelled() {
                 break;
@@ -159,7 +166,7 @@ impl DetectSource for StartMenuSource {
             let label = link.to_string_lossy().into_owned();
             let name = link
                 .file_stem()
-                .map(|s| s.to_string_lossy().into_owned())
+                .map(|s| clean_name(&s.to_string_lossy()))
                 .unwrap_or_default();
             let shortcut = match resolve(&link) {
                 Ok(s) => s,
@@ -190,6 +197,15 @@ impl DetectSource for StartMenuSource {
                 .target
                 .file_name()
                 .map(|f| f.to_string_lossy().into_owned());
+            let candidate = Candidate {
+                name: name.clone(),
+                folder: folder_of(&link),
+                exe_stem: shortcut
+                    .target
+                    .file_stem()
+                    .map(|f| f.to_string_lossy().into_owned())
+                    .unwrap_or_default(),
+            };
             let app = DetectedApp {
                 id: shortcut_id(&link),
                 name,
@@ -201,7 +217,17 @@ impl DetectSource for StartMenuSource {
                 already_added: false,
                 suggested_category: String::new(),
             };
-            apps.extend(ctx.accept(SourceKind::Startmenu, app));
+            found.push((candidate, app));
+        }
+        // Review 2026-10-29: only the apps people launch (relevance.rs).
+        let mask = keep_mask(&found.iter().map(|(c, _)| c.clone()).collect::<Vec<_>>());
+        let mut apps = Vec::new();
+        for ((c, app), keep) in found.into_iter().zip(mask) {
+            if keep {
+                apps.extend(ctx.accept(SourceKind::Startmenu, app));
+            } else {
+                ctx.skip(&c.name, "helper, variant or side tool of a suite");
+            }
         }
         apps.sort_by_key(|a| a.name.to_lowercase());
         Ok(apps)

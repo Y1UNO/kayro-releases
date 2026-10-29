@@ -72,7 +72,11 @@ une (image déposée sur la carte, copiée dans `%APPDATA%/Kayro/art/<appId>/`, 
 servie par le protocole `kayro-art` (id d'app + rôle, jamais un chemin) ; nom sur `.posterShade`. Sinon :
 
 **Faces sans affiche** (cartes d'apps, de scènes, éventail) : dégradé A → B du thème tiré par carte, 0,85, bout sombre
-× `--face-foot` 0,28, ombre de pied sous le nom, icône du programme sinon la lettre.
+× `--face-foot` 0,28, ombre de pied sous le nom, icône du programme sinon la lettre. Aux couleurs de l'icône : mêlées
+au thème à 35 % seulement (`ICON_FACE`, revue du 29/10) : le thème domine, une seule teinte à l'écran.
+
+**Tramage** (revue du 29/10) : le fond et le verre du moteur ajoutent un bruit fixe de ± ½ niveau 8 bits : plus de
+bandes dans les dégradés sombres.
 
 **Accessibilité** : contraste ≥ 4,5:1 vérifié par `src/design/contrast.test.ts` (25 paires × 6 thèmes) et
 `contrast.drift.test.ts` (le modèle suit `tokens.css`). Anneau de focus clavier (§ 3), aires cliquables ≥ `--hit-min` 44 px.
@@ -112,13 +116,18 @@ valeur initiale : la première image n'attend pas le JS), `html` / `body` peints
 
 **Couleurs du jeu** (étape 14, décisions de la planche du 14/10 dans `DA-JOURNAL.md` ; `src/features/gameColors/`,
 jetons `GAME_COLORS` dans `src/design/motion/tokens14.ts`) :
-- **Calcul** (`derive.ts`) : la palette brute du cœur (OKLab, `palettes.json`) donne A = dominante, B = accent
-  (une image d'une seule couleur prend l'accent de l'autre image du jeu, sinon du thème) ; bornées comme les thèmes
-  (L 0,72–0,85, C ≤ 0,12) puis mêlées au thème à **60 %**. Contraste ≥ 4,5:1 testé sur les 6 thèmes.
+- **Calcul** (`derive.ts`, `palettePick.ts`, revue du 29/10) : les couleurs brutes de l'affiche et du héros (OKLab,
+  `palettes.json`) sont groupées en **familles de teintes** (écart ≤ 32°, poids = surface × chroma, héros × 0,5) ;
+  A = la plus forte famille, B = la suivante si elle pèse ≥ 22 % de la première, sinon l'accent à 25° au moins de A
+  (une image d'une seule couleur prend l'accent de l'autre image du jeu, sinon du thème) ; une affiche sans couleur
+  prend la couleur qui parle pour elle (`characterOf`) ; bornées comme les thèmes
+  (L 0,72–0,85, C ≤ 0,12) puis mêlées au thème à **85 %** sur le cercle des teintes (`mixLch` : jamais de gris
+  entre deux teintes éloignées). Contraste ≥ 4,5:1 testé sur les 6 thèmes.
 - **Ce qui se teinte** (réglage `color_mode`, **Léger** par défaut) : l'ambiance du moteur (fond, lune, anneau, bokeh,
   braises, teinte du verre des cartes et des pastilles, prise dans la palette : `FxPalette.card`) et les accents de
   l'accueil (`--game-a`, `--game-b` : filet du titre, filets de survol ; anneau de focus réécrit avec eux), posés
   sur 3 conteneurs (`data-game-accents`), jamais sur `:root` : texte, dialogues et Réglages restent au thème.
+  Depuis la revue du 29/10, la nuit prend aussi la teinte du jeu en Léger, à 55 % de celle de l'Immersif.
   **Immersif** : en plus, la nuit aux couleurs du jeu (`FxPalette.bg`) et le héros flouté de Steam en haut
   (`FxPalette.hero`, texture du moteur, opacité 0,75, fondu dans la nuit de 18 à 60 % de la hauteur).
 - **Passage d'un jeu à l'autre : la marée** (`paletteTween.ts`, shader du fond) : 180 ms après que la sélection se
@@ -157,6 +166,12 @@ douce 3,5 % · **normale 5 %** · forte 7 % ; latéral 560 ms 1,5 · **2,5** · 
 2. **vivant** : pastille de sélection, interrupteurs, panneaux, notifications, listes ; ressort `liaison`, cascade ;
 3. **magie** : cartes du carrousel ; soulèvement 10 px × 1,03 sur `rebond`, après **120 ms** de présence du curseur un
    voile (800 ms) puis les filets, éclat du bord au lancement (1,6 × long).
+
+**Survol 3D** (revue du 29/10, `cardTilt.ts`, `CARD_TILT` et `FAN_TILT_MAX` dans `tokensReview.ts`) : la carte
+s'incline vers le curseur jusqu'à **6°** (cartes et éventail ; plafond 8° avec le balancement de l'éventail, 2,5°),
+lissée sur la boucle d'images (constante 90 ms en suivant, 190 ms au retour), sans transition CSS. Le moteur dessine
+le verre, l'affiche et les lumières de la carte **inclinés de la même façon** (perspective 900 px, `uQ` / `untilt` /
+`tiltN` dans `glassShader.ts`) ; le côté qui vient vers soi prend un reflet doux. Repli CSS : seul le DOM s'incline.
 
 **Réglage « Mouvement »** (`MOTION_STYLES`) : **Vivant** (défaut, = la DA validée) · Complet (la magie aussi en mode
 fenêtre et au clavier) · Net (plus aucun rebond ni magie dans le hub ; le widget garde ses propres réglages).
@@ -249,9 +264,12 @@ qui pâlit et se resserre à la montée.
 | Niveau | Éventail | Carrousel | Bascule | Période |
 |---|---|---|---|---|
 | Aucune | 0 | 0 | 0 | — |
-| Légère | 2,5 px | 2 px | 0,1° | 7 s |
-| **Visible** (défaut) | 7 px | 5 px | 0,8° | 4,4 s |
-| Marquée | 12 px | 8 px | 1,4° | 4,8 s |
+| Légère | 4 px | 3 px | 0,4° | 6 s |
+| **Visible** (défaut) | 10 px | 7 px | 1,1° | 4,6 s |
+| Marquée | 15 px | 11 px | 1,8° | 5 s |
+
+Dérive latérale (revue du 29/10) : 0,3 × l'amplitude, sur un sinus 1,63 fois plus lent (`FLOAT_RHYTHM.driftShare`,
+`driftPeriod`) : chaque carte décrit une boucle douce. Ombre pleine à 30 px crête à crête.
 
 Carte active du carrousel × 0,7 (`activeGain`) ; survol de l'éventail × 1,15 (`floatHoverGain`) et dérive latérale 4 px.
 Pause en 240 ms (survol, molette, défilement rapide, glisser), reprise lente en 1,2 s ; arrêtée sous l'éventail et hors

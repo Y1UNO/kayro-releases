@@ -78,14 +78,14 @@
     0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Hover (art direction « survol des cartes »): `rotate` tilts towards the pointer (cardTilt.ts),`
+/* Hover (art direction « survol des cartes »): `rotate` tilts towards the pointer (cardTilt.ts eases
+   it on the frame loop, the glass engine follows: no CSS transition on it),`
    `translate` lifts a grid card (level 1; a carousel card lifts with its slot, level 3), `scale` =
    press. Each on its own property so the carousel's `transform` keeps its own timing. */
 .card {
   transition:
     transform var(--dur-card) var(--ease),
     translate var(--m1-court) var(--m-ease-in),
-    rotate var(--m1-court) var(--m-ease-in),
     scale var(--m-press-dur) var(--m-press-ease),
     border-color var(--dur-card) ease;
 }

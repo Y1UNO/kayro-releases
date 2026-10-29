@@ -16,6 +16,7 @@ import { springAt, SPRINGS } from "../../../design/glass/pillMotion";
 import { curveOf, lerp } from "../../../design/motion/curve";
 import { EASES } from "../../../design/motion/eases";
 import { FLOAT_RHYTHM } from "../../../design/motion/tokens5";
+import { FAN_TILT_MAX } from "../../../design/motion/tokensReview";
 import { floatAt, floatLevel, seed } from "../float/cardFloat";
 import { FAN_SIZE } from "./fanTimeline";
 
@@ -89,7 +90,7 @@ export function hoverConfig(
     bounce: reduced || crisp ? 0 : (SPRINGS[String(v?.hoverSpring ?? "leger")] ?? 0),
     burst: noMagic ? 0 : num(v, "burst", 0.8),
     lift: off || reduced ? 0 : num(v, "lift", 12),
-    tilt: off || reduced ? 0 : Math.min(3, num(v, "tilt", 3)),
+    tilt: off || reduced ? 0 : Math.min(FAN_TILT_MAX, num(v, "tilt", 6)),
     grow: off || reduced ? 0 : num(v, "grow", 0.03),
     threads: !off && !crisp && v?.threads !== false,
     threadSpeed: reduced ? 0 : num(v, "threadSpeed", 0.25),
@@ -105,7 +106,7 @@ export function hoverConfig(
     floatHoverGain: num(v, "floatHoverGain", 1.15),
     drift: off || reduced || level.fan <= 0 ? 0 : FLOAT_RHYTHM.fanHoverDrift,
     floatPeriod: level.period,
-    sway: off || reduced ? 0 : Math.min(3, num(v, "sway", 2)),
+    sway: off || reduced ? 0 : Math.min(FAN_TILT_MAX, num(v, "sway", 2.5)),
     swayPeriod: Math.max(1, num(v, "swayPeriod", 3.6)) * 1000,
     reduced,
   };
@@ -337,11 +338,11 @@ export class FanMotion {
     // hair, and drifts a little more sideways. The pointer tilt adds up, never past 3°.
     const w = (2 * Math.PI * now) / c.swayPeriod;
     const sway = c.sway * h * Math.sin(w + seed(i, 6) * 6.28);
-    const clamp3 = (x: number) => Math.max(-3, Math.min(3, x));
+    const clamp3 = (x: number) => Math.max(-FAN_TILT_MAX, Math.min(FAN_TILT_MAX, x));
     // Hovered, it also drifts a little sideways (round 3b), on a slower rhythm of its own.
     const drift = c.drift * h * Math.sin((w * 0.5) / 1.3 + seed(i, 4) * 6.28);
     return {
-      dx: drift,
+      dx: drift + f.dx,
       dy: f.dy,
       rot: f.rot + c.sway * 0.15 * h * Math.sin(w * 0.77 + 1.1),
       h,

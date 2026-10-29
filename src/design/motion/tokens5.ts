@@ -33,15 +33,22 @@ export interface FloatLevel {
  */
 export const FLOAT_LEVELS: Readonly<Record<FloatName, FloatLevel>> = {
   none: { fan: 0, carousel: 0, tilt: 0, period: 7000 },
-  light: { fan: 2.5, carousel: 2, tilt: 0.1, period: 7000 },
-  visible: { fan: 7, carousel: 5, tilt: 0.8, period: 4400 },
-  strong: { fan: 12, carousel: 8, tilt: 1.4, period: 4800 },
+  // Review 2026-10-29: « Visible » was still read as « à peine visible » (7 / 5 px, 0.8°).
+  light: { fan: 4, carousel: 3, tilt: 0.4, period: 6000 },
+  visible: { fan: 10, carousel: 7, tilt: 1.1, period: 4600 },
+  strong: { fan: 15, carousel: 11, tilt: 1.8, period: 5000 },
 };
 
 export const FLOAT_RHYTHM = {
   /** Each card's period: × 0.90 to × 1.07 of the level's. */
   periodMin: 0.9,
   periodMax: 1.07,
+  /**
+   * Review 2026-10-29: the card also drifts sideways, this share of its amplitude, on a slower
+   * sine (× `driftPeriod`): its path is a soft loop, not a piston.
+   */
+  driftShare: 0.3,
+  driftPeriod: 1.63,
   /** Each card starts 0.6 to 0.7 s after the previous one: never « en bloc ». */
   staggerMin: 600,
   staggerMax: 700,
@@ -49,7 +56,7 @@ export const FLOAT_RHYTHM = {
   shadowAlpha: 0.32 / 0.55,
   shadowScale: 0.9,
   /** Peak-to-peak height (px) at which the shadow change is complete (« Marquée » on the fan). */
-  shadowFullAt: 24,
+  shadowFullAt: 30,
   /** A carousel card pauses its floating (hover, fast scroll) over this (ms)… */
   pauseMs: 240,
   /** …and comes back to it slowly (after a category sequence, a hover): no jolt (ms, ≈ 95 %). */

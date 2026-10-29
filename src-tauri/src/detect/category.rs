@@ -92,7 +92,7 @@ const SOFTWARE: &[&str] = &[
 ];
 
 /// Lower-case words of `text`, separated by single spaces (`Battle.net` → `battle net`).
-fn normalise(text: &str) -> String {
+pub(crate) fn normalise(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     for c in text.chars().flat_map(char::to_lowercase) {
         if c.is_alphanumeric() {

@@ -83,9 +83,8 @@
   border-radius: var(--rim-r, var(--radius-card));
   pointer-events: none;
   transform: scale(var(--side-scale, 0.7414));
-  transition:
-    transform var(--dur-card) var(--ease),
-    rotate var(--m1-court) var(--m-ease-in);
+  /* `rotate` follows the card's eased tilt (cardTilt.ts): no transition of its own. */
+  transition: transform var(--dur-card) var(--ease);
 }
 
 /* The active slot is the layer's grandparent since the floating box (round 5): not `>`. */

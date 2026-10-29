@@ -188,7 +188,7 @@ export class CarouselFloat {
         c.period,
         seed(b.key, 2) * c.period,
       );
-      b.el.style.transform = `translateY(${f.dy.toFixed(2)}px) rotate(${f.rot.toFixed(3)}deg)`;
+      b.el.style.transform = `translate(${f.dx.toFixed(2)}px, ${f.dy.toFixed(2)}px) rotate(${f.rot.toFixed(3)}deg)`;
       if (b.card) setGlassFloat(b.card, { rot: f.rot * DEG, elev: f.elev });
     }
     // Only floating: the slow cadence; anything else (hover, wheel, a pause easing): the full one.

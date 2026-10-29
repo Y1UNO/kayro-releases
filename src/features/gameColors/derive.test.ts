@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { BUILTIN_THEMES } from "../../design";
 import { worstContrast } from "../../design/contrast";
 import type { Palette } from "../../ipc/bindings";
-import { chromaOf, hexToLab, hexToRgb, labToHex, rgbToLab } from "../../lib/oklab";
+import { chromaOf, hexToLab, hexToRgb, hueGap, labToHex, rgbToLab } from "../../lib/oklab";
 import {
+  characterOf,
+  mixLch,
   deriveGameColors,
   faceColors,
   gamePair,
@@ -49,11 +51,11 @@ describe("game colours", () => {
     expect(fx.card).toEqual(theme.card);
   });
 
-  it("stay within the themes' lightness, with a night only in immersive", () => {
+  it("stay within the themes' lightness, with a lighter-handed night in « Léger »", () => {
     for (const theme of BUILTIN_THEMES) {
       for (const p of Object.values(EXTREMES)) {
         const light = deriveGameColors(theme, { main: p, other: null }, "light")!;
-        expect(light.night).toBeNull();
+        for (const hex of light.night!) expect(hexToLab(hex)[0]).toBeLessThan(0.26);
         // Never darker than the theme's own darkest gradient colour (Sakura and Cuivre's B < 0.72).
         const floor = Math.min(0.72, ...theme.gradient!.map((h) => hexToLab(h)[0])) - 0.01;
         for (const hex of [light.a, light.b]) {
@@ -63,6 +65,10 @@ describe("game colours", () => {
         }
         const deep = deriveGameColors(theme, { main: p, other: null }, "immersive")!;
         for (const hex of deep.night!) expect(hexToLab(hex)[0]).toBeLessThan(0.26);
+        // « Léger » tints the night less than « Immersif » (review 2026-10-29).
+        const gap = (n: readonly string[]) =>
+          Math.abs(hexToLab(n[1]!)[0] - hexToLab(theme.bg[1]!)[0]);
+        expect(gap(light.night!)).toBeLessThanOrEqual(gap(deep.night!) + 0.002); // hex rounding
       }
     }
   });
@@ -128,5 +134,53 @@ describe("game colours", () => {
     expect(chosen.a).not.toBe("#c82828");
     expect(hexToLab(chosen.a)[1]).toBeGreaterThan(hexToLab(auto.a)[1]);
     expect(deriveGameColors(theme, src, "light", undefined, { mode: "auto" })).toEqual(auto);
+  });
+
+  it("speak for a dark poster with its colour, not its grey sky (review 2026-10-29)", () => {
+    const p: Palette = {
+      colors: [
+        { l: 0.2, a: 0.001, b: 0.002, weight: 0.6, hex: "#1b1b1c" },
+        { l: 0.6, a: -0.09, b: -0.05, weight: 0.2, hex: "#2f9fb0" },
+        { l: 0.7, a: 0.12, b: 0.08, weight: 0.08, hex: "#e0705a" },
+      ],
+      dominant: 0,
+      accent: 2,
+      dark: 0,
+      light: 2,
+    };
+    const c = characterOf(p)!;
+    expect(c[1]).toBeCloseTo(-0.09);
+  });
+});
+
+describe("game colours follow the picture (review 2026-10-29)", () => {
+  // Apex Legends' poster on this PC (palettes.json): navy sky, grey, brown, blue, cyan, white.
+  const apex: Palette = {
+    colors: [
+      { l: 0.241, a: -0.005, b: -0.045, weight: 0.42, hex: "#171e35" },
+      { l: 0.56, a: -0.02, b: -0.01, weight: 0.17, hex: "#6b7e83" },
+      { l: 0.44, a: 0.01, b: 0.02, weight: 0.13, hex: "#524941" },
+      { l: 0.4, a: -0.02, b: -0.13, weight: 0.12, hex: "#184792" },
+      { l: 0.73, a: -0.07, b: -0.03, weight: 0.1, hex: "#67b6c2" },
+      { l: 0.92, a: 0.0, b: 0.0, weight: 0.06, hex: "#e4e6e2" },
+    ],
+    dominant: 0,
+    accent: 4,
+    dark: 0,
+    light: 5,
+  };
+
+  it("a blue game on the peach theme stays blue: no grey from the mix", () => {
+    const peach = BUILTIN_THEMES.find((t) => t.id === "lavande-peche")!;
+    const c = deriveGameColors(peach, { main: apex, other: null }, "light")!;
+    for (const hex of [c.a, c.b]) expect(chromaOf(hexToLab(hex))).toBeGreaterThan(0.06);
+    expect(hexToLab(c.a)[2]).toBeLessThan(-0.04); // A: the game's blue
+    // B: towards its cyan (the theme's peach only bends it a little round the circle).
+    expect(hueGap(hexToLab(c.b), hexToLab("#67b6c2"))).toBeLessThan(30);
+  });
+
+  it("mixLch keeps the chroma between two far hues", () => {
+    const m = mixLch([0.8, 0.1, 0], [0.8, -0.1, 0], 0.5);
+    expect(chromaOf(m)).toBeCloseTo(0.1, 3);
   });
 });

@@ -273,6 +273,9 @@ void main() {
     c = mix(c, gA, 0.3 * uIHalo.w * clamp(1.0 - length(q), 0.0, 1.0));
   }
   if (uIRing.w > 0.0) c = introRing(p, c);
+  // Review 2026-10-29: a fixed sub-level dither (interleaved gradient noise, ± ½ of an 8-bit
+  // step) hides the bands of the dark gradients on an 8-bit screen; the same pixel, every frame.
+  c += (fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5) / 255.0;
   outColor = vec4(c, 1.0);
 }
 `;

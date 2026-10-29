@@ -2,9 +2,11 @@ import {
   chainOpacity,
   glassEntries,
   glassFloatOf,
+  glassTiltOf,
   MAX_GLASS,
   parseRadius,
   radiusPx,
+  tiltBoxGrowth,
   type GlassEntry,
   type GlassKind,
 } from "../../design/glass/glassRegistry";
@@ -85,6 +87,8 @@ export class GlassFrame {
   readonly P = new Float32Array(MAX_GLASS * 4);
   /** Per shape: cos, sin of its angle, edge softness (px), stack order (0 = merged). */
   readonly X = new Float32Array(MAX_GLASS * 4);
+  /** Per shape: 3D tilt about x and y (rad), perspective (px, 0 = flat), unused. */
+  readonly Q = new Float32Array(MAX_GLASS * 4);
   n = 0;
   /** Shapes [0, ns) are merged; [ns, n) are stacked, back to front. */
   ns = 0;
@@ -93,7 +97,7 @@ export class GlassFrame {
   private hoverEl: Element | null = null;
   nested = 0;
   /** Selected card whose inside the engine draws (no DOM poster over it): centre, half size. */
-  private readonly prev = new Float32Array(MAX_GLASS * 12);
+  private readonly prev = new Float32Array(MAX_GLASS * 16);
   private prevN = -1;
   private prevHover = -1;
   private readonly prevP = new Float32Array(MAX_GLASS);
@@ -141,11 +145,13 @@ export class GlassFrame {
     for (let i = 0; i < n * 4 && !changed; i++) {
       if (this.R[i] !== this.prev[i] || this.S[i] !== this.prev[M + i]) changed = true;
       if (this.X[i] !== this.prev[2 * M + i]) changed = true;
+      if (this.Q[i] !== this.prev[3 * M + i]) changed = true;
       if (i % 4 === 0 && this.P[i] !== this.prevP[i >> 2]) changed = true;
     }
     this.prev.set(this.R.subarray(0, n * 4), 0);
     this.prev.set(this.S.subarray(0, n * 4), M);
     this.prev.set(this.X.subarray(0, n * 4), 2 * M);
+    this.prev.set(this.Q.subarray(0, n * 4), 3 * M);
     for (let i = 0; i < n; i++) this.prevP[i] = this.P[i * 4]!;
     this.prevN = n;
     return changed;
@@ -163,6 +169,11 @@ export class GlassFrame {
     if (opacity <= 0.005) return;
     let cx: number, cy: number, hw: number, hh: number, radius: number, scale: number;
     const float = pose ? undefined : glassFloatOf(e.el);
+    const tilt = pose
+      ? pose.persp && (pose.tx || pose.ty)
+        ? { x: pose.tx ?? 0, y: pose.ty ?? 0, persp: pose.persp }
+        : undefined
+      : glassTiltOf(e.el);
     if (pose) {
       ({ x: cx, y: cy, hw, hh, r: radius } = pose);
       scale = e.el.offsetWidth > 0 ? (2 * hw) / e.el.offsetWidth : 1;
@@ -184,6 +195,13 @@ export class GlassFrame {
         hw = (ow * scale) / 2;
         hh = (oh * scale) / 2;
       }
+      // A tilted card (review 2026-10-29): its box is its projected box; its true size, unprojected.
+      if (tilt && ow > 0 && oh > 0) {
+        const [gx, gy] = tiltBoxGrowth(tilt, ow, oh);
+        hw /= gx;
+        hh /= gy;
+        scale = (2 * hw) / ow;
+      }
       radius = radiusPx(e.radius, hw, hh, scale);
     }
     if (hw < 0.5 || hh < 0.5) return;
@@ -196,6 +214,8 @@ export class GlassFrame {
     const elev = Math.min(0.99, Math.max(0, pose?.elev ?? float?.elev ?? 0));
     const a = pose?.a ?? float?.rot ?? 0;
     this.X.set([Math.cos(a), Math.sin(a), pose?.soft ?? 0, (pose?.z ?? 0) + elev], o);
+    if (tilt) this.Q.set([tilt.x, tilt.y, tilt.persp * (pose ? 1 : scale), 0], o);
+    else this.Q.set([0, 0, 0, 0], o);
     let clip: DOMRect | undefined;
     if (e.clip) {
       clip = this.clips.get(e.clip);

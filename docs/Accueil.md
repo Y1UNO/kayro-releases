@@ -12,6 +12,7 @@
 - [[PLAN]] — choix techniques vérifiés
 - [[ARCHITECTURE]] — données, modules, perf
 - [[PRETEST]] — note pour les testeurs (version 0.14 prétest)
+- [[REVUE-OPUS55]] — note d'évolution de la revue Opus 5.5 (mouvement, verre 3D, couleurs, scan)
 - [[MACHINE]] — PC de test
 
 ## Mesures et relectures

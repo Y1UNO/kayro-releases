@@ -42,6 +42,7 @@ export const GLASS_UNIFORMS = [
   "uPo",
   "uPosterK",
   "uX",
+  "uQ",
   "uNS",
   "uHov",
   "uIVeil",
@@ -72,6 +73,7 @@ uniform vec3 uLightCol;
 uniform vec4 uPo[MAXS];    // poster per shape: texture slot (< 0: none), picture w / h, opacity, inset
 uniform vec2 uPosterK;     // poster: refraction (× the rim's), reflection on the rim
 uniform vec4 uX[MAXS];     // per shape: cos, sin of its angle, edge softness (px), stack order + floating height (fract)
+uniform vec4 uQ[MAXS];     // per shape: 3D tilt about x, y (rad), perspective (px, 0 = flat)
 uniform int uNS;           // shapes [0, uNS) are merged; [uNS, uN) are stacked, back to front
 uniform vec2 uHov;         // hovered card of the fan: shape index (< 0 none), level (deeper shadow)
 uniform vec4 uIVeil;       // opening, variant C: open circle x, y, radius (CSS px), veil opacity
@@ -108,6 +110,30 @@ vec3 sdg(vec2 p, vec2 b, float r) {
 vec2 rotL(int i, vec2 v) { vec4 x = uX[i]; return vec2(x.x * v.x + x.y * v.y, -x.y * v.x + x.x * v.y); }
 vec2 rotW(int i, vec2 v) { vec4 x = uX[i]; return vec2(x.x * v.x - x.y * v.y, x.y * v.x + x.x * v.y); }
 
+// A tilted shape (review 2026-10-29): CSS rotateX(a) rotateY(b) seen through a perspective P
+// (origin at the shape's centre). The screen point q goes back onto the card's plane: a ray from
+// the eye (0, 0, P) through q, cut by the plane of normal n = M ez, read in the basis M ex, M ey.
+vec2 untilt(int i, vec2 q) {
+  vec4 t = uQ[i];
+  if (t.z <= 0.0) return q;
+  float ca = cos(t.x), sa = sin(t.x), cb = cos(t.y), sb = sin(t.y);
+  vec3 u = vec3(cb, sa * sb, -ca * sb);
+  vec3 v = vec3(0.0, ca, sa);
+  vec3 n = vec3(sb, -sa * cb, ca * cb);
+  float k = t.z * n.z / max(t.z * n.z - n.x * q.x - n.y * q.y, 1e-3);
+  vec3 X = vec3(k * q, t.z * (1.0 - k));
+  return vec2(dot(u, X), dot(v, X));
+}
+
+// A tilted shape's normal turns with it: the key lights then run along its rim.
+vec3 tiltN(int i, vec3 nl) {
+  vec4 t = uQ[i];
+  if (t.z <= 0.0) return nl;
+  float ca = cos(t.x), sa = sin(t.x), cb = cos(t.y), sb = sin(t.y);
+  vec3 y = vec3(cb * nl.x + sb * nl.z, nl.y, -sb * nl.x + cb * nl.z);
+  return vec3(y.x, ca * y.y - sa * y.z, sa * y.y + ca * y.z);
+}
+
 void field(vec2 p, float depth, out float D, out vec2 N, out vec4 KA, out vec4 KB, out vec4 T, out float A, out vec2 O, out int B) {
   D = 1e5; N = vec2(0.0, 1.0); KA = vec4(0.0); KB = vec4(0.0); T = vec4(0.0); A = 0.0; O = p; B = -1;
   float best = 1e5;
@@ -119,7 +145,7 @@ void field(vec2 p, float depth, out float D, out vec2 N, out vec4 KA, out vec4 K
     vec4 c = uC[i];
     if (p.x < c.x || p.y < c.y || p.x > c.z || p.y > c.w) continue;
     vec4 r = uR[i];
-    vec3 g = sdg(rotL(i, p - r.xy), r.zw, s.x);
+    vec3 g = sdg(untilt(i, rotL(i, p - r.xy)), r.zw, s.x);
     g.yz = rotW(i, g.yz);
     float h = clamp(0.5 + 0.5 * (D - g.x) / k, 0.0, 1.0);
     D = mix(D, g.x, h) - k * h * (1.0 - h);
@@ -177,7 +203,7 @@ vec3 shade(vec3 under, vec2 p, float depth, float px, float D, vec2 N, vec4 KA, 
     vec4 r = uR[B];
     int sl = int(P.x + 0.5);
     vec2 hb = max(r.zw - P.w, vec2(1.0));
-    vec2 q = rotL(B, p - r.xy);
+    vec2 q = untilt(B, rotL(B, p - r.xy));
     vec3 gp = sdg(q, hb, max(uS[B].x - P.w, 0.0));
     vec2 o = rotL(B, off) * uPosterK.x;
     float lodP = bend * 2.0 + soft * 0.3;
@@ -195,6 +221,16 @@ vec3 shade(vec3 under, vec2 p, float depth, float px, float D, vec2 N, vec4 KA, 
   }
 
   vec3 n3 = normalize(vec3(N * slope * KB.x * 0.9, 1.0));
+  float face = 0.0;
+  if (B >= 0 && uQ[B].z > 0.0) {
+    n3 = normalize(tiltN(B, n3));
+    // The side that comes towards the viewer catches a soft light (a premium sheen, no texture).
+    vec4 tq = uQ[B];
+    vec2 fwd = vec2(-sin(tq.y), sin(tq.x));
+    float amt = clamp(length(fwd) / 0.12, 0.0, 1.0);
+    vec2 qn = untilt(B, rotL(B, p - uR[B].xy)) / max(uR[B].zw, vec2(1.0));
+    face = 0.075 * amt * smoothstep(-0.35, 1.0, dot(qn, fwd / max(length(fwd), 1e-4)));
+  }
   vec3 V = vec3(0.0, 0.0, 1.0);
   float spec = pow(max(dot(n3, normalize(vec3(-0.45, -0.75, 0.55) + V)), 0.0), KB.w)
     + 0.45 * pow(max(dot(n3, normalize(vec3(0.45, 0.75, 0.55) + V)), 0.0), KB.w);
@@ -208,7 +244,7 @@ vec3 shade(vec3 under, vec2 p, float depth, float px, float D, vec2 N, vec4 KA, 
     // Kept on the rim, thin and crisp: the cursor never widens the edge.
     cur = (pow(max(dot(n3, normalize(Lc + V)), 0.0), KB.w * 0.8) * 1.1 + exp(-x / 0.8) * 0.3) * att;
   }
-  col += uLightCol * (spec + cur) + vec3(rim) + bend * 0.06 * KB.x;
+  col += uLightCol * (spec + cur + face) + vec3(rim) + bend * 0.06 * KB.x;
   return mix(c0, min(col, vec3(1.0)), cover);
 }
 
@@ -228,7 +264,7 @@ vec3 stacked(vec3 col, vec2 p, float px) {
     vec4 r = uR[i];
     vec4 s = uS[i];
     float soft = uX[i].z;
-    vec3 g = sdg(rotL(i, p - r.xy), r.zw, s.x);
+    vec3 g = sdg(untilt(i, rotL(i, p - r.xy)), r.zw, s.x);
     float hvi = i == int(uHov.x + 0.5) ? clamp(uHov.y, 0.0, 1.0) : 0.0;
     if (g.x > 48.0 + soft * 2.0 + 40.0 * hvi) continue;
     int kind = int(s.y + 0.5);
@@ -249,6 +285,9 @@ void main() {
   // Variant C's veil: black over everything drawn, outside the open circle; the same 1 px edge as
   // the CSS gradient it replaces (transparent at r, black at r + 1).
   if (uIVeil.w > 0.0) col *= 1.0 - uIVeil.w * clamp(length(p - uIVeil.xy) - uIVeil.z, 0.0, 1.0);
+  // Review 2026-10-29: a fixed sub-level dither (interleaved gradient noise, ± ½ of an 8-bit
+  // step) hides the bands of the dark gradients on an 8-bit screen; the same pixel, every frame.
+  col += (fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5) / 255.0;
   outColor = vec4(col, 1.0);
 }
 `;

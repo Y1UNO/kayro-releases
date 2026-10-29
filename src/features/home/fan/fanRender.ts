@@ -87,6 +87,10 @@ export function renderFan(
       soft: blur,
       z: FAN_Z + z,
       elev: m?.elev ?? 0,
+      // Review 2026-10-29: the glass tilts with the card (CategoryFan.module.css: perspective 900).
+      tx: (m?.tiltX ?? 0) * DEG,
+      ty: (m?.tiltY ?? 0) * DEG,
+      persp: 900 * sc,
     };
     poses.set(el.card, pose);
     if (h > 0) hover = { el: el.card, h };

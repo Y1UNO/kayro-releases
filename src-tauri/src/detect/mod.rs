@@ -7,6 +7,7 @@
 pub mod category;
 pub mod epic;
 pub mod filters;
+pub mod relevance;
 pub mod scan;
 pub mod startmenu;
 pub mod steam;
