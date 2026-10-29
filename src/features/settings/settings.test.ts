@@ -21,6 +21,7 @@ import {
 
 const SETTINGS: Settings = {
   ...V,
+  openingScreen: "last",
   schemaVersion: 2,
   themeId: "bleu-gris",
   colorMode: "light",

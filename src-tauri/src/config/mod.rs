@@ -11,6 +11,7 @@ pub mod scene_ops;
 pub mod schema;
 pub mod share;
 pub mod store;
+pub mod themes;
 pub mod ui_state;
 pub mod validate;
 pub mod visual;
@@ -39,7 +40,7 @@ pub struct ConfigState {
     slots: Mutex<SlotsFile>,
     scenes: Mutex<Vec<SceneFile>>,
     ui_state: Mutex<UiState>,
-    themes: Vec<ThemeFile>,
+    themes: Mutex<Vec<ThemeFile>>,
 }
 
 impl ConfigState {
@@ -66,7 +67,7 @@ impl ConfigState {
             slots: Mutex::new(slots),
             scenes: Mutex::new(scenes),
             ui_state: Mutex::new(ui_state),
-            themes,
+            themes: Mutex::new(themes),
         }
     }
 
@@ -234,10 +235,6 @@ impl ConfigState {
             }
         }
         Ok(scene)
-    }
-
-    pub fn themes(&self) -> &[ThemeFile] {
-        &self.themes
     }
 }
 

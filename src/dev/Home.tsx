@@ -120,6 +120,7 @@ export default function HomeDev() {
       apps,
       settings: {
         ...VISUAL_DEFAULTS,
+        openingScreen: "last",
         schemaVersion: 2,
         themeId: params.get("theme") ?? ACTIVE_THEME_ID,
         quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",

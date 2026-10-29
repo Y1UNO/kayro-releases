@@ -10,6 +10,7 @@ import {
   type ModePassage,
   type ProgressEvent,
   type Settings,
+  type ThemeFile,
 } from "./bindings";
 
 export type Unlisten = () => void;
@@ -89,6 +90,11 @@ export const desktopEvents: DesktopEvents = {
   onRecentsChanged: (handler) => listenTo(events.recentsChanged.listen, handler),
   onHotkeysChanged: (handler) => listenTo(events.hotkeysChanged.listen, handler),
 };
+
+/** The personal themes changed (saved, imported or deleted, from either window). */
+export function onThemesChanged(handler: (themes: ThemeFile[]) => void): Promise<Unlisten> {
+  return listenTo(events.themesChanged.listen, handler);
+}
 
 /** The hub appeared or went away; `bench` asks the page to report when it painted. */
 export function onWindowVisibility(

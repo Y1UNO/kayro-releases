@@ -19,6 +19,7 @@ import type {
   AppArt,
   AppPalette,
   ArtRole,
+  ThemeFile,
 } from "./bindings";
 
 export type Outcome<T> = { ok: true; value: T } | { ok: false; error: AppError };
@@ -153,3 +154,17 @@ export const artIpc = {
 };
 
 export type ArtIpc = typeof artIpc;
+
+/** Personal themes (step 15): made in Réglages › Thèmes, imported from a dropped `.json`. */
+export const themesIpc = {
+  list: (): Promise<Outcome<ThemeFile[]>> => plain(commands.themesList()),
+  newId: (name: string): Promise<Outcome<string>> => plain(commands.themeNewId(name)),
+  save: (theme: ThemeFile): Promise<Outcome<ThemeFile>> => checked(commands.themeSave(theme)),
+  remove: (id: string): Promise<Outcome<null>> => checked(commands.themeDelete(id)),
+  /** Reads and validates the file, then keeps it as a new personal theme. */
+  importFile: (path: string): Promise<Outcome<ThemeFile>> => checked(commands.themeImport(path)),
+  /** Writes the shareable file in the exports folder, shows it in Explorer; returns its path. */
+  exportFile: (id: string): Promise<Outcome<string>> => checked(commands.themeExport(id)),
+};
+
+export type ThemesIpc = typeof themesIpc;

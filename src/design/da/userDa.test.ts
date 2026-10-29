@@ -7,6 +7,7 @@ import { defaultValues } from "./values";
 
 const S: Settings = {
   ...VISUAL_DEFAULTS,
+  openingScreen: "last",
   schemaVersion: 2,
   themeId: "bleu-gris",
   colorMode: "light",

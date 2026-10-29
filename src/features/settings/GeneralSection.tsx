@@ -6,10 +6,17 @@ import { desktopIpc } from "../../ipc/commands";
 import { errorText } from "../../ipc/errors";
 import { hubStore, useDesktop, useHub } from "../../store";
 import { HotkeyField } from "../scenes/HotkeyField";
-import { ToggleRow } from "./SettingRow";
+import type { OpeningScreen } from "../../ipc/bindings";
+import { ChoiceRow, ToggleRow } from "./SettingRow";
 import styles from "./Settings.module.css";
 
-/** Réglages › Général: the global shortcut, hiding, economy mode, starting with Windows, logs. */
+/** « Écran d'ouverture » (step 15), in the segments' order. */
+const OPENING_SCREENS: readonly OpeningScreen[] = ["last", "pointer", "main"];
+
+/**
+ * Réglages › Général: the global shortcut, the opening screen, hiding, economy mode, starting with
+ * Windows, logs.
+ */
 export function GeneralSection() {
   const settings = useHub((s) => s.settings);
   const scenes = useDesktop((s) => s.hotkeys?.scenes);
@@ -76,6 +83,16 @@ export function GeneralSection() {
           </p>
         )}
       </section>
+      <ChoiceRow<OpeningScreen>
+        label={t("settings.general.openingScreen.label")}
+        help={t("settings.general.openingScreen.help")}
+        value={settings.openingScreen}
+        onChange={(openingScreen) => void set({ openingScreen })}
+        options={OPENING_SCREENS.map((v) => ({
+          value: v,
+          label: t(`settings.general.openingScreen.${v}`),
+        }))}
+      />
       <ToggleRow
         label={t("settings.general.hideOnEscape")}
         checked={settings.hideOnEscape}

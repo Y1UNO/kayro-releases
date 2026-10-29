@@ -8,7 +8,7 @@ use tauri::{
 };
 
 use super::geometry::{self, Screen};
-use crate::config::schema::DisplayMode;
+use crate::config::schema::{DisplayMode, OpeningScreen};
 use crate::config::ui_state::{Placement, Rect};
 use crate::platform::own_window;
 
@@ -77,20 +77,49 @@ pub fn choose_screen<R: Runtime>(
         );
         geometry::screen_at(screens, cx, cy)
     });
-    let under_pointer = || {
-        let p = app.cursor_position().ok()?;
-        geometry::screen_at(screens, p.x as i32, p.y as i32)
-    };
-    let main = || {
-        let primary = app.primary_monitor().ok().flatten()?;
-        screens
-            .iter()
-            .position(|s| s.rect.x == primary.position().x && s.rect.y == primary.position().y)
-    };
     under_window
-        .or_else(under_pointer)
-        .or_else(main)
+        .or_else(|| under_pointer(app, screens))
+        .or_else(|| main_screen(app, screens))
         .unwrap_or(0)
+}
+
+fn under_pointer<R: Runtime>(app: &AppHandle<R>, screens: &[Screen]) -> Option<usize> {
+    let p = app.cursor_position().ok()?;
+    geometry::screen_at(screens, p.x as i32, p.y as i32)
+}
+
+fn main_screen<R: Runtime>(app: &AppHandle<R>, screens: &[Screen]) -> Option<usize> {
+    let primary = app.primary_monitor().ok().flatten()?;
+    screens
+        .iter()
+        .position(|s| s.rect.x == primary.position().x && s.rect.y == primary.position().y)
+}
+
+/// The screen the hub opens on (« Écran d'ouverture »): the pointer's or the main one when asked,
+/// else (and when that one cannot be found) the usual choice.
+pub fn opening_screen<R: Runtime>(
+    app: &AppHandle<R>,
+    screens: &[Screen],
+    saved: &Placement,
+    window: Option<&WebviewWindow<R>>,
+    choice: OpeningScreen,
+) -> usize {
+    let asked = match choice {
+        OpeningScreen::Last => None,
+        OpeningScreen::Pointer => under_pointer(app, screens),
+        OpeningScreen::Main => main_screen(app, screens),
+    };
+    asked.unwrap_or_else(|| choose_screen(app, screens, saved, window))
+}
+
+/// The screen a window is on now (its centre), if any.
+pub fn screen_of<R: Runtime>(window: &WebviewWindow<R>, screens: &[Screen]) -> Option<usize> {
+    let (pos, size) = (window.outer_position().ok()?, window.outer_size().ok()?);
+    geometry::screen_at(
+        screens,
+        pos.x + (size.width / 2) as i32,
+        pos.y + (size.height / 2) as i32,
+    )
 }
 
 /// Remembers where the window is, in the shape `geometry` reads back.

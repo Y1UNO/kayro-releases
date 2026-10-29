@@ -9,6 +9,7 @@ pub mod ipc;
 pub mod ipc_art;
 pub mod ipc_desktop;
 pub mod ipc_scenes;
+pub mod ipc_themes;
 pub mod launcher;
 mod legacy;
 mod logging;

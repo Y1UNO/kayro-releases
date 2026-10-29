@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -11,6 +12,7 @@ import type { ReactNode } from "react";
 import { applyTheme } from "./applyTheme";
 import type { Theme } from "./theme";
 import { BUILTIN_THEMES, resolveTheme } from "./themes";
+import { customThemes } from "./themes/custom";
 
 export interface SetThemeOptions {
   /** Skip the 0.9 s cross-fade of `:root` (the theme wave reveals the change itself). */
@@ -37,6 +39,21 @@ export function ThemeProvider({ initialThemeId, onThemeChange, children }: Props
   const [theme, setTheme] = useState<Theme>(() => resolveTheme(initialThemeId));
   // The first application is always instant; later ones only when asked.
   const instant = useRef(true);
+  // The id asked for: a personal theme edited, imported or arriving late is picked up again.
+  const wanted = useRef(initialThemeId);
+
+  useEffect(
+    () =>
+      customThemes.subscribe(() => {
+        const next = resolveTheme(wanted.current);
+        setTheme((current) => {
+          if (JSON.stringify(current) === JSON.stringify(next)) return current;
+          instant.current = true;
+          return next;
+        });
+      }),
+    [],
+  );
 
   // Layout effect: variables are set before the browser paints, so no flash of the wrong theme.
   useLayoutEffect(() => {
@@ -48,6 +65,7 @@ export function ThemeProvider({ initialThemeId, onThemeChange, children }: Props
     (id: string, options?: SetThemeOptions) => {
       // Renamed or retired ids resolve like at start-up (an unknown one gives the default theme).
       const next = resolveTheme(id);
+      wanted.current = next.id;
       instant.current = options?.instant === true;
       setTheme(next);
       onThemeChange?.(next.id);

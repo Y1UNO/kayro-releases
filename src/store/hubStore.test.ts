@@ -9,6 +9,7 @@ const SETTINGS: Settings = {
   ...VISUAL_DEFAULTS,
   schemaVersion: 2,
   themeId: "crepuscule",
+  openingScreen: "last",
   quality: "balanced",
   colorMode: "light",
   hotkey: "Ctrl+Alt+H",

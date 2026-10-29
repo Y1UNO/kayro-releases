@@ -17,7 +17,7 @@ use crate::intake::{inspect, shortcut_target, InspectReport};
 use crate::launcher::system::SystemLauncher;
 use crate::launcher::{launch_app, LaunchResult};
 use crate::procwatch::{AppRunState, ProcWatch, RunningApps};
-use crate::{icons, ipc_art, ipc_desktop, ipc_scenes, platform};
+use crate::{icons, ipc_art, ipc_desktop, ipc_scenes, ipc_themes, platform};
 
 /// Emitted after every successful change of the settings (also to the window that made it).
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -338,6 +338,12 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_art::art_set_user::<tauri::Wry>,
             ipc_art::art_clear_user::<tauri::Wry>,
             ipc_art::palettes_get,
+            ipc_themes::themes_list,
+            ipc_themes::theme_new_id,
+            ipc_themes::theme_save::<tauri::Wry>,
+            ipc_themes::theme_delete::<tauri::Wry>,
+            ipc_themes::theme_import::<tauri::Wry>,
+            ipc_themes::theme_export,
         ])
         .events(collect_events![
             SettingsChanged,
@@ -351,7 +357,8 @@ pub fn builder() -> Builder<tauri::Wry> {
             crate::desktop::hotkeys::HotkeysChanged,
             ipc_desktop::RecentsChanged,
             ipc_art::ArtChanged,
-            ipc_art::PalettesChanged
+            ipc_art::PalettesChanged,
+            ipc_themes::ThemesChanged
         ])
 }
 

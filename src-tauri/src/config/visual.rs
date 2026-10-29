@@ -48,6 +48,19 @@ pub enum ThemeTransition {
     Direct,
 }
 
+/// « Écran d'ouverture » (step 15): where the hub opens from the shortcut or the notification area.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum OpeningScreen {
+    /// Where it was last (the remembered screen).
+    #[default]
+    Last,
+    /// The screen under the mouse pointer.
+    Pointer,
+    /// The main screen of Windows.
+    Main,
+}
+
 /// « Dépliage du widget ».
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]

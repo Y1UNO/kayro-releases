@@ -1,8 +1,8 @@
 # Kayro — Accueil
 
 > [!info] Où on en est
-> - **Dernière étape close** : prétest — installeur et note pour les testeurs (le 2026-10-29)
-> - **Prochaine étape** : 15 — Réglages · Apparence
+> - **Dernière étape close** : 15 — Réglages · Apparence (le 2026-10-29)
+> - **Prochaine étape** : 16–17 — Ambiances
 > - **DA** : gelée le 2026-10-14 (v1)
 
 ## Référence

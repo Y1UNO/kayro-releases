@@ -18,6 +18,13 @@
         "label": "Mode économe",
         "help": "La fenêtre est détruite quand elle est cachée : moins de mémoire utilisée, mais environ 0,4 s pour la rouvrir. Désactivé, {app} reste chargé et apparaît en un instant."
       },
+      "openingScreen": {
+        "label": "Écran d’ouverture",
+        "help": "L’écran où {app} s’ouvre avec le raccourci ou la zone de notification.",
+        "last": "Dernier utilisé",
+        "pointer": "Écran de la souris",
+        "main": "Écran principal"
+      },
       "hideOnEscape": "Échap cache {app}",
       "hideOnBlur": "Cliquer ailleurs cache {app}",
       "autostart": {
@@ -158,7 +165,34 @@
       }
     },
     "themes": {
-      "apply": "Thème {name}"
+      "apply": "Thème {name}",
+      "mine": "Mes thèmes",
+      "mineHelp": "Créez votre thème à partir de deux couleurs, ou déposez ici un fichier de thème (.json) pour l’importer.",
+      "create": "Créer mon thème",
+      "edit": "Modifier {name}",
+      "editShort": "Modifier",
+      "newTitle": "Nouveau thème",
+      "editTitle": "Modifier le thème",
+      "back": "Thèmes",
+      "name": "Nom",
+      "namePlaceholder": "Mon thème",
+      "colorA": "Couleur principale",
+      "colorB": "Couleur d’accent",
+      "tint": "Fond",
+      "tintNeutral": "Neutre",
+      "tintTinted": "Teinté",
+      "adjusted": "{app} ajuste les couleurs pour que le texte reste lisible partout.",
+      "save": "Enregistrer et appliquer",
+      "cancel": "Annuler",
+      "export": "Exporter",
+      "exported": "Exporté : {file}",
+      "exportFailed": "Impossible d’exporter le thème.",
+      "delete": "Supprimer",
+      "confirmDelete": "Confirmer la suppression",
+      "saveFailed": "Impossible d’enregistrer le thème.",
+      "imported": "Thème importé : {name}",
+      "importFailed": "« {file} » n’est pas un thème valide.",
+      "full": "{max} thèmes personnels au maximum."
     }
   }
 }

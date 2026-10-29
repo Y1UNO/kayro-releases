@@ -103,6 +103,13 @@ jeu (étape 14) et les thèmes importés (étape 15). Anciens thèmes : la migra
 (`src-tauri/src/config/visual.rs`) donne `mauve` → Encre, Crépuscule / Aurore boréale / Océan / Rose poudré / Graphite →
 Bleu-gris ; côté page, un id inconnu ou retiré donne Bleu-gris (`resolveTheme`, aussi dans `setThemeId`).
 
+**Thèmes perso** (étape 15, `src/design/themes/derive.ts`, Réglages › Thèmes › « Mes thèmes ») : 2 couleurs + un
+curseur de fond donnent un thème entier par la règle des 6 thèmes : accent, cartes, voile 1 = A ; faisceau, lueur,
+voile 3 = B ; texte doux = A +0,12 de clarté, ½ chroma ; fonds à la teinte de A, L 0,215 / 0,165 / 0,127, chroma de
+0,01 (Neutre, comme Encre) à 0,052 (Teinté). A borné L 0,72–0,84, C ≤ 0,12 ; B L 0,62–0,82, C ≤ 0,14 ; si une paire
+de texte passe sous 4,5:1, la clarté de A (puis sa chroma) bouge vers la valeur lisible la plus proche. Fichiers
+`themes/perso-*.json` (≤ 20), import par dépôt d'un `.json`, export dans le dossier `exports`.
+
 **Jetons écrits par un thème** (`themeVariables`, `src/design/applyTheme.ts`) : `--bg-top`, `--bg-mid`, `--bg-bottom`,
 `--accent`, `--glow`, `--card`, `--grad-a`, `--grad-b`, `--text-soft`. Les couleurs sont des `@property` (Bleu-gris en
 valeur initiale : la première image n'attend pas le JS), `html` / `body` peints en `--bg-bottom` dès l'image 0.

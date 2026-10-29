@@ -142,3 +142,20 @@ fn game_colour_choices_default_to_the_board_and_unknown_values_fall_back() {
         out
     );
 }
+
+#[test]
+fn opening_screen_defaults_to_the_last_one_and_survives_odd_values() {
+    use super::schema::OpeningScreen;
+    assert_eq!(Settings::default().opening_screen, OpeningScreen::Last);
+    let (_dir, s) = load_settings(r#"{"schemaVersion":2,"openingScreen":"pointer"}"#);
+    assert_eq!(s.opening_screen, OpeningScreen::Pointer);
+    let (_dir, s) = load_settings(r#"{"schemaVersion":2,"openingScreen":"moon","quality":"high"}"#);
+    assert_eq!(s.opening_screen, OpeningScreen::Last);
+    assert_eq!(s.quality, Quality::High);
+    let mut s = Settings::default();
+    s.apply(SettingsPatch {
+        opening_screen: Some(OpeningScreen::Main),
+        ..Default::default()
+    });
+    assert_eq!(s.opening_screen, OpeningScreen::Main);
+}

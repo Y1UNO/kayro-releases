@@ -33,7 +33,7 @@ use specta::Type;
 use tauri::{AppHandle, Manager, Runtime, WebviewWindow, WindowEvent};
 use tauri_specta::Event;
 
-use crate::config::schema::{DisplayMode, Settings};
+use crate::config::schema::{DisplayMode, OpeningScreen, Settings};
 use crate::config::ConfigState;
 use crate::error::AppError;
 
@@ -121,13 +121,19 @@ fn create_for<R: Runtime>(
         return Err(AppError::not_found("a screen"));
     }
     let ui = app.state::<ConfigState>().ui_state();
+    // A passage between modes keeps its screen; an opening follows « Écran d'ouverture ».
+    let choice = if entering {
+        OpeningScreen::Last
+    } else {
+        settings(app).opening_screen
+    };
     let window = match mode {
         DisplayMode::Immersive => {
-            let i = windows::choose_screen(app, &screens, &ui.immersive, None);
+            let i = windows::opening_screen(app, &screens, &ui.immersive, None, choice);
             windows::create_main(app, mode, &screens[i], &ui.window, entering)?
         }
         DisplayMode::Window => {
-            let i = windows::choose_screen(app, &screens, &ui.window, None);
+            let i = windows::opening_screen(app, &screens, &ui.window, None, choice);
             windows::create_main(app, mode, &screens[i], &ui.window, entering)?
         }
         DisplayMode::Widget => {
@@ -238,6 +244,8 @@ pub fn show<R: Runtime>(app: &AppHandle<R>) {
         Some(window) => {
             if mode == DisplayMode::Immersive {
                 refit_immersive(app, &window);
+            } else if mode == DisplayMode::Window && windows::visible(app).is_none() {
+                follow_opening_screen(app, &window);
             }
             reveal(app, &window);
         }
@@ -261,8 +269,27 @@ fn refit_immersive<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
         return;
     }
     let ui = app.state::<ConfigState>().ui_state();
-    let i = windows::choose_screen(app, &screens, &ui.immersive, Some(window));
+    let choice = settings(app).opening_screen;
+    let i = windows::opening_screen(app, &screens, &ui.immersive, Some(window), choice);
     windows::configure_main(window, DisplayMode::Immersive, &screens[i], &ui.window);
+}
+
+/// Normal window reopened: moved to the screen « Écran d'ouverture » asks for (same place on it),
+/// left alone when it is already there or when the choice is « dernier utilisé ».
+fn follow_opening_screen<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
+    let choice = settings(app).opening_screen;
+    if choice == OpeningScreen::Last {
+        return;
+    }
+    let screens = windows::screens(app);
+    if screens.is_empty() {
+        return;
+    }
+    let ui = app.state::<ConfigState>().ui_state();
+    let i = windows::opening_screen(app, &screens, &ui.window, Some(window), choice);
+    if windows::screen_of(window, &screens) != Some(i) {
+        windows::configure_main(window, DisplayMode::Window, &screens[i], &ui.window);
+    }
 }
 
 /// Hides the hub. In economy mode the window is destroyed.

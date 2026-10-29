@@ -8,6 +8,7 @@ import { App } from "./App";
 import { installUserPrefs } from "./app/userPrefs";
 import { ThemeProvider } from "./design";
 import { installDa } from "./design/da";
+import { loadCustomThemes } from "./design/themes/custom";
 import { applyDefaultLogoColours } from "./brand";
 import { GameAtmosphere } from "./features/gameColors/GameAtmosphere";
 import { WidgetApp } from "./features/widget/WidgetApp";
@@ -77,6 +78,7 @@ if (DevPage) {
     sceneStore.getState().init(),
     desktopStore.getState().init(),
     artStore.getState().init(),
+    loadCustomThemes(),
   ]).finally(() => {
     installUserPrefs({ quality: false });
     appRoot.render(
@@ -91,7 +93,11 @@ if (DevPage) {
   // Load the user's data first (a few ms, local): the first paint already has the right theme
   // and quality level. A failed load still renders the app (defaults, error shown by <App />).
   // The art index too (folder listings only, a few ms): posters are there on the first paint.
-  void Promise.all([hubStore.getState().init(), artStore.getState().init()]).finally(() => {
+  void Promise.all([
+    hubStore.getState().init(),
+    artStore.getState().init(),
+    loadCustomThemes(),
+  ]).finally(() => {
     const settings = hubStore.getState().settings;
     installUserPrefs({ quality: true });
     appRoot.render(

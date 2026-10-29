@@ -129,6 +129,15 @@ export const commands = {
 	artClearUser: (id: string, role: ArtRole) => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_clear_user", { id, role })),
 	/**  The palettes known so far (the first pass may still be running: `PalettesChanged` follows). */
 	palettesGet: () => __TAURI_INVOKE<AppPalette[]>("palettes_get"),
+	themesList: () => __TAURI_INVOKE<ThemeFile_Serialize[]>("themes_list"),
+	/**  A personal theme id no theme uses yet, derived from a name (the editor's first save). */
+	themeNewId: (name: string) => __TAURI_INVOKE<string>("theme_new_id", { name }),
+	themeSave: (theme: ThemeFile_Deserialize) => typedError<ThemeFile_Serialize, AppError>(__TAURI_INVOKE("theme_save", { theme })),
+	themeDelete: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("theme_delete", { id })),
+	/**  Imports a dropped `.json` theme file as a new personal theme. Nothing is run, only read. */
+	themeImport: (path: string) => typedError<ThemeFile_Serialize, AppError>(__TAURI_INVOKE("theme_import", { path })),
+	/**  Writes `<id>.json` in the exports folder, shows it in Explorer and returns its path. */
+	themeExport: (id: string) => typedError<string, AppError>(__TAURI_INVOKE("theme_export", { id })),
 };
 
 /** Events */
@@ -144,6 +153,7 @@ export const events = {
 	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
+	themesChanged: makeEvent<ThemesChanged_Deserialize>("themes-changed"),
 	windowVisibility: makeEvent<WindowVisibility>("window-visibility"),
 };
 
@@ -462,6 +472,15 @@ export type OpeningDue =
  */
 "quiet" | "no";
 
+/**  « Écran d'ouverture » (step 15): where the hub opens from the shortcut or the notification area. */
+export type OpeningScreen = 
+/**  Where it was last (the remembered screen). */
+"last" | 
+/**  The screen under the mouse pointer. */
+"pointer" | 
+/**  The main screen of Windows. */
+"main";
+
 /**  « Ouverture au lancement »: V1-A with the C pulse, V1-A alone, or nothing. */
 export type OpeningStyle = "pulse" | "classic" | "none";
 
@@ -622,6 +641,7 @@ export type Settings = {
 	cardFloat: CardFloat,
 	openingStyle: OpeningStyle,
 	themeTransition: ThemeTransition,
+	openingScreen: OpeningScreen,
 	widgetUnroll: WidgetUnroll,
 	widgetSpring: Elasticity,
 	cardHover: CardHoverStyle,
@@ -660,6 +680,7 @@ export type SettingsPatch = {
 	cardFloat?: CardFloat | null,
 	openingStyle?: OpeningStyle | null,
 	themeTransition?: ThemeTransition | null,
+	openingScreen?: OpeningScreen | null,
 	widgetUnroll?: WidgetUnroll | null,
 	widgetSpring?: Elasticity | null,
 	cardHover?: CardHoverStyle | null,
@@ -702,8 +723,58 @@ export type StepState = "pending" | "running" | "ok" | "failed" |
 /**  Not run: unlinked slot, nothing to follow, scene cancelled or aborted… */
 "skipped";
 
+/**  Colour theme file (`themes/<id>.json`), same shape as `src/design/theme.ts`. */
+export type ThemeFile = ThemeFile_Serialize | ThemeFile_Deserialize;
+
+/**  Colour theme file (`themes/<id>.json`), same shape as `src/design/theme.ts`. */
+export type ThemeFile_Deserialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	author: string,
+	description: string,
+	bg: [string, string, string],
+	accent: string,
+	glow: string,
+	fog: [string, string, string],
+	card: [number, number, number],
+	beam: [number, number, number],
+	/**  The two colours of the gradient, A and B (logo themes, personal themes). */
+	gradient?: [string, string] | null,
+	/**  Soft text colour (labels). */
+	soft?: string | null,
+};
+
+/**  Colour theme file (`themes/<id>.json`), same shape as `src/design/theme.ts`. */
+export type ThemeFile_Serialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	author: string,
+	description: string,
+	bg: [string, string, string],
+	accent: string,
+	glow: string,
+	fog: [string, string, string],
+	card: [number, number, number],
+	beam: [number, number, number],
+	/**  The two colours of the gradient, A and B (logo themes, personal themes). */
+	gradient?: [string, string] | null,
+	/**  Soft text colour (labels). */
+	soft?: string | null,
+};
+
 /**  « Changement de thème »: the wave with its impact, a cross-fade, or a direct switch. */
 export type ThemeTransition = "wave" | "fade" | "direct";
+
+/**  The personal themes changed (saved, imported or deleted): both windows read them again. */
+export type ThemesChanged = ThemesChanged_Serialize | ThemesChanged_Deserialize;
+
+/**  The personal themes changed (saved, imported or deleted): both windows read them again. */
+export type ThemesChanged_Deserialize = ThemeFile_Deserialize[];
+
+/**  The personal themes changed (saved, imported or deleted): both windows read them again. */
+export type ThemesChanged_Serialize = ThemeFile_Serialize[];
 
 /**
  *  How the native veil fades when `main` gives way to the widget or takes over from it (round

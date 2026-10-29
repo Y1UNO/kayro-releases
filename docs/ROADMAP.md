@@ -92,6 +92,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 - **Étape prétest — 2026-10-29** (branche `step-pretest`, version 0.14.0) : installeur NSIS par utilisateur, français, WebView2 `embedBootstrapper` → `Kayro_0.14.0_x64-setup.exe` **7,5 Mo** (`scripts/build-installer.ps1`) ; la case « supprimer les données » du désinstalleur ne vise que `fr.yiuno.hub` (modèle NSIS lu), jamais `%APPDATA%\Kayro`. « Exporter les logs » (zip `exports/kayro-logs-<date>.zip` + `infos.txt`, crate `zip` deflate seul) ; « Kayro 0.14 prétest » en bas de Réglages › Général (`APP_VERSION` lu dans `tauri.conf.json`). Premier lancement vide vérifié dans l'exe (APPDATA redirigé) : accueil vide, détection 76 apps, ajout, export, démarrage Windows non activé.
   - Limites : installeur ni installé ni désinstallé ici (SmartScreen non vu) ; le profil WebView2 (`%LOCALAPPDATA%\fr.yiuno.hub`) ne suit pas `LOCALAPPDATA` ; aucun assistant de premier lancement (l'utilisateur clique « + ») ; dates internes du zip à 1980. Tests : vitest 548, cargo 230.
 
+- **Étape 15 — 2026-10-29** (branche `step-pretest`) : Réglages › Thèmes › « Mes thèmes » : créer un thème depuis 2 couleurs + un curseur de fond (`design/themes/derive.ts` rejoue la règle mesurée sur les 6 thèmes ; A et B bornés, lisibilité ≥ 4,5:1 vérifiée sur 279 combinaisons), le modifier, l'exporter (dossier `exports`, Explorateur), le supprimer ; import en déposant un `.json` sur la section (cœur `config/themes.rs` : schéma strict, couleurs hex/rgb seulement, ≤ 20, ≤ 64 Ko, id `perso-…` toujours neuf). Réglage Général « Écran d'ouverture » (dernier utilisé par défaut ; souris ou principal : la fenêtre y est déplacée à l'ouverture, pas le widget). Non vu dans l'exe, non mesuré (aucun effet sur la boucle d'images).
 - **Revue Opus 5.5 — 2026-10-29** (branche `step-pretest`, commit `dee0ecf` ; note `docs/REVUE-OPUS55.md`) : revue des artefacts de motion (Kayro, Hades II, RAYKA) ; flottaison plus lisible (Visible 10 / 7 px + dérive), survol 3D à 6° avec le verre du moteur incliné (reprojection en perspective dans le shader), couleurs du jeu plus marquées (couleur qui parle pour l'affiche, nuit teintée en Léger), faces d'icônes plus sobres, tramage anti-bandes ; scan des apps affiné (`detect/relevance.rs` : aides, consoles, variantes et outils annexes d'une suite écartés ; « - Raccourci » retiré) : 58 propositions du menu Démarrer sur ce PC au lieu de 100 (scan réel, lecture seule). Exe vérifié par CDP (inclinaison de l'éventail et du carrousel, verre qui suit) ; A/B contre le prétest (4 passes) : p95 3,7 ms partout, + 0,2 à 0,4 point de CPU / GPU au repos et au survol, marée sans régression (chiffres dans la note). Après retours : changement d'onglet en ronde sur toute la scène (`fanDance.ts`, ≈ 1,4 s ; réglage `danceMs`) — non mesuré, non vu dans l'exe.
 
 ## Plus tard (liste unique)
@@ -114,9 +115,9 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   avec ses variantes en Personnalisation avancée et le choix par app).
 
 ### Étape 15 — Réglages · Apparence
-- [ ] « Créer mon thème », import / export de thèmes (la grille des 6 thèmes existe déjà, R5).
-- [ ] Réglage « Écran d'ouverture » : écran principal · écran de la souris · dernier utilisé (aujourd'hui, sans
-  placement enregistré, l'app s'ouvre sur l'écran de la souris).
+- [x] « Créer mon thème », import / export de thèmes (la grille des 6 thèmes existe déjà, R5). — 2026-10-29
+- [x] Réglage « Écran d'ouverture » : écran principal · écran de la souris · dernier utilisé (aujourd'hui, sans
+  placement enregistré, l'app s'ouvre sur l'écran de la souris). — 2026-10-29
 
 ### Étapes 16–17 — Ambiances
 - [ ] Design propre à chaque carte de catégorie.
