@@ -1,4 +1,4 @@
-# Kayro 0.14 prétest — note pour les testeurs
+# Kayro 0.15 prétest — note pour les testeurs
 
 Merci de tester Kayro ! C'est un lanceur d'applications pour Windows : un écran joli et rapide pour ouvrir tes jeux
 et tes logiciels, qui apparaît avec un raccourci clavier. C'est une **version de test** : il y aura des bugs, et c'est
@@ -8,7 +8,7 @@ Kayro marche **sans Internet** et n'envoie rien : tes réglages restent sur ton 
 
 ## 1. Installer
 
-1. Lance `Kayro_0.14.0_x64-setup.exe`.
+1. Lance `Kayro_0.15.0_x64-setup.exe`.
 2. Windows affiche sûrement **« Windows a protégé votre ordinateur »** (SmartScreen). C'est normal : le programme
    n'est pas signé (un certificat coûte cher pour un projet perso). Clique sur **« Informations complémentaires »**,
    puis sur **« Exécuter quand même »**. Ton antivirus peut aussi poser la question.
@@ -45,7 +45,7 @@ Kayro marche **sans Internet** et n'envoie rien : tes réglages restent sur ton 
    Windows). Aucune image, aucun mot de passe.
 3. Dis-moi aussi : ta version de Windows (10 ou 11), ta taille d'écran, la mise à l'échelle (Paramètres ›
    Affichage › Échelle, par ex. 100 / 125 / 150 %), la fréquence de ton écran (60, 144 Hz…) et ta carte graphique.
-4. La version testée est écrite en bas de **Réglages › Général** (« Kayro 0.14 prétest »).
+4. La version testée est écrite en bas de **Réglages › Général** (« Kayro 0.15 prétest »).
 
 Ce qui m'intéresse le plus : <!-- TODO : les 3 ou 4 choses à tester en priorité -->
 - ce qui est lent, saccadé ou bizarre à l'écran ;
@@ -68,6 +68,6 @@ supprime ce dossier à la main si tu veux tout effacer.
 - Epic et GOG n'ont pas été essayés avec de vrais jeux installés.
 - Pas de mises à jour automatiques : je t'enverrai les nouvelles versions (installe par-dessus, tes réglages
   restent).
-- À venir : réglages d'apparence plus complets, ambiances animées par jeu, assistant de premier lancement.
+- À venir : ambiances animées par jeu, assistant de premier lancement.
 - Pas de commande vocale, de gestes ni d'intégrations (Discord, OBS…) pour l'instant.
-- La liste « Détectées » contient du bruit (désinstalleurs, « Check For Updates », « About Java »…) : décoche-les.
+- La liste « Détectées » est plus courte qu'en 0.14 ; s'il reste un intrus, décoche-le.
