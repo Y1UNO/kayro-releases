@@ -10,7 +10,8 @@
 [CmdletBinding()]
 param()
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
+# gh answers on stderr when something is missing (checked through $LASTEXITCODE).
 $root = Split-Path -Parent $PSScriptRoot
 $conf = Get-Content (Join-Path $root 'src-tauri\tauri.conf.json') -Raw | ConvertFrom-Json
 $version = $conf.version
