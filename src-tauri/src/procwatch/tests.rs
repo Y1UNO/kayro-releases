@@ -19,6 +19,7 @@ fn app(id: &str, launch: Launch, exe: Option<&str>) -> AppEntry {
         mood_id: None,
         favorite: false,
         colors: None,
+        mood_tune: None,
     }
 }
 

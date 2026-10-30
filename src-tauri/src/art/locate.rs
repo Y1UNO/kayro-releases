@@ -55,7 +55,7 @@ fn stems(role: ArtRole) -> (&'static [&'static str], &'static str) {
         ArtRole::Hero => (&["library_hero"], "jpg"),
         ArtRole::HeroBlur => (&["library_hero_blur"], "jpg"),
         ArtRole::Logo => (&["logo"], "png"),
-        ArtRole::Icon => (&[], "jpg"),
+        ArtRole::Icon | ArtRole::CharLeft | ArtRole::CharRight => (&[], "jpg"),
     }
 }
 

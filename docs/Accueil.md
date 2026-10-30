@@ -1,8 +1,8 @@
 # Kayro — Accueil
 
 > [!info] Où on en est
-> - **Dernière étape close** : 15 — Réglages · Apparence (le 2026-10-29)
-> - **Prochaine étape** : 16–17 — Ambiances
+> - **Dernière étape close** : 16–17 — Ambiances (le 2026-10-30, à valider dans l'exe et à mesurer)
+> - **Prochaine étape** : 17b — Sound design, ou 18 — Audit (CPU au repos)
 > - **DA** : gelée le 2026-10-14 (v1)
 
 ## Référence
@@ -13,6 +13,7 @@
 - [[ARCHITECTURE]] — données, modules, perf
 - [[PRETEST]] — note pour les testeurs (version 0.14 prétest)
 - [[REVUE-OPUS55]] — note d'évolution de la revue Opus 5.5 (mouvement, verre 3D, couleurs, scan)
+- [[AMBIANCES]] — ambiances `.hubmood`, packs, cartes spéciales et images à fournir
 - [[MACHINE]] — PC de test
 
 ## Mesures et relectures

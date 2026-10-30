@@ -10,6 +10,7 @@ import {
   type ModePassage,
   type ProgressEvent,
   type Settings,
+  type MoodFile,
   type ThemeFile,
 } from "./bindings";
 
@@ -90,6 +91,16 @@ export const desktopEvents: DesktopEvents = {
   onRecentsChanged: (handler) => listenTo(events.recentsChanged.listen, handler),
   onHotkeysChanged: (handler) => listenTo(events.hotkeysChanged.listen, handler),
 };
+
+/** During a launch cover, the game's window came to the front (its program's file name). */
+export function onLaunchLanded(handler: (exe: string) => void): Promise<Unlisten> {
+  return listenTo(events.launchLanded.listen, handler);
+}
+
+/** The imported ambiences changed (imported or deleted, from either window; steps 16–17). */
+export function onMoodsChanged(handler: (moods: MoodFile[]) => void): Promise<Unlisten> {
+  return listenTo(events.moodsChanged.listen, handler);
+}
 
 /** The personal themes changed (saved, imported or deleted, from either window). */
 export function onThemesChanged(handler: (themes: ThemeFile[]) => void): Promise<Unlisten> {

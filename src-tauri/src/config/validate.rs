@@ -161,6 +161,9 @@ pub fn validate_app(app: &AppEntry) -> Check {
         &app.art.hero,
         &app.mood_id,
     )?;
+    if let Some(t) = &app.mood_tune {
+        super::moods::validate_tune(t).or_else(|e| err("moodTune", e))?;
+    }
     match &app.colors {
         Some(c) => super::game_colors::validate_app_colors(c).or_else(|e| err("colors", e)),
         None => Ok(()),

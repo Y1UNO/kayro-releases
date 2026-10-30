@@ -93,6 +93,10 @@
     "artDrop": {
       "refused": "Cette image ne peut pas servir d’affiche : il faut un fichier JPEG, PNG ou WebP de 16 Mo au plus."
     },
+    "launchIntro": {
+      "label": "Lancement de {name}",
+      "skip": "Échap ou clic · passer"
+    },
     "launchFail": {
       "title": "{name} ne s’est pas lancé.",
       "launchNotFound": "Le chemin n’existe plus.",
@@ -229,10 +233,12 @@
     },
     "look": {
       "title": "Apparence",
-      "help": "Appliqué tout de suite. Glissez une image (JPEG, PNG ou WebP) sur une case.",
+      "help": "Appliqué tout de suite. Glissez une image (JPEG, PNG ou WebP) sur une case. Avec un personnage détouré (PNG transparent) à gauche ou à droite, la carte devient spéciale.",
       "poster": "Affiche",
       "hero": "Fond",
       "logo": "Logo",
+      "charLeft": "Personnage gauche",
+      "charRight": "Personnage droit",
       "none": "Aucune",
       "fromSteam": "Steam",
       "fromYou": "vous",
@@ -244,7 +250,33 @@
       "colorA": "Couleur A",
       "colorB": "Couleur B",
       "noPalette": "Pas encore de couleurs pour cette app : ajoutez une image.",
-      "preview": "Aperçu des couleurs"
+      "preview": "Aperçu des couleurs",
+      "mood": {
+        "title": "Ambiance du jeu",
+        "help": "Animée derrière les cartes quand cette app est sélectionnée. Visible avec « Couleurs du jeu » activé, en qualité Équilibré ou plus.",
+        "off": "« Couleurs du jeu » est désactivé dans Réglages › Visuel : l’ambiance ne s’affiche pas.",
+        "choices": "Ambiance",
+        "packs": {
+          "aucune": "Aucune",
+          "braises": "Braises",
+          "etoiles": "Étoiles",
+          "brume": "Brume",
+          "runes": "Runes",
+          "pluie": "Pluie"
+        },
+        "custom": "Sur mesure",
+        "mine": "Importées",
+        "density": "Densité",
+        "speed": "Vitesse",
+        "drop": "Déposez un fichier .hubmood sur la fenêtre pour ajouter une ambiance.",
+        "imported": "Ambiance « {name} » ajoutée.",
+        "importFailed": "{file} n’est pas une ambiance valide.",
+        "export": "Exporter",
+        "exported": "Ambiance exportée dans le dossier « exports ».",
+        "exportFailed": "L’export a échoué.",
+        "remove": "Supprimer",
+        "removed": "Ambiance supprimée."
+      }
     }
   },
   "widget": {

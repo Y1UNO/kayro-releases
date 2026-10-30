@@ -5,9 +5,11 @@
 pub mod com;
 pub mod icon;
 pub mod own_window;
+pub mod process;
 pub mod shell;
 pub mod startup;
 pub mod theme;
+pub mod top_windows;
 pub mod veil;
 pub mod window;
 

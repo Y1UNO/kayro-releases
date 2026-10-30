@@ -5,7 +5,8 @@ import { setStageCue, type GlassPose, type StageFrame } from "../../../fx/gpu/cu
 import { frameLoop } from "../../../fx/loop";
 import type { FanMotion, HoverConfig } from "./fanFloat";
 import { put, renderFan, type FanCardEls } from "./fanRender";
-import { LinkElements, type LinkEls } from "./linkEls";
+import { centre, LinkElements, type LinkEls } from "./linkEls";
+import { holdGameColors } from "../../gameColors/store";
 import {
   deckOrder,
   restValues,
@@ -28,11 +29,6 @@ interface Slot {
 }
 
 const PROMOTE = "transform, opacity";
-/** Centre of an element in the viewport (CSS px). */
-function centre(el: HTMLElement | null): { x: number; y: number } {
-  const r = el?.getBoundingClientRect();
-  return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: 0, y: 0 };
-}
 
 /** Cadence of the fan's floating and hover (decision round 3: 60 images/s, 30 in Eco). */
 const FLOAT_FPS = 60;
@@ -173,6 +169,8 @@ export class LinkDirector {
     opts: { eco: boolean; reduced: boolean },
   ): Promise<boolean> {
     const seq = this.prepare(kind, cat, shuf);
+    // 30/10: a tab change lands with the selected card's impact; its colours change then.
+    if (seq.impact > 0 && !opts.reduced) holdGameColors(performance.now() + seq.impact);
     const out: Values = new Map();
     const done = await this.choreo.play(
       seq.duration,

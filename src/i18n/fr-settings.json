@@ -60,10 +60,9 @@
       },
       "gameColors": {
         "label": "Couleurs du jeu",
-        "help": "Léger : l’ambiance et les accents prennent les couleurs du jeu sélectionné. Immersif : le fond aussi, avec l’image du jeu en haut.",
+        "help": "Stylisé : l’ambiance, la nuit et les accents prennent les couleurs du jeu sélectionné.",
         "off": "Désactivé",
-        "light": "Léger",
-        "immersive": "Immersif"
+        "light": "Stylisé"
       },
       "motion": {
         "label": "Mouvement",
@@ -155,7 +154,6 @@
           "instant": "Tout de suite",
           "launch": "Au lancement"
         },
-        "colorHero": "Image du jeu en fond (Immersif)",
         "colorFromIcon": "Apps sans image aux couleurs de leur icône"
       },
       "reset": {

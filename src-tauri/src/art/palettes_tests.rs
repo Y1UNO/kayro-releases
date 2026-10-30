@@ -28,6 +28,7 @@ fn app(id: &str, steam: Option<&str>, launch: Launch) -> AppEntry {
         mood_id: None,
         favorite: false,
         colors: None,
+        mood_tune: None,
     }
 }
 

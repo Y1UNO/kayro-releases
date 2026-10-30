@@ -10,6 +10,8 @@ const SLUGS: Record<ArtRole, string> = {
   heroBlur: "hero-blur",
   logo: "logo",
   icon: "icon",
+  charLeft: "char-left",
+  charRight: "char-right",
 };
 
 /**

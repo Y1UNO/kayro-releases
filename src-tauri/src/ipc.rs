@@ -17,7 +17,7 @@ use crate::intake::{inspect, shortcut_target, InspectReport};
 use crate::launcher::system::SystemLauncher;
 use crate::launcher::{launch_app, LaunchResult};
 use crate::procwatch::{AppRunState, ProcWatch, RunningApps};
-use crate::{icons, ipc_art, ipc_desktop, ipc_scenes, ipc_themes, platform};
+use crate::{icons, ipc_art, ipc_desktop, ipc_moods, ipc_scenes, ipc_themes, platform};
 
 /// Emitted after every successful change of the settings (also to the window that made it).
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -344,6 +344,11 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_themes::theme_delete::<tauri::Wry>,
             ipc_themes::theme_import::<tauri::Wry>,
             ipc_themes::theme_export,
+            ipc_moods::moods_list,
+            ipc_moods::mood_import::<tauri::Wry>,
+            ipc_moods::mood_delete::<tauri::Wry>,
+            ipc_moods::mood_export,
+            ipc_desktop::launch_cover::<tauri::Wry>,
         ])
         .events(collect_events![
             SettingsChanged,
@@ -358,36 +363,12 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_desktop::RecentsChanged,
             ipc_art::ArtChanged,
             ipc_art::PalettesChanged,
-            ipc_themes::ThemesChanged
+            ipc_themes::ThemesChanged,
+            ipc_moods::MoodsChanged,
+            crate::desktop::cover::LaunchLanded
         ])
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use specta_typescript::Typescript;
-    use std::path::PathBuf;
-
-    fn committed_path() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../src/ipc/bindings.ts")
-    }
-
-    /// `src/ipc/bindings.ts` must be exactly what the Rust types generate (`npm run gen:types`).
-    #[test]
-    fn committed_bindings_match_the_rust_types() {
-        let dir = tempfile::tempdir().unwrap();
-        let fresh = dir.path().join("bindings.ts");
-        builder()
-            .export(Typescript::default(), &fresh)
-            .expect("export");
-        let norm = |p: &PathBuf| {
-            std::fs::read_to_string(p)
-                .unwrap_or_default()
-                .replace("\r\n", "\n")
-        };
-        assert!(
-            norm(&fresh) == norm(&committed_path()),
-            "src/ipc/bindings.ts is out of date: run `npm run gen:types`"
-        );
-    }
-}
+#[path = "ipc_tests.rs"]
+mod tests;

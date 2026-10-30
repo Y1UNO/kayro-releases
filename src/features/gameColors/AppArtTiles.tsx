@@ -7,7 +7,7 @@ import { hubStore, useArt } from "../../store";
 import { artUrl } from "../home/art";
 import styles from "./AppLook.module.css";
 
-const ROLES = ["poster", "hero", "logo"] as const satisfies readonly ArtRole[];
+const ROLES = ["poster", "hero", "logo", "charLeft", "charRight"] as const satisfies readonly ArtRole[];
 const IMAGE = /\.(jpe?g|png|webp)$/i;
 
 /** True inside the Tauri window; false in a plain browser (dev pages, tests). */
@@ -54,7 +54,8 @@ function useTileDrop(id: string): void {
 }
 
 /**
- * Step 14, edit dialog: the app's poster, background (hero) and logo. Each tile shows the image in
+ * Step 14, edit dialog: the app's poster, background (hero) and logo; steps 16–17: the special
+ * card's two cut-out characters (the user's only). Each tile shows the image in
  * use (the user's, else Steam's) and takes a dropped image; « Retirer » gives Steam's back.
  */
 export function AppArtTiles({ app }: { app: AppEntry }) {

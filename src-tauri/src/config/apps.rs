@@ -110,6 +110,10 @@ pub struct AppEntry {
     #[serde(default)]
     #[specta(optional)]
     pub colors: Option<super::game_colors::AppColors>,
+    /// The user's density and speed of this app's ambience (steps 16–17); absent = × 1.
+    #[serde(default)]
+    #[specta(optional)]
+    pub mood_tune: Option<super::moods::MoodTune>,
 }
 
 /// Hand-edited files may leave out optional parts; fill them in before the strict parse so the
@@ -160,6 +164,7 @@ impl NewApp {
             mood_id: self.mood_id,
             favorite: self.favorite,
             colors: None,
+            mood_tune: None,
         }
     }
 }

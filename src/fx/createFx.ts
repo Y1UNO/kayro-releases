@@ -5,6 +5,7 @@ import { MoonLayer } from "./css/moonFx";
 import { RingLayer } from "./css/ringFx";
 import { ParticlesLayer } from "./canvas/particles";
 import { GlassEngine, type EngineState } from "./gpu/engine";
+import { MoodCanvasLayer } from "./mood/moodCanvas";
 import { frameLoop } from "./loop";
 import { onReducedMotionChange } from "./motionPref";
 
@@ -24,12 +25,13 @@ export function clampIntensity(v: number | null | undefined): number {
 function replacedBy(engine: EngineState, l: FxLayer): boolean {
   if (!engine.active) return false;
   if (l instanceof RingLayer) return engine.ring;
-  return l instanceof MoonLayer || l instanceof ParticlesLayer;
+  return l instanceof MoonLayer || l instanceof ParticlesLayer || l instanceof MoodCanvasLayer;
 }
 
 /**
  * The atmosphere: every layer behind one `FxLayer`, plus the fade and the real stop of `pause`.
- * Layers are stacked in order (moon and veils, ring, embers and stars): they are the CSS and 2D
+ * Layers are stacked in order (moon and veils, ring, embers and stars, the game's ambience,
+ * steps 16–17): they are the CSS and 2D
  * fallback of the glass engine, which puts its canvas under them and, while it runs, pauses the
  * layers it replaces. `make` lets a test supply other layers.
  */
@@ -38,6 +40,7 @@ export function createFx(
     new MoonLayer(),
     new RingLayer(),
     new ParticlesLayer(),
+    new MoodCanvasLayer(),
     new GlassEngine(onEngine),
   ],
 ): FxLayer {

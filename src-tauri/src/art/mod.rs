@@ -35,15 +35,21 @@ pub enum ArtRole {
     Logo,
     /// Small square icon (Steam's 32 px one): for apps the Shell gives no icon for.
     Icon,
+    /// Special card (steps 16–17): a cut-out character, transparent PNG, left of the active card.
+    CharLeft,
+    /// The same, right of the active card.
+    CharRight,
 }
 
 impl ArtRole {
-    pub const ALL: [ArtRole; 5] = [
+    pub const ALL: [ArtRole; 7] = [
         ArtRole::Poster,
         ArtRole::Hero,
         ArtRole::HeroBlur,
         ArtRole::Logo,
         ArtRole::Icon,
+        ArtRole::CharLeft,
+        ArtRole::CharRight,
     ];
 
     /// Name used in URLs and in the user's file names (`art/<appId>/<slug>.<ext>`).
@@ -54,6 +60,8 @@ impl ArtRole {
             ArtRole::HeroBlur => "hero-blur",
             ArtRole::Logo => "logo",
             ArtRole::Icon => "icon",
+            ArtRole::CharLeft => "char-left",
+            ArtRole::CharRight => "char-right",
         }
     }
 
@@ -61,9 +69,17 @@ impl ArtRole {
         Self::ALL.into_iter().find(|r| r.slug() == slug)
     }
 
-    /// Roles the user can provide an image for (the blurred hero and the icon come from Steam).
+    /// Roles the user can provide an image for (the blurred hero and the icon come from Steam;
+    /// the special card's characters only from the user).
     pub fn user_settable(self) -> bool {
-        matches!(self, ArtRole::Poster | ArtRole::Hero | ArtRole::Logo)
+        matches!(
+            self,
+            ArtRole::Poster
+                | ArtRole::Hero
+                | ArtRole::Logo
+                | ArtRole::CharLeft
+                | ArtRole::CharRight
+        )
     }
 }
 

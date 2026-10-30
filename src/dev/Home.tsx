@@ -86,6 +86,9 @@ const MOCK: Record<string, string[]> = {
   autres: ["Photos", "Bloc-notes", "Paramètres", "Calculatrice", "Musique"],
 };
 
+/** `?mood=runes`: every app takes that ambience (steps 16–17, needs `?colors`). */
+const DEV_MOOD = new URLSearchParams(location.search).get("mood");
+
 function entry(name: string, category: string, i: number): AppEntry {
   return {
     id: `${category}-${i}`,
@@ -95,7 +98,7 @@ function entry(name: string, category: string, i: number): AppEntry {
     launch: { kind: "exe", path: "C:/fake.exe", args: [], cwd: null, elevated: false },
     match: { exe: null },
     art: { poster: null, hero: null },
-    moodId: null,
+    moodId: DEV_MOOD,
     favorite: false,
   };
 }
@@ -124,7 +127,7 @@ export default function HomeDev() {
         schemaVersion: 2,
         themeId: params.get("theme") ?? ACTIVE_THEME_ID,
         quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
-        colorMode: params.get("colors") === "immersive" ? "immersive" : "light",
+        colorMode: "light",
         hotkey: "Ctrl+Alt+H",
         language: "fr",
         atmosphereIntensity: Number(params.get("intensity")) || 1,

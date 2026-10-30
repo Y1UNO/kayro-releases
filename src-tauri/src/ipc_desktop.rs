@@ -291,3 +291,16 @@ mod tests {
         assert_eq!(o.due(true), OpeningDue::No);
     }
 }
+
+/// Launch cover (30/10, desktop/cover.rs): `on` keeps the hub in front of everything while a game
+/// starts behind it (its store's windows stay hidden) and reports the game's window
+/// (`LaunchLanded`); off ends it, `hide` taking the hub off the screen.
+#[tauri::command]
+#[specta::specta]
+pub async fn launch_cover<R: Runtime>(app: AppHandle<R>, on: bool, hide: bool) {
+    if on {
+        crate::desktop::cover::start(&app);
+    } else {
+        crate::desktop::cover::end(&app, hide);
+    }
+}

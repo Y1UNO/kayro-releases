@@ -110,3 +110,20 @@ export function rgb01(css: string): [number, number, number] {
   if (!m || m.length < 3) return [0, 0, 0];
   return [Number(m[0]) / 255, Number(m[1]) / 255, Number(m[2]) / 255];
 }
+
+/** The engine's full-window canvas and its WebGL2 context (opaque, everything is 2D: no depth). */
+export function engineCanvas(): [HTMLCanvasElement, WebGL2RenderingContext | null] {
+  const canvas = document.createElement("canvas");
+  canvas.setAttribute("aria-hidden", "true");
+  canvas.dataset.engine = "";
+  canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none";
+  const gl = canvas.getContext("webgl2", {
+    alpha: false,
+    antialias: false,
+    depth: false,
+    stencil: false,
+    premultipliedAlpha: true,
+    powerPreference: "high-performance",
+  });
+  return [canvas, gl];
+}

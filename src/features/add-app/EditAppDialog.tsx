@@ -6,6 +6,7 @@ import { hubStore } from "../../store";
 import { AppArtTiles } from "../gameColors/AppArtTiles";
 import { AppColorsChoice } from "../gameColors/AppColorsChoice";
 import look from "../gameColors/AppLook.module.css";
+import { AppMoodChoice } from "../moods/AppMoodChoice";
 import { applyDraft, entryToDraft, isTargetLocked } from "./draft";
 import { ManualForm } from "./ManualForm";
 import { refusalOf } from "./refusal";
@@ -75,7 +76,7 @@ function Editor({
   }
 
   return (
-    <div className={styles.body}>
+    <div className={`${styles.body} ${styles.editBody}`}>
       {/* Step 14: the app's images and colours, saved at once. */}
       <section className={look.look} aria-label={t("addApps.look.title")}>
         <div className={look.head}>
@@ -84,6 +85,7 @@ function Editor({
         </div>
         <AppArtTiles app={app} />
         <AppColorsChoice app={app} />
+        <AppMoodChoice app={app} />
       </section>
       <ManualForm
         initial={draft}

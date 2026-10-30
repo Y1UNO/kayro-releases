@@ -11,6 +11,7 @@ import {
   twinkle,
 } from "../canvas/particles";
 import type { FxPalette, FxParams } from "../FxLayer";
+import { MAX_MOOD_SPRITES, MoodSim } from "../mood/moodSim";
 
 /**
  * Particles of the glass engine's background: the embers and stars of round 1 (same seeds and
@@ -23,8 +24,8 @@ export const MAX_BOKEH = 24;
 const ECO_BOKEH = 4;
 /** The bokeh's colour is lightened this far towards white (round 5). */
 const BOKEH_LIFT = 0.35;
-export const MAX_SPRITES = 2 * MAX_PARTICLES + MAX_BOKEH;
-/** Per sprite: x, y, size, alpha, r, g, b, kind (0 ember, 1 star, 2 bokeh). */
+export const MAX_SPRITES = 2 * MAX_PARTICLES + MAX_BOKEH + MAX_MOOD_SPRITES;
+/** Per sprite: x, y, size, alpha, r, g, b, kind (0 ember, 1 star, 2 bokeh, 3+ ambience: MOOD_KIND). */
 export const SPRITE_FLOATS = 8;
 
 type Values = Readonly<Record<string, number | boolean | string>>;
@@ -53,8 +54,9 @@ export class Scene {
   readonly sprites = new Float32Array(MAX_SPRITES * SPRITE_FLOATS);
   private readonly tmp = [0, 0, 0];
   count = 0;
-  /** Something moves on its own: the background needs ambient frames. */
-  animated = false;
+  /** Steps 16–17: the shown game's ambience, written after the theme's own sprites. */
+  readonly mood = new MoodSim();
+  private moves = false;
   /** Slow drifts (veils, bands, bokeh, moon) run; false = still picture. */
   drifting = false;
   time = 0;
@@ -80,10 +82,17 @@ export class Scene {
     seedEmbers(this.embers, this.nEmbers, params.embers);
     seedStars(this.stars, this.nStars, params.stars);
     this.drifting = b.fog === "animated";
-    this.animated = !reduced && (this.drifting || this.nEmbers + this.nStars > 0);
+    this.moves = !reduced && (this.drifting || this.nEmbers + this.nStars > 0);
+    this.mood.configure(quality, reduced);
+  }
+
+  /** Something moves on its own: the background needs ambient frames. */
+  get animated(): boolean {
+    return this.moves || this.mood.animated;
   }
 
   step(dt: number): void {
+    this.mood.step(dt);
     if (this.still) return;
     if (this.drifting) this.time += dt;
     advance(this.embers, this.nEmbers, dt);
@@ -170,6 +179,7 @@ export class Scene {
       const colour = at(mix, old ? lift(old.a, old.b) : null, x, y);
       put(x, y, bs * (0.5 + a), bi * (0.5 + 0.5 * b) * breathe, colour, 2);
     }
+    n += this.mood.fill(s, n, MAX_SPRITES - n, palette, W, H, k);
     this.count = n;
   }
 }

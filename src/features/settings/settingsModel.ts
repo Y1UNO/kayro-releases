@@ -47,7 +47,6 @@ export const VISUAL_DEFAULTS = {
   colorPick: "dominant",
   colorPassage: "tide",
   colorTrigger: "select",
-  colorHero: true,
   colorFromIcon: true,
 } as const satisfies SettingsPatch;
 

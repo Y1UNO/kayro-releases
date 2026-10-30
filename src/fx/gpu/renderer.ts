@@ -18,6 +18,16 @@ import { GLASS_FRAGMENT, GLASS_UNIFORMS } from "./glassShader";
 import { HERO_UNITS } from "./heroTexture";
 import { MAX_POSTERS } from "./posterTextures";
 import { MAX_SPRITES, SPRITE_FLOATS } from "./scene";
+import { drawAtlas } from "../mood/glyphAtlas";
+
+/** Texture unit of the ambience's glyphs (units 1–6 posters, 7–8 hero). */
+const GLYPH_UNIT = 9;
+
+/** The glyphs of the shown ambience (steps 16–17): the atlas is redrawn when `version` changes. */
+export interface GlyphSet {
+  glyphPaths: readonly string[];
+  version: number;
+}
 
 /** Poster samplers of the glass pass: uP0 … on texture units 1 … (unit 0 = background). */
 const POSTER_UNITS: Uniforms = Object.fromEntries(
@@ -28,6 +38,7 @@ const INT_UNIFORMS = new Set([
   "uN",
   "uNS",
   "uNested",
+  "uGlyphs",
   ...Object.keys(POSTER_UNITS),
   ...Object.keys(HERO_UNITS),
 ]);
@@ -48,6 +59,8 @@ export class Renderer {
   private readonly spriteVao: WebGLVertexArrayObject;
   private readonly spriteBuf: WebGLBuffer;
   private a: Target | null = null;
+  private glyphTex: WebGLTexture | null = null;
+  private glyphVersion = -1;
 
   private constructor(
     private readonly gl: WebGL2RenderingContext,
@@ -99,10 +112,11 @@ export class Renderer {
 
   render(
     bg: Uniforms,
-    sprites: { data: Float32Array; count: number; u: Uniforms },
+    sprites: { data: Float32Array; count: number; u: Uniforms; glyphs?: GlyphSet },
     glass: Uniforms,
     bindPosters: (() => void) | null = null,
     bindHero: (() => void) | null = null,
+    drawArt: (() => void) | null = null,
   ): void {
     const { gl, a } = this;
     if (!a) return;
@@ -115,10 +129,12 @@ export class Renderer {
     this.use(this.bg, bg);
     gl.bindVertexArray(this.quad);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    drawArt?.(); // steps 16–17: the special card's characters and logo, behind the sprites
     if (sprites.count > 0) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE);
-      this.use(this.sprite, sprites.u);
+      this.bindGlyphs(sprites.glyphs);
+      this.use(this.sprite, { ...sprites.u, uGlyphs: GLYPH_UNIT });
       gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBuf);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, sprites.data, 0, sprites.count * SPRITE_FLOATS);
       gl.bindVertexArray(this.spriteVao);
@@ -142,7 +158,28 @@ export class Renderer {
     const gl = this.gl;
     dropTarget(gl, this.a);
     this.a = null;
+    gl.deleteTexture(this.glyphTex);
+    this.glyphTex = null;
     for (const p of [this.bg, this.sprite, this.glass]) gl.deleteProgram(p.program);
+  }
+
+  /** Uploads the ambience's glyph atlas once per ambience, binds it on its unit. */
+  private bindGlyphs(g: GlyphSet | undefined): void {
+    const gl = this.gl;
+    if (!g || g.glyphPaths.length === 0) return;
+    if (!this.glyphTex) this.glyphTex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0 + GLYPH_UNIT);
+    gl.bindTexture(gl.TEXTURE_2D, this.glyphTex);
+    if (g.version !== this.glyphVersion) {
+      this.glyphVersion = g.version;
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, drawAtlas(g.glyphPaths));
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    }
+    gl.activeTexture(gl.TEXTURE0);
   }
 
   private use(p: Program, u: Uniforms): void {

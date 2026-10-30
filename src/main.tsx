@@ -9,6 +9,7 @@ import { installUserPrefs } from "./app/userPrefs";
 import { ThemeProvider } from "./design";
 import { installDa } from "./design/da";
 import { loadCustomThemes } from "./design/themes/custom";
+import { loadMoods } from "./features/moods/moodsStore";
 import { applyDefaultLogoColours } from "./brand";
 import { GameAtmosphere } from "./features/gameColors/GameAtmosphere";
 import { WidgetApp } from "./features/widget/WidgetApp";
@@ -97,6 +98,7 @@ if (DevPage) {
     hubStore.getState().init(),
     artStore.getState().init(),
     loadCustomThemes(),
+    loadMoods(),
   ]).finally(() => {
     const settings = hubStore.getState().settings;
     installUserPrefs({ quality: true });

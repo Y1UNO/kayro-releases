@@ -64,6 +64,7 @@ fn entry_for(app: &DetectedApp) -> AppEntry {
         mood_id: None,
         favorite: false,
         colors: None,
+        mood_tune: None,
     }
 }
 

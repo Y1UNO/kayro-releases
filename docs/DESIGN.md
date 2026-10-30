@@ -69,7 +69,8 @@ font le tour du bord en sens opposés, cœur blanc à 55 %, 2,2 px, intensité 1
 
 **Affiches** (étape 14, `src/features/home/art.ts`) : une carte d'app montre l'affiche locale de l'app quand elle en a
 une (image déposée sur la carte, copiée dans `%APPDATA%/Kayro/art/<appId>/`, sinon le cache Steam lu en place),
-servie par le protocole `kayro-art` (id d'app + rôle, jamais un chemin) ; nom sur `.posterShade`. Sinon :
+servie par le protocole `kayro-art` (id d'app + rôle, jamais un chemin) ; nom sur `.posterShade`. **Plaque de nom**
+(verre sans flou, 30/10) : marge `--plate-pad` 6 / 12 px (grille 5 / 10), bord 1 px, reflet haut 1 px. Sinon :
 
 **Faces sans affiche** (cartes d'apps, de scènes, éventail) : dégradé A → B du thème tiré par carte, 0,85, bout sombre
 × `--face-foot` 0,28, ombre de pied sous le nom, icône du programme sinon la lettre. Aux couleurs de l'icône : mêlées
@@ -130,26 +131,48 @@ jetons `GAME_COLORS` dans `src/design/motion/tokens14.ts`) :
   prend la couleur qui parle pour elle (`characterOf`) ; bornées comme les thèmes
   (L 0,72–0,85, C ≤ 0,12) puis mêlées au thème à **85 %** sur le cercle des teintes (`mixLch` : jamais de gris
   entre deux teintes éloignées). Contraste ≥ 4,5:1 testé sur les 6 thèmes.
-- **Ce qui se teinte** (réglage `color_mode`, **Léger** par défaut) : l'ambiance du moteur (fond, lune, anneau, bokeh,
+- **Ce qui se teinte** (réglage `color_mode`, **Stylisé** par défaut) : l'ambiance du moteur (fond, lune, anneau, bokeh,
   braises, teinte du verre des cartes et des pastilles, prise dans la palette : `FxPalette.card`) et les accents de
   l'accueil (`--game-a`, `--game-b` : filet du titre, filets de survol ; anneau de focus réécrit avec eux), posés
   sur 3 conteneurs (`data-game-accents`), jamais sur `:root` : texte, dialogues et Réglages restent au thème.
-  Depuis la revue du 29/10, la nuit prend aussi la teinte du jeu en Léger, à 55 % de celle de l'Immersif.
-  **Immersif** : en plus, la nuit aux couleurs du jeu (`FxPalette.bg`) et le héros flouté de Steam en haut
-  (`FxPalette.hero`, texture du moteur, opacité 0,75, fondu dans la nuit de 18 à 60 % de la hauteur).
+  Depuis la revue du 29/10, la nuit prend aussi la teinte du jeu (55 % de la pleine teinte, `LIGHT_NIGHT`).
+  **Immersif retiré le 30/10** (décision de l'utilisateur : « c'est moche ») : le réglage n'a plus que Désactivé ·
+  **Stylisé** (l'ancien « Léger »), un ancien `immersive` est lu comme Stylisé ; ni héros flouté ni carte des couleurs
+  en fond (la texture du héros ne sert plus qu'au fond des cartes spéciales).
 - **Passage d'un jeu à l'autre : la marée** (`paletteTween.ts`, shader du fond) : 180 ms après que la sélection se
   pose (rien pendant une rafale), les nouvelles couleurs partent de la carte active en cercle, **700 ms**, courbe
   `standard`, bord doux 90 px et bande de lumière (0,55, pleine jusqu'à 80 %) ; sans View Transition ; les accents
   changent une fois, quand le bord atteint le titre. Premier affichage, thème, réglage : changement direct.
-  « Réduire les animations » : direct. Repli CSS : lune et anneau en fondu, nuit de l'Immersif sur `Backdrop`.
+  « Réduire les animations » : direct. Repli CSS : lune et anneau en fondu, nuit du jeu sur `Backdrop`.
 - **Sortie des jeux** (éventail, autre écran) : retour au thème par la même marée. **App sans image** : face et
-  ambiance aux couleurs de son icône. **Carte active avec affiche** : le logo du jeu à la place du nom (fondu micro).
+  ambiance aux couleurs de son icône. **Carte active avec affiche** : le nom en petit (13 px, centré) sans plaque, le
+  verre de la plaque s'efface (fondu micro) ; le logo du jeu n'y est plus affiché depuis le 30/10 (il doublait le
+  titre de l'affiche).
 - **Variantes** (Personnalisation avancée, § 5) : intensité 35 / 60 / 100 %, caractère (comme le thème, fidèle,
   vive), couleur principale (dominante, la plus vive, accordée au thème), passage (marée, fondu 600 ms, direct),
-  moment (sélection posée, tout de suite, au lancement seulement), image du jeu en Immersif, couleurs de l'icône.
+  moment (sélection posée, tout de suite, au lancement seulement), couleurs de l'icône.
 - **Par app** (dialogue de modification, panneau « Apparence », enregistré tout de suite) : ses images (affiche,
   fond, logo : déposer une image sur une case, « Retirer » rend celle de Steam) et ses couleurs (Automatiques ·
   Choisies : A et B parmi les couleurs de ses images, bornées et mêlées comme les autres · Thème : jamais teintée).
+
+**Ambiances et cartes spéciales** (étapes 16–17, détail dans `docs/AMBIANCES.md`) : l'app sélectionnée peut porter
+une ambiance `.hubmood` (6 packs, sur mesure, importées) que le moteur dessine avec ses sprites, derrière le verre, aux
+couleurs A / B du jeu ; anneau de glyphes et pulsation autour de la carte active (`setFocusTarget`). Parts par qualité
+`MOOD_SHARE` (Éco 0, Équilibré 0,6, Élevé 1, Ultra 1,25), fondu `MOOD_FADE` 350 / 650 ms. **Carte spéciale** (art
+local de l'utilisateur) : fond flouté, personnages de part et d'autre de la carte active (centre libre), ombres
+teintées par A, liseré de lumière B, pieds et bord extérieur fondus, logo sous la carte (`SPECIAL`). Rien avec
+« Couleurs du jeu » désactivé ; « réduire » : image fixe ; moteur coupé : ambiance en Canvas 2D, pas de carte spéciale.
+**Séquence de lancement** (30/10, `launch: "seal"` dans l'ambiance, `SEAL`) : le jeu est lancé tout de suite derrière
+Kayro, qui reste devant tout (couverture, `desktop/cover.rs`) ; une scène WebGL2 joue pendant ce temps (encre, cercle de
+runes au sol en perspective, sceau vertical, flammes en aplats 3 tons, braises, carte en 3D) jusqu'à l'arrivée de la
+fenêtre du jeu (4,6 à 10 s), puis le final (feu, carte qui brûle, pilier, éclair, noir) et Kayro se cache ; un clic ou
+une touche saute au final ; « réduire les animations » : lancement direct. Second style, `launch: "gommage"` (Clair
+Obscur, `GOMMAGE`, palette `PAINT`, 3ᵉ version : la 1re améliorée) : clair-obscur (lumière dorée en rayons qui tombe
+d'en haut sur la carte, poussière), cinq coups de pinceau à l'huile (brosse plate, fin effilochée en poils secs,
+éclairés par le faisceau) dont un trait cramoisi derrière la carte, monolithe lointain à la tête brisée, « 33 » peint en
+cramoisi et fines fissures dorées, coins dorés Art nouveau, pétales lumineux au vent (dorés dans le faisceau, quelques-uns
+flous), nom en or gravé ; la carte s'efface en pétales. Fin de la couverture : quand une nouvelle grande fenêtre du jeu
+apparaît (≥ 20 % de l'écran), mise au premier plan à la fin.
 
 ---
 
@@ -214,14 +237,20 @@ Une fois par démarrage du programme, au premier affichage ; jamais au rappel pa
   Réglage « Ouverture au lancement » : Pulsation (défaut) · Classique (V1-A sans pulsation) · Aucune.
 
 ### 4.2 Liaison A : « l'éventail pivote, puis le deck se déplie » (`src/features/home/fan/`, catalogue `categoryLink`)
-Éventail de 5 cartes 210 × 290 (7° par rang, pivot 1 300 px, faces en miroir à droite du centre). Au clic :
+Éventail de 5 cartes 210 × 290 (7° par rang, pivot 1 300 px, faces en miroir à droite du centre). Chaque catégorie a
+son **emblème** au trait fin (étape 16a, `CategoryEmblem.tsx` : manette et braises, mât et ondes, plume, deux fenêtres,
+constellation ; `--fan-emblem` 66 px, copie géante à `--fan-mark-alpha` 0,09 vers le coin opposé), qui bouge une fois au
+survol ou au focus (niveau 3, `transform` / `opacity`, rien au repos). Au clic :
 rotation de sortie 15° / rang en **850 ms** `bascule` ; les autres cartes s'effacent et se floutent (500 ms, départ
 120 ms) ; la carte choisie −30 px × 1,06 puis × 0,6 ; **deck** empilé (±7 / ±4 px, 3,5° par rang, × 0,55, 700 ms
 `standard`) ; **dépliage** en carrousel en **700 ms** sur le ressort `liaison` (3,4 %), décalage 70 ms du centre vers
 les bords. Étapes 0 / 650 / 1 070 ms. Onglets : **ronde** (`fanDance.ts`) : les cartes quittent leur place pour un anneau
 en perspective large comme la scène (demi-largeur 92 % de la carte la plus éloignée, fond 92 px plus haut, × 0,84
 devant, × 0,5 au fond, penchées de 5°), en font un tour ensemble en se croisant, et retombent à leur place ; vague de
-45 ms de gauche à droite, 1 250 ms par carte (réglage `danceMs`, 0 = regroupement 380 ms puis redépliage) ; retour (« Toutes les catégories »)
+45 ms de gauche à droite, 1 250 ms par carte (réglage `danceMs`, 0 = regroupement 380 ms puis redépliage) ; puis
+**atterrissage** (30/10, `IMPACT`, `DANCE.lead`) : la carte du milieu quitte l'anneau 240 ms avant les autres, avance
+× 1,09 / −12 px en descendant avec un tremblement de ±2 px (440 ms), s'écrase × 0,94 en arrivant (190 ms ; les couleurs
+du jeu changent alors) et se pose (440 ms) pendant que les autres virevoltent encore, juste après la dernière (1,54 s) ; retour (« Toutes les catégories »)
 décalé de 35 ms par rang. Titres : celui qui part sort d'abord (168 ms, `sortie`), l'autre entre à +120 ms (moyen,
 `vive`). Échap sur l'éventail = liaison vers la dernière catégorie.
 - **Éco** : moteur à 30 i/s, mêmes étapes. **Réduire** : état final direct. **Net** : deck sur `vive`, sans dépassement.
@@ -303,13 +332,13 @@ Pause en 240 ms (survol, molette, défilement rapide, glisser), reprise lente en
 onglets verticaux (`src/features/settings/`, textes `src/i18n/fr-settings.json`) :
 - **Général** : raccourci (Ctrl+Alt+H), mode économe, Échap cache Kayro, cliquer ailleurs cache Kayro, démarrer avec Windows.
 - **Visuel** : Qualité (Auto · Éco · **Équilibré** · Élevé · Ultra) ; Atmosphère (Douce 0,6 · **Normale 1** · Forte 1,3) ;
-  Couleurs du jeu (Désactivé · **Léger** · Immersif) ; Mouvement (Complet · **Vivant** · Net) ; Suivre Windows ;
+  Couleurs du jeu (Désactivé · **Stylisé**) ; Mouvement (Complet · **Vivant** · Net) ; Suivre Windows ;
   Mode d'affichage (+ écran du mode immersif) ; puis **Personnalisation avancée** : Flottaison des cartes, Ouverture
   au lancement, Changement de thème, Dépliage et Élasticité du widget, Survol des cartes (**Complet** · Simple ·
   Aucun), Bokeh du fond, Particules, Lumière du curseur, puis les couleurs du jeu : Intensité (Douce · **Normale** ·
   Forte), Caractère (**Comme le thème** · Fidèle à l'affiche · Vive), Couleur principale (**Dominante** · La plus
   vive · Accordée au thème), Passage d'un jeu à l'autre (**Marée** · Fondu · Direct), Moment du changement
-  (**Sélection posée** · Tout de suite · Au lancement), Image du jeu en fond (Immersif, **oui**), Apps sans image
+  (**Sélection posée** · Tout de suite · Au lancement), Apps sans image
   aux couleurs de leur icône (**oui**) ;
   enfin « Revenir aux réglages par défaut » (tout Visuel sauf l'affichage), avec « Annuler » tant qu'aucun réglage
   Visuel n'a été changé ensuite.

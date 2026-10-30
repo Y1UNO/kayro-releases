@@ -280,7 +280,7 @@ void main() {
 }
 `;
 
-export const SPRITE_UNIFORMS = ["uView", "uStar", "uKind"] as const;
+export const SPRITE_UNIFORMS = ["uView", "uStar", "uKind", "uGlyphs"] as const;
 
 /** Per instance: aI = x, y, size (CSS px), alpha; aC = rgb, kind (0 ember, 1 star, 2 bokeh). */
 export const SPRITE_VERTEX = `#version 300 es
@@ -314,13 +314,28 @@ in vec2 vUv;
 in vec4 vC;
 in float vA;
 uniform vec3 uStar;
+uniform sampler2D uGlyphs; // steps 16–17: the ambience's glyphs, 4 × 2 cells (glyphAtlas.ts)
 out vec4 outColor;
 void main() {
   float r = length(vUv);
-  if (r > 1.0) discard;
   vec3 col = vC.rgb;
   float a;
-  if (vC.w < 0.5) {
+  // Steps 16–17, the ambiences' square sprites: rain streak, beam of light, glyph.
+  if (vC.w > 3.5 && vC.w < 4.5) {
+    a = (1.0 - smoothstep(0.0, 0.1, abs(vUv.x))) * (1.0 - abs(vUv.y));
+  } else if (vC.w > 4.5 && vC.w < 5.5) {
+    a = exp(-vUv.x * vUv.x * 30.0) * (1.0 - smoothstep(-1.0, 1.0, vUv.y)) * 0.5;
+  } else if (vC.w > 7.5) {
+    float i = floor(vC.w - 7.5);
+    vec2 cell = vec2(mod(i, 4.0), floor(i / 4.0));
+    a = texture(uGlyphs, (cell + vUv * 0.5 + 0.5) / vec2(4.0, 2.0)).a;
+  } else if (r > 1.0) {
+    discard;
+  } else if (vC.w > 2.5 && vC.w < 3.5) {
+    a = exp(-r * r * 4.0) * (1.0 - r); // soft disc (dots, mist)
+  } else if (vC.w > 5.5 && vC.w < 6.5) {
+    a = smoothstep(0.8, 0.9, r) * (1.0 - smoothstep(0.92, 1.0, r)) + 0.2 * smoothstep(0.45, 0.92, r) * (1.0 - smoothstep(0.92, 1.0, r)); // pulse ring
+  } else if (vC.w < 0.5) {
     a = smoothstep(0.3, 0.16, r) + 0.6 * exp(-r * r * 5.0) * (1.0 - r);
   } else if (vC.w < 1.5) {
     float core = smoothstep(0.32, 0.18, r);

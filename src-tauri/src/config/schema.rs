@@ -37,9 +37,11 @@ pub enum Quality {
 #[serde(rename_all = "lowercase")]
 pub enum ColorMode {
     Off,
+    /// « Stylisé » (30/10): the ambience and the accents take the game's colours. The immersive
+    /// mode was removed that day: an older file's `immersive` reads as this one.
     #[default]
+    #[serde(alias = "immersive")]
     Light,
-    Immersive,
 }
 
 /// How the hub is shown: a borderless window the size of the chosen screen, a normal window,
@@ -90,8 +92,6 @@ pub struct Settings {
     pub color_pick: ColorPick,
     pub color_passage: ColorPassage,
     pub color_trigger: ColorTrigger,
-    /// Immersive: the game's hero at the top of the night (V3 b); off = its colours only.
-    pub color_hero: bool,
     /// An app without a picture takes its icon's colours (V10 b); off = the theme's.
     pub color_from_icon: bool,
 }
@@ -133,7 +133,6 @@ impl Default for Settings {
             color_pick: ColorPick::default(),
             color_passage: ColorPassage::default(),
             color_trigger: ColorTrigger::default(),
-            color_hero: true,
             color_from_icon: true,
         }
     }
@@ -170,7 +169,6 @@ pub struct SettingsPatch {
     pub color_pick: Option<ColorPick>,
     pub color_passage: Option<ColorPassage>,
     pub color_trigger: Option<ColorTrigger>,
-    pub color_hero: Option<bool>,
     pub color_from_icon: Option<bool>,
 }
 
@@ -211,7 +209,6 @@ impl Settings {
             color_pick,
             color_passage,
             color_trigger,
-            color_hero,
             color_from_icon,
         );
     }

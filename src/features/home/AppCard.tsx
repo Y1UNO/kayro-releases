@@ -3,7 +3,7 @@ import type { AppEntry } from "../../ipc/bindings";
 import { t } from "../../i18n";
 import { EditIcon, useGlass } from "../../design";
 import { markGlassDirtyFor } from "../../design/glass/glassRegistry";
-import { useArtUrl, usePosterUrl } from "./art";
+import { usePosterUrl } from "./art";
 import { IconFace } from "../gameColors/IconFace";
 import { faceMixOf, monogram, shadeOf } from "./cardLook";
 import { currentMotion } from "../../design/motion/current";
@@ -85,10 +85,9 @@ export function AppCard({
   }, [failed]);
   const poster = usePosterUrl(app);
   const icon = useAppIcon(app);
-  // Step 14: the game's logo instead of its name on the active card (V9 c); a card without a
-  // picture in its icon's colours (V10 b).
-  const logo = useArtUrl(app.id, "logo");
-  const withLogo = Boolean(poster && logo && mode === "stage");
+  // A card without a picture takes its icon's colours (V10 b). With a poster, the active card shows
+  // its name in small plain type (2026-10-30: the poster's own title made the logo a double).
+  const onPoster = Boolean(poster && mode === "stage");
   const stage = mode === "stage";
   const hidden = stage && !isVisible(d);
   const vars = cssVars({
@@ -161,15 +160,11 @@ export function AppCard({
           {running && <span className={styles.running} aria-hidden="true" />}
           <span className={fail.ring} data-on={failed ? "" : undefined} aria-hidden="true" />
           <span
-            className={withLogo ? `${styles.plate} ${face.withLogo}` : styles.plate}
+            className={onPoster ? `${styles.plate} ${styles.onPoster}` : styles.plate}
             data-face=""
           >
             {app.name}
           </span>
-          {withLogo && (
-            // Decorative: the button's label names the app.
-            <img className={face.logo} src={logo!} alt={""} draggable={false} decoding="async" />
-          )}
         </button>
         {/* Mouse shortcut; the keyboard has F2 and the context-menu key (see HomeScreen). */}
         <button

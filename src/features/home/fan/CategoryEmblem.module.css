@@ -1,0 +1,189 @@
+/*
+ * Steps 16–17: emblems of the category cards (CategoryEmblem.tsx). Fine strokes in the text
+ * colour, a soft glow of the theme; nothing moves at rest. Hovering or focusing the card plays
+ * each part ONCE (finite animations or transitions, transform / opacity only: no idle cost).
+ * Durations × --m-k3 (level 3 « magie », 0 with « réduire les animations » or « Net »): the
+ * emblem then simply stays still.
+ */
+.emblem,
+.mark {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+
+.emblem {
+  --e-dur: calc(var(--m-long) * 2.2 * var(--m-k3));
+  --e-move: calc(var(--m-moyen) * var(--m-k3));
+  --e-stagger: calc(var(--m-cascade) * 2 * var(--m-k3));
+  width: var(--fan-emblem);
+  height: var(--fan-emblem);
+  margin: -4px -6px 0;
+  /* A small surface (66 px): the drop shadow is cheap and never animated. */
+  filter: drop-shadow(0 0 7px var(--glow));
+}
+
+/* Faint large copy behind the face, toward the far corner (mirrored on the right of the fan). */
+.mark {
+  position: absolute;
+  top: 46px;
+  right: -34px;
+  width: var(--fan-mark);
+  height: var(--fan-mark);
+  stroke-width: 1.1;
+  opacity: var(--fan-mark-alpha);
+  pointer-events: none;
+}
+
+:global([data-side="end"]) .mark {
+  right: auto;
+  left: -34px;
+  transform: scaleX(-1);
+}
+
+.dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+.faint {
+  opacity: 0.55;
+}
+
+/* Every moving part turns around its own box. */
+.ember,
+.wave,
+.pen,
+.spark,
+.back,
+.front,
+.star {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Games: the embers rest faint, rise off the pad and come back from below. */
+.ember {
+  opacity: 0.6;
+}
+
+/* Others: the stars twinkle one after the other. */
+.star {
+  opacity: 0.9;
+}
+
+/* Creativity: the pen dips around its tip. */
+.pen {
+  transform-origin: 0% 100%;
+}
+
+/* Software: the windows part (held while hovered, back on leave). */
+.back,
+.front {
+  transition: transform var(--e-move) var(--m-ease-move);
+}
+
+:global([data-fan-card]:is(:hover, :focus-visible)) .emblem .ember {
+  animation: rise var(--e-dur) var(--m-ease-in) calc(var(--i) * var(--e-stagger)) 1 both;
+}
+
+:global([data-fan-card]:is(:hover, :focus-visible)) .emblem .wave {
+  animation: wave var(--e-dur) var(--m-ease-in) calc(var(--i) * var(--e-stagger) * 2) 1 both;
+}
+
+:global([data-fan-card]:is(:hover, :focus-visible)) .emblem .pen {
+  animation: dip var(--e-dur) var(--m-ease-move) 1 both;
+}
+
+:global([data-fan-card]:is(:hover, :focus-visible)) .emblem .spark {
+  animation: spark var(--e-dur) var(--m-ease-bounce) var(--e-stagger) 1 both;
+}
+
+:global([data-fan-card]:is(:hover, :focus-visible)) .emblem .back {
+  transform: translate(-2.5px, -2.5px);
+}
+
+:global([data-fan-card]:is(:hover, :focus-visible)) .emblem .front {
+  transform: translate(2.5px, 2.5px);
+}
+
+:global([data-fan-card]:is(:hover, :focus-visible)) .emblem .star {
+  animation: twinkle var(--e-dur) var(--m-ease-in) calc(var(--i) * var(--e-stagger)) 1 both;
+}
+
+@keyframes rise {
+  0% {
+    transform: none;
+    opacity: 0.6;
+  }
+  55% {
+    transform: translateY(-9px) scale(0.7);
+    opacity: 0;
+  }
+  56% {
+    transform: translateY(4px);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 0.6;
+  }
+}
+
+@keyframes wave {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  45% {
+    transform: scale(1.16);
+    opacity: 0.25;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes dip {
+  0% {
+    transform: none;
+  }
+  35% {
+    transform: rotate(-9deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes spark {
+  0% {
+    transform: none;
+  }
+  40% {
+    transform: scale(1.35) rotate(45deg);
+  }
+  100% {
+    transform: rotate(90deg);
+  }
+}
+
+@keyframes twinkle {
+  0% {
+    transform: none;
+    opacity: 0.9;
+  }
+  35% {
+    transform: scale(1.7);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 0.9;
+  }
+}

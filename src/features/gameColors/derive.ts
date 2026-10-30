@@ -46,12 +46,13 @@ const BOUNDS: Record<ColorChoice["character"], { lMin: number; lMax: number; cMa
   faithful: { lMin: 0.62, lMax: 0.95, cMax: 0.37 },
 };
 
-/** The night of the immersive mode, top → bottom (lightness), and its largest chroma. */
+/** The game's night at full share, top → bottom (lightness), and its largest chroma. */
 const NIGHT_L = [0.22, 0.155, 0.09] as const;
 const NIGHT_C = 0.055;
 /**
- * Review 2026-10-29: in « Léger » the night takes the game's hue too, at this share of the
- * immersive one (the user saw no change from one game to the next with the night left alone).
+ * Review 2026-10-29: the night takes the game's hue too, at this share (the user saw no change
+ * from one game to the next with the night left alone). The immersive mode (full share) was
+ * removed on 30/10: « Stylisé » keeps this one.
  */
 const LIGHT_NIGHT = 0.55;
 /** The dominant colour speaks for the image only above this chroma (a night-blue sky does not). */
@@ -189,11 +190,11 @@ export function deriveGameColors(
     : gamePair(source!, tb, choice.pick);
   const a = labToHex(mixLch(ta, bounded(rawA, choice.character), t));
   const b = labToHex(mixLch(tb, bounded(rawB, choice.character), t));
-  // The night takes A's hue (review 2026-10-29: was the dominant colour's, often a grey sky); in
-  // « Léger » at a share of the immersive one (LIGHT_NIGHT).
+  // The night takes A's hue (review 2026-10-29: was the dominant colour's, often a grey sky), at
+  // LIGHT_NIGHT of the full share (the immersive mode is gone since 30/10).
   const C = Math.min(NIGHT_C, chromaOf(rawA));
   const h = hueOf(rawA);
-  const share = mode === "immersive" ? t : t * LIGHT_NIGHT;
+  const share = t * LIGHT_NIGHT;
   const night = NIGHT_L.map((L, i) =>
     labToHex(mixLch(hexToLab(theme.bg[i]!), [L, C * Math.cos(h), C * Math.sin(h)], share)),
   ) as [string, string, string];
@@ -218,7 +219,7 @@ export function withGameColors(theme: Theme, c: GameColors): Theme {
 }
 
 export interface PaletteExtras {
-  /** Immersive mode: the game's hero picture, drawn by the engine (see `FxPalette.hero`). */
+  /** The special card's background (steps 16–17), drawn by the engine (see `FxPalette.hero`). */
   hero: FxPalette["hero"];
   /** How the engine goes from the previous palette (step 14). */
   passage: "tide" | "instant";

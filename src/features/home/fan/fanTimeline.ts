@@ -17,7 +17,7 @@ import type { ElementValues } from "../../../design/da/daParams";
 import { springAt, SPRINGS } from "../../../design/glass/pillMotion";
 import { curveOf, lerp, type Curve } from "../../../design/motion/curve";
 import { MOTION_DEFAULTS as M } from "../../../design/motion/tokens";
-import { DANCE, danceOverlay, danceSpan } from "./fanDance";
+import { DANCE, danceOverlay, impactAt, impactOverlay, impactStart, tabSpan } from "./fanDance";
 
 export type Phase = "choose" | "turn" | "deck" | "dance" | "spread" | "close";
 export const FAN_SIZE = 5;
@@ -246,6 +246,8 @@ interface Tween extends Target {
  */
 export class Sequence {
   readonly duration: number;
+  /** When the selected card's impact lands (ms from the start; 0 = none: not a dancing tab). */
+  readonly impact: number;
   private readonly tracks = new Map<string, Tween[]>();
 
   constructor(
@@ -270,7 +272,9 @@ export class Sequence {
         end = Math.max(end, tw.at + tw.dur);
       }
     }
-    this.duration = Math.max(end, this.dancing ? danceSpan(config.danceMs) / k : 0);
+    const dance = this.dancing ? config.danceMs : 0;
+    this.duration = Math.max(end, tabSpan(dance) / k);
+    this.impact = impactAt(dance) / k;
   }
 
   private get dancing(): boolean {
@@ -282,7 +286,9 @@ export class Sequence {
     for (const [key, list] of this.tracks) out.set(key, valueOf(list, t));
     if (this.dancing) {
       const k = this.config.speed;
-      danceOverlay(out, this.ctx.slots, t, this.config.danceMs / k, DANCE.wave / k);
+      const dur = this.config.danceMs;
+      danceOverlay(out, this.ctx.slots, t, dur / k, DANCE.wave / k, DANCE.lead / k);
+      impactOverlay(out, t, impactStart(dur) / k, k);
     }
     return out;
   }

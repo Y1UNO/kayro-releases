@@ -6,6 +6,8 @@ pub mod atomic;
 pub mod dirstore;
 pub mod game_colors;
 pub mod migrate;
+pub mod mood_store;
+pub mod moods;
 pub mod scene;
 pub mod scene_ops;
 pub mod schema;
@@ -41,6 +43,7 @@ pub struct ConfigState {
     scenes: Mutex<Vec<SceneFile>>,
     ui_state: Mutex<UiState>,
     themes: Mutex<Vec<ThemeFile>>,
+    moods: Mutex<Vec<moods::MoodFile>>,
 }
 
 impl ConfigState {
@@ -53,10 +56,12 @@ impl ConfigState {
         let (ui_state, _) = store::load::<UiState>(&paths.ui_state());
         let scenes = dirstore::load_dir::<SceneFile>(&paths.scenes_dir());
         let themes = dirstore::load_dir::<ThemeFile>(&paths.themes_dir());
+        let moods = dirstore::load_dir_ext::<moods::MoodFile>(&paths.moods_dir(), "hubmood");
         tracing::info!(
             apps = apps.apps.len(),
             scenes = scenes.len(),
             themes = themes.len(),
+            moods = moods.len(),
             elapsed_us = started.elapsed().as_micros() as u64,
             "config loaded"
         );
@@ -68,6 +73,7 @@ impl ConfigState {
             scenes: Mutex::new(scenes),
             ui_state: Mutex::new(ui_state),
             themes: Mutex::new(themes),
+            moods: Mutex::new(moods),
         }
     }
 

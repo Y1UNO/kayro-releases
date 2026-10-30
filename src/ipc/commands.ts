@@ -19,6 +19,7 @@ import type {
   AppArt,
   AppPalette,
   ArtRole,
+  MoodFile,
   ThemeFile,
 } from "./bindings";
 
@@ -109,6 +110,12 @@ export type ScenesIpc = typeof scenesIpc;
 /** Showing, hiding and fitting the window, screens, shortcuts, starting with Windows, recent apps. */
 export const desktopIpc = {
   hide: (): Promise<Outcome<void>> => plain(commands.windowHide()),
+  /**
+   * Launch cover (30/10): `on` keeps the hub in front while a game starts behind it; off ends
+   * it, `hide` taking the hub off the screen.
+   */
+  launchCover: (on: boolean, hide: boolean): Promise<Outcome<void>> =>
+    plain(commands.launchCover(on, hide)),
   /** Starts moving the window with the mouse (call from a pointer-down). */
   drag: (): Promise<Outcome<null>> => checked(commands.windowDrag()),
   /** The widget window follows the size of its content (logical pixels). */
@@ -168,3 +175,13 @@ export const themesIpc = {
 };
 
 export type ThemesIpc = typeof themesIpc;
+
+/** Ambiences (steps 16–17): the imported `.hubmood` files; the built-in packs live in the page. */
+export const moodsIpc = {
+  list: (): Promise<Outcome<MoodFile[]>> => plain(commands.moodsList()),
+  /** Reads and validates the file, then keeps it as a new ambience. */
+  importFile: (path: string): Promise<Outcome<MoodFile>> => checked(commands.moodImport(path)),
+  remove: (id: string): Promise<Outcome<null>> => checked(commands.moodDelete(id)),
+  /** Writes the ambience in the exports folder, shows it in Explorer; returns its path. */
+  exportFile: (mood: MoodFile): Promise<Outcome<string>> => checked(commands.moodExport(mood)),
+};

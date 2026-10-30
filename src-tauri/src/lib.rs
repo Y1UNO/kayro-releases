@@ -8,6 +8,7 @@ pub mod intake;
 pub mod ipc;
 pub mod ipc_art;
 pub mod ipc_desktop;
+pub mod ipc_moods;
 pub mod ipc_scenes;
 pub mod ipc_themes;
 pub mod launcher;
@@ -100,7 +101,14 @@ pub fn run() {
                     use tauri_specta::Event;
                     ipc::notify(ipc::AppStateChanged(state).emit(&for_events));
                 },
+                desktop::cover::on_foreground,
             ));
+            // 30/10: the launch cover tells the page when the game's window came to the front.
+            let for_cover = app.handle().clone();
+            desktop::cover::set_reporter(move |exe| {
+                use tauri_specta::Event;
+                ipc::notify(desktop::cover::LaunchLanded(exe).emit(&for_cover));
+            });
             let silent = std::env::args().any(|a| a == SILENT_FLAG);
             desktop::startup(app.handle(), silent);
             Ok(())

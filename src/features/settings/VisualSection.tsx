@@ -97,7 +97,7 @@ export function VisualSection() {
         help={t("settings.visual.gameColors.help")}
         value={settings.colorMode}
         onChange={(colorMode) => set({ colorMode })}
-        options={(["off", "light", "immersive"] as const).map((m) => ({
+        options={(["off", "light"] as const).map((m) => ({
           value: m,
           label: t(`settings.visual.gameColors.${m}`),
         }))}

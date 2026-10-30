@@ -173,10 +173,14 @@ describe("category link A: sequences", () => {
   it("tab: the cards dance round the whole stage, cross over and under, and land at their places", () => {
     const rest = restValues("spread", ctx(1, 0), c);
     const s = new Sequence("tab", ctx(2, 1), c, rest, rest);
-    expect(s.duration).toBeCloseTo(1250 + 4 * 45, 0);
+    // 30/10: the selected card lands first, with its impact, while the others still dance.
+    // It settles just after the last card has landed.
+    expect(s.impact).toBeCloseTo(1250 - 240 + 2 * 45, 0);
+    expect(s.duration).toBeCloseTo(s.impact + 440, 0);
+    expect(s.duration).toBeGreaterThan(1250 + 4 * 45);
     near(s.at(0).get("a0.x"), -428);
     // Mid-dance: spread over the stage (not a pile in the centre), faces gone, some at the back.
-    const mid = s.at(700);
+    const mid = s.at(600);
     const xs = SLOTS.map(({ k }) => mid.get(`a${k}.x`)!);
     expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(500);
     expect(Math.min(...SLOTS.map(({ k }) => mid.get(`a${k}.y`)!))).toBeLessThan(-40);

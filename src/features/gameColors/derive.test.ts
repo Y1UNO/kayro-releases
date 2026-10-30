@@ -63,12 +63,7 @@ describe("game colours", () => {
           expect(L).toBeGreaterThan(floor);
           expect(L).toBeLessThan(0.9);
         }
-        const deep = deriveGameColors(theme, { main: p, other: null }, "immersive")!;
-        for (const hex of deep.night!) expect(hexToLab(hex)[0]).toBeLessThan(0.26);
-        // « Léger » tints the night less than « Immersif » (review 2026-10-29).
-        const gap = (n: readonly string[]) =>
-          Math.abs(hexToLab(n[1]!)[0] - hexToLab(theme.bg[1]!)[0]);
-        expect(gap(light.night!)).toBeLessThanOrEqual(gap(deep.night!) + 0.002); // hex rounding
+        for (const hex of light.night!) expect(hexToLab(hex)[0]).toBeLessThan(0.26);
       }
     }
   });
@@ -76,7 +71,7 @@ describe("game colours", () => {
   it("keep every text pair at 4.5:1 or more, on all 6 themes", () => {
     for (const theme of BUILTIN_THEMES) {
       for (const [name, p] of Object.entries(EXTREMES)) {
-        for (const mode of ["light", "immersive"] as const) {
+        for (const mode of ["light"] as const) {
           const c = deriveGameColors(theme, { main: p, other: null }, mode)!;
           const worst = worstContrast(withGameColors(theme, c));
           expect(

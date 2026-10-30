@@ -17,7 +17,7 @@ const MAX_IMPORT_BYTES: u64 = 64 * 1024;
 pub const PREFIX: &str = "perso-";
 
 /// `Forêt du soir` → `perso-foret-du-soir`; `-2`, `-3`… appended when the id is taken.
-fn theme_id(name: &str, taken: impl Fn(&str) -> bool) -> String {
+pub(super) fn theme_id(name: &str, taken: impl Fn(&str) -> bool) -> String {
     let mut slug = String::new();
     for c in name.to_lowercase().chars().map(deaccent) {
         if c.is_ascii_alphanumeric() {

@@ -7,6 +7,7 @@
 //! screen, a mode change is a passage (round 4b: the page fades out, the window changes, the page
 //! comes back, see `passage`).
 
+pub mod cover;
 pub mod geometry;
 pub mod hotkeys;
 mod modes;
@@ -169,8 +170,9 @@ fn on_focus<R: Runtime>(app: &AppHandle<R>, label: &str, focused: bool) {
     let s = settings(app);
     if let Some(window) = windows::get(app, label) {
         // Covers the taskbar only while the hub is the program in front (spike 04).
-        if s.display_mode == DisplayMode::Immersive {
-            let _ = window.set_always_on_top(focused);
+        // 30/10: a launch cover keeps it in front while the game starts behind it (cover.rs).
+        if s.display_mode == DisplayMode::Immersive || cover::covering() {
+            let _ = window.set_always_on_top(focused || cover::covering());
         }
     }
     let settled =

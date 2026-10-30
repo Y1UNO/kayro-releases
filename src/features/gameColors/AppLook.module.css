@@ -57,7 +57,9 @@
   object-fit: cover;
 }
 
-.drop[data-role="logo"] img {
+.drop[data-role="logo"] img,
+.drop[data-role="charLeft"] img,
+.drop[data-role="charRight"] img {
   object-fit: contain;
   padding: var(--space-2);
   box-sizing: border-box;

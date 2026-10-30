@@ -32,9 +32,12 @@ import { cardGeometry, useDa } from "../../design/da";
 import { useHomeKeys } from "./useHomeKeys";
 import { usePosterDrop } from "./usePosterDrop";
 import { GameColorsBridge } from "../gameColors/GameColorsBridge";
+import { LaunchIntro } from "../launchIntro/LaunchIntro";
+import { startLaunch } from "../launchIntro/launchStore";
 import styles from "./HomeScreen.module.css";
 
-const launch = (app: AppEntry) => void hubStore.getState().launchApp(app.id);
+// 30/10: through the launch sequence of the app's ambience, when it has one (launchStore.ts).
+const launch = (app: AppEntry) => startLaunch(app);
 
 const NOTICE_MS = 4000;
 
@@ -258,6 +261,7 @@ export function HomeScreen({
         <main className={styles.screen}>
           {/* Step 14: the selected app's colours (the fan has none: back to the theme's). */}
           <GameColorsBridge activeId={onFan ? null : (list[focus]?.id ?? null)} />
+          <LaunchIntro />
           <TopBar
             onSearch={() => setPaletteOpen(true)}
             onAdd={() => setAddOpen(true)}

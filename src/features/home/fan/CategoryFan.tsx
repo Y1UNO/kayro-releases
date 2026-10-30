@@ -3,6 +3,7 @@ import { useGlass } from "../../../design";
 import { PointerFrame } from "../../../fx/pointerFrame";
 import { t } from "../../../i18n";
 import { CATEGORY_IDS, CATEGORY_LABELS, type CategoryId } from "../categories";
+import { CategoryEmblem } from "./CategoryEmblem";
 import { MAX_SPARKS } from "./fanFloat";
 import { FAN_SIZE } from "./fanTimeline";
 import type { FanCardEls } from "./fanRender";
@@ -137,9 +138,10 @@ function FanCard({
   const face = (
     <>
       <span className={styles.fill} />
+      <CategoryEmblem id={id} mark />
       <span className={styles.shade} />
       <span className={styles.content}>
-        <span className={styles.letter}>{name.slice(0, 1)}</span>
+        <CategoryEmblem id={id} />
         <span className={styles.foot}>
           <span className={styles.name}>{name}</span>
           <span className={styles.count}>{apps}</span>

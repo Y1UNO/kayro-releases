@@ -21,8 +21,8 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 14 | Couleurs du jeu : art local, palette OKLab, modes | 5, 8 | E |
 | [x] P | Prétest : installeur NSIS, « Exporter les logs », version visible, note `docs/PRETEST.md` | 14 | F |
 | [ ] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
-| [ ] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
-| [ ] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
+| [x] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
+| [x] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
 | [ ] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages des sons, à définir à l'étape 17b, `docs/SONS.md` | 12b, 13 | E |
 | [ ] 18 | Audit : perf, sécurité, robustesse, accessibilité | 1–16 | F |
 | [ ] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis | 18 | F |
@@ -94,6 +94,15 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 
 - **Étape 15 — 2026-10-29** (branche `step-pretest`) : Réglages › Thèmes › « Mes thèmes » : créer un thème depuis 2 couleurs + un curseur de fond (`design/themes/derive.ts` rejoue la règle mesurée sur les 6 thèmes ; A et B bornés, lisibilité ≥ 4,5:1 vérifiée sur 279 combinaisons), le modifier, l'exporter (dossier `exports`, Explorateur), le supprimer ; import en déposant un `.json` sur la section (cœur `config/themes.rs` : schéma strict, couleurs hex/rgb seulement, ≤ 20, ≤ 64 Ko, id `perso-…` toujours neuf). Réglage Général « Écran d'ouverture » (dernier utilisé par défaut ; souris ou principal : la fenêtre y est déplacée à l'ouverture, pas le widget). Non vu dans l'exe, non mesuré (aucun effet sur la boucle d'images).
 - **Revue Opus 5.5 — 2026-10-29** (branche `step-pretest`, commit `dee0ecf` ; note `docs/REVUE-OPUS55.md`) : revue des artefacts de motion (Kayro, Hades II, RAYKA) ; flottaison plus lisible (Visible 10 / 7 px + dérive), survol 3D à 6° avec le verre du moteur incliné (reprojection en perspective dans le shader), couleurs du jeu plus marquées (couleur qui parle pour l'affiche, nuit teintée en Léger), faces d'icônes plus sobres, tramage anti-bandes ; scan des apps affiné (`detect/relevance.rs` : aides, consoles, variantes et outils annexes d'une suite écartés ; « - Raccourci » retiré) : 58 propositions du menu Démarrer sur ce PC au lieu de 100 (scan réel, lecture seule). Exe vérifié par CDP (inclinaison de l'éventail et du carrousel, verre qui suit) ; A/B contre le prétest (4 passes) : p95 3,7 ms partout, + 0,2 à 0,4 point de CPU / GPU au repos et au survol, marée sans régression (chiffres dans la note). Après retours : changement d'onglet en ronde sur toute la scène (`fanDance.ts`, ≈ 1,4 s ; réglage `danceMs`) — non mesuré, non vu dans l'exe.
+- **Étapes 16–17 — Ambiances, 2026-10-30** (branche `step-16-ambiances`, note `docs/AMBIANCES.md`) : emblèmes des cartes
+  de catégorie (16a) ; `setFocusTarget` suit la carte affichée (16b) ; `.hubmood` strict côté Rust (`config/moods.rs`,
+  import / export / suppression, `moodId` + `moodTune` par app), rendu dans le moteur WebGL2 (sprites réfractés, atlas
+  de glyphes, repli Canvas 2D) et 6 packs (16c–16d) ; panneau « Ambiance du jeu » ; cartes spéciales (personnages,
+  fond, logo, 17a) ; « Sceau de la sorcière » pour Hades II (17). Retouches du 30/10 : plaques de nom plus fines,
+  petit nom au lieu du logo sur la carte active avec affiche, dialogue « Modifier » qui défile, **mode Immersif des
+  couleurs du jeu retiré** (Désactivé · Stylisé). Tests : vitest 565, cargo 250, clippy / eslint / tsc
+  propres. **Non mesuré** (CPU / GPU des ambiances : à faire en A/B avec `npm run perf -- --exe`, accord requis) ;
+  non vu dans l'exe par moi ; carte spéciale sans repli CSS ; anneau de glyphes en partie derrière les cartes latérales.
 
 ## Plus tard (liste unique)
 Seul endroit des choses à faire plus tard (regroupées au gel de la DA, le 2026-10-14). Elles viennent de l'ancienne liste
@@ -120,9 +129,13 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   placement enregistré, l'app s'ouvre sur l'écran de la souris). — 2026-10-29
 
 ### Étapes 16–17 — Ambiances
-- [ ] Design propre à chaque carte de catégorie.
-- [ ] `FxLayer.setFocusTarget` : point d'extension gardé (le faisceau de l'étape 8 a été retiré au gel).
-- [ ] Cartes spéciales avec art local fourni par moi (personnages détourés à gauche et à droite, logo, fond) : couches
+- [x] Design propre à chaque carte de catégorie — 2026-10-30 (16a : emblème au trait par catégorie, mouvement unique
+  au survol, `CategoryEmblem.tsx`).
+- [x] `FxLayer.setFocusTarget` : point d'extension gardé (le faisceau de l'étape 8 a été retiré au gel) — 2026-10-30
+  (16b : la cible suit la carte de l'app affichée, `gameColorsStore.focus`, sélection et redimensionnement ; la marée
+  garde son origine).
+- [x] Cartes spéciales avec art local fourni par moi — 2026-10-30 (17a : rôles `char-left` / `char-right`, couches
+  dans le moteur, liste à fournir dans `docs/AMBIANCES.md`). Texte d'origine : (personnages détourés à gauche et à droite, logo, fond) : couches
   avec profondeur, personnages teintés par l'ambiance, bords fondus dans la brume, centre libre. Kayro n'embarque aucune
   image de jeu : un dossier d'images par carte, rempli par l'utilisateur. Références dans reference/ambiances/.
 
@@ -160,8 +173,7 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 - [ ] Bouton « Parcourir » pour choisir un exe (plugin dialog).
 - [ ] Suivi des jeux Steam (processus sans `match.exe`) pour que `waitReady`, `focus` et `close` marchent aussi sur eux.
 - [ ] Test d'Epic avec un vrai jeu installé (URI de lancement et `.item` réels ; icône par l'exe du manifeste, étape 14).
-- [ ] Couleurs du jeu (limites de l'étape 14) : « Au lancement » gardé après un redémarrage ; héros de l'Immersif en
-  repli CSS ; une marée lancée pendant une autre repart de l'état visible (aujourd'hui, les bords sautent).
+- [ ] Couleurs du jeu (limites de l'étape 14) : « Au lancement » gardé après un redémarrage ; une marée lancée pendant une autre repart de l'état visible (aujourd'hui, les bords sautent).
 - [ ] Images d'app : retour visuel pendant le glisser d'une image sur une carte ou une case ; dossier `art/<id>` d'une
   app retirée (gardé aujourd'hui) ; jeux GOG (icône `goggame-*.ico`, images locales de Galaxy) à voir avec un vrai jeu.
 - [ ] Menu « Quitter » du tray et rafraîchissement de l'icône quand seul le thème système Windows change.
@@ -183,3 +195,4 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 
 ## Abandonné
 Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).
+- 2026-10-30 — Mode Immersif des couleurs du jeu (héros flouté, puis carte des couleurs de l'affiche) et son repli CSS : retiré à la demande de l'utilisateur (« c'est moche »).

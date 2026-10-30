@@ -12,8 +12,8 @@ export const commands = {
 	 *  the shortcut is not shown. True when the page must report its paint time (measurement).
 	 */
 	appReady: () => __TAURI_INVOKE<boolean>("app_ready"),
-	settingsGet: () => __TAURI_INVOKE<Settings>("settings_get"),
-	settingsSet: (patch: SettingsPatch) => typedError<Settings, AppError>(__TAURI_INVOKE("settings_set", { patch })),
+	settingsGet: () => __TAURI_INVOKE<Settings_Serialize>("settings_get"),
+	settingsSet: (patch: SettingsPatch_Deserialize) => typedError<Settings_Serialize, AppError>(__TAURI_INVOKE("settings_set", { patch })),
 	appsList: () => __TAURI_INVOKE<AppEntry[]>("apps_list"),
 	appsAdd: (newApp: NewApp) => typedError<AppEntry, AppError>(__TAURI_INVOKE("apps_add", { newApp })),
 	appsUpdate: (entry: AppEntry) => typedError<AppEntry, AppError>(__TAURI_INVOKE("apps_update", { entry })),
@@ -138,6 +138,19 @@ export const commands = {
 	themeImport: (path: string) => typedError<ThemeFile_Serialize, AppError>(__TAURI_INVOKE("theme_import", { path })),
 	/**  Writes `<id>.json` in the exports folder, shows it in Explorer and returns its path. */
 	themeExport: (id: string) => typedError<string, AppError>(__TAURI_INVOKE("theme_export", { id })),
+	/**  The user's imported ambiences (the built-in packs live in the page). */
+	moodsList: () => __TAURI_INVOKE<MoodFile_Serialize[]>("moods_list"),
+	/**  Imports a dropped `.hubmood` file. Nothing is run, only read and checked. */
+	moodImport: (path: string) => typedError<MoodFile_Serialize, AppError>(__TAURI_INVOKE("mood_import", { path })),
+	moodDelete: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("mood_delete", { id })),
+	/**  Writes the ambience in the exports folder, shows it in Explorer and returns its path. */
+	moodExport: (mood: MoodFile_Deserialize) => typedError<string, AppError>(__TAURI_INVOKE("mood_export", { mood })),
+	/**
+	 *  Launch cover (30/10, desktop/cover.rs): `on` keeps the hub in front of everything while a game
+	 *  starts behind it (its store's windows stay hidden) and reports the game's window
+	 *  (`LaunchLanded`); off ends it, `hide` taking the hub off the screen.
+	 */
+	launchCover: (on: boolean, hide: boolean) => __TAURI_INVOKE<void>("launch_cover", { on, hide }),
 };
 
 /** Events */
@@ -147,12 +160,14 @@ export const events = {
 	artChanged: makeEvent<ArtChanged>("art-changed"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
+	launchLanded: makeEvent<LaunchLanded>("launch-landed"),
 	modePassage: makeEvent<ModePassage>("mode-passage"),
+	moodsChanged: makeEvent<MoodsChanged_Deserialize>("moods-changed"),
 	palettesChanged: makeEvent<PalettesChanged>("palettes-changed"),
 	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
 	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
-	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
+	settingsChanged: makeEvent<SettingsChanged_Deserialize>("settings-changed"),
 	themesChanged: makeEvent<ThemesChanged_Deserialize>("themes-changed"),
 	windowVisibility: makeEvent<WindowVisibility>("window-visibility"),
 };
@@ -197,6 +212,8 @@ export type AppEntry = {
 	favorite: boolean,
 	/**  The user's choice of colours for this app (step 14); absent = automatic. */
 	colors?: AppColors | null,
+	/**  The user's density and speed of this app's ambience (steps 16–17); absent = × 1. */
+	moodTune?: MoodTune | null,
 };
 
 /**
@@ -267,7 +284,11 @@ export type ArtRole =
 /**  Transparent title logo. */
 "logo" | 
 /**  Small square icon (Steam's 32 px one): for apps the Shell gives no icon for. */
-"icon";
+"icon" | 
+/**  Special card (steps 16–17): a cut-out character, transparent PNG, left of the active card. */
+"charLeft" | 
+/**  The same, right of the active card. */
+"charRight";
 
 /**  An app the user could add. */
 export type Candidate = {
@@ -294,13 +315,45 @@ export type ColorCharacter = "theme" | "faithful" | "vivid";
 export type ColorIntensity = "soft" | "normal" | "strong";
 
 /**  How much the colours of the selected game tint the interface (DESIGN.md). */
-export type ColorMode = "off" | "light" | "immersive";
+export type ColorMode = ColorMode_Serialize | ColorMode_Deserialize;
+
+/**  How much the colours of the selected game tint the interface (DESIGN.md). */
+export type ColorMode_Deserialize = "off" | 
+/**
+ *  « Stylisé » (30/10): the ambience and the accents take the game's colours. The immersive
+ *  mode was removed that day: an older file's `immersive` reads as this one.
+ */
+"light" | 
+/**
+ *  « Stylisé » (30/10): the ambience and the accents take the game's colours. The immersive
+ *  mode was removed that day: an older file's `immersive` reads as this one.
+ */
+"immersive";
+
+/**  How much the colours of the selected game tint the interface (DESIGN.md). */
+export type ColorMode_Serialize = "off" | 
+/**
+ *  « Stylisé » (30/10): the ambience and the accents take the game's colours. The immersive
+ *  mode was removed that day: an older file's `immersive` reads as this one.
+ */
+"light";
 
 /**  How the colours go from one game to the next (V7): the tide, a fade, or at once. */
 export type ColorPassage = "tide" | "fade" | "direct";
 
 /**  Which colours become A and B (V5): dominant → accent, the two most vivid, dominant → theme B. */
 export type ColorPick = "dominant" | "vivid" | "theme";
+
+/**  What a layer's colour is taken from: the game's colours (or the theme's), never a free value. */
+export type ColorRole = 
+/**  Colour A (the strongest of the picture, or the theme's first). */
+"dominant" | 
+/**  Colour B. */
+"accent" | 
+/**  The night (background). */
+"dark" | 
+/**  The text colour (near white). */
+"text";
 
 /**  When the colours change (V8): once the selection rests, at once, or only when an app starts. */
 export type ColorTrigger = "select" | "instant" | "launch";
@@ -330,6 +383,8 @@ export type DetectedApp = {
 	/**  Category proposed for the app (see [`category::suggest_category`]); the user may change it. */
 	suggestedCategory: string,
 };
+
+export type Direction = "up" | "down" | "left" | "right" | "none";
 
 /**
  *  How the hub is shown: a borderless window the size of the chosen screen, a normal window,
@@ -411,9 +466,19 @@ export type Launch = { kind: "exe"; path: string; args: string[]; cwd: string | 
 /**  Packaged (UWP) app, by Application User Model ID. */
 { kind: "uwp"; aumid: string } | { kind: "url"; url: string };
 
+/**  The game's window came up (file name of its program), during a cover. */
+export type LaunchLanded = string;
+
 export type LaunchResult = { kind: "started"; pid: number | null } | 
 /**  The app was already open: its window was brought to the front instead. */
 { kind: "focusedExisting" };
+
+/**  A short sequence played before the game starts (30/10): only these, drawn by Kayro itself. */
+export type LaunchStyle = 
+/**  A witch's seal traced and set alight around the card, which burns into it (Hades II). */
+"seal" | 
+/**  A painted night, a far monolith, petals; the card erased into petals (Clair Obscur). */
+"gommage";
 
 /**  Which process to watch to know the app is running. */
 export type MatchRule = {
@@ -436,6 +501,79 @@ export type MonitorInfo = {
 	/**  The screen the immersive mode uses. */
 	chosen: boolean,
 };
+
+/**  A `.hubmood` file. */
+export type MoodFile = MoodFile_Serialize | MoodFile_Deserialize;
+
+/**  A `.hubmood` file. */
+export type MoodFile_Deserialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	/**  The game it was made for (shown, never used to pick anything). */
+	gameHint?: string | null,
+	glyphs?: { [key in string]: string },
+	layers: MoodLayer_Deserialize[],
+	/**  Played when the game is launched from its card (30/10); absent = it starts at once. */
+	launch?: LaunchStyle | null,
+};
+
+/**  A `.hubmood` file. */
+export type MoodFile_Serialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	/**  The game it was made for (shown, never used to pick anything). */
+	gameHint?: string | null,
+	glyphs: { [key in string]: string },
+	layers: MoodLayer_Serialize[],
+	/**  Played when the game is launched from its card (30/10); absent = it starts at once. */
+	launch?: LaunchStyle | null,
+};
+
+/**  One layer of an ambience. Sizes in px, speeds in px/s, lives and periods in s, opacities 0–1. */
+export type MoodLayer = MoodLayer_Serialize | MoodLayer_Deserialize;
+
+/**  One layer of an ambience. Sizes in px, speeds in px/s, lives and periods in s, opacities 0–1. */
+export type MoodLayer_Deserialize = 
+/**  Particles spread over the scene (`count` at « Élevé »); `drift`: sideways sway 0–1. */
+({ type: "particles"; shape: ParticleShape; glyph?: string | null; count: number; size: [(number | null), (number | null)]; speed: [(number | null), (number | null)]; direction: Direction; drift: number | null; life: [(number | null), (number | null)]; colorRole: ColorRole; opacity: number | null }) & { period?: never; radius?: never; rotation?: never; sway?: never } | 
+/**  Glyphs on a circle around the shown card (radius × the screen's height), turning in °/s. */
+({ type: "glyphRing"; glyph: string; count: number; radius: number | null; rotation: number | null; size: number | null; colorRole: ColorRole; opacity: number | null }) & { direction?: never; drift?: never; life?: never; period?: never; shape?: never; speed?: never; sway?: never } | 
+/**  Large soft clouds drifting low across the scene. */
+({ type: "mist"; count: number; colorRole: ColorRole; opacity: number | null; speed: number | null }) & { direction?: never; drift?: never; glyph?: never; life?: never; period?: never; radius?: never; rotation?: never; shape?: never; size?: never; sway?: never } | 
+/**  Columns of light from the top, swaying by `sway` degrees. */
+({ type: "beam"; count: number; sway: number | null; colorRole: ColorRole; opacity: number | null }) & { direction?: never; drift?: never; glyph?: never; life?: never; period?: never; radius?: never; rotation?: never; shape?: never; size?: never; speed?: never } | 
+/**  A ring of light breathing around the shown card. */
+({ type: "pulse"; period: number | null; colorRole: ColorRole; opacity: number | null }) & { count?: never; direction?: never; drift?: never; glyph?: never; life?: never; radius?: never; rotation?: never; shape?: never; size?: never; speed?: never; sway?: never };
+
+/**  One layer of an ambience. Sizes in px, speeds in px/s, lives and periods in s, opacities 0–1. */
+export type MoodLayer_Serialize = 
+/**  Particles spread over the scene (`count` at « Élevé »); `drift`: sideways sway 0–1. */
+({ type: "particles"; shape: ParticleShape; glyph?: string | null; count: number; size: [(number | null), (number | null)]; speed: [(number | null), (number | null)]; direction: Direction; drift: number | null; life: [(number | null), (number | null)]; colorRole: ColorRole; opacity: number | null }) & { period?: never; radius?: never; rotation?: never; sway?: never } | 
+/**  Glyphs on a circle around the shown card (radius × the screen's height), turning in °/s. */
+({ type: "glyphRing"; glyph: string; count: number; radius: number | null; rotation: number | null; size: number | null; colorRole: ColorRole; opacity: number | null }) & { direction?: never; drift?: never; life?: never; period?: never; shape?: never; speed?: never; sway?: never } | 
+/**  Large soft clouds drifting low across the scene. */
+({ type: "mist"; count: number; colorRole: ColorRole; opacity: number | null; speed: number | null }) & { direction?: never; drift?: never; glyph?: never; life?: never; period?: never; radius?: never; rotation?: never; shape?: never; size?: never; sway?: never } | 
+/**  Columns of light from the top, swaying by `sway` degrees. */
+({ type: "beam"; count: number; sway: number | null; colorRole: ColorRole; opacity: number | null }) & { direction?: never; drift?: never; glyph?: never; life?: never; period?: never; radius?: never; rotation?: never; shape?: never; size?: never; speed?: never } | 
+/**  A ring of light breathing around the shown card. */
+({ type: "pulse"; period: number | null; colorRole: ColorRole; opacity: number | null }) & { count?: never; direction?: never; drift?: never; glyph?: never; life?: never; radius?: never; rotation?: never; shape?: never; size?: never; speed?: never; sway?: never };
+
+/**  The user's dosage of an app's ambience (Modifier › Apparence): density and speed, × 0.25–2. */
+export type MoodTune = {
+	density: number | null,
+	speed: number | null,
+};
+
+/**  The imported ambiences changed (imported or deleted): both windows read them again. */
+export type MoodsChanged = MoodsChanged_Serialize | MoodsChanged_Deserialize;
+
+/**  The imported ambiences changed (imported or deleted): both windows read them again. */
+export type MoodsChanged_Deserialize = MoodFile_Deserialize[];
+
+/**  The imported ambiences changed (imported or deleted): both windows read them again. */
+export type MoodsChanged_Serialize = MoodFile_Serialize[];
 
 /**  « Mouvement »: `Lively` is the validated « Vivant intelligent » language. */
 export type MotionStyle = 
@@ -513,6 +651,8 @@ export type PaletteSource = "poster" | "hero" |
 
 /**  Emitted when the palettes changed (an image was added, changed or removed). */
 export type PalettesChanged = AppPalette[];
+
+export type ParticleShape = "ember" | "dot" | "star" | "line" | "glyph";
 
 export type PassageStep = 
 /**  Fade your content out, then call `passage_faded(id)`. */
@@ -619,11 +759,89 @@ export type SceneHotkeyStatus = {
 /**  Progress of the scene being played: one event per step change, plus its start and end. */
 export type SceneProgress = ProgressEvent;
 
-export type Settings = {
+export type Settings = Settings_Serialize | Settings_Deserialize;
+
+/**  Emitted after every successful change of the settings (also to the window that made it). */
+export type SettingsChanged = SettingsChanged_Serialize | SettingsChanged_Deserialize;
+
+/**  Emitted after every successful change of the settings (also to the window that made it). */
+export type SettingsChanged_Deserialize = Settings_Deserialize;
+
+/**  Emitted after every successful change of the settings (also to the window that made it). */
+export type SettingsChanged_Serialize = Settings_Serialize;
+
+/**  Partial update: absent (or null) fields are left as they are. */
+export type SettingsPatch = SettingsPatch_Serialize | SettingsPatch_Deserialize;
+
+/**  Partial update: absent (or null) fields are left as they are. */
+export type SettingsPatch_Deserialize = {
+	themeId?: string | null,
+	quality?: Quality | null,
+	colorMode?: ColorMode_Deserialize | null,
+	hotkey?: string | null,
+	language?: string | null,
+	atmosphereIntensity?: number | null,
+	displayMode?: DisplayMode | null,
+	hideOnEscape?: boolean | null,
+	hideOnBlur?: boolean | null,
+	economyMode?: boolean | null,
+	motionStyle?: MotionStyle | null,
+	followSystemMotion?: boolean | null,
+	cardFloat?: CardFloat | null,
+	openingStyle?: OpeningStyle | null,
+	themeTransition?: ThemeTransition | null,
+	openingScreen?: OpeningScreen | null,
+	widgetUnroll?: WidgetUnroll | null,
+	widgetSpring?: Elasticity | null,
+	cardHover?: CardHoverStyle | null,
+	bokeh?: boolean | null,
+	particles?: boolean | null,
+	cursorLight?: boolean | null,
+	colorIntensity?: ColorIntensity | null,
+	colorCharacter?: ColorCharacter | null,
+	colorPick?: ColorPick | null,
+	colorPassage?: ColorPassage | null,
+	colorTrigger?: ColorTrigger | null,
+	colorFromIcon?: boolean | null,
+};
+
+/**  Partial update: absent (or null) fields are left as they are. */
+export type SettingsPatch_Serialize = {
+	themeId: string | null,
+	quality: Quality | null,
+	colorMode: ColorMode_Serialize | null,
+	hotkey: string | null,
+	language: string | null,
+	atmosphereIntensity: number | null,
+	displayMode: DisplayMode | null,
+	hideOnEscape: boolean | null,
+	hideOnBlur: boolean | null,
+	economyMode: boolean | null,
+	motionStyle: MotionStyle | null,
+	followSystemMotion: boolean | null,
+	cardFloat: CardFloat | null,
+	openingStyle: OpeningStyle | null,
+	themeTransition: ThemeTransition | null,
+	openingScreen: OpeningScreen | null,
+	widgetUnroll: WidgetUnroll | null,
+	widgetSpring: Elasticity | null,
+	cardHover: CardHoverStyle | null,
+	bokeh: boolean | null,
+	particles: boolean | null,
+	cursorLight: boolean | null,
+	colorIntensity: ColorIntensity | null,
+	colorCharacter: ColorCharacter | null,
+	colorPick: ColorPick | null,
+	colorPassage: ColorPassage | null,
+	colorTrigger: ColorTrigger | null,
+	colorFromIcon: boolean | null,
+};
+
+export type Settings_Deserialize = {
 	schemaVersion: number,
 	themeId: string,
 	quality: Quality,
-	colorMode: ColorMode,
+	colorMode: ColorMode_Deserialize,
 	hotkey: string,
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
@@ -654,46 +872,47 @@ export type Settings = {
 	colorPick: ColorPick,
 	colorPassage: ColorPassage,
 	colorTrigger: ColorTrigger,
-	/**  Immersive: the game's hero at the top of the night (V3 b); off = its colours only. */
-	colorHero: boolean,
 	/**  An app without a picture takes its icon's colours (V10 b); off = the theme's. */
 	colorFromIcon: boolean,
 };
 
-/**  Emitted after every successful change of the settings (also to the window that made it). */
-export type SettingsChanged = Settings;
-
-/**  Partial update: absent (or null) fields are left as they are. */
-export type SettingsPatch = {
-	themeId?: string | null,
-	quality?: Quality | null,
-	colorMode?: ColorMode | null,
-	hotkey?: string | null,
-	language?: string | null,
-	atmosphereIntensity?: number | null,
-	displayMode?: DisplayMode | null,
-	hideOnEscape?: boolean | null,
-	hideOnBlur?: boolean | null,
-	economyMode?: boolean | null,
-	motionStyle?: MotionStyle | null,
-	followSystemMotion?: boolean | null,
-	cardFloat?: CardFloat | null,
-	openingStyle?: OpeningStyle | null,
-	themeTransition?: ThemeTransition | null,
-	openingScreen?: OpeningScreen | null,
-	widgetUnroll?: WidgetUnroll | null,
-	widgetSpring?: Elasticity | null,
-	cardHover?: CardHoverStyle | null,
-	bokeh?: boolean | null,
-	particles?: boolean | null,
-	cursorLight?: boolean | null,
-	colorIntensity?: ColorIntensity | null,
-	colorCharacter?: ColorCharacter | null,
-	colorPick?: ColorPick | null,
-	colorPassage?: ColorPassage | null,
-	colorTrigger?: ColorTrigger | null,
-	colorHero?: boolean | null,
-	colorFromIcon?: boolean | null,
+export type Settings_Serialize = {
+	schemaVersion: number,
+	themeId: string,
+	quality: Quality,
+	colorMode: ColorMode_Serialize,
+	hotkey: string,
+	language: string,
+	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
+	atmosphereIntensity: number | null,
+	displayMode: DisplayMode,
+	/**  Escape hides the hub once there is nothing left to close. */
+	hideOnEscape: boolean,
+	/**  Losing the focus hides the hub (the widget only folds its panel). */
+	hideOnBlur: boolean,
+	/**  « Mode économe »: the window is destroyed while hidden (less memory, slower to come back). */
+	economyMode: boolean,
+	motionStyle: MotionStyle,
+	/**  Follow Windows « Effets d'animation » (reduce motion); off = Kayro ignores it. */
+	followSystemMotion: boolean,
+	cardFloat: CardFloat,
+	openingStyle: OpeningStyle,
+	themeTransition: ThemeTransition,
+	openingScreen: OpeningScreen,
+	widgetUnroll: WidgetUnroll,
+	widgetSpring: Elasticity,
+	cardHover: CardHoverStyle,
+	bokeh: boolean,
+	particles: boolean,
+	cursorLight: boolean,
+	/**  Game colours (step 14, « Personnalisation avancée »): V1, V6, V5, V7, V8. */
+	colorIntensity: ColorIntensity,
+	colorCharacter: ColorCharacter,
+	colorPick: ColorPick,
+	colorPassage: ColorPassage,
+	colorTrigger: ColorTrigger,
+	/**  An app without a picture takes its icon's colours (V10 b); off = the theme's. */
+	colorFromIcon: boolean,
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */

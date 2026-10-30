@@ -1,5 +1,11 @@
 import type { FanCardEls } from "./fanRender";
 
+/** Centre of an element in the viewport (CSS px). */
+export function centre(el: HTMLElement | null): { x: number; y: number } {
+  const r = el?.getBoundingClientRect();
+  return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: 0, y: 0 };
+}
+
 /** What the director moves; read when a sequence starts (the DOM of that moment). */
 export interface LinkEls {
   fan: HTMLElement | null;
