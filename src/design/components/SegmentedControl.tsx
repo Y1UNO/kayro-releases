@@ -1,3 +1,4 @@
+import { playSound } from "../../sound/engine";
 import { useRef } from "react";
 import type { KeyboardEvent } from "react";
 import { SelectionPill } from "../glass/SelectionPill";
@@ -59,6 +60,7 @@ export function SegmentedControl<T extends string>({
     e.preventDefault();
     const target = options[next];
     if (!target) return;
+    playSound("select", { degree: next });
     onChange(target.value);
     refs.current[next]?.focus();
   }
@@ -86,7 +88,10 @@ export function SegmentedControl<T extends string>({
             tabIndex={selected ? 0 : -1}
             disabled={disabled}
             className={[styles.segment, selected ? styles.selected : ""].filter(Boolean).join(" ")}
-            onClick={() => onChange(opt.value)}
+            onClick={() => {
+              if (!selected) playSound("select", { degree: i });
+              onChange(opt.value);
+            }}
             onKeyDown={(e) => onKeyDown(e, i)}
           >
             {opt.label}

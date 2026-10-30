@@ -7,6 +7,7 @@ import type { FanMotion, HoverConfig } from "./fanFloat";
 import { put, renderFan, type FanCardEls } from "./fanRender";
 import { centre, LinkElements, type LinkEls } from "./linkEls";
 import { holdGameColors } from "../../gameColors/store";
+import { playSound, stopSound } from "../../../sound";
 import {
   deckOrder,
   restValues,
@@ -161,6 +162,21 @@ export class LinkDirector {
     if (phase === "spread") this.release();
   }
 
+  /**
+   * Step 17b, on the rhythm of the sequence: a tab change whirls (its run stretched to end at the
+   * impact) then lands at the squash; the fan unfolds (« link ») or folds back. A sequence that
+   * replaces another cuts its sounds.
+   */
+  private sound(kind: SequenceKind, impact: number, reduced: boolean): void {
+    stopSound("tab");
+    stopSound("land");
+    if (kind === "link") return playSound("link");
+    if (kind === "back") return playSound("linkBack");
+    if (reduced || impact <= 0) return playSound("land");
+    playSound("tab", { timeScale: Math.max(0.5, impact / 1000 / 0.7) });
+    playSound("land", { delay: impact / 1000 });
+  }
+
   /** Plays a sequence from the picture of now: true at its end, false if replaced. */
   async play(
     kind: SequenceKind,
@@ -171,6 +187,7 @@ export class LinkDirector {
     const seq = this.prepare(kind, cat, shuf);
     // 30/10: a tab change lands with the selected card's impact; its colours change then.
     if (seq.impact > 0 && !opts.reduced) holdGameColors(performance.now() + seq.impact);
+    this.sound(kind, seq.impact, opts.reduced);
     const out: Values = new Map();
     const done = await this.choreo.play(
       seq.duration,

@@ -1,3 +1,4 @@
+import { playSound } from "../../sound";
 import { useCallback, useRef } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "../../design";
@@ -169,6 +170,7 @@ export function useThemeSwap(): (id: string, card: HTMLElement) => void {
   return useCallback(
     (id: string, card: HTMLElement) => {
       if (busy.current || id === theme.id) return;
+      playSound("theme");
       const settings = hubStore.getState().settings;
       const { speed, style } = currentMotion();
       const crisp = style === "crisp";

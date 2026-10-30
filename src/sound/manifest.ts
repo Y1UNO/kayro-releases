@@ -7,12 +7,25 @@
  */
 export const SOUND_EVENTS = [
   "click",
+  "select",
+  "hover",
   "step",
+  "toggle",
+  "dialogOpen",
+  "dialogClose",
   "tab",
+  "land",
+  "link",
+  "linkBack",
   "confirm",
-  "launch",
   "success",
+  "error",
   "export",
+  "progress",
+  "theme",
+  "open",
+  "launch",
+  "launchFinale",
 ] as const;
 export type SoundEvent = (typeof SOUND_EVENTS)[number];
 
@@ -54,7 +67,8 @@ export interface PackFx {
 
 export interface SoundPack {
   fx: PackFx;
-  cues: Record<SoundEvent, Note[]>;
+  /** Per moment, one or a few variants (one is picked at random, never the same twice). */
+  cues: Record<SoundEvent, Note[][]>;
 }
 
 export interface SoundManifest {
@@ -115,13 +129,28 @@ function note(where: string, v: unknown): Note {
     gain: num(`${where}.gain`, o.gain, 0, 0.5),
   };
   if (o.to !== undefined) n.to = num(`${where}.to`, o.to, 40, 8000);
-  if (o.at !== undefined) n.at = num(`${where}.at`, o.at, 0, 3);
+  if (o.at !== undefined) n.at = num(`${where}.at`, o.at, 0, 4);
   if (o.attack !== undefined) n.attack = num(`${where}.attack`, o.attack, 0.001, 1);
   if (o.bell !== undefined) {
     if (typeof o.bell !== "boolean") fail(`${where}.bell`, "vrai ou faux attendu");
     n.bell = o.bell;
   }
   return n;
+}
+
+/** A list of notes, or a list of 2–4 variants (lists of notes). */
+function variants(where: string, v: unknown): Note[][] {
+  if (!Array.isArray(v) || v.length === 0) fail(where, "notes attendues");
+  const many = Array.isArray(v[0]);
+  const lists = (many ? v : [v]) as unknown[];
+  if (many && lists.length > 4) fail(where, "4 variantes au plus");
+  return lists.map((list, k) => {
+    const at = many ? `${where}[${k}]` : where;
+    if (!Array.isArray(list) || list.length === 0 || list.length > 16) {
+      fail(at, "1 à 16 notes attendues");
+    }
+    return list.map((n, i) => note(`${at}[${i}]`, n));
+  });
 }
 
 function pack(where: string, v: unknown): SoundPack {
@@ -144,14 +173,8 @@ function pack(where: string, v: unknown): SoundPack {
     };
   }
   const cues = keys(`${where}.cues`, o.cues, [...SOUND_EVENTS]);
-  const notes = {} as Record<SoundEvent, Note[]>;
-  for (const e of SOUND_EVENTS) {
-    const list = cues[e];
-    if (!Array.isArray(list) || list.length === 0 || list.length > 12) {
-      fail(`${where}.cues.${e}`, "1 à 12 notes attendues");
-    }
-    notes[e] = list.map((n, i) => note(`${where}.cues.${e}[${i}]`, n));
-  }
+  const notes = {} as Record<SoundEvent, Note[][]>;
+  for (const e of SOUND_EVENTS) notes[e] = variants(`${where}.cues.${e}`, cues[e]);
   return { fx: out, cues: notes };
 }
 
@@ -168,9 +191,9 @@ export function parseSoundManifest(raw: unknown): SoundManifest {
   return { schemaVersion: 1, events, packs };
 }
 
-/** How long a moment rings (s), its echo tail included. */
-export function cueLength(p: SoundPack, event: SoundEvent): number {
-  const end = Math.max(...p.cues[event].map((n) => (n.at ?? 0) + n.dur));
+/** How long a moment rings (s), its echo tail included (`timeScale`: its notes' starts stretched). */
+export function cueLength(p: SoundPack, event: SoundEvent, timeScale = 1): number {
+  const end = Math.max(...p.cues[event].flat().map((n) => (n.at ?? 0) * timeScale + n.dur));
   const echo = p.fx.echo;
   const tail = echo
     ? echo.time * Math.ceil(Math.log(0.01) / Math.log(Math.max(echo.feedback, 0.01)))

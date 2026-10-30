@@ -1,3 +1,4 @@
+import { playSound, stopSound } from "../../sound";
 import { APP_NAME } from "../../app/appName";
 import { daStore } from "../../design/da";
 import { Choreo } from "../../design/motion/choreo";
@@ -219,6 +220,8 @@ export function runOpening(
       state.still = window.setTimeout(finish, Math.max(STILL_MS, s.hold));
       return;
     }
+    // Step 17b: its melody follows the timeline (ring, logo, pulse, one note per letter, line).
+    playSound("open", { timeScale: 1 / s.speed });
     void choreo.play(total, render, { eco }).then((ended) => ended && finish());
   });
 
@@ -228,6 +231,7 @@ export function runOpening(
     window.removeEventListener("keydown", skip, true);
     host.removeEventListener("pointerdown", skip);
     choreo.cancel();
+    stopSound("open");
     setIntroCue(null);
     if (under) under.style.opacity = "";
   };

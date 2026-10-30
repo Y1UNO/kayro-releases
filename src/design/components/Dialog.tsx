@@ -1,3 +1,4 @@
+import { playSound } from "../../sound/engine";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -57,6 +58,13 @@ export function Dialog({
   useEffect(() => {
     onCloseRef.current = onClose;
   });
+
+  // Step 17b: a soft rise when it opens, a fall when it closes (not for a dialog born closed).
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    if (open !== wasOpen.current) playSound(open ? "dialogOpen" : "dialogClose");
+    wasOpen.current = open;
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;

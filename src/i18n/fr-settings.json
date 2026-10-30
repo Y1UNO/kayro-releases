@@ -28,9 +28,9 @@
       },
       "families": {
         "label": "Quand en jouer",
-        "interface": "Interface (clics, cartes, validation)",
-        "transitions": "Changement de catégorie",
-        "launch": "Lancement d'un jeu"
+        "interface": "Interface (clics, survol des cartes, fenêtres, validation)",
+        "transitions": "Changements de catégorie et de thème",
+        "launch": "Ouverture de Kayro et lancement d'un jeu"
       },
       "listen": "Écouter"
     },

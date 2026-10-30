@@ -87,7 +87,12 @@ export class SealCinema implements LaunchScene {
   play(t: number, landed: number | null, skip: number | null): SceneState {
     const f = sealFrame(t, landed, skip);
     this.draw(f, t);
-    return { done: f.done, caption: f.caption, hint: Math.min(f.cover, 1 - f.flash) * 0.8 };
+    return {
+      done: f.done,
+      finale: t >= f.finaleAt,
+      caption: f.caption,
+      hint: Math.min(f.cover, 1 - f.flash) * 0.8,
+    };
   }
 
   private draw(f: SealFrame, tMs: number): void {

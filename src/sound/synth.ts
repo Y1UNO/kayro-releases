@@ -65,7 +65,10 @@ function voice(
   osc.stop(start + dur + 0.02);
 }
 
-/** Schedules the notes from `t0` (s, the context's clock), at `gain`, pitched by `rate`. */
+/**
+ * Schedules the notes from `t0` (s, the context's clock), at `gain`, pitched by `rate`, their
+ * starts stretched by `timeScale` (a sound following an animation's own length).
+ */
 export function playNotes(
   c: BaseAudioContext,
   notes: readonly Note[],
@@ -73,9 +76,10 @@ export function playNotes(
   t0: number,
   gain: number,
   rate: number,
+  timeScale = 1,
 ): void {
   for (const n of notes) {
-    const start = t0 + (n.at ?? 0);
+    const start = t0 + (n.at ?? 0) * timeScale;
     const attack = n.attack ?? 0.004;
     const to = n.to === undefined ? undefined : n.to * rate;
     voice(c, n.wave, n.freq * rate, to, start, n.dur, attack, n.gain * gain, into);

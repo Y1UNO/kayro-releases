@@ -11,6 +11,8 @@ export interface LaunchScene {
 
 export interface SceneState {
   done: boolean;
+  /** The finale has begun (step 17b: its sound starts with it). */
+  finale: boolean;
   caption: number;
   hint: number;
 }

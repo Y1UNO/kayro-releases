@@ -1,3 +1,4 @@
+import { playSound } from "../../sound";
 import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "zustand";
@@ -72,6 +73,7 @@ function Sequence({ intro }: { intro: Intro }) {
     window.addEventListener("resize", onResize);
     window.addEventListener("keydown", onKey, true);
     host.addEventListener("pointerdown", skip);
+    let finaleHeard = false;
     const unsubscribe = frameLoop().subscribe((_dt, now) => {
       const p = launchIntro.getState().playing;
       if (!p) return;
@@ -81,6 +83,10 @@ function Sequence({ intro }: { intro: Intro }) {
       const tt = frozen?.t ?? now - start;
       const landed = frozen ? frozen.landed : p.landedAt === null ? null : p.landedAt - start;
       const f = cinema.play(tt, landed, skipAt);
+      if (f.finale && !finaleHeard && !frozen) {
+        finaleHeard = true;
+        playSound("launchFinale");
+      }
       if (caption.current) caption.current.style.opacity = String(f.caption);
       if (hint.current) hint.current.style.opacity = String(f.hint);
       if (f.done && !frozen) finish(true);

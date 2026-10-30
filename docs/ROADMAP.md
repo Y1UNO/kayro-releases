@@ -25,7 +25,9 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
 | [x] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages des sons, à définir à l'étape 17b, `docs/SONS.md` | 12b, 13 | E |
 | [ ] 18 | Audit : perf, sécurité, robustesse, accessibilité | 1–16 | F |
-| [ ] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis | 18 | F |
+| [ ] 18b | Mises à jour : rechercher et installer une nouvelle version depuis Kayro (réseau optionnel, voir « Plus tard ») | 18, installeur maison | F |
+| [ ] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis ; **démarrage** : choix des apps lancées avec Windows à l'installation, démarrage express sur le logo (voir « Plus tard ») | 18 | F |
+| [ ] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
 
@@ -109,7 +111,10 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
   lancement, réussite, export) en 3 familles ; contexte audio suspendu après chaque son, rien quand Kayro est caché.
   Réglages › **Sons** : interrupteur, style, volume en forme d'onde (rendu hors ligne du son), familles ; Rust
   `config/sounds.rs` (volume 0–1 validé). Installeur : onglet **Patch notes** (frise des versions, `installer/ui/
-  patchNotes.json`). Tests : vitest 583, cargo 255, clippy / eslint / tsc propres. **Non entendu par moi** ;
+  patchNotes.json`). 2ᵉ passe (même jour) : 20 moments, variantes, gamme pentatonique au survol et à la sélection,
+  sons calés sur les animations (ronde → impact, mélodie d'ouverture lettre par lettre, final des scènes de
+  lancement), Premium retravaillé, nouvelle ronde 8-bit. Tests : vitest 585, cargo 255, clippy / eslint / tsc
+  propres. **Non entendu par moi** ;
   coût CPU non mesuré (étape 18).
 
 ## Plus tard (liste unique)
@@ -164,7 +169,23 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 ### Avant l'étape 19 — Fonctions et finitions
 - [ ] Qualité « Auto » adaptative, pour les PC plus faibles : proposition chiffrée dans `docs/PERF-ETAPE13.md`
   § « Qualité Auto » (décision du 14/10 : pas maintenant).
-- [ ] Gestion des apps qui démarrent avec Windows au premier lancement.
+- [ ] Gestion des apps qui démarrent avec Windows au premier lancement. **Précisé le 2026-10-30 (étape 19)** : à
+  l'installation, trois choix — « Garder seulement Kayro » (les autres apps ne démarrent plus avec Windows), « Ne rien
+  changer », ou **personnalisé** : la liste des apps lancées au démarrage, on coche celles qu'on veut **garder**.
+  Réversible (ce qui a été retiré est noté pour pouvoir le remettre), jamais d'app système ni de pilote touchés.
+- [ ] **Démarrage express** (2026-10-30, étape 19) : au démarrage du PC, Kayro s'ouvre le plus vite possible sur le
+  logo KAYRO **immobile** ; un clic dessus ou Entrée lance l'animation d'ouverture actuelle, et on arrive sur le hub
+  complet (Kayro devient l'écran d'accueil du PC). À mesurer : temps jusqu'au logo.
+- [ ] **Mises à jour** (2026-10-30, étape 18b, avant d'envoyer d'autres versions) : « Rechercher une mise à jour »
+  dans Réglages et, au choix, une vérification automatique ; téléchargement puis installation par l'installeur
+  maison (patch notes affichées). Seule fonction réseau de Kayro : **désactivée par défaut et expliquée** (CLAUDE.md
+  › Réseau), source unique (ex. les « releases » GitHub du projet), fichiers **signés** et vérifiés avant de lancer
+  quoi que ce soit (plugin updater de Tauri ou équivalent, à vérifier à l'étape). Demander à l'utilisateur où héberger.
+- [ ] **Kysland** (« Kayro Island », 2026-10-30, étape 20) : le widget refait façon Dynamic Island d'Apple, version
+  Windows. On le **décroche** d'un geste avec une certaine résistance (il faut tirer, effet ressort), on le balade où
+  on veut sur l'écran ; posé **en haut**, il s'aimante et s'intègre en île (forme pilule centrée, s'étire pour
+  afficher une info, se rétracte). Animations et sons propres ; garder la veille douce et la règle « jamais devant un
+  jeu en plein écran ».
 - [ ] Détection : filtres de bruit renforcés (désinstallateurs, aide/documentation, « Check For Updates », « About/Configure
   Java », « Module Docs », « Report a Problem », « Windows App Cert Kit », variantes mode compatibilité / sans échec,
   doublons de même nom et même cible).

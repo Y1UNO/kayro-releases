@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SOUND_DEFAULTS } from "../features/settings/settingsModel";
+import { degreeRate, pickVariant } from "./engine";
 import { cueGain, SILENT, type SoundPrefs } from "./gate";
 import { cueLength, parseSoundManifest, SOUND_EVENTS, SOUND_PACKS } from "./manifest";
 import manifestJson from "./sons.json";
@@ -15,15 +16,32 @@ const ON: SoundPrefs = {
 const clone = () => JSON.parse(JSON.stringify(manifestJson)) as Record<string, any>;
 
 describe("sounds (step 17b)", () => {
-  it("the built-in manifest describes every moment in every style", () => {
+  it("the built-in manifest describes every moment in every style, all light", () => {
     const m = parseSoundManifest(manifestJson);
+    const longest = { interface: 1.9, transitions: 2.2, launch: 4.5 };
     for (const p of SOUND_PACKS) {
       for (const e of SOUND_EVENTS) {
         expect(m.packs[p].cues[e].length).toBeGreaterThan(0);
-        // Light: nothing rings long (the launch, echo included, under 2.6 s).
-        expect(cueLength(m.packs[p], e)).toBeLessThanOrEqual(e === "launch" ? 2.6 : 1.7);
+        expect(cueLength(m.packs[p], e)).toBeLessThanOrEqual(longest[m.events[e].family]);
       }
     }
+  });
+
+  it("the opening's melody keeps the opening's rhythm (a note per letter, 85 ms apart)", () => {
+    const m = parseSoundManifest(manifestJson);
+    for (const p of SOUND_PACKS) {
+      const starts = m.packs[p].cues.open[0]!.map((n) => n.at ?? 0);
+      for (const at of [2.0, 2.085, 2.17, 2.255, 2.34]) expect(starts).toContain(at);
+    }
+  });
+
+  it("climbs a pentatonic scale and never repeats a variant", () => {
+    expect(degreeRate(0)).toBe(1);
+    expect(degreeRate(5)).toBeCloseTo(2);
+    expect(degreeRate(2)).toBeCloseTo(2 ** (4 / 12));
+    expect(degreeRate(-1)).toBeCloseTo(2 ** (-3 / 12));
+    for (const r of [0, 0.3, 0.6, 0.99]) expect(pickVariant(3, 1, r)).not.toBe(1);
+    expect(pickVariant(1, 0, 0.5)).toBe(0);
   });
 
   it("refuses an unknown field, moment, style, wave or a number out of range", () => {
@@ -34,7 +52,7 @@ describe("sounds (step 17b)", () => {
     b.events.voice = b.events.click;
     expect(() => parseSoundManifest(b)).toThrow(/inconnu/);
     const c = clone();
-    c.packs.premium.cues.click[0].wave = "noise";
+    c.packs.premium.cues.select[0].wave = "noise";
     expect(() => parseSoundManifest(c)).toThrow(/valeur inconnue/);
     const d = clone();
     d.packs.retro.cues.tab[0].gain = 3;

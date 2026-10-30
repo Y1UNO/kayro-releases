@@ -1,3 +1,4 @@
+import { playSound } from "../../sound";
 import { useCallback, useEffect, useLayoutEffect, useRef, type Ref } from "react";
 import type { AppEntry } from "../../ipc/bindings";
 import { t } from "../../i18n";
@@ -121,6 +122,7 @@ export function AppCard({
           data-stage={stage ? "" : undefined}
           tabIndex={-1}
           onClick={onClick}
+          onPointerEnter={() => playSound("hover", { degree: (d ?? 0) + 2 })}
           {...cardTilt}
         >
           {poster ? (

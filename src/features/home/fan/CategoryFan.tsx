@@ -1,3 +1,4 @@
+import { playSound } from "../../../sound";
 import { useLayoutEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 import { useGlass } from "../../../design";
 import { PointerFrame } from "../../../fx/pointerFrame";
@@ -168,7 +169,10 @@ function FanCard({
         // card in front: the fan's right cards lie behind their left neighbour).
         data-side={i > (FAN_SIZE - 1) / 2 ? "end" : undefined}
         onClick={() => onPick(id)}
-        onPointerEnter={(e) => onHover(i, true, ...pointerOf(e))}
+        onPointerEnter={(e) => {
+          playSound("hover", { degree: i });
+          onHover(i, true, ...pointerOf(e));
+        }}
         onPointerMove={(e) => {
           moveHandlers.set(e.currentTarget, (nx, ny) => onHover(i, true, nx, ny));
           fanMoves.push(e.currentTarget, e.currentTarget, e.clientX, e.clientY);
