@@ -46,6 +46,9 @@ pub enum OpeningDue {
     /// Silent start: no opening, but it is still the program's start (asked once, at once, even
     /// hidden, so that the home screen is ready under the first show).
     Quiet,
+    /// Express start (step 19): the logo stays still until a click or Enter, then the opening
+    /// goes on from there (asked once, at once, even hidden: the logo is ready under the show).
+    Express,
     No,
 }
 
@@ -53,6 +56,7 @@ pub enum OpeningDue {
 pub struct OpeningOnce {
     asked: AtomicBool,
     silent: AtomicBool,
+    express: AtomicBool,
 }
 
 impl OpeningOnce {
@@ -60,7 +64,13 @@ impl OpeningOnce {
         Self {
             asked: AtomicBool::new(false),
             silent: AtomicBool::new(false),
+            express: AtomicBool::new(false),
         }
+    }
+
+    /// The program was started at login on its home screen (step 19).
+    pub fn express_start(&self) {
+        self.express.store(true, Ordering::SeqCst);
     }
 
     /// The program was started silently: no opening in this run.
@@ -69,6 +79,12 @@ impl OpeningOnce {
     }
 
     fn due(&self, visible: bool) -> OpeningDue {
+        if self.express.load(Ordering::SeqCst) {
+            return match self.asked.swap(true, Ordering::SeqCst) {
+                true => OpeningDue::No,
+                false => OpeningDue::Express,
+            };
+        }
         let quiet = self.silent.load(Ordering::SeqCst);
         if !quiet && !visible && !self.asked.load(Ordering::SeqCst) {
             return OpeningDue::Later;
@@ -230,9 +246,9 @@ pub fn autostart_set<R: Runtime>(app: AppHandle<R>, enabled: bool) -> Result<boo
         launch.disable()
     };
     result.map_err(|e| AppError::new(ErrorCode::Internal, e.to_string()))?;
-    if !enabled {
-        crate::platform::startup::forget_startup_approval(&app.package_info().name);
-    }
+    // Off: the registry as before the first enable. On (step 19): an « off » mark left by the
+    // Task Manager would keep Windows from starting it.
+    crate::platform::startup::forget_startup_approval(&app.package_info().name);
     tracing::info!(enabled, "start with Windows changed");
     autostart_get(app)
 }
@@ -288,6 +304,15 @@ mod tests {
         let o = OpeningOnce::new();
         o.silent_start();
         assert_eq!(o.due(true), OpeningDue::Quiet);
+        assert_eq!(o.due(true), OpeningDue::No);
+    }
+
+    #[test]
+    fn an_express_start_waits_on_the_logo_once() {
+        // Step 19: answered at once even hidden (the logo is ready under the first show).
+        let o = OpeningOnce::new();
+        o.express_start();
+        assert_eq!(o.due(false), OpeningDue::Express);
         assert_eq!(o.due(true), OpeningDue::No);
     }
 }

@@ -96,25 +96,27 @@ pub async fn install<R: Runtime>(
 #[serde(rename_all = "camelCase", default)]
 struct InstallChoices {
     update_auto: Option<bool>,
+    /// Step 19: start with Windows on the home screen (true) or not at all (false).
+    autostart: Option<bool>,
 }
 
-pub fn apply_install_choices(config: &ConfigState, data_dir: &Path) {
+/// Applies them; returns the « start with Windows » asked, for the caller to set (it needs the app).
+pub fn apply_install_choices(config: &ConfigState, data_dir: &Path) -> Option<bool> {
     let file = data_dir.join("install-choices.json");
-    let Ok(text) = std::fs::read_to_string(&file) else {
-        return;
-    };
+    let text = std::fs::read_to_string(&file).ok()?;
     let choices: InstallChoices = serde_json::from_str(&text).unwrap_or_default();
-    if let Some(update_auto) = choices.update_auto {
-        let patch = SettingsPatch {
-            update_auto: Some(update_auto),
-            ..Default::default()
-        };
-        if let Err(e) = config.set_settings(patch) {
-            tracing::warn!(error = %e, "install choices: not applied");
-        }
+    let patch = SettingsPatch {
+        update_auto: choices.update_auto,
+        // Off: the home screen choice stays as it was, for the day it is switched on again.
+        startup_home: choices.autostart.filter(|&on| on),
+        ..Default::default()
+    };
+    if let Err(e) = config.set_settings(patch) {
+        tracing::warn!(error = %e, "install choices: not applied");
     }
     let _ = std::fs::remove_file(&file);
     tracing::info!(?choices, "install choices applied");
+    choices.autostart
 }
 
 #[cfg(test)]
@@ -136,5 +138,20 @@ mod tests {
         apply_install_choices(&config, dir.path());
         assert!(config.settings().update_auto);
         assert!(!dir.path().join("install-choices.json").exists());
+    }
+
+    #[test]
+    fn start_with_windows_on_the_home_screen_comes_from_the_installer() {
+        let dir = tempfile::tempdir().unwrap();
+        let config = ConfigState::load(DataPaths::new(dir.path()));
+        let file = dir.path().join("install-choices.json");
+        assert_eq!(apply_install_choices(&config, dir.path()), None);
+        std::fs::write(&file, r#"{"updateAuto":false,"autostart":true}"#).unwrap();
+        assert_eq!(apply_install_choices(&config, dir.path()), Some(true));
+        assert!(config.settings().startup_home);
+        // Off: Kayro does not start with Windows; the home screen choice is kept for later.
+        std::fs::write(&file, r#"{"updateAuto":false,"autostart":false}"#).unwrap();
+        assert_eq!(apply_install_choices(&config, dir.path()), Some(false));
+        assert!(config.settings().startup_home);
     }
 }

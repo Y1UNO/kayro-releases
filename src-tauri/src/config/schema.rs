@@ -105,6 +105,9 @@ pub struct Settings {
     pub sound_launch: bool,
     /// Step 18b: one look for an update at start (network: off unless the user allows it).
     pub update_auto: bool,
+    /// Step 19: started with Windows, the hub opens on its home screen (still logo) instead of
+    /// waiting in the notification area.
+    pub startup_home: bool,
 }
 
 /// Bounds of [`Settings::atmosphere_intensity`].
@@ -152,6 +155,7 @@ impl Default for Settings {
             sound_transitions: true,
             sound_launch: true,
             update_auto: false,
+            startup_home: false,
         }
     }
 }
@@ -195,6 +199,7 @@ pub struct SettingsPatch {
     pub sound_transitions: Option<bool>,
     pub sound_launch: Option<bool>,
     pub update_auto: Option<bool>,
+    pub startup_home: Option<bool>,
 }
 
 impl Settings {
@@ -242,6 +247,7 @@ impl Settings {
             sound_transitions,
             sound_launch,
             update_auto,
+            startup_home,
         );
     }
 }

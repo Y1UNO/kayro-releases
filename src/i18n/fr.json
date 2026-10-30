@@ -5,7 +5,9 @@
   },
   "opening": {
     "subtitle": "Lanceur d’applications",
-    "skip": "Animation d’ouverture : Échap, Entrée, Espace ou clic pour passer"
+    "skip": "Animation d’ouverture : Échap, Entrée, Espace ou clic pour passer",
+    "express": "Écran d’accueil : Entrée, Espace ou clic pour entrer, Échap pour masquer",
+    "enter": "Clique ou appuie sur Entrée"
   },
   "home": {
     "search": {

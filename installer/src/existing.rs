@@ -109,16 +109,24 @@ pub fn close_softly(exe: &Path) -> bool {
     !running(exe)
 }
 
-/// The choices Kayro applies at its next start (`%APPDATA%/Kayro/install-choices.json`).
-pub fn write_install_choices(update_auto: bool) -> std::io::Result<()> {
-    let base = std::env::var_os("APPDATA").map(PathBuf::from).ok_or(std::io::ErrorKind::NotFound)?;
-    let dir = base.join("Kayro");
-    std::fs::create_dir_all(&dir)?;
-    std::fs::write(dir.join("install-choices.json"), install_choices_json(update_auto))
+/// Kayro's data folder (`%APPDATA%/Kayro`), where it finds the installer's choices and journals.
+pub fn data_dir() -> Option<PathBuf> {
+    std::env::var_os("APPDATA").map(|d| PathBuf::from(d).join("Kayro"))
 }
 
-fn install_choices_json(update_auto: bool) -> String {
-    format!("{{\"updateAuto\":{update_auto}}}")
+/// The choices Kayro applies at its next start (`%APPDATA%/Kayro/install-choices.json`).
+/// `autostart`: Kayro opens on its home screen at login (step 19).
+pub fn write_install_choices(update_auto: bool, autostart: bool) -> std::io::Result<()> {
+    let dir = data_dir().ok_or(std::io::ErrorKind::NotFound)?;
+    std::fs::create_dir_all(&dir)?;
+    std::fs::write(
+        dir.join("install-choices.json"),
+        install_choices_json(update_auto, autostart),
+    )
+}
+
+fn install_choices_json(update_auto: bool, autostart: bool) -> String {
+    format!("{{\"updateAuto\":{update_auto},\"autostart\":{autostart}}}")
 }
 
 /// The user's desktop folder (where NSIS puts its shortcut), wherever Windows moved it.
@@ -186,8 +194,14 @@ mod tests {
 
     #[test]
     fn the_install_choices_are_the_json_kayro_reads() {
-        assert_eq!(install_choices_json(true), r#"{"updateAuto":true}"#);
-        assert_eq!(install_choices_json(false), r#"{"updateAuto":false}"#);
+        assert_eq!(
+            install_choices_json(true, false),
+            r#"{"updateAuto":true,"autostart":false}"#
+        );
+        assert_eq!(
+            install_choices_json(false, true),
+            r#"{"updateAuto":false,"autostart":true}"#
+        );
     }
 
     #[test]

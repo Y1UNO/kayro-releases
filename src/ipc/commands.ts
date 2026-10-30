@@ -6,6 +6,7 @@ import {
   type AppError,
   type NewApp,
   type Settings,
+  type StartupApp,
   type UpdateInfo,
 } from "./bindings";
 import type {
@@ -138,6 +139,13 @@ export const desktopIpc = {
   /** The scene a shortcut asked to confirm while the page was not there to hear it. */
   takePendingScene: (): Promise<Outcome<string | null>> => plain(commands.sceneHotkeyTake()),
   autostart: (): Promise<Outcome<boolean>> => checked(commands.autostartGet()),
+  /** Step 19: the apps Windows starts at login (Réglages › Démarrage). */
+  startupApps: (): Promise<Outcome<StartupApp[]>> => checked(commands.startupApps()),
+  setStartupApp: (id: string, enabled: boolean): Promise<Outcome<StartupApp[]>> =>
+    checked(commands.startupAppSet(id, enabled)),
+  /** Puts back every app Kayro switched off, exactly as it was. */
+  restoreStartupApps: (): Promise<Outcome<StartupApp[]>> =>
+    checked(commands.startupAppsRestore()),
   setAutostart: (enabled: boolean): Promise<Outcome<boolean>> =>
     checked(commands.autostartSet(enabled)),
   /** Zips the logs into the exports folder and shows it in Explorer; returns the zip's path. */

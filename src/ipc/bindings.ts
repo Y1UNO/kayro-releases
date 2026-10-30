@@ -151,6 +151,9 @@ export const commands = {
 	 *  (`LaunchLanded`); off ends it, `hide` taking the hub off the screen.
 	 */
 	launchCover: (on: boolean, hide: boolean) => __TAURI_INVOKE<void>("launch_cover", { on, hide }),
+	startupApps: () => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_apps")),
+	startupAppSet: (id: string, enabled: boolean) => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_app_set", { id, enabled })),
+	startupAppsRestore: () => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_apps_restore")),
 	/**  « Rechercher une mise à jour »: the only network request of Kayro, on demand. */
 	updateCheck: () => typedError<{
 	version: string,
@@ -628,7 +631,12 @@ export type OpeningDue =
  *  Silent start: no opening, but it is still the program's start (asked once, at once, even
  *  hidden, so that the home screen is ready under the first show).
  */
-"quiet" | "no";
+"quiet" | 
+/**
+ *  Express start (step 19): the logo stays still until a click or Enter, then the opening
+ *  goes on from there (asked once, at once, even hidden: the logo is ready under the show).
+ */
+"express" | "no";
 
 /**  « Écran d'ouverture » (step 15): where the hub opens from the shortcut or the notification area. */
 export type OpeningScreen = 
@@ -830,6 +838,7 @@ export type SettingsPatch_Deserialize = {
 	soundTransitions?: boolean | null,
 	soundLaunch?: boolean | null,
 	updateAuto?: boolean | null,
+	startupHome?: boolean | null,
 };
 
 /**  Partial update: absent (or null) fields are left as they are. */
@@ -869,6 +878,7 @@ export type SettingsPatch_Serialize = {
 	soundTransitions: boolean | null,
 	soundLaunch: boolean | null,
 	updateAuto: boolean | null,
+	startupHome: boolean | null,
 };
 
 export type Settings_Deserialize = {
@@ -917,6 +927,11 @@ export type Settings_Deserialize = {
 	soundLaunch: boolean,
 	/**  Step 18b: one look for an update at start (network: off unless the user allows it). */
 	updateAuto: boolean,
+	/**
+	 *  Step 19: started with Windows, the hub opens on its home screen (still logo) instead of
+	 *  waiting in the notification area.
+	 */
+	startupHome: boolean,
 };
 
 export type Settings_Serialize = {
@@ -965,6 +980,11 @@ export type Settings_Serialize = {
 	soundLaunch: boolean,
 	/**  Step 18b: one look for an update at start (network: off unless the user allows it). */
 	updateAuto: boolean,
+	/**
+	 *  Step 19: started with Windows, the hub opens on its home screen (still logo) instead of
+	 *  waiting in the notification area.
+	 */
+	startupHome: boolean,
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */
@@ -987,6 +1007,25 @@ export type SourceReport = {
 	error: string | null,
 	ms: number,
 };
+
+export type StartupApp = {
+	id: string,
+	name: string,
+	target: string,
+	enabled: boolean,
+	locked: StartupLock | null,
+	/**  Switched off by Kayro: « Tout remettre comme avant » puts it back. */
+	byKayro: boolean,
+};
+
+/**  Why an app cannot be changed here. */
+export type StartupLock = 
+/**  For the whole PC (often drivers): needs administrator rights. */
+"machine" | 
+/**  Part of Windows. */
+"system" | 
+/**  Kayro itself: its own switch is « Démarrer avec Windows ». */
+"kayro";
 
 /**  One step. `required`: if it fails, the rest of the scene is not run. */
 export type Step = { type: "launch"; slot: string; required?: boolean } | { type: "wait"; ms: number; required?: boolean } | { type: "waitReady"; slot: string; timeoutMs: number; required?: boolean } | { type: "focus"; slot: string; required?: boolean } | 

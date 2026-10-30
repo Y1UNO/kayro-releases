@@ -1,10 +1,18 @@
 import "@fontsource-variable/cormorant-garamond";
 import "@fontsource-variable/manrope";
 import "./style.css";
+import "./startup.css";
 import icon from "../../src-tauri/icons/128x128@2x.png";
-import { fakeBackend, tauriBackend, type Backend, type Info } from "./backend";
+import {
+  fakeBackend,
+  tauriBackend,
+  type Backend,
+  type Info,
+  type StartupEntry,
+} from "./backend";
 import { t, type MessageKey } from "./messages";
 import { notesView, scrollToNewest } from "./notes";
+import { startupChoice, startupRows } from "./startup";
 
 /**
  * Kayro's installer window: a fan of glass cards on the left, one screen at a time on the right
@@ -17,7 +25,7 @@ const backend: Backend =
 
 type Mode = "install" | "update" | "reinstall";
 type Screen =
-  | { name: "welcome"; mode: Mode }
+  | { name: "welcome" | "startup"; mode: Mode }
   | { name: "running" | "stuck" | "installing" | "done" | "newer" | "missing" }
   | { name: "failed"; code: number };
 
@@ -25,6 +33,8 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const panel = document.getElementById("panel")!;
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let info: Info;
+/** The apps Windows starts at login (step 19), read once. */
+let startupEntries: StartupEntry[] = [];
 let desktop = true;
 /** Step 18b: look for updates at start (checked, explained, the user may untick it). */
 let updateAuto = true;
@@ -58,6 +68,7 @@ function button(label: string, primary: boolean, onClick: (b: HTMLButtonElement)
 
 function build(s: Screen): Node[] {
   const key = s.name === "welcome" ? s.mode : s.name;
+  if (s.name === "startup") return buildStartup(s.mode);
   const vars = {
     version: info.version,
     installed: info.installed ?? "",
@@ -95,7 +106,8 @@ function build(s: Screen): Node[] {
           el("span", "", t("updateAuto"), el("small", "checkHelp", t("updateAutoHelp"))),
         ),
       );
-      actions.append(button(msg(s.mode, "go"), true, () => void startInstall()));
+      const next = () => void show({ name: "startup", mode: s.mode });
+      actions.append(button(t("next"), true, next));
       break;
     }
     case "running":
@@ -130,6 +142,22 @@ function build(s: Screen): Node[] {
   }
   if (actions.childElementCount) parts.push(actions);
   return parts;
+}
+
+/** « Au démarrage du PC »: Kayro at login and the other apps (installer/ui/startup.ts). */
+function buildStartup(m: Mode): Node[] {
+  const back = () => void show({ name: "welcome", mode: m });
+  return [
+    el("p", "eyebrow", t("startup.eyebrow")),
+    el("h1", "title startTitle", t("startup.title")),
+    ...startupRows(startupEntries),
+    el(
+      "div",
+      "actions",
+      button(t("back"), false, back),
+      button(msg(m, "go"), true, () => void startInstall()),
+    ),
+  ];
 }
 
 /** Fades the panel out, puts `nodes` in, and lets them rise in a cascade. */
@@ -178,7 +206,7 @@ async function startInstall() {
   installing = true;
   await show({ name: "installing" });
   const started = performance.now();
-  const outcome = await backend.install(desktop, updateAuto);
+  const outcome = await backend.install(desktop, updateAuto, startupChoice(startupEntries));
   // Long enough to read: a fast install would only flash the screen.
   await wait(Math.max(0, 1800 - (performance.now() - started)));
   installing = false;
@@ -229,6 +257,7 @@ function setupChrome() {
 async function main() {
   setupChrome();
   info = await backend.info();
+  startupEntries = await backend.startupList().catch(() => []);
   if (!info.ready) return show({ name: "missing" });
   if (info.newerInstalled) return show({ name: "newer" });
   return show({ name: "welcome", mode: mode() });

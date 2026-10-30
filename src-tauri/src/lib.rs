@@ -10,6 +10,7 @@ pub mod ipc_art;
 pub mod ipc_desktop;
 pub mod ipc_moods;
 pub mod ipc_scenes;
+pub mod ipc_startup;
 pub mod ipc_themes;
 pub mod ipc_update;
 pub mod launcher;
@@ -31,11 +32,15 @@ pub(crate) const SILENT_FLAG: &str = "--silent";
 /// replace the exe, never kills it); with no Kayro running, this one ends at once.
 pub(crate) const QUIT_FLAG: &str = "--quit";
 
+/// When this process started (step 19: « start → logo » is logged for the express start).
+pub(crate) static STARTED: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+
 fn asks_to_quit<S: AsRef<str>>(args: &[S]) -> bool {
     args.iter().any(|a| a.as_ref() == QUIT_FLAG)
 }
 
 pub fn run() {
+    STARTED.get_or_init(std::time::Instant::now);
     // Before the logger: it creates the new data folder, which would hide the old one.
     let migration = legacy::migrate_legacy_data(&paths::appdata_base());
     logging::init();
@@ -89,7 +94,11 @@ pub fn run() {
             app.manage(ConfigState::load(data));
             // Step 18b: the installer's choices, then (if allowed) one look for an update.
             let config = app.state::<ConfigState>();
-            update::apply_install_choices(&config, config.paths().root());
+            if let Some(on) = update::apply_install_choices(&config, config.paths().root()) {
+                if let Err(e) = ipc_desktop::autostart_set(app.handle().clone(), on) {
+                    tracing::warn!(error = ?e, "install choices: start with Windows not set");
+                }
+            }
             app.manage(update::PendingUpdate::default());
             ipc_update::check_at_start(app.handle(), config.settings().update_auto);
             // Colours of the apps' images, on a background thread (step 14).

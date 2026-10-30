@@ -8,6 +8,7 @@ import { useMotionTokens } from "../../design/motion/current";
 import { isEco } from "../../design/quality";
 import { useReducedMotion } from "../../fx/useReducedMotion";
 import { useHub } from "../../store";
+import { useDisplayMode } from "../opening/expressMode";
 import { CardHoverFx, cardHoverConfig } from "./rim/cardHoverFx";
 import { geometryVars, mountedRange, type Geometry } from "./carouselGeometry";
 import { inheritKeys } from "./deckKeys";
@@ -71,7 +72,7 @@ export function Carousel({
   const cardHover = useDa((s) => s.values.cardHover);
   const fanHover = useDa((s) => s.values.categoryHover);
   const eco = useHub((s) => isEco(s.settings?.quality));
-  const windowMode = useHub((s) => s.settings?.displayMode === "window");
+  const windowMode = useDisplayMode() === "window";
   const reduced = useReducedMotion();
   const hoverCfg = useMemo(
     () =>

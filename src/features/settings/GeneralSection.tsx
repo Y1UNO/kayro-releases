@@ -1,5 +1,5 @@
 import { playSound } from "../../sound";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { APP_VERSION } from "../../app/appName";
 import { Button } from "../../design";
 import { t } from "../../i18n";
@@ -16,25 +16,15 @@ import styles from "./Settings.module.css";
 const OPENING_SCREENS: readonly OpeningScreen[] = ["last", "pointer", "main"];
 
 /**
- * Réglages › Général: the global shortcut, the opening screen, hiding, economy mode, starting with
- * Windows, logs.
+ * Réglages › Général: the global shortcut, the opening screen, hiding, economy mode, updates, logs
+ * (starting with Windows: Réglages › Démarrage, step 19).
  */
 export function GeneralSection() {
   const settings = useHub((s) => s.settings);
   const scenes = useDesktop((s) => s.hotkeys?.scenes);
   const toggleStatus = useDesktop((s) => s.hotkeys?.toggle ?? null);
-  const [autostart, setAutostart] = useState<boolean | null>(null);
   const [message, setMessage] = useState<{ text: string; kind: "ok" | "error" } | null>(null);
   const [logs, setLogs] = useState<{ text: string; kind: "ok" | "error" } | null>(null);
-
-  // What lives outside settings.json is read each time the section shows.
-  useEffect(() => {
-    let live = true;
-    void desktopIpc.autostart().then((r) => live && setAutostart(r.ok ? r.value : null));
-    return () => {
-      live = false;
-    };
-  }, []);
 
   if (!settings) return null;
   const set = hubStore.getState().setSettings;
@@ -47,12 +37,6 @@ export function GeneralSection() {
         ? { text: t("settings.general.hotkey.saved"), kind: "ok" }
         : { text: errorText(result.error), kind: "error" },
     );
-  }
-
-  async function changeAutostart(enabled: boolean) {
-    const result = await desktopIpc.setAutostart(enabled);
-    if (result.ok) setAutostart(result.value);
-    else setMessage({ text: t("settings.general.autostart.failed"), kind: "error" });
   }
 
   async function exportLogs() {
@@ -111,13 +95,6 @@ export function GeneralSection() {
         help={t("settings.general.economy.help")}
         checked={settings.economyMode}
         onChange={(economyMode) => void set({ economyMode })}
-      />
-      <ToggleRow
-        label={t("settings.general.autostart.label")}
-        help={t("settings.general.autostart.help")}
-        checked={autostart === true}
-        disabled={autostart === null}
-        onChange={(enabled) => void changeAutostart(enabled)}
       />
       <UpdateRows />
       <section className={styles.row} data-row="">

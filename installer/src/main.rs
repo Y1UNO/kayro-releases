@@ -11,7 +11,7 @@ mod payload;
 use std::cmp::Ordering;
 use std::process::Command;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
 
 #[derive(Serialize)]
@@ -35,6 +35,16 @@ enum Outcome {
     Failed { code: i32 },
 }
 
+/// « Au démarrage du PC » (step 19): Kayro at login, and the other apps of this account.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct StartupChoice {
+    /// Kayro opens on its home screen at login.
+    kayro: bool,
+    /// The apps that keep starting with Windows; `None` = change nothing (« Ne rien changer »).
+    keep: Option<Vec<String>>,
+}
+
 fn version(app: &AppHandle) -> String {
     app.package_info().version.to_string()
 }
@@ -56,6 +66,27 @@ fn info(app: AppHandle) -> Info {
     }
 }
 
+/// The apps Windows starts at login (the locked ones too, shown greyed).
+#[tauri::command]
+fn startup_list() -> Vec<kayro_startup::Entry> {
+    let Some(dir) = existing::data_dir() else {
+        return Vec::new();
+    };
+    kayro_startup::list(&kayro_startup::Registry, &kayro_startup::Journal::load(&dir))
+}
+
+/// Switches off the apps not kept; Kayro's journal remembers them to put them back.
+fn apply_startup(keep: &[String]) {
+    let Some(dir) = existing::data_dir() else {
+        return;
+    };
+    let mut journal = kayro_startup::Journal::load(&dir);
+    match kayro_startup::keep_only(&mut kayro_startup::Registry, &mut journal, keep) {
+        Ok(n) => eprintln!("startup: {n} apps switched off"),
+        Err(e) => eprintln!("startup: not applied: {e}"),
+    }
+}
+
 #[tauri::command]
 async fn close_kayro() -> bool {
     tauri::async_runtime::spawn_blocking(|| match existing::installed() {
@@ -67,11 +98,16 @@ async fn close_kayro() -> bool {
 }
 
 #[tauri::command]
-async fn install(app: AppHandle, desktop: bool, update_auto: bool) -> Outcome {
+async fn install(
+    app: AppHandle,
+    desktop: bool,
+    update_auto: bool,
+    startup: StartupChoice,
+) -> Outcome {
     let version = version(&app);
     tauri::async_runtime::spawn_blocking(move || {
         // Read by Kayro at its next start (src-tauri/src/update.rs), then removed.
-        if let Err(e) = existing::write_install_choices(update_auto) {
+        if let Err(e) = existing::write_install_choices(update_auto, startup.kayro) {
             eprintln!("install choices not written: {e}");
         }
         let Ok(x) = payload::extract(&version) else {
@@ -83,6 +119,10 @@ async fn install(app: AppHandle, desktop: bool, update_auto: bool) -> Outcome {
         let landed = existing::installed()
             .is_some_and(|i| existing::compare_versions(&i.version, &version) == Ordering::Equal);
         if code == 0 && landed {
+            // Only once Kayro is really there: a failed install changes nothing else.
+            if let Some(keep) = &startup.keep {
+                apply_startup(keep);
+            }
             Outcome::Done
         } else {
             Outcome::Failed { code }
@@ -125,6 +165,7 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             info,
+            startup_list,
             close_kayro,
             install,
             launch,

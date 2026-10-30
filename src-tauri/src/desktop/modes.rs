@@ -113,7 +113,15 @@ fn layout_changes(
 /// Applies what changed between two settings: the display mode, the economy mode, the menu.
 pub fn settings_changed<R: Runtime>(app: &AppHandle<R>, old: &Settings, new: &Settings) {
     if old.display_mode != new.display_mode {
-        mode_changed(app, old.display_mode, new.display_mode);
+        // Step 19: the express start's window is immersive whatever the setting said.
+        let shown = if app.state::<DesktopState>().end_express_immersive() {
+            DisplayMode::Immersive
+        } else {
+            old.display_mode
+        };
+        if shown != new.display_mode {
+            mode_changed(app, shown, new.display_mode);
+        }
     }
     if old.economy_mode != new.economy_mode {
         economy_changed(app, new);

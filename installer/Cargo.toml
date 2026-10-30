@@ -15,6 +15,7 @@ path = "src/main.rs"
 tauri-build = { version = "2.7.1", features = [] }
 
 [dependencies]
+kayro-startup = { path = "../crates/startup" }
 tauri = { version = "2.12.2", features = [] }
 serde = { version = "1.0.229", features = ["derive"] }
 sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }

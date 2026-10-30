@@ -10,13 +10,31 @@ export interface Info {
   ready: boolean;
 }
 
+/** An app Windows starts at login (crates/startup, `Entry`). */
+export interface StartupEntry {
+  id: string;
+  name: string;
+  target: string;
+  scope: "user" | "machine";
+  enabled: boolean;
+  locked: "machine" | "system" | "kayro" | null;
+  byKayro: boolean;
+}
+
+/** « Au démarrage du PC »: `keep` null = change nothing; [] = only Kayro. */
+export interface StartupChoice {
+  kayro: boolean;
+  keep: string[] | null;
+}
+
 export type Outcome = { kind: "done" } | { kind: "failed"; code: number };
 
 /** The installer's core, behind one interface (a fake one draws the screens in a browser, dev). */
 export interface Backend {
   info(): Promise<Info>;
+  startupList(): Promise<StartupEntry[]>;
   closeKayro(): Promise<boolean>;
-  install(desktop: boolean, updateAuto: boolean): Promise<Outcome>;
+  install(desktop: boolean, updateAuto: boolean, startup: StartupChoice): Promise<Outcome>;
   launch(): Promise<boolean>;
   classic(): Promise<boolean>;
   quit(): Promise<void>;
@@ -27,8 +45,10 @@ export interface Backend {
 
 export const tauriBackend: Backend = {
   info: () => invoke<Info>("info"),
+  startupList: () => invoke<StartupEntry[]>("startup_list"),
   closeKayro: () => invoke<boolean>("close_kayro"),
-  install: (desktop, updateAuto) => invoke<Outcome>("install", { desktop, updateAuto }),
+  install: (desktop, updateAuto, startup) =>
+    invoke<Outcome>("install", { desktop, updateAuto, startup }),
   launch: () => invoke<boolean>("launch"),
   classic: () => invoke<boolean>("classic"),
   quit: () => invoke<void>("quit"),
@@ -42,7 +62,8 @@ export const tauriBackend: Backend = {
 
 /**
  * Dev only (`npx vite --config installer/vite.config.ts`, no Tauri): `?screen=update`, `running`,
- * `stuck`, `failed`, `newer`, `missing`, `reinstall`; the install takes 2.5 s.
+ * `stuck`, `failed`, `newer`, `missing`, `reinstall`, `alone` (no other app at login); the install
+ * takes 2.5 s.
  */
 export function fakeBackend(screen: string | null): Backend {
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -55,6 +76,7 @@ export function fakeBackend(screen: string | null): Backend {
       running,
       ready: screen !== "missing",
     }),
+    startupList: async () => (screen === "alone" ? [] : FAKE_STARTUP),
     closeKayro: async () => {
       await wait(900);
       running = screen === "stuck";
@@ -71,3 +93,29 @@ export function fakeBackend(screen: string | null): Backend {
     onCloseRequested: () => undefined,
   };
 }
+
+const fake = (
+  id: string,
+  name: string,
+  enabled = true,
+  locked: StartupEntry["locked"] = null,
+): StartupEntry => ({
+  id,
+  name,
+  target: "",
+  scope: locked === "machine" ? "machine" : "user",
+  enabled,
+  locked,
+  byKayro: false,
+});
+
+const FAKE_STARTUP: StartupEntry[] = [
+  fake("user:run:Discord", "Discord"),
+  fake("user:run:Steam", "Steam"),
+  fake("user:run:Medal", "Medal"),
+  fake("user:run:electron.app.Notion", "electron.app.Notion"),
+  fake("user:folder:Voicemeeter.lnk", "Voicemeeter"),
+  fake("user:run:OneDrive", "OneDrive", false),
+  fake("machine:run:RtkAudUService", "RtkAudUService", true, "machine"),
+  fake("machine:run:SecurityHealth", "SecurityHealth", true, "machine"),
+];

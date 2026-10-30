@@ -262,3 +262,27 @@
   opacity: 0;
   will-change: transform, opacity;
 }
+
+/* Step 19, express start: under the still logo, until the user comes in (no loop, one fade). */
+.enter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(41.6% + 150px);
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  opacity: 0;
+  transition: opacity 600ms ease-out;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter {
+    transition: none;
+  }
+}

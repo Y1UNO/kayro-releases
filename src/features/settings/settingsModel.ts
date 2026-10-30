@@ -78,5 +78,8 @@ export const SOUND_DEFAULTS = {
   soundLaunch: true,
 } as const satisfies SettingsPatch;
 
-/** Step 18b: no update check unless the user allows it (the installer asks; `Settings::default`). */
-export const UPDATE_DEFAULTS = { updateAuto: false } as const satisfies SettingsPatch;
+/**
+ * What the installer asks (`Settings::default`): no update check unless the user allows it
+ * (step 18b); started with Windows, no home screen unless asked (step 19).
+ */
+export const UPDATE_DEFAULTS = { updateAuto: false, startupHome: false } as const satisfies SettingsPatch;

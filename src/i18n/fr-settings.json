@@ -5,9 +5,37 @@
     "nav": {
       "label": "Catégories des réglages",
       "general": "Général",
+      "startup": "Démarrage",
       "visual": "Visuel",
       "sounds": "Sons",
       "themes": "Thèmes"
+    },
+    "startup": {
+      "autostart": {
+        "label": "Démarrer avec Windows",
+        "help": "{app} se lance à l’ouverture de ta session.",
+        "failed": "Impossible de modifier le démarrage avec Windows."
+      },
+      "screen": {
+        "label": "Au démarrage de Windows",
+        "help": "Écran d’accueil : {app} s’ouvre sur son logo, un clic ou Entrée et tu es dans tes apps. Discret : il attend dans la zone de notification. L’écran d’accueil s’ouvre toujours en plein écran (Immersif).",
+        "home": "Écran d’accueil",
+        "quiet": "Discret"
+      },
+      "apps": {
+        "label": "Apps lancées avec Windows",
+        "help": "Comme dans le Gestionnaire des tâches : une app coupée n’est pas supprimée, elle ne démarre simplement plus avec Windows.",
+        "byKayro": "Coupée par {app}",
+        "none": "Aucune autre app de ton compte ne démarre avec Windows.",
+        "locked": "Jamais modifiées ici (Windows, pilotes, apps pour tout le PC) : {names}.",
+        "failed": "Windows a refusé ce changement."
+      },
+      "restore": {
+        "label": "Tout remettre comme avant",
+        "help": "Rallume les apps que {app} a coupées (à l’installation ou ici), exactement comme elles étaient.",
+        "done": "C’est remis comme avant.",
+        "nothing": "{app} n’a rien coupé."
+      }
     },
     "sounds": {
       "on": {
@@ -58,11 +86,6 @@
       },
       "hideOnEscape": "Échap cache {app}",
       "hideOnBlur": "Cliquer ailleurs cache {app}",
-      "autostart": {
-        "label": "Démarrer avec Windows",
-        "help": "{app} démarre sans fenêtre, dans la zone de notification.",
-        "failed": "Impossible de modifier le démarrage avec Windows."
-      },
       "logs": {
         "label": "Journal de {app}",
         "help": "Crée un fichier .zip du journal (ce que {app} a fait ces derniers jours, sans vos images) et l’affiche dans l’Explorateur. Rien n’est envoyé : c’est vous qui le transmettez si vous le souhaitez.",

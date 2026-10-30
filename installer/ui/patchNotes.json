@@ -129,5 +129,15 @@
     "points": [
       "Le message « nouvelle version disponible » s'affiche bien au démarrage de Kayro."
     ]
+  },
+  {
+    "version": "0.19",
+    "date": "30/10/2026",
+    "title": "Démarrage",
+    "points": [
+      "À l'installation, tu choisis les apps qui démarrent avec Windows : seulement Kayro, à la carte, ou rien ne change.",
+      "Rien n'est supprimé : Réglages › Démarrage rallume chaque app, ou tout remet comme avant.",
+      "Au démarrage du PC, Kayro s'ouvre sur son logo : un clic ou Entrée, et tu es dans tes apps."
+    ]
   }
 ]

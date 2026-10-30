@@ -91,7 +91,7 @@ export function App() {
           />
         )}
       </div>
-      {opening.play && <Opening under={under} onDone={opening.finish} />}
+      {opening.play && <Opening under={under} onDone={opening.finish} express={opening.express} />}
       <SceneToast />
       <UpdateNotice />
       <UpdateDialog />

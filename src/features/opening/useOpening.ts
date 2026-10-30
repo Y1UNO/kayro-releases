@@ -3,6 +3,7 @@ import { daStore } from "../../design/da";
 import { setIntroCue, type IntroFrame } from "../../fx/gpu/cues";
 import { desktopIpc } from "../../ipc/commands";
 import { onWindowVisibility } from "../../ipc/events";
+import { startExpressMode } from "./expressMode";
 
 /** Dark page, nothing drawn: the engine waits for an opening that starts at the next show. */
 const WAITING: IntroFrame = {
@@ -32,12 +33,21 @@ export function openingOwnsEntrance(): boolean {
  * it. A silent start (Windows login, round 4b) plays none: answered `quiet` at once, the home
  * screen is ready under the first show (still on the fan: it is the program's start).
  *
+ * Express start (step 19, « Écran d'accueil » at login): answered `express` at once, the opening
+ * waits on its still logo for a click or Enter (`express`), then goes on.
+ *
  * `hidden`: keep the home screen hidden (opening playing or waiting). `play`: mount <Opening>.
  * `fan` (round 3b): this is the program's start (first show), the home screen opens on the
  * category fan, even with the opening turned off; a recreated window (economy mode) does not.
  */
-export function useOpening(): { hidden: boolean; play: boolean; fan: boolean; finish: () => void } {
-  const [state, setState] = useState<"ask" | "later" | "play" | "off">("ask");
+export function useOpening(): {
+  hidden: boolean;
+  play: boolean;
+  express: boolean;
+  fan: boolean;
+  finish: () => void;
+} {
+  const [state, setState] = useState<"ask" | "later" | "play" | "express" | "off">("ask");
   const [fan, setFan] = useState(false);
 
   useEffect(() => {
@@ -54,6 +64,10 @@ export function useOpening(): { hidden: boolean; play: boolean; fan: boolean; fi
         if (due === "later") return setState("later");
         settled = true;
         if (due !== "no") setFan(true);
+        if (due === "express") {
+          startExpressMode();
+          return setState("express");
+        }
         setState(on && due === "now" ? "play" : "off");
       });
     if (state === "ask") ask();
@@ -72,10 +86,16 @@ export function useOpening(): { hidden: boolean; play: boolean; fan: boolean; fi
 
   useEffect(() => {
     const on = daStore.getState().values.opening?.on !== false;
-    owns = state === "play" || (state === "later" && on);
+    owns = state === "play" || state === "express" || (state === "later" && on);
     return () => void (owns = false);
   }, [state]);
 
   const finish = useCallback(() => setState("off"), []);
-  return { hidden: state !== "off", play: state === "play", fan, finish };
+  return {
+    hidden: state !== "off",
+    play: state === "play" || state === "express",
+    express: state === "express",
+    fan,
+    finish,
+  };
 }

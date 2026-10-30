@@ -4,11 +4,12 @@ import { Dialog } from "../../design";
 import { t } from "../../i18n";
 import { GeneralSection } from "./GeneralSection";
 import { SoundsSection } from "./SoundsSection";
+import { StartupSection } from "./StartupSection";
 import { ThemesSection } from "./ThemesSection";
 import { VisualSection } from "./VisualSection";
 import styles from "./Settings.module.css";
 
-const TABS = ["general", "visual", "sounds", "themes"] as const;
+const TABS = ["general", "startup", "visual", "sounds", "themes"] as const;
 type Tab = (typeof TABS)[number];
 
 /** The category shown last, while the app runs (the dialog reopens where it was left). */
@@ -20,7 +21,7 @@ interface Props {
 }
 
 /**
- * Réglages (round 5): a side column of categories — Général · Visuel · Sons · Thèmes — and the chosen
+ * Réglages (round 5): a side column of categories — Général · Démarrage · Visuel · Sons · Thèmes — and the chosen
  * one in a body that scrolls (the panel never outgrows the screen).
  */
 export function SettingsDialog({ open, onClose }: Props) {
@@ -94,6 +95,7 @@ export function SettingsDialog({ open, onClose }: Props) {
           aria-labelledby={`${ids}-tab-${tab}`}
         >
           {tab === "general" && <GeneralSection />}
+          {tab === "startup" && <StartupSection />}
           {tab === "visual" && <VisualSection />}
           {tab === "sounds" && <SoundsSection />}
           {tab === "themes" && <ThemesSection />}

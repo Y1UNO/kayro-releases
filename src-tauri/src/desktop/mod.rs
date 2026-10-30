@@ -8,6 +8,7 @@
 //! comes back, see `passage`).
 
 pub mod cover;
+mod express;
 pub mod geometry;
 pub mod hotkeys;
 mod modes;
@@ -73,7 +74,11 @@ pub struct DesktopState {
     passage: passage::Waiting,
     /// A passage that builds a window is in flight: mode changes wait for its end.
     mode_gate: Mutex<modes::ModeGate>,
+    /// Step 19: the express start shows `main` in immersive mode whatever the setting, until the
+    /// hub is first hidden (or the mode is changed): it then goes back to the user's mode.
+    express_immersive: AtomicBool,
 }
+
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|p| p.into_inner())
@@ -92,12 +97,17 @@ fn settings<R: Runtime>(app: &AppHandle<R>) -> Settings {
 
 /// Called once from `setup`, after the notification-area icon exists. A silent start (Windows
 /// login) creates the window hidden, or nothing at all in economy mode, and plays no opening.
+/// Step 19, « Écran d'accueil »: at login the hub comes on screen at once on its still logo,
+/// always in immersive mode (economy mode too); the user's mode comes back once it is hidden.
 pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
     hotkeys::init(app);
+    let s = settings(app);
+    if silent && s.startup_home {
+        return express::start(app, &s);
+    }
     if silent {
         crate::ipc_desktop::OPENING.silent_start();
     }
-    let s = settings(app);
     if silent && s.economy_mode {
         tracing::info!("silent start, economy mode: no window yet");
         return;
@@ -168,10 +178,11 @@ fn on_focus<R: Runtime>(app: &AppHandle<R>, label: &str, focused: bool) {
         return; // the widget never hides by itself: its page folds the panel
     }
     let s = settings(app);
+    let express = app.state::<DesktopState>().in_express_immersive();
     if let Some(window) = windows::get(app, label) {
         // Covers the taskbar only while the hub is the program in front (spike 04).
         // 30/10: a launch cover keeps it in front while the game starts behind it (cover.rs).
-        if s.display_mode == DisplayMode::Immersive || cover::covering() {
+        if s.display_mode == DisplayMode::Immersive || express || cover::covering() {
             let _ = window.set_always_on_top(focused || cover::covering());
         }
     }
@@ -241,6 +252,10 @@ fn retire<R: Runtime>(app: &AppHandle<R>, label: &str) {
 
 /// Shows the hub in the current mode (building its window when there is none).
 pub fn show<R: Runtime>(app: &AppHandle<R>) {
+    let express = app.state::<DesktopState>().in_express_immersive();
+    if let Some(window) = windows::get(app, MAIN).filter(|_| express) {
+        return reveal(app, &window); // still the express start's immersive window
+    }
     let mode = settings(app).display_mode;
     match windows::get(app, windows::label_for(mode)) {
         Some(window) => {
@@ -306,7 +321,10 @@ pub fn hide<R: Runtime>(app: &AppHandle<R>) {
     } else {
         settings(app).display_mode
     };
-    save_placement(app, &window, mode);
+    let express = state.end_express_immersive() && window.label() == MAIN;
+    if !express {
+        save_placement(app, &window, mode);
+    }
     let _ = window.hide();
     crate::ipc::notify(
         WindowVisibility {
@@ -317,6 +335,8 @@ pub fn hide<R: Runtime>(app: &AppHandle<R>) {
     );
     if settings(app).economy_mode {
         let _ = window.destroy();
+    } else if express {
+        express::leave(app, &window, mode);
     }
 }
 
@@ -338,7 +358,8 @@ pub fn toggle<R: Runtime>(app: &AppHandle<R>) {
 pub fn page_ready<R: Runtime>(app: &AppHandle<R>, label: &str) -> bool {
     let state = app.state::<DesktopState>();
     if let Some(t0) = lock(&state.building_since).take() {
-        tracing::info!(ms = t0.elapsed().as_millis() as u64, "page ready");
+        let since_start = crate::STARTED.get().map(|s| s.elapsed().as_millis() as u64);
+        tracing::info!(ms = t0.elapsed().as_millis() as u64, ?since_start, "page ready");
     }
     if !state.want_visible.swap(false, Ordering::SeqCst) {
         return false;

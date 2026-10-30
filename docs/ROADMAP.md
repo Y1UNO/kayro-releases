@@ -26,7 +26,8 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages des sons, à définir à l'étape 17b, `docs/SONS.md` | 12b, 13 | E |
 | [ ] 18 | Audit : perf, sécurité, robustesse, accessibilité | 1–16 | F |
 | [x] 18b | Mises à jour : rechercher et installer une nouvelle version depuis Kayro (réseau optionnel, voir « Plus tard ») | 18, installeur maison | F |
-| [ ] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis ; **démarrage** : choix des apps lancées avec Windows à l'installation, démarrage express sur le logo (voir « Plus tard ») | 18 | F |
+| [x] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis ; **démarrage** : choix des apps lancées avec Windows à l'installation, démarrage express sur le logo (voir « Plus tard ») | 18 | F |
+| [ ] 19b | **Scan intelligent et rangement fluide** (demandé le 2026-10-30) : un scan bien plus malin (filtres de bruit, doublons, lanceurs et outils à part, catégorie devinée, « Ignorer ») et plus simple à l'ajout d'apps ; changer une app de catégorie (et la réordonner) de façon fluide. Détails : « Plus tard » › Détection | 5, 19 | G |
 | [ ] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
@@ -105,6 +106,17 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
   couleurs du jeu retiré** (Désactivé · Stylisé). Tests : vitest 565, cargo 250, clippy / eslint / tsc
   propres. **Non mesuré** (CPU / GPU des ambiances : à faire en A/B avec `npm run perf -- --exe`, accord requis) ;
   non vu dans l'exe par moi ; carte spéciale sans repli CSS ; anneau de glyphes en partie derrière les cartes latérales.
+- **Étape 19 — Démarrage, 2026-10-30** (version 0.19.0) : crate partagé `crates/startup` (installeur + Kayro) qui
+  coupe les apps lancées avec Windows comme le Gestionnaire des tâches (marque `StartupApproved`, jamais la clé `Run`
+  ni le dossier Démarrage ; format non documenté par Microsoft, connu par l'usage) ; seulement les entrées du compte,
+  jamais celles du PC, de Windows ni Kayro ; journal `startup-journal.json` → « Tout remettre comme avant » à l'octet
+  près. Installeur : écran « Au démarrage du PC », **« Garder seulement Kayro » par défaut** avec avertissement rouge,
+  « Choisir », « Ne rien changer ». Nouvel onglet Réglages › **Démarrage**. Démarrage express (`startupHome`, même
+  entrée `--silent`) : ouverture figée sur le logo, clic / Entrée → la suite, **toujours en immersif** (le mode de
+  l'utilisateur revient quand Kayro est caché ou qu'on change de mode). Tests : vitest
+  592, cargo 258 + 7 + 4. **Non mesuré** (temps jusqu'au logo, journalisé `since_start`) ; non vu dans l'exe ;
+  assistant de premier lancement non fait (→ « Plus tard »). Apps du Store : leur propre interrupteur (`State` de
+  leur `StartupTask`, comme Paramètres › Applications › Démarrage), même journal ; celles de Windows verrouillées.
 - **Étape 18b — Mises à jour, 2026-10-30** (versions 0.18.0 et 0.18.1, note `docs/MISES-A-JOUR.md`) :
   `tauri-plugin-updater` 2.14.0 ; versions publiées sur le dépôt **public** `Y1UNO/kayro-releases` (installeurs,
   signature, `latest.json` ; jamais le code) par `scripts/publish-release.ps1` (`gh`) ; clé privée hors du dépôt
@@ -179,11 +191,15 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 ### Avant l'étape 19 — Fonctions et finitions
 - [ ] Qualité « Auto » adaptative, pour les PC plus faibles : proposition chiffrée dans `docs/PERF-ETAPE13.md`
   § « Qualité Auto » (décision du 14/10 : pas maintenant).
-- [ ] Gestion des apps qui démarrent avec Windows au premier lancement. **Précisé le 2026-10-30 (étape 19)** : à
+- [x] Gestion des apps qui démarrent avec Windows au premier lancement (fait à l'étape 19, apps du Store comprises). **Précisé le 2026-10-30 (étape 19)** : à
   l'installation, trois choix — « Garder seulement Kayro » (les autres apps ne démarrent plus avec Windows), « Ne rien
   changer », ou **personnalisé** : la liste des apps lancées au démarrage, on coche celles qu'on veut **garder**.
   Réversible (ce qui a été retiré est noté pour pouvoir le remettre), jamais d'app système ni de pilote touchés.
-- [ ] **Démarrage express** (2026-10-30, étape 19) : au démarrage du PC, Kayro s'ouvre le plus vite possible sur le
+- [ ] **Assistant de premier lancement** (reporté de l'étape 19) : Kayro vide au premier lancement, l'utilisateur
+  clique « + » ; un petit assistant proposerait les apps détectées.
+- [ ] Démarrage : mesurer « démarrage du PC → logo » (journal
+  `since_start`) ; afficher le logo depuis `index.html` avant React si la mesure le justifie.
+- [x] **Démarrage express** (2026-10-30, étape 19, fait ; temps jusqu'au logo encore à mesurer) : au démarrage du PC, Kayro s'ouvre le plus vite possible sur le
   logo KAYRO **immobile** ; un clic dessus ou Entrée lance l'animation d'ouverture actuelle, et on arrive sur le hub
   complet (Kayro devient l'écran d'accueil du PC). À mesurer : temps jusqu'au logo.
 - [ ] **Mises à jour** (2026-10-30, étape 18b, avant d'envoyer d'autres versions) : « Rechercher une mise à jour »

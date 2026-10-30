@@ -13,7 +13,7 @@ import {
 } from "../../design";
 import { t } from "../../i18n";
 import type { DisplayMode } from "../../ipc/bindings";
-import { hubStore, useHub } from "../../store";
+import { chooseDisplayMode, useDisplayMode } from "../opening/expressMode";
 import { PopMenu } from "./PopMenu";
 import { TopBarShell } from "./TopBarShell";
 import styles from "./TopBar.module.css";
@@ -25,7 +25,7 @@ const MODES: readonly DisplayMode[] = ["immersive", "window", "widget"];
  * (Immersif · Fenêtre · Widget), instead of three segments in the middle of the bar.
  */
 function ModeButton() {
-  const mode = useHub((s) => s.settings?.displayMode ?? "immersive");
+  const mode = useDisplayMode();
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   // The press that closes the menu (a click outside it) must not open it again.
   const wasOpen = useRef(false);
@@ -57,7 +57,7 @@ function ModeButton() {
             id: m,
             label: t(`home.modes.${m}`),
             checked: m === mode,
-            onSelect: () => void hubStore.getState().setSettings({ displayMode: m }),
+            onSelect: () => void chooseDisplayMode(m),
           }))}
         />
       )}
