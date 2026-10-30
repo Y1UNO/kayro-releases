@@ -34,6 +34,22 @@ fn failed(e: impl std::fmt::Display) -> AppError {
     AppError::new(ErrorCode::UpdateFailed, e.to_string())
 }
 
+fn info_of(u: &Update) -> UpdateInfo {
+    UpdateInfo {
+        version: u.version.clone(),
+        current: u.current_version.clone(),
+        notes: u.body.clone(),
+    }
+}
+
+/// What the last check found and kept (the page asks once it is ready: the check at start may
+/// end before it listens).
+pub fn pending_info<R: Runtime>(app: &AppHandle<R>) -> Option<UpdateInfo> {
+    let pending = app.try_state::<PendingUpdate>()?;
+    let found = pending.0.lock().unwrap_or_else(|p| p.into_inner());
+    found.as_ref().map(info_of)
+}
+
 /// Asks the release server whether a newer version exists (and keeps it for `install`).
 pub async fn check<R: Runtime>(app: &AppHandle<R>) -> Result<Option<UpdateInfo>, AppError> {
     let updater = app
@@ -42,11 +58,7 @@ pub async fn check<R: Runtime>(app: &AppHandle<R>) -> Result<Option<UpdateInfo>,
         .build()
         .map_err(failed)?;
     let found = updater.check().await.map_err(failed)?;
-    let info = found.as_ref().map(|u| UpdateInfo {
-        version: u.version.clone(),
-        current: u.current_version.clone(),
-        notes: u.body.clone(),
-    });
+    let info = found.as_ref().map(info_of);
     tracing::info!(found = ?info.as_ref().map(|i| &i.version), "update: checked");
     if let Some(pending) = app.try_state::<PendingUpdate>() {
         *pending.0.lock().unwrap_or_else(|p| p.into_inner()) = found;

@@ -60,9 +60,13 @@ let listening = false;
 export function listenForUpdates(): void {
   if (listening) return;
   listening = true;
-  void onUpdateAvailable((info) =>
-    updateStore.setState({ status: "available", info, announced: info }),
-  );
+  const announce = (info: UpdateInfo) =>
+    updateStore.setState({ status: "available", info, announced: info });
+  // The check at start may end before the page listens: ask once listening.
+  void onUpdateAvailable(announce).then(async () => {
+    const r = await updateIpc.pending();
+    if (r.ok && r.value && updateStore.getState().status === "idle") announce(r.value);
+  });
   void onUpdateProgress(({ downloaded, total }) =>
     updateStore.setState({ progress: total ? Math.min(1, downloaded / total) : null }),
   );

@@ -113,5 +113,13 @@
       "Réglages › Général : rechercher une mise à jour, ou au démarrage si tu l'autorises.",
       "Chaque version est signée et vérifiée avant d'être installée."
     ]
+  },
+  {
+    "version": "0.18.1",
+    "date": "30/10/2026",
+    "title": "Première mise à jour",
+    "points": [
+      "Premier essai de mise à jour automatique : si tu lis ceci dans Kayro, ça marche."
+    ]
   }
 ]

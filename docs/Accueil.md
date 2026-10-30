@@ -1,9 +1,9 @@
 # Kayro — Accueil
 
 > [!info] Où on en est
-> - **Dernière étape close** : 17b — Sons (le 2026-10-30, version 0.17.0, à écouter dans l'exe)
-> - **À envoyer** : 0.17.0 avec l'installeur maison `Kayro_0.17.0_Installer.exe` (l'installeur classique en secours)
-> - **Prochaine étape** : 18 — Audit (CPU au repos, scènes de lancement et sons à mesurer)
+> - **Dernière étape close** : 18b — Mises à jour (le 2026-10-30, versions publiées sur github.com/Y1UNO/kayro-releases)
+> - **À envoyer** : le dernier `Kayro_<version>_Installer.exe` de la page des versions ; ensuite Kayro se met à jour seul
+> - **Prochaine étape** : 19 — Démarrage (apps au démarrage, démarrage express), puis 20 — Kysland ; 18 — Audit avant la v1
 > - **DA** : gelée le 2026-10-14 (v1)
 
 ## Référence
@@ -14,6 +14,7 @@
 - [[ARCHITECTURE]] — données, modules, perf
 - [[PRETEST]] — note pour les testeurs (version 0.17 prétest)
 - [[REVUE-OPUS55]] — note d'évolution de la revue Opus 5.5 (mouvement, verre 3D, couleurs, scan)
+- [[MISES-A-JOUR]] — mises à jour signées, publier une version
 - [[SONS]] — sons synthétisés, styles, réglages
 - [[AMBIANCES]] — ambiances `.hubmood`, packs, cartes spéciales et images à fournir
 - [[MACHINE]] — PC de test

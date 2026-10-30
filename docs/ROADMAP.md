@@ -25,7 +25,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
 | [x] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages des sons, à définir à l'étape 17b, `docs/SONS.md` | 12b, 13 | E |
 | [ ] 18 | Audit : perf, sécurité, robustesse, accessibilité | 1–16 | F |
-| [ ] 18b | Mises à jour : rechercher et installer une nouvelle version depuis Kayro (réseau optionnel, voir « Plus tard ») | 18, installeur maison | F |
+| [x] 18b | Mises à jour : rechercher et installer une nouvelle version depuis Kayro (réseau optionnel, voir « Plus tard ») | 18, installeur maison | F |
 | [ ] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis ; **démarrage** : choix des apps lancées avec Windows à l'installation, démarrage express sur le logo (voir « Plus tard ») | 18 | F |
 | [ ] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
 
@@ -105,6 +105,16 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
   couleurs du jeu retiré** (Désactivé · Stylisé). Tests : vitest 565, cargo 250, clippy / eslint / tsc
   propres. **Non mesuré** (CPU / GPU des ambiances : à faire en A/B avec `npm run perf -- --exe`, accord requis) ;
   non vu dans l'exe par moi ; carte spéciale sans repli CSS ; anneau de glyphes en partie derrière les cartes latérales.
+- **Étape 18b — Mises à jour, 2026-10-30** (versions 0.18.0 et 0.18.1, note `docs/MISES-A-JOUR.md`) :
+  `tauri-plugin-updater` 2.14.0 ; versions publiées sur le dépôt **public** `Y1UNO/kayro-releases` (installeurs,
+  signature, `latest.json` ; jamais le code) par `scripts/publish-release.ps1` (`gh`) ; clé privée hors du dépôt
+  (`%USERPROFILE%\.kayro`). Réglages › Général : « Rechercher une mise à jour » et « au démarrage » (`updateAuto`,
+  désactivé par défaut côté Kayro) ; installeur maison : case cochée et expliquée (choix de l'utilisateur, exception
+  assumée à « réseau désactivé par défaut ») → `install-choices.json`. **Essai réel** : 0.18.0 installée, 0.18.1
+  publiée, trouvée au démarrage, téléchargée, signature vérifiée, installée, Kayro redémarré en 0.18.1 (~4 s).
+  Trouvé à l'essai : l'annonce du démarrage partait avant que la page écoute → la page demande au cœur ce qu'il a
+  trouvé (`update_pending`). Tests : vitest 587, cargo 256. Limites : une seule vérification par démarrage ; pas de
+  retour en arrière ; le compte GitHub est **Y1UNO** (chiffre 1).
 - **Étape 17b — Sons, 2026-10-30** (version 0.17.0, note `docs/SONS.md`) : sons **synthétisés** (Web Audio, aucun
   fichier) en trois styles — Premium (cloches de cristal, écho doux, par défaut), Rétro (synthé chaud filtré), 8-bit
   (carrés) — décrits par `src/sound/sons.json` (validé strictement) ; 7 moments (clic, carte, catégorie, validation,

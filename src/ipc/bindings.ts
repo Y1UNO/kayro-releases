@@ -158,6 +158,13 @@ export const commands = {
 	/**  The release's notes (its patch notes), plain text, one point per line. */
 	notes: string | null,
 } | null, AppError>(__TAURI_INVOKE("update_check")),
+	/**  What the check at start found, if anything (asked by the page once it listens). */
+	updatePending: () => __TAURI_INVOKE<{
+	version: string,
+	current: string,
+	/**  The release's notes (its patch notes), plain text, one point per line. */
+	notes: string | null,
+} | null>("update_pending"),
 	/**  Installs the update the last check found (Kayro quits, then starts again on it). */
 	updateInstall: () => typedError<null, AppError>(__TAURI_INVOKE("update_install")),
 };

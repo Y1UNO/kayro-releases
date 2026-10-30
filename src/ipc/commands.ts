@@ -199,5 +199,7 @@ export const moodsIpc = {
  */
 export const updateIpc = {
   check: (): Promise<Outcome<UpdateInfo | null>> => checked(commands.updateCheck()),
+  /** What the check at start found (it may end before the page listens). */
+  pending: (): Promise<Outcome<UpdateInfo | null>> => plain(commands.updatePending()),
   install: (): Promise<Outcome<null>> => checked(commands.updateInstall()),
 };

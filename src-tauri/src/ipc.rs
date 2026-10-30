@@ -350,6 +350,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_moods::mood_export,
             ipc_desktop::launch_cover::<tauri::Wry>,
             crate::ipc_update::update_check::<tauri::Wry>,
+            crate::ipc_update::update_pending::<tauri::Wry>,
             crate::ipc_update::update_install::<tauri::Wry>,
         ])
         .events(collect_events![

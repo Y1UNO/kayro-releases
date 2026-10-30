@@ -330,7 +330,10 @@ Pause en 240 ms (survol, molette, défilement rapide, glisser), reprise lente en
 
 **Règle : les réglages qui comptent sont visibles ; le reste va dans « Personnalisation avancée ».** Dialogue unique,
 onglets verticaux (`src/features/settings/`, textes `src/i18n/fr-settings.json`) :
-- **Général** : raccourci (Ctrl+Alt+H), mode économe, Échap cache Kayro, cliquer ailleurs cache Kayro, démarrer avec Windows.
+- **Général** : raccourci (Ctrl+Alt+H), mode économe, Échap cache Kayro, cliquer ailleurs cache Kayro, démarrer avec Windows,
+  puis (étape 18b) « Rechercher les mises à jour au démarrage » (**non** par défaut ; l'installeur maison le propose coché)
+  et « Rechercher une mise à jour ». Fenêtre **« Mise à jour disponible »** : versions (l'ancienne en petit, → , la
+  nouvelle en Cormorant), nouveautés dans un encart à puces ✦, barre au dégradé du logo pendant le téléchargement.
 - **Visuel** : Qualité (Auto · Éco · **Équilibré** · Élevé · Ultra) ; Atmosphère (Douce 0,6 · **Normale 1** · Forte 1,3) ;
   Couleurs du jeu (Désactivé · **Stylisé**) ; Mouvement (Complet · **Vivant** · Net) ; Suivre Windows ;
   Mode d'affichage (+ écran du mode immersif) ; puis **Personnalisation avancée** : Flottaison des cartes, Ouverture

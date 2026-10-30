@@ -28,6 +28,13 @@ pub async fn update_check<R: Runtime>(app: AppHandle<R>) -> Result<Option<Update
     update::check(&app).await
 }
 
+/// What the check at start found, if anything (asked by the page once it listens).
+#[tauri::command]
+#[specta::specta]
+pub fn update_pending<R: Runtime>(app: AppHandle<R>) -> Option<UpdateInfo> {
+    update::pending_info(&app)
+}
+
 /// Installs the update the last check found (Kayro quits, then starts again on it).
 #[tauri::command]
 #[specta::specta]
