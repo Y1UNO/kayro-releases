@@ -12,7 +12,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run && cargo test -p hub",
     "typecheck": "tsc --noEmit",
-    "gen:types": "cargo run -q -p hub --bin gen_types",
+    "gen:types": "cargo run -q -p hub --example gen_types",
     "tauri": "tauri",
     "perf": "node scripts/perf/bench.mjs"
   },

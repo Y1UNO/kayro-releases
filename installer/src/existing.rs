@@ -58,11 +58,15 @@ pub fn installed() -> Option<Installed> {
     let version = read_value("DisplayVersion")?;
     let dir = read_value("InstallLocation")?;
     let dir = dir.trim().trim_matches('"');
-    (!dir.is_empty()).then(|| Installed { version, dir: PathBuf::from(dir) })
+    (!dir.is_empty()).then(|| Installed {
+        version,
+        dir: PathBuf::from(dir),
+    })
 }
 
-/// Whether a Kayro started from `exe` is running (another copy elsewhere does not matter here:
-/// the installer only replaces this one).
+/// Whether the installed Kayro (`exe`) is running. Matched by its place, `…\Kayro\Kayro.exe`, not
+/// its full path: Windows may report another path for the same file (AppData redirected for a
+/// packaged parent app). A copy elsewhere (a developer's build) does not count.
 pub fn running(exe: &Path) -> bool {
     let mut system = System::new();
     system.refresh_processes_specifics(
@@ -73,11 +77,17 @@ pub fn running(exe: &Path) -> bool {
     system
         .processes()
         .values()
-        .any(|p| p.exe().is_some_and(|e| same_path(e, exe)))
+        .any(|p| p.exe().is_some_and(|e| same_place(e, exe)))
 }
 
-fn same_path(a: &Path, b: &Path) -> bool {
-    a.to_string_lossy().eq_ignore_ascii_case(&b.to_string_lossy())
+/// Same file name in a folder of the same name (`…\Kayro\Kayro.exe`), whatever the case.
+fn same_place(a: &Path, b: &Path) -> bool {
+    let tail = |p: &Path| -> Option<String> {
+        let name = p.file_name()?.to_string_lossy().to_lowercase();
+        let dir = p.parent()?.file_name()?.to_string_lossy().to_lowercase();
+        Some(format!("{dir}\\{name}"))
+    };
+    matches!((tail(a), tail(b)), (Some(x), Some(y)) if x == y)
 }
 
 /// Asks the running Kayro to quit as with « Quitter » (never a kill), then waits for it (10 s).
@@ -99,9 +109,26 @@ pub fn close_softly(exe: &Path) -> bool {
     !running(exe)
 }
 
+/// The user's desktop folder (where NSIS puts its shortcut), wherever Windows moved it.
+pub fn desktop_dir() -> Option<PathBuf> {
+    use windows::Win32::System::Com::CoTaskMemFree;
+    use windows::Win32::UI::Shell::{FOLDERID_Desktop, SHGetKnownFolderPath, KF_FLAG_DEFAULT};
+    // SAFETY: the returned string is read once, then freed with the COM allocator as required.
+    unsafe {
+        let path = SHGetKnownFolderPath(&FOLDERID_Desktop, KF_FLAG_DEFAULT, None).ok()?;
+        let text = path.to_string().ok();
+        CoTaskMemFree(Some(path.0 as *const _));
+        text.map(PathBuf::from)
+    }
+}
+
 /// `a.b.c` compared number by number (a missing part counts as 0; a non-number as 0).
 pub fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
-    let parts = |v: &str| -> Vec<u64> { v.split('.').map(|p| p.trim().parse().unwrap_or(0)).collect() };
+    let parts = |v: &str| -> Vec<u64> {
+        v.split('.')
+            .map(|p| p.trim().parse().unwrap_or(0))
+            .collect()
+    };
     let (pa, pb) = (parts(a), parts(b));
     let n = pa.len().max(pb.len());
     (0..n)
@@ -123,9 +150,40 @@ mod tests {
         assert_eq!(compare_versions("1.0.0", "0.99.9"), Greater);
     }
 
+    /// Manual probe: `cargo test -p kayro-setup -- --ignored --nocapture probe` with Kayro open.
     #[test]
-    fn paths_match_whatever_the_case() {
-        assert!(same_path(Path::new("C:\\Users\\A\\Kayro.exe"), Path::new("c:\\users\\a\\kayro.EXE")));
-        assert!(!same_path(Path::new("C:\\A\\Kayro.exe"), Path::new("C:\\B\\Kayro.exe")));
+    #[ignore]
+    fn probe_running() {
+        let i = installed();
+        println!("installed: {i:?}");
+        let mut system = System::new();
+        system.refresh_processes_specifics(
+            ProcessesToUpdate::All,
+            true,
+            ProcessRefreshKind::nothing().with_exe(UpdateKind::OnlyIfNotSet),
+        );
+        for p in system
+            .processes()
+            .values()
+            .filter(|p| p.name().to_string_lossy().contains("Kayro"))
+        {
+            println!("{:?} {:?}", p.name(), p.exe());
+        }
+        println!("running: {:?}", i.map(|i| running(&i.exe())));
+    }
+
+    #[test]
+    fn the_installed_kayro_is_known_by_its_place() {
+        let installed = Path::new("C:\\Users\\A\\AppData\\Local\\Kayro\\Kayro.exe");
+        // Redirected by Windows for a packaged parent app: the same file.
+        let redirected = Path::new(
+            "C:\\Users\\A\\AppData\\Local\\Packages\\X\\LocalCache\\Local\\kayro\\KAYRO.exe",
+        );
+        assert!(same_place(redirected, installed));
+        // A developer's build elsewhere does not count.
+        assert!(!same_place(
+            Path::new("C:\\HUB\\target\\release\\Kayro.exe"),
+            installed
+        ));
     }
 }

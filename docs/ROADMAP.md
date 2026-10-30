@@ -192,12 +192,15 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   30 s pour une limite de 50) si une version de WebView2 libère mieux la mémoire du processus GPU ; même protocole.
 - [x] Journal du renommage Hub → Kayro : dossier de données migré (`%APPDATA%/Hub` copié une fois vers `Kayro`),
   identifiant `fr.yiuno.hub` conservé (voir l'entrée « Chore renommage » du journal ci-dessus).
-- [ ] **Installeur maison** (demandé le 2026-10-30, en cours) : fenêtre au style de Kayro (crate `installer/`,
-  exe `KayroSetup`) qui porte l'installeur NSIS et le lance invisible (`/S`, `/NS` sans raccourci bureau) ; repli sur
+- [x] **Installeur maison** — 2026-10-30 : `Kayro_<v>_Installer.exe` (14,4 Mo), fenêtre au style de Kayro (crate
+  `installer/`, page `installer/ui/`) qui porte l'installeur NSIS (5,6 Mo) et le lance invisible (`/S`) ; repli sur
   l'installeur classique sans WebView2 ou après une erreur ; Kayro ouvert → fermé en douceur (`--quit`) avec accord,
-  car NSIS en mode invisible le **tue** ; version installée lue dans `HKCU\…\Uninstall\Kayro` (`DisplayVersion`,
-  `InstallLocation`). Fait : partie Rust (`existing.rs`, `payload.rs`, `main.rs`, build.rs). Reste : la page
-  (Vite, `installer/ui/`), le script `build-installer.ps1`, les essais réels (accord de l'utilisateur avant d'installer).
+  car NSIS en mode invisible le **tue** ; version installée lue dans `HKCU\…\Uninstall\Kayro`. **Jamais `/NS`** : il
+  retire aussi le raccourci du menu Démarrer ; sans raccourci bureau, celui de NSIS est enlevé ou l'ancien remis.
+  Essais réels sur ce PC : installation, menu Démarrer, « Lancer Kayro », réinstallation avec Kayro ouvert,
+  désinstallation (données gardées). Non essayé : mise à jour depuis une version plus ancienne, PC sans WebView2.
+  Trouvé au passage : `gen_types.exe` était livré dans l'installeur → devenu un exemple cargo (`npm run gen:types`).
+  Piège d'essai : lancé depuis l'app Claude (paquet MSIX), AppData est redirigé (`Packages\Claude_…\LocalCache`).
 
 ### Après la v1.0 — Voix (extension A)
 - [ ] **Écoute active** (demandé le 2026-10-30) : lancer des apps, des scènes et d'autres actions à la voix, avec un

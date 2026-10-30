@@ -42,22 +42,35 @@ pub fn extract(version: &str) -> io::Result<Extracted> {
     fs::create_dir_all(&dir)?;
     let exe = dir.join(format!("Kayro_{version}_x64-setup.exe"));
     fs::write(&exe, PAYLOAD)?;
-    Ok(Extracted { dir, exe, keep: false })
+    Ok(Extracted {
+        dir,
+        exe,
+        keep: false,
+    })
 }
 
-/// The installer's arguments: silent (`/S`), without the desktop shortcut if unwanted (`/NS`).
-pub fn silent_args(desktop: bool) -> Vec<&'static str> {
-    if desktop {
-        vec!["/S"]
-    } else {
-        vec!["/S", "/NS"]
+/// The desktop shortcut NSIS makes in silent mode.
+const SHORTCUT: &str = "Kayro.lnk";
+
+/// Runs the installer invisibly (`/S`) and waits for it; its exit code (−1 if it gave none).
+/// Never `/NS`: it leaves out the Start menu shortcut too. Without the desktop shortcut, the one
+/// NSIS made is removed afterwards, or the one that was there before is put back as it was.
+pub fn install_silently(exe: &Path, desktop: bool, desktop_dir: Option<&Path>) -> io::Result<i32> {
+    let lnk = desktop_dir.map(|d| d.join(SHORTCUT));
+    let before = lnk.as_ref().and_then(|l| fs::read(l).ok());
+    let status = Command::new(exe).arg("/S").status()?;
+    if let (false, Some(lnk)) = (desktop, &lnk) {
+        put_back(lnk, before);
     }
+    Ok(status.code().unwrap_or(-1))
 }
 
-/// Runs the installer invisibly and waits for it; its exit code (−1 if it gave none).
-pub fn install_silently(exe: &Path, desktop: bool) -> io::Result<i32> {
-    let status = Command::new(exe).args(silent_args(desktop)).status()?;
-    Ok(status.code().unwrap_or(-1))
+/// The shortcut as it was before the install: its old bytes, or none.
+fn put_back(lnk: &Path, before: Option<Vec<u8>>) {
+    let _ = match before {
+        Some(bytes) => fs::write(lnk, bytes),
+        None => fs::remove_file(lnk),
+    };
 }
 
 /// Starts the classic installer (its own window) and lets it run on its own.
@@ -76,8 +89,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_desktop_shortcut_is_left_out_on_request() {
-        assert_eq!(silent_args(true), ["/S"]);
-        assert_eq!(silent_args(false), ["/S", "/NS"]);
+    fn an_unwanted_desktop_shortcut_is_removed_or_put_back() {
+        let dir = std::env::temp_dir().join(format!("kayro-setup-test-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let lnk = dir.join(SHORTCUT);
+        // Made by the install, none before: removed.
+        fs::write(&lnk, b"nsis").unwrap();
+        put_back(&lnk, None);
+        assert!(!lnk.exists());
+        // The user's own one before: put back as it was.
+        fs::write(&lnk, b"nsis").unwrap();
+        put_back(&lnk, Some(b"mine".to_vec()));
+        assert_eq!(fs::read(&lnk).unwrap(), b"mine");
+        fs::remove_dir_all(&dir).unwrap();
     }
 }

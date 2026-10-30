@@ -1,4 +1,4 @@
-//! `npm run gen:types`: writes `src/ipc/bindings.ts` from the Rust command and type definitions.
+//! `npm run gen:types` (an example, so never shipped by the installer): writes `src/ipc/bindings.ts` from the Rust command and type definitions.
 
 use std::path::Path;
 

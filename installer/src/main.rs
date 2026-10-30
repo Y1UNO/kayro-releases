@@ -47,7 +47,9 @@ fn info(app: AppHandle) -> Info {
         newer_installed: installed
             .as_ref()
             .is_some_and(|i| existing::compare_versions(&i.version, &version) == Ordering::Greater),
-        running: installed.as_ref().is_some_and(|i| existing::running(&i.exe())),
+        running: installed
+            .as_ref()
+            .is_some_and(|i| existing::running(&i.exe())),
         installed: installed.map(|i| i.version),
         ready: payload::present(),
         version,
@@ -71,7 +73,8 @@ async fn install(app: AppHandle, desktop: bool) -> Outcome {
         let Ok(x) = payload::extract(&version) else {
             return Outcome::Failed { code: -1 };
         };
-        let code = payload::install_silently(&x.exe, desktop).unwrap_or(-1);
+        let code = payload::install_silently(&x.exe, desktop, existing::desktop_dir().as_deref())
+            .unwrap_or(-1);
         // Success is the exit code and the version now recorded by the installer.
         let landed = existing::installed()
             .is_some_and(|i| existing::compare_versions(&i.version, &version) == Ordering::Equal);
@@ -116,7 +119,14 @@ fn main() {
         return;
     }
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![info, close_kayro, install, launch, classic, quit])
+        .invoke_handler(tauri::generate_handler![
+            info,
+            close_kayro,
+            install,
+            launch,
+            classic,
+            quit
+        ])
         .setup(|app| {
             WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
                 .title("Installer Kayro")

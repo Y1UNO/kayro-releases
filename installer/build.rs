@@ -18,8 +18,11 @@ fn main() {
     let dist = PathBuf::from("dist");
     if !dist.join("index.html").exists() {
         fs::create_dir_all(&dist).expect("dist");
-        fs::write(dist.join("index.html"), "<!doctype html><title>Kayro</title>")
-            .expect("page provisoire");
+        fs::write(
+            dist.join("index.html"),
+            "<!doctype html><title>Kayro</title>",
+        )
+        .expect("page provisoire");
     }
     tauri_build::build()
 }

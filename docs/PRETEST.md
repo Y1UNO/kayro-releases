@@ -8,13 +8,18 @@ Kayro marche **sans Internet** et n'envoie rien : tes réglages restent sur ton 
 
 ## 1. Installer
 
-1. Lance `Kayro_0.16.0_x64-setup.exe`.
+1. Lance `Kayro_0.16.0_Installer.exe`, puis clique sur **Installer** (la case « raccourci sur le bureau » est
+   cochée par défaut). À la fin, **Lancer Kayro**. Si Kayro est déjà ouvert, l'installeur propose de le fermer
+   proprement d'abord ; une ancienne version est mise à jour, tes réglages restent.
 2. Windows affiche sûrement **« Windows a protégé votre ordinateur »** (SmartScreen). C'est normal : le programme
    n'est pas signé (un certificat coûte cher pour un projet perso). Clique sur **« Informations complémentaires »**,
    puis sur **« Exécuter quand même »**. Ton antivirus peut aussi poser la question.
 3. L'installation se fait pour ton compte seulement, sans droits administrateur.
 4. Si ton PC n'a pas WebView2 (le moteur d'affichage de Microsoft, presque toujours présent sur Windows 11),
-   l'installeur le télécharge : il faut Internet **à ce moment-là seulement**.
+   c'est l'installeur classique de Windows qui s'ouvre, et il le télécharge : il faut Internet **à ce moment-là
+   seulement**.
+5. En cas de souci, le dossier `secours` contient l'installeur classique (`Kayro_0.16.0_x64-setup.exe`) : il
+   installe exactement la même chose, dans une fenêtre Windows ordinaire.
 
 ## 2. Utiliser
 

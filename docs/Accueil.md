@@ -2,8 +2,7 @@
 
 > [!info] Où on en est
 > - **Dernière étape close** : 16–17 — Ambiances (le 2026-10-30, à valider dans l'exe et à mesurer)
-> - **En cours** : installeur maison (`installer/`, voir [[ROADMAP]] « Avant l'étape 19 ») ; 0.16.0 envoyable
->   avec l'installeur classique (`Kayro_0.16.0_x64-setup.exe`)
+> - **À envoyer** : 0.16.0 avec l'installeur maison `Kayro_0.16.0_Installer.exe` (l'installeur classique en secours)
 > - **Prochaine étape** : 17b — Sound design, ou 18 — Audit (CPU au repos)
 > - **DA** : gelée le 2026-10-14 (v1)
 
