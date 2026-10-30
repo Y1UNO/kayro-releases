@@ -121,5 +121,13 @@
     "points": [
       "Premier essai de mise à jour automatique : si tu lis ceci dans Kayro, ça marche."
     ]
+  },
+  {
+    "version": "0.18.2",
+    "date": "30/10/2026",
+    "title": "L'annonce au démarrage",
+    "points": [
+      "Le message « nouvelle version disponible » s'affiche bien au démarrage de Kayro."
+    ]
   }
 ]
