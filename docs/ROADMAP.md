@@ -201,9 +201,11 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 
 ### Après la v1.0 — Voix (extension A)
 - [ ] **Écoute active** (demandé le 2026-10-30) : lancer des apps, des scènes et d'autres actions à la voix, avec un
-  mot d'éveil. À cadrer : la règle actuelle du projet dit « micro jamais en permanence » (CLAUDE.md) ; une écoute
-  active la contredit, il faudra choisir avec l'utilisateur (écoute permanente locale avec indicateur visible et
-  coupure facile, ou écoute au raccourci / bouton). Traitement 100 % local, ne lance que ce qui est configuré.
+  mot d'éveil. **Décision de l'utilisateur (2026-10-30)** : les deux modes, au choix dans les réglages —
+  **écoute active en permanence** (mot d'éveil) ou **push-to-talk** (raccourci / bouton). Le mode permanent est une
+  exception voulue à la règle « micro jamais en permanence » (CLAUDE.md, à mettre à jour à ce moment-là) : indicateur
+  visible quand le micro écoute, coupure facile, veille douce respectée (jeu au premier plan → à décider).
+  Traitement 100 % local, ne lance que ce qui est configuré.
 
 ## Abandonné
 Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).
