@@ -1,4 +1,4 @@
-# Kayro 0.16 prétest — note pour les testeurs
+# Kayro 0.17 prétest — note pour les testeurs
 
 Merci de tester Kayro ! C'est un lanceur d'applications pour Windows : un écran joli et rapide pour ouvrir tes jeux
 et tes logiciels, qui apparaît avec un raccourci clavier. C'est une **version de test** : il y aura des bugs, et c'est
@@ -8,7 +8,7 @@ Kayro marche **sans Internet** et n'envoie rien : tes réglages restent sur ton 
 
 ## 1. Installer
 
-1. Lance `Kayro_0.16.0_Installer.exe`, puis clique sur **Installer** (la case « raccourci sur le bureau » est
+1. Lance `Kayro_0.17.0_Installer.exe`, puis clique sur **Installer** (la case « raccourci sur le bureau » est
    cochée par défaut). À la fin, **Lancer Kayro**. Si Kayro est déjà ouvert, l'installeur propose de le fermer
    proprement d'abord ; une ancienne version est mise à jour, tes réglages restent.
 2. Windows affiche sûrement **« Windows a protégé votre ordinateur »** (SmartScreen). C'est normal : le programme
@@ -18,7 +18,7 @@ Kayro marche **sans Internet** et n'envoie rien : tes réglages restent sur ton 
 4. Si ton PC n'a pas WebView2 (le moteur d'affichage de Microsoft, presque toujours présent sur Windows 11),
    c'est l'installeur classique de Windows qui s'ouvre, et il le télécharge : il faut Internet **à ce moment-là
    seulement**.
-5. En cas de souci, le dossier `secours` contient l'installeur classique (`Kayro_0.16.0_x64-setup.exe`) : il
+5. En cas de souci, le dossier `secours` contient l'installeur classique (`Kayro_0.17.0_x64-setup.exe`) : il
    installe exactement la même chose, dans une fenêtre Windows ordinaire.
 
 ## 2. Utiliser
@@ -35,6 +35,9 @@ Kayro marche **sans Internet** et n'envoie rien : tes réglages restent sur ton 
 - Tu peux changer de thème, mettre des images à tes jeux (glisser une image sur une carte) et régler les
   couleurs du jeu dans **Réglages › Visuel**. Tu peux aussi créer tes propres thèmes (**Mes thèmes**), les
   exporter et les importer.
+- **Sons** (nouveau en 0.17) : **Réglages › Sons** : style Premium (doux et cristallin), Rétro ou 8-bit, volume
+  (curseur en forme d'onde), et ce qui fait du son (interface, changement de catégorie, lancement). Tout se coupe
+  d'un clic. L'installeur a aussi un onglet **Patch notes** qui raconte toutes les versions.
 - **Ambiances** (nouveau en 0.16) : clic droit sur un jeu › **Modifier…** › **Ambiance du jeu** : braises,
   étoiles, brume, runes, pluie… autour de la carte quand le jeu est sélectionné. Deux ambiances sur mesure ont
   une **animation de lancement** : « Sceau de la sorcière » (pour Hades II) et « Pétales du Gommage » (pour
@@ -56,7 +59,7 @@ Kayro marche **sans Internet** et n'envoie rien : tes réglages restent sur ton 
    Windows). Aucune image, aucun mot de passe.
 3. Dis-moi aussi : ta version de Windows (10 ou 11), ta taille d'écran, la mise à l'échelle (Paramètres ›
    Affichage › Échelle, par ex. 100 / 125 / 150 %), la fréquence de ton écran (60, 144 Hz…) et ta carte graphique.
-4. La version testée est écrite en bas de **Réglages › Général** (« Kayro 0.16 prétest »).
+4. La version testée est écrite en bas de **Réglages › Général** (« Kayro 0.17 prétest »).
 
 Ce qui m'intéresse le plus : <!-- TODO : les 3 ou 4 choses à tester en priorité -->
 - ce qui est lent, saccadé ou bizarre à l'écran ;

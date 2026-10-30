@@ -4,6 +4,7 @@ import "./style.css";
 import icon from "../../src-tauri/icons/128x128@2x.png";
 import { fakeBackend, tauriBackend, type Backend, type Info } from "./backend";
 import { t, type MessageKey } from "./messages";
+import { notesView, scrollToNewest } from "./notes";
 
 /**
  * Kayro's installer window: a fan of glass cards on the left, one screen at a time on the right
@@ -26,6 +27,9 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let info: Info;
 let desktop = true;
 let installing = false;
+/** The screen of the « Installation » tab, and the tab shown. */
+let current: Screen | null = null;
+let tab: "install" | "notes" = "install";
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -111,21 +115,43 @@ function build(s: Screen): Node[] {
       actions.append(button(t("close"), true, () => void backend.quit()));
   }
   if (actions.childElementCount) parts.push(actions);
-  parts.forEach((p, i) => (p as HTMLElement).style.setProperty("--i", String(i)));
   return parts;
 }
 
-async function show(s: Screen) {
-  document.body.dataset.state = s.name;
+/** Fades the panel out, puts `nodes` in, and lets them rise in a cascade. */
+async function swap(nodes: Node[]) {
   if (!reduced && panel.childElementCount) {
     panel.classList.add("leaving");
     await wait(170);
   }
-  panel.replaceChildren(...build(s));
+  nodes.forEach((p, i) => (p as HTMLElement).style.setProperty("--i", String(i)));
+  panel.replaceChildren(...nodes);
   panel.classList.remove("leaving", "entering");
   void panel.offsetWidth; // restart the cascade
   panel.classList.add("entering");
+}
+
+async function show(s: Screen) {
+  current = s;
+  document.body.dataset.state = s.name;
+  if (tab !== "install") return; // shown when the user comes back to the tab
+  await swap(build(s));
   panel.querySelector<HTMLElement>("[data-primary]")?.focus();
+}
+
+/** « Installation » · « Patch notes »: the install goes on behind the notes. */
+async function openTab(next: "install" | "notes") {
+  if (next === tab) return;
+  tab = next;
+  document.body.dataset.tab = next;
+  for (const b of document.querySelectorAll<HTMLButtonElement>("[data-tab]")) {
+    b.setAttribute("aria-selected", String(b.dataset.tab === next));
+  }
+  if (next === "notes") {
+    await swap([notesView()]);
+    scrollToNewest(panel);
+  }
+  else if (current) await show(current);
 }
 
 function mode(): Mode {
@@ -162,6 +188,13 @@ function setupChrome() {
   min.setAttribute("aria-label", t("minimize"));
   close.setAttribute("aria-label", t("close"));
   min.addEventListener("click", () => void backend.minimize());
+  for (const b of document.querySelectorAll<HTMLButtonElement>("[data-tab]")) {
+    b.textContent = t(b.dataset.tab === "notes" ? "tabNotes" : "tabInstall");
+    b.addEventListener(
+      "click",
+      () => void openTab(b.dataset.tab === "notes" ? "notes" : "install"),
+    );
+  }
   close.addEventListener("click", () => {
     if (!installing) void backend.quit();
   });

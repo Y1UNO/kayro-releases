@@ -1,9 +1,9 @@
 # Kayro — Accueil
 
 > [!info] Où on en est
-> - **Dernière étape close** : 16–17 — Ambiances (le 2026-10-30, à valider dans l'exe et à mesurer)
-> - **À envoyer** : 0.16.0 avec l'installeur maison `Kayro_0.16.0_Installer.exe` (l'installeur classique en secours)
-> - **Prochaine étape** : 17b — Sound design, ou 18 — Audit (CPU au repos)
+> - **Dernière étape close** : 17b — Sons (le 2026-10-30, version 0.17.0, à écouter dans l'exe)
+> - **À envoyer** : 0.17.0 avec l'installeur maison `Kayro_0.17.0_Installer.exe` (l'installeur classique en secours)
+> - **Prochaine étape** : 18 — Audit (CPU au repos, scènes de lancement et sons à mesurer)
 > - **DA** : gelée le 2026-10-14 (v1)
 
 ## Référence
@@ -12,8 +12,9 @@
 - [[DA-JOURNAL]] — décisions de DA et « Changements après le gel »
 - [[PLAN]] — choix techniques vérifiés
 - [[ARCHITECTURE]] — données, modules, perf
-- [[PRETEST]] — note pour les testeurs (version 0.16 prétest)
+- [[PRETEST]] — note pour les testeurs (version 0.17 prétest)
 - [[REVUE-OPUS55]] — note d'évolution de la revue Opus 5.5 (mouvement, verre 3D, couleurs, scan)
+- [[SONS]] — sons synthétisés, styles, réglages
 - [[AMBIANCES]] — ambiances `.hubmood`, packs, cartes spéciales et images à fournir
 - [[MACHINE]] — PC de test
 

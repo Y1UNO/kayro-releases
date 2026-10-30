@@ -1,0 +1,105 @@
+[
+  {
+    "version": "0.1",
+    "date": "09/10/2026",
+    "title": "L'idée",
+    "points": [
+      "Un lanceur d'applications pour Windows, beau, fluide et très personnalisable.",
+      "Plan technique : cœur en Rust (Tauri), tout en local, rien sur Internet."
+    ]
+  },
+  {
+    "version": "0.2 – 0.4",
+    "date": "09/10/2026",
+    "title": "Les fondations",
+    "points": [
+      "La fenêtre, une seule instance, les premiers essais d'affichage.",
+      "Le design : thèmes de couleur, verre, composants.",
+      "Les réglages sauvegardés proprement, l'interface en français."
+    ]
+  },
+  {
+    "version": "0.5 – 0.6",
+    "date": "09/10/2026",
+    "title": "Trouver et lancer",
+    "points": [
+      "Steam, Epic et le menu Démarrer détectés tout seuls.",
+      "Les apps se lancent, Kayro sait lesquelles sont ouvertes."
+    ]
+  },
+  {
+    "version": "0.7 – 0.9",
+    "date": "10/10/2026",
+    "title": "L'accueil",
+    "points": [
+      "Carrousel de cartes, onglets de catégories, recherche Ctrl + K.",
+      "Atmosphère animée : brume, lumière, particules.",
+      "Ajouter et modifier ses apps, glisser-déposer, icônes, logo Kayro."
+    ]
+  },
+  {
+    "version": "0.10 – 0.12",
+    "date": "11/10/2026",
+    "title": "Scènes et modes",
+    "points": [
+      "Les scènes : plusieurs apps lancées d'un coup, avec un éditeur.",
+      "Fenêtre, plein écran ou widget ; Ctrl + Alt + H pour afficher Kayro."
+    ]
+  },
+  {
+    "version": "DA v1",
+    "date": "14/10/2026",
+    "title": "La direction artistique",
+    "points": [
+      "Verre liquide, ouverture animée, éventail des catégories.",
+      "Un mouvement « vivant » partout, des réglages Visuel complets."
+    ]
+  },
+  {
+    "version": "0.13",
+    "date": "14/10/2026",
+    "title": "Performance",
+    "points": [
+      "Quatre niveaux de qualité et un repli automatique sûr.",
+      "Veille douce : tout s'arrête quand Kayro est caché."
+    ]
+  },
+  {
+    "version": "0.14",
+    "date": "29/10/2026",
+    "title": "Couleurs du jeu et premier prétest",
+    "points": [
+      "L'interface prend les couleurs de l'affiche du jeu sélectionné.",
+      "Premier installeur pour les amis, « Exporter les logs »."
+    ]
+  },
+  {
+    "version": "0.15",
+    "date": "29/10/2026",
+    "title": "Mes thèmes",
+    "points": [
+      "Créer, importer et exporter ses propres thèmes.",
+      "Survol 3D du verre, ronde des cartes au changement d'onglet."
+    ]
+  },
+  {
+    "version": "0.16",
+    "date": "30/10/2026",
+    "title": "Ambiances",
+    "points": [
+      "Braises, étoiles, brume, runes ou pluie autour du jeu choisi.",
+      "Animations de lancement sur mesure pour Hades II et Clair Obscur.",
+      "Un installeur aux couleurs de Kayro."
+    ]
+  },
+  {
+    "version": "0.17",
+    "date": "30/10/2026",
+    "title": "Les sons",
+    "points": [
+      "Des sons doux et légers, synthétisés : Premium, Rétro ou 8-bit.",
+      "Réglages › Sons : volume en forme d'onde, familles au choix.",
+      "Ces patch notes dans l'installeur."
+    ]
+  }
+]

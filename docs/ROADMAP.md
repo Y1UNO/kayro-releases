@@ -23,7 +23,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [ ] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
 | [x] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
 | [x] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
-| [ ] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages des sons, à définir à l'étape 17b, `docs/SONS.md` | 12b, 13 | E |
+| [x] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages des sons, à définir à l'étape 17b, `docs/SONS.md` | 12b, 13 | E |
 | [ ] 18 | Audit : perf, sécurité, robustesse, accessibilité | 1–16 | F |
 | [ ] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis | 18 | F |
 
@@ -103,6 +103,14 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
   couleurs du jeu retiré** (Désactivé · Stylisé). Tests : vitest 565, cargo 250, clippy / eslint / tsc
   propres. **Non mesuré** (CPU / GPU des ambiances : à faire en A/B avec `npm run perf -- --exe`, accord requis) ;
   non vu dans l'exe par moi ; carte spéciale sans repli CSS ; anneau de glyphes en partie derrière les cartes latérales.
+- **Étape 17b — Sons, 2026-10-30** (version 0.17.0, note `docs/SONS.md`) : sons **synthétisés** (Web Audio, aucun
+  fichier) en trois styles — Premium (cloches de cristal, écho doux, par défaut), Rétro (synthé chaud filtré), 8-bit
+  (carrés) — décrits par `src/sound/sons.json` (validé strictement) ; 7 moments (clic, carte, catégorie, validation,
+  lancement, réussite, export) en 3 familles ; contexte audio suspendu après chaque son, rien quand Kayro est caché.
+  Réglages › **Sons** : interrupteur, style, volume en forme d'onde (rendu hors ligne du son), familles ; Rust
+  `config/sounds.rs` (volume 0–1 validé). Installeur : onglet **Patch notes** (frise des versions, `installer/ui/
+  patchNotes.json`). Tests : vitest 583, cargo 255, clippy / eslint / tsc propres. **Non entendu par moi** ;
+  coût CPU non mesuré (étape 18).
 
 ## Plus tard (liste unique)
 Seul endroit des choses à faire plus tard (regroupées au gel de la DA, le 2026-10-14). Elles viennent de l'ancienne liste

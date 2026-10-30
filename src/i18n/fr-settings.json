@@ -6,7 +6,33 @@
       "label": "Catégories des réglages",
       "general": "Général",
       "visual": "Visuel",
+      "sounds": "Sons",
       "themes": "Thèmes"
+    },
+    "sounds": {
+      "on": {
+        "label": "Sons de l'interface",
+        "help": "De petits sons doux quand tu cliques, changes de carte ou lances un jeu. Coupés quand {app} est caché."
+      },
+      "pack": {
+        "label": "Style",
+        "help": "Synthétisés à la volée, sans fichier ni connexion.",
+        "premium": "Premium",
+        "retro": "Rétro",
+        "chiptune": "8-bit"
+      },
+      "volume": {
+        "label": "Volume",
+        "value": "{percent} %",
+        "help": "Relâche le curseur pour écouter."
+      },
+      "families": {
+        "label": "Quand en jouer",
+        "interface": "Interface (clics, cartes, validation)",
+        "transitions": "Changement de catégorie",
+        "launch": "Lancement d'un jeu"
+      },
+      "listen": "Écouter"
     },
     "general": {
       "hotkey": {

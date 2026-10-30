@@ -13,6 +13,7 @@ import { loadMoods } from "./features/moods/moodsStore";
 import { applyDefaultLogoColours } from "./brand";
 import { GameAtmosphere } from "./features/gameColors/GameAtmosphere";
 import { WidgetApp } from "./features/widget/WidgetApp";
+import { startSounds } from "./sound";
 import { artStore, desktopStore, hubStore, sceneStore } from "./store";
 import "./index.css";
 import "./design/themeSwap.css";
@@ -62,6 +63,8 @@ if (new URLSearchParams(location.search).get("enter") === "1") {
   document.body.style.opacity = "0";
 }
 const DevPage = Catalogue ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev;
+// Step 17b: the interface sounds follow the settings as soon as they are read.
+startSounds();
 
 if (DevPage) {
   appRoot.render(

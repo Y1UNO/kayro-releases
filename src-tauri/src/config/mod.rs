@@ -10,6 +10,7 @@ pub mod mood_store;
 pub mod moods;
 pub mod scene;
 pub mod scene_ops;
+pub mod sounds;
 pub mod schema;
 pub mod share;
 pub mod store;
@@ -306,6 +307,8 @@ fn unique_id(name: &str, apps: &AppsFile) -> String {
 mod scene_tests;
 #[cfg(test)]
 mod settings_r5_tests;
+#[cfg(test)]
+mod sounds_tests;
 #[cfg(test)]
 mod store_tests;
 #[cfg(test)]

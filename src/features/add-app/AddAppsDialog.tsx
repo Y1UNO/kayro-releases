@@ -1,3 +1,4 @@
+import { playSound } from "../../sound";
 import { useCallback, useState } from "react";
 import { Dialog, SegmentedControl } from "../../design";
 import { t } from "../../i18n";
@@ -61,6 +62,7 @@ function Body({ onClose, onAdded }: Omit<Props, "open">) {
   const drop = useFileDrop((paths) => void inspect(paths));
 
   const added = (count: number) => {
+    if (count > 0) playSound("success");
     onAdded?.(count);
     onClose();
   };

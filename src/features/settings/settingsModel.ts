@@ -64,3 +64,16 @@ export function visualSnapshot(s: Settings): SettingsPatch {
 export function isVisualDefault(s: Settings): boolean {
   return VISUAL_KEYS.every((k) => s[k] === VISUAL_DEFAULTS[k]);
 }
+
+/**
+ * Step 17b, Réglages › Sons: the defaults (same values as `Settings::default`, schema.rs).
+ * Crystalline « Premium » style, low volume, every family on.
+ */
+export const SOUND_DEFAULTS = {
+  soundsOn: true,
+  soundPack: "premium",
+  soundVolume: 0.4,
+  soundInterface: true,
+  soundTransitions: true,
+  soundLaunch: true,
+} as const satisfies SettingsPatch;

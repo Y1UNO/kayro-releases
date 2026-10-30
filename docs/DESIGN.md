@@ -342,8 +342,12 @@ onglets verticaux (`src/features/settings/`, textes `src/i18n/fr-settings.json`)
   aux couleurs de leur icône (**oui**) ;
   enfin « Revenir aux réglages par défaut » (tout Visuel sauf l'affichage), avec « Annuler » tant qu'aucun réglage
   Visuel n'a été changé ensuite.
+- **Sons** (étape 17b, `SoundsSection.tsx`) : Sons de l'interface (**oui**), Style (**Premium** · Rétro · 8-bit),
+  Volume (**40 %**) dessiné comme l'**onde** du son du style (44 barres arrondies dans un champ, éclairées au dégradé du
+  logo jusqu'au volume, plus hautes avec lui ; une lumière traverse l'onde quand le son joue ; `VolumeWave.tsx`), puis
+  « Quand en jouer » : Interface, Changement de catégorie, Lancement d'un jeu. Chaque choix se fait entendre.
 - **Thèmes** : grille des 6 cartes 240 × 150 ; un clic applique et joue l'onde.
-Défauts : `VISUAL_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::default` (`src-tauri/src/config/schema.rs`).
+Défauts : `VISUAL_DEFAULTS`, `SOUND_DEFAULTS` (`settingsModel.ts`), les mêmes que `Settings::default` (`src-tauri/src/config/schema.rs`).
 
 ---
 

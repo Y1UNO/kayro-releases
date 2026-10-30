@@ -39,6 +39,11 @@ function subscribe(notify: () => void): () => void {
  * The window is on screen. A small periodic effect (a light that crosses a card or a rule from
  * time to time) stops its timer while it is false (review B2): no timer runs for a hidden hub.
  */
+/** Outside React (the sounds, step 17b): told each time the window shows or hides. */
+export function followWindowVisible(onChange: (visible: boolean) => void): () => void {
+  return subscribe(() => onChange(visible));
+}
+
 export function useWindowVisible(): boolean {
   return useSyncExternalStore(
     subscribe,

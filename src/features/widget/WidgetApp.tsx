@@ -1,3 +1,4 @@
+import { playSound } from "../../sound";
 import { useEffect, useRef, useState } from "react";
 import { announceReady, useWindowShown } from "../../app/useWindowShown";
 import { useTheme } from "../../design";
@@ -103,6 +104,7 @@ export function WidgetApp() {
     request(scene);
   };
   const launch = (app: AppEntry) => {
+    playSound("launch");
     void hubStore.getState().launchApp(app.id);
     fold();
   };

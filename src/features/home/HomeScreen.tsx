@@ -21,6 +21,7 @@ import { CategoryTitle } from "./CategoryTitle";
 import { CommandPalette } from "./CommandPalette";
 import { EmptyState } from "./EmptyState";
 import { homeLeft, homeReducer, initialHomeState, rememberHome } from "./homeState";
+import { useHomeSounds } from "./useHomeSounds";
 import { LaunchToast } from "./LaunchToast";
 import { DragGhost, Notice } from "./Overlays";
 import { SceneDock } from "./SceneDock";
@@ -100,6 +101,7 @@ export function HomeScreen({
   const focus = Math.min(state.focus[state.category], Math.max(0, count - 1));
   const grid = state.view === "grid";
   useEffect(() => rememberHome(state), [state]);
+  useHomeSounds(state.category, focus);
 
   // The confirmation disappears by itself; the timer exists only while one is shown.
   useEffect(() => {

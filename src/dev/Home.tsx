@@ -23,7 +23,7 @@ import { installAddAppsMock } from "./addAppsMock";
 import { Opening } from "../features/opening/Opening";
 import { ACTIVE_THEME_ID } from "../design/da";
 import type { CategoryId } from "../features/home/categories";
-import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
+import { SOUND_DEFAULTS, VISUAL_DEFAULTS } from "../features/settings/settingsModel";
 import { effectiveQuality } from "../design/quality";
 
 /** The category journey, as exposed by useCategoryLink.ts in development builds. */
@@ -123,6 +123,7 @@ export default function HomeDev() {
       apps,
       settings: {
         ...VISUAL_DEFAULTS,
+        ...SOUND_DEFAULTS,
         openingScreen: "last",
         schemaVersion: 2,
         themeId: params.get("theme") ?? ACTIVE_THEME_ID,

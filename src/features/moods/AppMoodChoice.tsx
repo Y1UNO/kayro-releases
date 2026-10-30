@@ -1,3 +1,4 @@
+import { playSound } from "../../sound";
 import { useEffect, useRef, useState } from "react";
 import { Button, Chip, Slider } from "../../design";
 import { CUSTOM_MOODS } from "../../fx/mood/custom";
@@ -87,6 +88,7 @@ export function AppMoodChoice({ app }: { app: AppEntry }) {
   const imported = mine.some((m) => m.id === current);
   async function exportIt(mood: Mood) {
     const r = await moodsIpc.exportFile(mood as unknown as MoodFile);
+    if (r.ok) playSound("export");
     setStatus(
       r.ok
         ? { text: t("addApps.look.mood.exported"), kind: "ok" }

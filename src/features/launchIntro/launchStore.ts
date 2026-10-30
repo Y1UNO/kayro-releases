@@ -4,6 +4,7 @@ import { desktopIpc } from "../../ipc/commands";
 import { onLaunchLanded } from "../../ipc/events";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { parseColor } from "../../lib/color";
+import { playSound } from "../../sound";
 import { artStore, hubStore, imageOf } from "../../store";
 import { artUrl } from "../home/art";
 import { moodById } from "../moods/moodsStore";
@@ -76,6 +77,7 @@ export function startLaunch(app: AppEntry): void {
   const style = settings?.colorMode === "off" ? null : moodById(app.moodId)?.launch;
   const card = style && !prefersReducedMotion() ? cardOf(app.id) : null;
   if (launchIntro.getState().playing) return;
+  playSound("launch");
   if (!card || !style) return void go();
   listen();
   const r = card.getBoundingClientRect();

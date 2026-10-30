@@ -1,3 +1,4 @@
+import { playSound } from "../../sound";
 import { useId, useMemo, useState } from "react";
 import { Button, ChevronLeftIcon, Slider, useTheme } from "../../design";
 import type { Theme } from "../../design/theme";
@@ -69,6 +70,7 @@ export function ThemeEditor({ theme, onClose }: Props) {
   async function exportIt() {
     if (!theme) return;
     const r = await themesIpc.exportFile(theme.id);
+    if (r.ok) playSound("export");
     const file = r.ok ? (r.value.split(/[\\/]/).pop() ?? r.value) : "";
     setStatus(
       r.ok

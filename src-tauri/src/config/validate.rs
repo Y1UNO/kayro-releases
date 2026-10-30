@@ -6,6 +6,7 @@ use std::path::{Component, Path};
 
 use super::apps::{AppEntry, Launch, NewApp};
 use super::schema::{Settings, ATMOSPHERE_MAX, ATMOSPHERE_MIN};
+use super::sounds::{SOUND_VOLUME_MAX, SOUND_VOLUME_MIN};
 use crate::error::AppError;
 
 pub const MAX_APPS: usize = 2000;
@@ -237,6 +238,9 @@ pub fn validate_settings(s: &Settings) -> Check {
     let a = s.atmosphere_intensity;
     if !(ATMOSPHERE_MIN..=ATMOSPHERE_MAX).contains(&a) {
         return err("atmosphereIntensity", "must be between 0.3 and 1.3");
+    }
+    if !(SOUND_VOLUME_MIN..=SOUND_VOLUME_MAX).contains(&s.sound_volume) {
+        return err("soundVolume", "must be between 0 and 1");
     }
     Ok(())
 }

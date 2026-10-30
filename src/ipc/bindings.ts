@@ -803,6 +803,12 @@ export type SettingsPatch_Deserialize = {
 	colorPassage?: ColorPassage | null,
 	colorTrigger?: ColorTrigger | null,
 	colorFromIcon?: boolean | null,
+	soundsOn?: boolean | null,
+	soundPack?: SoundPack | null,
+	soundVolume?: number | null,
+	soundInterface?: boolean | null,
+	soundTransitions?: boolean | null,
+	soundLaunch?: boolean | null,
 };
 
 /**  Partial update: absent (or null) fields are left as they are. */
@@ -835,6 +841,12 @@ export type SettingsPatch_Serialize = {
 	colorPassage: ColorPassage | null,
 	colorTrigger: ColorTrigger | null,
 	colorFromIcon: boolean | null,
+	soundsOn: boolean | null,
+	soundPack: SoundPack | null,
+	soundVolume: number | null,
+	soundInterface: boolean | null,
+	soundTransitions: boolean | null,
+	soundLaunch: boolean | null,
 };
 
 export type Settings_Deserialize = {
@@ -874,6 +886,13 @@ export type Settings_Deserialize = {
 	colorTrigger: ColorTrigger,
 	/**  An app without a picture takes its icon's colours (V10 b); off = the theme's. */
 	colorFromIcon: boolean,
+	/**  Step 17b, Réglages › Sons: on, style, volume (0–1), and the three families. */
+	soundsOn: boolean,
+	soundPack: SoundPack,
+	soundVolume: number | null,
+	soundInterface: boolean,
+	soundTransitions: boolean,
+	soundLaunch: boolean,
 };
 
 export type Settings_Serialize = {
@@ -913,6 +932,13 @@ export type Settings_Serialize = {
 	colorTrigger: ColorTrigger,
 	/**  An app without a picture takes its icon's colours (V10 b); off = the theme's. */
 	colorFromIcon: boolean,
+	/**  Step 17b, Réglages › Sons: on, style, volume (0–1), and the three families. */
+	soundsOn: boolean,
+	soundPack: SoundPack,
+	soundVolume: number | null,
+	soundInterface: boolean,
+	soundTransitions: boolean,
+	soundLaunch: boolean,
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */
@@ -920,6 +946,9 @@ export type SlotsFile = {
 	schemaVersion: number,
 	slots: { [key in string]: string },
 };
+
+/**  « Style des sons »: crystalline and soft (the default), a warm analogue synth, or 8-bit. */
+export type SoundPack = "premium" | "retro" | "chiptune";
 
 /**  Where a detected app comes from (also the identity of a [`DetectSource`]). */
 export type SourceKind = "steam" | "epic" | "startmenu";

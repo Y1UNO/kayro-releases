@@ -15,6 +15,8 @@ pub use super::scene::SceneFile;
 use super::store::{lenient_merge, Document, LoadReport};
 use super::validate::validate_settings;
 use super::visual::{settings_v1_to_v2, DEFAULT_THEME};
+pub use super::sounds::SoundPack;
+use super::sounds::SOUND_VOLUME_DEFAULT;
 pub use super::visual::{
     CardFloat, CardHoverStyle, Elasticity, MotionStyle, OpeningScreen, OpeningStyle,
     ThemeTransition, WidgetUnroll,
@@ -94,6 +96,13 @@ pub struct Settings {
     pub color_trigger: ColorTrigger,
     /// An app without a picture takes its icon's colours (V10 b); off = the theme's.
     pub color_from_icon: bool,
+    /// Step 17b, Réglages › Sons: on, style, volume (0–1), and the three families.
+    pub sounds_on: bool,
+    pub sound_pack: SoundPack,
+    pub sound_volume: f32,
+    pub sound_interface: bool,
+    pub sound_transitions: bool,
+    pub sound_launch: bool,
 }
 
 /// Bounds of [`Settings::atmosphere_intensity`].
@@ -134,6 +143,12 @@ impl Default for Settings {
             color_passage: ColorPassage::default(),
             color_trigger: ColorTrigger::default(),
             color_from_icon: true,
+            sounds_on: true,
+            sound_pack: SoundPack::default(),
+            sound_volume: SOUND_VOLUME_DEFAULT,
+            sound_interface: true,
+            sound_transitions: true,
+            sound_launch: true,
         }
     }
 }
@@ -170,6 +185,12 @@ pub struct SettingsPatch {
     pub color_passage: Option<ColorPassage>,
     pub color_trigger: Option<ColorTrigger>,
     pub color_from_icon: Option<bool>,
+    pub sounds_on: Option<bool>,
+    pub sound_pack: Option<SoundPack>,
+    pub sound_volume: Option<f32>,
+    pub sound_interface: Option<bool>,
+    pub sound_transitions: Option<bool>,
+    pub sound_launch: Option<bool>,
 }
 
 impl Settings {
@@ -210,6 +231,12 @@ impl Settings {
             color_passage,
             color_trigger,
             color_from_icon,
+            sounds_on,
+            sound_pack,
+            sound_volume,
+            sound_interface,
+            sound_transitions,
+            sound_launch,
         );
     }
 }

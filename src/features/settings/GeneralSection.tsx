@@ -1,3 +1,4 @@
+import { playSound } from "../../sound";
 import { useEffect, useState } from "react";
 import { APP_VERSION } from "../../app/appName";
 import { Button } from "../../design";
@@ -59,6 +60,7 @@ export function GeneralSection() {
       setLogs({ text: t("settings.general.logs.failed"), kind: "error" });
       return;
     }
+    playSound("export");
     const file = result.value.split(/[\\/]/).pop() ?? result.value;
     setLogs({ text: t("settings.general.logs.done", { file }), kind: "ok" });
   }
