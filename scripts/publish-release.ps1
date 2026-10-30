@@ -22,7 +22,11 @@ function Stop-Here([string]$message) {
     exit 1
 }
 
-if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { Stop-Here 'outil gh introuvable (winget install --id GitHub.cli -e).' }
+# gh from the PATH, or where winget puts it (a terminal opened before its install does not know it).
+$ghCmd = Get-Command gh -ErrorAction SilentlyContinue
+$ghExe = if ($ghCmd) { $ghCmd.Source } else { Join-Path $env:ProgramFiles 'GitHub CLI\gh.exe' }
+if (-not (Test-Path $ghExe)) { Stop-Here 'outil gh introuvable (winget install --id GitHub.cli -e).' }
+Set-Alias gh $ghExe
 gh auth status *> $null
 if ($LASTEXITCODE -ne 0) { Stop-Here 'gh n''est pas connecte (gh auth login --web).' }
 if (-not (Test-Path (Join-Path $publish 'latest.json'))) { Stop-Here "rien a publier dans $publish (lance build-installer.ps1)." }
