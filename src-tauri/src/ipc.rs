@@ -349,6 +349,8 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_moods::mood_delete::<tauri::Wry>,
             ipc_moods::mood_export,
             ipc_desktop::launch_cover::<tauri::Wry>,
+            crate::ipc_update::update_check::<tauri::Wry>,
+            crate::ipc_update::update_install::<tauri::Wry>,
         ])
         .events(collect_events![
             SettingsChanged,
@@ -365,7 +367,9 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_art::PalettesChanged,
             ipc_themes::ThemesChanged,
             ipc_moods::MoodsChanged,
-            crate::desktop::cover::LaunchLanded
+            crate::desktop::cover::LaunchLanded,
+            crate::ipc_update::UpdateAvailable,
+            crate::ipc_update::UpdateProgress
         ])
 }
 

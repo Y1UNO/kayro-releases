@@ -7,6 +7,7 @@ import { desktopIpc } from "../../ipc/commands";
 import { errorText } from "../../ipc/errors";
 import { hubStore, useDesktop, useHub } from "../../store";
 import { HotkeyField } from "../scenes/HotkeyField";
+import { UpdateRows } from "../update/UpdateRows";
 import type { OpeningScreen } from "../../ipc/bindings";
 import { ChoiceRow, ToggleRow } from "./SettingRow";
 import styles from "./Settings.module.css";
@@ -118,6 +119,7 @@ export function GeneralSection() {
         disabled={autostart === null}
         onChange={(enabled) => void changeAutostart(enabled)}
       />
+      <UpdateRows />
       <section className={styles.row} data-row="">
         <h3 className={styles.label}>{t("settings.general.logs.label")}</h3>
         <p className={styles.help}>{t("settings.general.logs.help")}</p>

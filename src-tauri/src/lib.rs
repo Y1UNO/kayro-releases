@@ -11,6 +11,7 @@ pub mod ipc_desktop;
 pub mod ipc_moods;
 pub mod ipc_scenes;
 pub mod ipc_themes;
+pub mod ipc_update;
 pub mod launcher;
 mod legacy;
 mod logging;
@@ -19,6 +20,7 @@ pub mod paths;
 pub mod platform;
 pub mod procwatch;
 pub mod scenes;
+pub mod update;
 
 use config::ConfigState;
 use tauri::Manager;
@@ -55,6 +57,7 @@ pub fn run() {
             tracing::info!(?args, "second instance: showing the window");
             desktop::show(app);
         }))
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec![SILENT_FLAG]),
@@ -84,6 +87,11 @@ pub fn run() {
                 roots: art::ArtRoots::system(data.art_dir()),
             });
             app.manage(ConfigState::load(data));
+            // Step 18b: the installer's choices, then (if allowed) one look for an update.
+            let config = app.state::<ConfigState>();
+            update::apply_install_choices(&config, config.paths().root());
+            app.manage(update::PendingUpdate::default());
+            ipc_update::check_at_start(app.handle(), config.settings().update_auto);
             // Colours of the apps' images, on a background thread (step 14).
             app.manage(ipc_art::PaletteWorker::default());
             app.state::<ipc_art::PaletteWorker>().request(app.handle());

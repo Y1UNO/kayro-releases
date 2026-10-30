@@ -7,6 +7,7 @@ import {
   atmosphereLevel,
   isVisualDefault,
   SOUND_DEFAULTS,
+  UPDATE_DEFAULTS,
   VISUAL_DEFAULTS as V,
   visualSnapshot,
 } from "./settingsModel";
@@ -23,6 +24,7 @@ import {
 const SETTINGS: Settings = {
   ...V,
   ...SOUND_DEFAULTS,
+  ...UPDATE_DEFAULTS,
   openingScreen: "last",
   schemaVersion: 2,
   themeId: "bleu-gris",

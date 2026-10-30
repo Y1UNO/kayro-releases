@@ -40,6 +40,11 @@
         "failedAtStart": "Le raccourci {hotkey} est déjà utilisé par une autre application. {app} reste accessible par la zone de notification : choisissez un autre raccourci.",
         "saved": "Raccourci enregistré."
       },
+      "update": {
+        "auto": "Rechercher les mises à jour au démarrage",
+        "help": "Une seule petite vérification auprès de la page des versions de Kayro sur GitHub, rien d'autre n'est envoyé. Une mise à jour ne s'installe jamais sans ton accord.",
+        "check": "Rechercher une mise à jour"
+      },
       "economy": {
         "label": "Mode économe",
         "help": "La fenêtre est détruite quand elle est cachée : moins de mémoire utilisée, mais environ 0,4 s pour la rouvrir. Désactivé, {app} reste chargé et apparaît en un instant."

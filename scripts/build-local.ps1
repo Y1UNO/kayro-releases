@@ -63,10 +63,19 @@ if (-not $NoBuild) {
     Push-Location $root
     try {
         Write-Host 'Compilation release (npm run tauri build -- --no-bundle)...'
+        # Step 18b: the updater's key, when there is one (only the bundles are signed).
+        $key = Join-Path $env:USERPROFILE '.kayro\kayro-updater.key'
+        if (Test-Path $key) {
+            $env:TAURI_SIGNING_PRIVATE_KEY = $key
+            $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ''
+        }
         npm run tauri build -- --no-bundle
         if ($LASTEXITCODE -ne 0) { Stop-Here "la compilation a echoue (code $LASTEXITCODE)." }
     }
-    finally { Pop-Location }
+    finally {
+        Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY, Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
+        Pop-Location
+    }
 }
 if (-not (Test-Path $exe)) { Stop-Here "exe introuvable : $exe" }
 if (-not (Test-Path $icon)) { Stop-Here "icone introuvable : $icon" }

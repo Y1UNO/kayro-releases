@@ -4,6 +4,7 @@ import { HomeScreen } from "./features/home/HomeScreen";
 import { SceneEditor } from "./features/scenes/SceneEditor";
 import { ScenesScreen } from "./features/scenes/ScenesScreen";
 import { SceneToast } from "./features/scenes/SceneToast";
+import { UpdateDialog, UpdateNotice } from "./features/update/UpdateDialog";
 import type { NewSceneSeed } from "./features/scenes/draft";
 import { t } from "./i18n";
 import { errorText } from "./ipc/errors";
@@ -92,6 +93,8 @@ export function App() {
       </div>
       {opening.play && <Opening under={under} onDone={opening.finish} />}
       <SceneToast />
+      <UpdateNotice />
+      <UpdateDialog />
       {dialog}
     </>
   );

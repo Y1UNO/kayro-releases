@@ -1,6 +1,13 @@
 // Thin layer over the GENERATED bindings (`bindings.ts`, never edited by hand): every command
 // answers with an `Outcome` instead of throwing, so callers handle failure explicitly.
-import { commands, type AppEntry, type AppError, type NewApp, type Settings } from "./bindings";
+import {
+  commands,
+  type AppEntry,
+  type AppError,
+  type NewApp,
+  type Settings,
+  type UpdateInfo,
+} from "./bindings";
 import type {
   AddReport,
   OpeningDue,
@@ -184,4 +191,13 @@ export const moodsIpc = {
   remove: (id: string): Promise<Outcome<null>> => checked(commands.moodDelete(id)),
   /** Writes the ambience in the exports folder, shows it in Explorer; returns its path. */
   exportFile: (mood: MoodFile): Promise<Outcome<string>> => checked(commands.moodExport(mood)),
+};
+
+/**
+ * Step 18b, updates: the only network of Kayro (the project's signed releases), on demand or at
+ * start if allowed. `install` downloads, checks the signature, installs: Kayro quits and restarts.
+ */
+export const updateIpc = {
+  check: (): Promise<Outcome<UpdateInfo | null>> => checked(commands.updateCheck()),
+  install: (): Promise<Outcome<null>> => checked(commands.updateInstall()),
 };

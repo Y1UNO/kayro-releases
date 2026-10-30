@@ -12,6 +12,7 @@ import {
   type Settings,
   type MoodFile,
   type ThemeFile,
+  type UpdateInfo,
 } from "./bindings";
 
 export type Unlisten = () => void;
@@ -136,3 +137,15 @@ export const artEvents: ArtEvents = {
   onAppsChanged: (handler) => listenTo(events.appsChanged.listen, () => handler()),
   onPalettesChanged: (handler) => listenTo(events.palettesChanged.listen, handler),
 };
+
+/** Step 18b: the check at start found a newer version. */
+export function onUpdateAvailable(handler: (info: UpdateInfo) => void): Promise<Unlisten> {
+  return listenTo(events.updateAvailable.listen, handler);
+}
+
+/** Step 18b: an update downloading (bytes so far, total when known). */
+export function onUpdateProgress(
+  handler: (p: { downloaded: number; total: number | null }) => void,
+): Promise<Unlisten> {
+  return listenTo(events.updateProgress.listen, handler);
+}

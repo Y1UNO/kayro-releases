@@ -119,7 +119,8 @@
     "elevationRequired": "Cette application demande les droits administrateur. Marquez-la « exécuter en administrateur » pour la lancer.",
     "elevationCancelled": "Lancement annulé : la demande d’autorisation administrateur a été refusée.",
     "launchFailed": "Cette application n’a pas pu être lancée.",
-    "hotkeyConflict": "Ce raccourci est déjà utilisé par une autre application. Choisissez-en un autre."
+    "hotkeyConflict": "Ce raccourci est déjà utilisé par une autre application. Choisissez-en un autre.",
+    "updateFailed": "La mise à jour n'a pas pu être vérifiée ou installée. Vérifiez la connexion, puis réessayez."
   },
   "addApps": {
     "tabsLabel": "Façon d’ajouter",
@@ -302,5 +303,19 @@
     "noneInCategory": "Aucune application dans cette catégorie.",
     "launch": "Lancer {name}",
     "toWindow": "Ouvrir en fenêtre"
+  },
+  "update": {
+    "title": "Mise à jour disponible",
+    "from": "Kayro {version}",
+    "to": "Kayro {version}",
+    "restart": "Kayro va se fermer, s'installer et redémarrer tout seul. Tes réglages, tes apps et tes images restent.",
+    "install": "Installer et redémarrer",
+    "later": "Plus tard",
+    "downloading": "Téléchargement et vérification de la signature…",
+    "notice": "Kayro {version} est disponible.",
+    "see": "Voir",
+    "checking": "Recherche en cours…",
+    "upToDate": "Kayro est à jour (version {version}).",
+    "found": "La version {version} est disponible."
   }
 }

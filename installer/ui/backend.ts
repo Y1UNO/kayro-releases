@@ -16,7 +16,7 @@ export type Outcome = { kind: "done" } | { kind: "failed"; code: number };
 export interface Backend {
   info(): Promise<Info>;
   closeKayro(): Promise<boolean>;
-  install(desktop: boolean): Promise<Outcome>;
+  install(desktop: boolean, updateAuto: boolean): Promise<Outcome>;
   launch(): Promise<boolean>;
   classic(): Promise<boolean>;
   quit(): Promise<void>;
@@ -28,7 +28,7 @@ export interface Backend {
 export const tauriBackend: Backend = {
   info: () => invoke<Info>("info"),
   closeKayro: () => invoke<boolean>("close_kayro"),
-  install: (desktop) => invoke<Outcome>("install", { desktop }),
+  install: (desktop, updateAuto) => invoke<Outcome>("install", { desktop, updateAuto }),
   launch: () => invoke<boolean>("launch"),
   classic: () => invoke<boolean>("classic"),
   quit: () => invoke<void>("quit"),
@@ -49,7 +49,7 @@ export function fakeBackend(screen: string | null): Backend {
   let running = screen === "running" || screen === "stuck";
   return {
     info: async () => ({
-      version: "0.16.0",
+      version: "0.18.0",
       installed: { update: "0.15.0", reinstall: "0.16.0", newer: "0.17.0" }[screen ?? ""] ?? null,
       newerInstalled: screen === "newer",
       running,

@@ -151,6 +151,15 @@ export const commands = {
 	 *  (`LaunchLanded`); off ends it, `hide` taking the hub off the screen.
 	 */
 	launchCover: (on: boolean, hide: boolean) => __TAURI_INVOKE<void>("launch_cover", { on, hide }),
+	/**  « Rechercher une mise à jour »: the only network request of Kayro, on demand. */
+	updateCheck: () => typedError<{
+	version: string,
+	current: string,
+	/**  The release's notes (its patch notes), plain text, one point per line. */
+	notes: string | null,
+} | null, AppError>(__TAURI_INVOKE("update_check")),
+	/**  Installs the update the last check found (Kayro quits, then starts again on it). */
+	updateInstall: () => typedError<null, AppError>(__TAURI_INVOKE("update_install")),
 };
 
 /** Events */
@@ -169,6 +178,8 @@ export const events = {
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
 	settingsChanged: makeEvent<SettingsChanged_Deserialize>("settings-changed"),
 	themesChanged: makeEvent<ThemesChanged_Deserialize>("themes-changed"),
+	updateAvailable: makeEvent<UpdateAvailable>("update-available"),
+	updateProgress: makeEvent<UpdateProgress>("update-progress"),
 	windowVisibility: makeEvent<WindowVisibility>("window-visibility"),
 };
 
@@ -413,7 +424,9 @@ export type ErrorCode =
 /**  Any other failure to start (`message` has the Win32 code). */
 "launchFailed" | 
 /**  The keyboard shortcut is already used by another program (or another shortcut of the hub). */
-"hotkeyConflict";
+"hotkeyConflict" | 
+/**  An update could not be checked, downloaded or verified (no network, bad signature…). */
+"updateFailed";
 
 export type FocusResult = "focused" | 
 /**  No process of this app is known (or the app cannot be followed). */
@@ -809,6 +822,7 @@ export type SettingsPatch_Deserialize = {
 	soundInterface?: boolean | null,
 	soundTransitions?: boolean | null,
 	soundLaunch?: boolean | null,
+	updateAuto?: boolean | null,
 };
 
 /**  Partial update: absent (or null) fields are left as they are. */
@@ -847,6 +861,7 @@ export type SettingsPatch_Serialize = {
 	soundInterface: boolean | null,
 	soundTransitions: boolean | null,
 	soundLaunch: boolean | null,
+	updateAuto: boolean | null,
 };
 
 export type Settings_Deserialize = {
@@ -893,6 +908,8 @@ export type Settings_Deserialize = {
 	soundInterface: boolean,
 	soundTransitions: boolean,
 	soundLaunch: boolean,
+	/**  Step 18b: one look for an update at start (network: off unless the user allows it). */
+	updateAuto: boolean,
 };
 
 export type Settings_Serialize = {
@@ -939,6 +956,8 @@ export type Settings_Serialize = {
 	soundInterface: boolean,
 	soundTransitions: boolean,
 	soundLaunch: boolean,
+	/**  Step 18b: one look for an update at start (network: off unless the user allows it). */
+	updateAuto: boolean,
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */
@@ -1023,6 +1042,23 @@ export type ThemesChanged_Deserialize = ThemeFile_Deserialize[];
 
 /**  The personal themes changed (saved, imported or deleted): both windows read them again. */
 export type ThemesChanged_Serialize = ThemeFile_Serialize[];
+
+/**  A newer version was found by the automatic check (at start, if allowed). */
+export type UpdateAvailable = UpdateInfo;
+
+/**  A newer version, as the release describes it. */
+export type UpdateInfo = {
+	version: string,
+	current: string,
+	/**  The release's notes (its patch notes), plain text, one point per line. */
+	notes: string | null,
+};
+
+/**  The download of an update: bytes so far, total when known. */
+export type UpdateProgress = {
+	downloaded: number,
+	total: number | null,
+};
 
 /**
  *  How the native veil fades when `main` gives way to the widget or takes over from it (round

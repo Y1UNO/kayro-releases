@@ -77,3 +77,6 @@ export const SOUND_DEFAULTS = {
   soundTransitions: true,
   soundLaunch: true,
 } as const satisfies SettingsPatch;
+
+/** Step 18b: no update check unless the user allows it (the installer asks; `Settings::default`). */
+export const UPDATE_DEFAULTS = { updateAuto: false } as const satisfies SettingsPatch;

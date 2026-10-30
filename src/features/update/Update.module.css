@@ -1,0 +1,111 @@
+/* Step 18b, « Mise à jour disponible ». */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.versions {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: var(--fs-15);
+  color: var(--text-2);
+}
+
+.arrow::before {
+  content: "→";
+  color: var(--accent-light);
+}
+
+.next {
+  font-family: var(--font-title);
+  font-size: var(--fs-24, 24px);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-row);
+  background: var(--fill-soft);
+  list-style: none;
+  font-size: var(--fs-13);
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.notes li::before {
+  content: "✦";
+  margin-right: var(--space-2);
+  color: var(--accent-light);
+}
+
+.help {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--text-2);
+}
+
+.warn {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--warn, #f3a6a6);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--fill-soft);
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
+  transform-origin: left center;
+  transition: transform var(--m1-court) var(--m-ease-in);
+}
+
+/* Size unknown: a segment sliding along the track. */
+.fill[data-unknown] {
+  animation: slide 1.3s var(--m-ease-in) infinite;
+}
+
+@keyframes slide {
+  from {
+    translate: -100% 0;
+  }
+  to {
+    translate: 300% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
+
+  .fill[data-unknown] {
+    animation: none;
+  }
+}

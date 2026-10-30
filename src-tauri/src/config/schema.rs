@@ -103,6 +103,8 @@ pub struct Settings {
     pub sound_interface: bool,
     pub sound_transitions: bool,
     pub sound_launch: bool,
+    /// Step 18b: one look for an update at start (network: off unless the user allows it).
+    pub update_auto: bool,
 }
 
 /// Bounds of [`Settings::atmosphere_intensity`].
@@ -149,6 +151,7 @@ impl Default for Settings {
             sound_interface: true,
             sound_transitions: true,
             sound_launch: true,
+            update_auto: false,
         }
     }
 }
@@ -191,6 +194,7 @@ pub struct SettingsPatch {
     pub sound_interface: Option<bool>,
     pub sound_transitions: Option<bool>,
     pub sound_launch: Option<bool>,
+    pub update_auto: Option<bool>,
 }
 
 impl Settings {
@@ -237,6 +241,7 @@ impl Settings {
             sound_interface,
             sound_transitions,
             sound_launch,
+            update_auto,
         );
     }
 }

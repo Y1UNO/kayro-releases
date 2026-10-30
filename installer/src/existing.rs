@@ -109,6 +109,18 @@ pub fn close_softly(exe: &Path) -> bool {
     !running(exe)
 }
 
+/// The choices Kayro applies at its next start (`%APPDATA%/Kayro/install-choices.json`).
+pub fn write_install_choices(update_auto: bool) -> std::io::Result<()> {
+    let base = std::env::var_os("APPDATA").map(PathBuf::from).ok_or(std::io::ErrorKind::NotFound)?;
+    let dir = base.join("Kayro");
+    std::fs::create_dir_all(&dir)?;
+    std::fs::write(dir.join("install-choices.json"), install_choices_json(update_auto))
+}
+
+fn install_choices_json(update_auto: bool) -> String {
+    format!("{{\"updateAuto\":{update_auto}}}")
+}
+
 /// The user's desktop folder (where NSIS puts its shortcut), wherever Windows moved it.
 pub fn desktop_dir() -> Option<PathBuf> {
     use windows::Win32::System::Com::CoTaskMemFree;
@@ -170,6 +182,12 @@ mod tests {
             println!("{:?} {:?}", p.name(), p.exe());
         }
         println!("running: {:?}", i.map(|i| running(&i.exe())));
+    }
+
+    #[test]
+    fn the_install_choices_are_the_json_kayro_reads() {
+        assert_eq!(install_choices_json(true), r#"{"updateAuto":true}"#);
+        assert_eq!(install_choices_json(false), r#"{"updateAuto":false}"#);
     }
 
     #[test]

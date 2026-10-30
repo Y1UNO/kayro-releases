@@ -103,5 +103,15 @@
       "Réglages › Sons : volume en forme d'onde, familles au choix.",
       "Ces patch notes dans l'installeur."
     ]
+  },
+  {
+    "version": "0.18",
+    "date": "30/10/2026",
+    "title": "Mises à jour",
+    "points": [
+      "Kayro se met à jour tout seul : plus besoin de réinstaller.",
+      "Réglages › Général : rechercher une mise à jour, ou au démarrage si tu l'autorises.",
+      "Chaque version est signée et vérifiée avant d'être installée."
+    ]
   }
 ]

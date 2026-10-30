@@ -26,6 +26,8 @@ const panel = document.getElementById("panel")!;
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let info: Info;
 let desktop = true;
+/** Step 18b: look for updates at start (checked, explained, the user may untick it). */
+let updateAuto = true;
 let installing = false;
 /** The screen of the « Installation » tab, and the tab shown. */
 let current: Screen | null = null;
@@ -81,6 +83,18 @@ function build(s: Screen): Node[] {
       box.checked = desktop;
       box.addEventListener("change", () => (desktop = box.checked));
       parts.push(el("label", "check", box, el("span", "", t("desktop"))));
+      const upd = el("input", "");
+      upd.type = "checkbox";
+      upd.checked = updateAuto;
+      upd.addEventListener("change", () => (updateAuto = upd.checked));
+      parts.push(
+        el(
+          "label",
+          "check",
+          upd,
+          el("span", "", t("updateAuto"), el("small", "checkHelp", t("updateAutoHelp"))),
+        ),
+      );
       actions.append(button(msg(s.mode, "go"), true, () => void startInstall()));
       break;
     }
@@ -150,8 +164,7 @@ async function openTab(next: "install" | "notes") {
   if (next === "notes") {
     await swap([notesView()]);
     scrollToNewest(panel);
-  }
-  else if (current) await show(current);
+  } else if (current) await show(current);
 }
 
 function mode(): Mode {
@@ -165,7 +178,7 @@ async function startInstall() {
   installing = true;
   await show({ name: "installing" });
   const started = performance.now();
-  const outcome = await backend.install(desktop);
+  const outcome = await backend.install(desktop, updateAuto);
   // Long enough to read: a fast install would only flash the screen.
   await wait(Math.max(0, 1800 - (performance.now() - started)));
   installing = false;

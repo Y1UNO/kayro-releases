@@ -67,9 +67,13 @@ async fn close_kayro() -> bool {
 }
 
 #[tauri::command]
-async fn install(app: AppHandle, desktop: bool) -> Outcome {
+async fn install(app: AppHandle, desktop: bool, update_auto: bool) -> Outcome {
     let version = version(&app);
     tauri::async_runtime::spawn_blocking(move || {
+        // Read by Kayro at its next start (src-tauri/src/update.rs), then removed.
+        if let Err(e) = existing::write_install_choices(update_auto) {
+            eprintln!("install choices not written: {e}");
+        }
         let Ok(x) = payload::extract(&version) else {
             return Outcome::Failed { code: -1 };
         };
