@@ -192,6 +192,18 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   30 s pour une limite de 50) si une version de WebView2 libère mieux la mémoire du processus GPU ; même protocole.
 - [x] Journal du renommage Hub → Kayro : dossier de données migré (`%APPDATA%/Hub` copié une fois vers `Kayro`),
   identifiant `fr.yiuno.hub` conservé (voir l'entrée « Chore renommage » du journal ci-dessus).
+- [ ] **Installeur maison** (demandé le 2026-10-30, en cours) : fenêtre au style de Kayro (crate `installer/`,
+  exe `KayroSetup`) qui porte l'installeur NSIS et le lance invisible (`/S`, `/NS` sans raccourci bureau) ; repli sur
+  l'installeur classique sans WebView2 ou après une erreur ; Kayro ouvert → fermé en douceur (`--quit`) avec accord,
+  car NSIS en mode invisible le **tue** ; version installée lue dans `HKCU\…\Uninstall\Kayro` (`DisplayVersion`,
+  `InstallLocation`). Fait : partie Rust (`existing.rs`, `payload.rs`, `main.rs`, build.rs). Reste : la page
+  (Vite, `installer/ui/`), le script `build-installer.ps1`, les essais réels (accord de l'utilisateur avant d'installer).
+
+### Après la v1.0 — Voix (extension A)
+- [ ] **Écoute active** (demandé le 2026-10-30) : lancer des apps, des scènes et d'autres actions à la voix, avec un
+  mot d'éveil. À cadrer : la règle actuelle du projet dit « micro jamais en permanence » (CLAUDE.md) ; une écoute
+  active la contredit, il faudra choisir avec l'utilisateur (écoute permanente locale avec indicateur visible et
+  coupure facile, ou écoute au raccourci / bouton). Traitement 100 % local, ne lance que ce qui est configuré.
 
 ## Abandonné
 Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).
