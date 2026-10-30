@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { AppEntry, AppSource } from "../../ipc/bindings";
 import { ipc } from "../../ipc/commands";
+import { imageOf, useArt } from "../../store";
 import { useArtUrl } from "./art";
 
 /** Remembers each answer for the session (a missing icon too): one request per app and target. */
@@ -45,8 +46,10 @@ function load(id: string, key: string): Promise<string | null> {
  */
 export function useAppIcon(app: IconApp): string | null {
   const shell = useShellIcon(app);
-  const steam = useArtUrl(app.id, "icon");
-  return shell ?? steam;
+  const art = useArtUrl(app.id, "icon");
+  // Step 19c: an icon of the user's own (or the logo the advanced scan found) comes first.
+  const own = useArt((s) => imageOf(s, app.id, "icon")?.origin === "user");
+  return own ? art : (shell ?? art);
 }
 
 function useShellIcon(app: IconApp): string | null {

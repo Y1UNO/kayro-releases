@@ -221,6 +221,8 @@ fn scan_library(library: &Path, steam_root: &Path, ctx: &ScanCtx) -> Vec<Detecte
             suggested_category: String::new(),
             launcher: false,
             ignored: false,
+            install_dir: None,
+            logo_path: None,
         };
         apps.extend(ctx.accept(SourceKind::Steam, app));
     }

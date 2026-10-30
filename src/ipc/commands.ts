@@ -94,6 +94,8 @@ export const detect = {
   /** Resolves with what was found; a newer scan cancels this one. */
   scan: (): Promise<Outcome<ScanReport>> => checked(commands.detectScan()),
   cancel: (): Promise<Outcome<void>> => plain(commands.detectCancel()),
+  /** Step 19c, « Scan avancé »: the usual scan, then the PC's program and game folders. */
+  deep: (): Promise<Outcome<ScanReport>> => checked(commands.detectDeep()),
   /** Step 19b: the icon of a proposed app (`data:` URL), or null. */
   icon: (app: DetectedApp): Promise<Outcome<string | null>> => checked(commands.detectIcon(app)),
 };

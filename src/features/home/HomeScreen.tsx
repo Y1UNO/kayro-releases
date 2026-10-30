@@ -200,7 +200,7 @@ export function HomeScreen({
   );
 
   function onAreaContextMenu(e: MouseEvent) {
-    if (!(e.target instanceof Element)) return;
+    if (onFan || !(e.target instanceof Element)) return;
     const id = e.target.closest<HTMLElement>("[data-app-id]")?.dataset.appId;
     const app = id ? apps.find((a) => a.id === id) : list[focus];
     if (!app) return;
@@ -275,7 +275,13 @@ export function HomeScreen({
             <FanTitle askRef={askRef} shown={onFan} />
           </div>
 
-          <div ref={areaRef} className={styles.area} data-game-accents="">
+          {/* Step 19c: a right click anywhere around the cards opens the selected app's menu. */}
+          <div
+            ref={areaRef}
+            className={styles.area}
+            data-game-accents=""
+            onContextMenu={onAreaContextMenu}
+          >
             {fanMounted && (
               <CategoryFan
                 counts={counts}
@@ -297,7 +303,6 @@ export function HomeScreen({
               role="tabpanel"
               inert={onFan}
               onPointerDown={onPointerDown}
-              onContextMenu={onAreaContextMenu}
               onClick={onAreaClick}
             >
               <AnimatePresence initial={false}>

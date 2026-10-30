@@ -375,3 +375,8 @@
     opacity: 0;
   }
 }
+
+/* Step 19c: the name is being changed in a field laid over the plate. */
+.plate[data-renaming] {
+  color: transparent;
+}

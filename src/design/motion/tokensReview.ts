@@ -17,7 +17,7 @@ export const CARD_TILT = {
 export const FAN_TILT_MAX = 8;
 
 /**
- * Fewer colours on screen: a card without a picture is mostly the theme, with a hint of its icon
- * (was the icon's colours at the game colours' share, 60 %: a rainbow with many such apps).
+ * A card without a picture takes its logo's colours (step 19c, the user: « sinon ça déteint »): full
+ * share, vivid bounds. Was « soft / theme » from 29/10 (fewer colours on screen).
  */
-export const ICON_FACE = { intensity: "soft", character: "theme" } as const;
+export const ICON_FACE = { intensity: "strong", character: "vivid" } as const;

@@ -144,6 +144,13 @@ export function onUpdateAvailable(handler: (info: UpdateInfo) => void): Promise<
 }
 
 /** Step 18b: an update downloading (bytes so far, total when known). */
+/** Step 19c: where the advanced scan is (folders read, apps found, looking for logos). */
+export function onDeepProgress(
+  handler: (p: { folders: number; found: number; logos: boolean }) => void,
+): Promise<Unlisten> {
+  return listenTo(events.deepProgress.listen, handler);
+}
+
 export function onUpdateProgress(
   handler: (p: { downloaded: number; total: number | null }) => void,
 ): Promise<Unlisten> {

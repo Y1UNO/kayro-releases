@@ -51,6 +51,8 @@ fn steam_app(id: &str) -> DetectedApp {
         suggested_category: String::new(),
         launcher: false,
         ignored: false,
+        install_dir: None,
+        logo_path: None,
     }
 }
 

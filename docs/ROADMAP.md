@@ -28,6 +28,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 18b | Mises à jour : rechercher et installer une nouvelle version depuis Kayro (réseau optionnel, voir « Plus tard ») | 18, installeur maison | F |
 | [x] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis ; **démarrage** : choix des apps lancées avec Windows à l'installation, démarrage express sur le logo (voir « Plus tard ») | 18 | F |
 | [x] 19b | **Scan intelligent et rangement fluide** (demandé le 2026-10-30) : un scan bien plus malin (filtres de bruit, doublons, lanceurs et outils à part, catégorie devinée, « Ignorer ») et plus simple à l'ajout d'apps ; changer une app de catégorie (et la réordonner) de façon fluide. Détails : « Plus tard » › Détection | 5, 19 | G |
+| [x] 19c | **Finitions ajout et rangement** (2026-10-30) : scan avancé du PC, logos ronds, cartes aux couleurs du logo, renommer sur la carte, clic droit rangé, fil physique | 19b | G |
 | [ ] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
@@ -106,6 +107,23 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
   couleurs du jeu retiré** (Désactivé · Stylisé). Tests : vitest 565, cargo 250, clippy / eslint / tsc
   propres. **Non mesuré** (CPU / GPU des ambiances : à faire en A/B avec `npm run perf -- --exe`, accord requis) ;
   non vu dans l'exe par moi ; carte spéciale sans repli CSS ; anneau de glyphes en partie derrière les cartes latérales.
+- **Étape 19c — Finitions, 2026-10-30** (version 0.19.2) : **scan avancé** (`detect_deep`, lancé par l'utilisateur
+  après explication) : dossiers de programmes et de jeux des disques fixes (Program Files, Games, Riot, Epic, GOG,
+  Ubisoft, `%LOCALAPPDATA%\Programs`), programme principal choisi (pas d'installeur, d'aide ni d'outil console :
+  en-tête PE), nom de l'app et non de l'éditeur, logo PNG du dossier → icône de l'app (rôle Icon désormais
+  modifiable) ; sonde sur ce PC : 34 apps en 0,3–3,5 s, lecture seule. Logos ronds (listes, scènes, widget) ;
+  cartes sans image : logo centré, couleurs du logo pleines (`ICON_FACE` strong / vivid). Renommer sur la carte
+  (clic droit › Renommer : champ posé sur la plaque). Clic droit : icônes, Reculer/Avancer sur une ligne,
+  « Déplacer vers › » en sous-menu, Retirer en rouge. Scènes : corde Verlet (12 segments) + cadre freiné par
+  l'air, fil à trois traits lumineux, l'app sort de sa ligne et se transforme en cadre, « Mes apps » sans les
+  apps déjà mises (les autres remontent avec un rebond). Retours du 30/10 au soir : clic droit partout (plus
+  jamais le menu du navigateur), sous-menu qui ne se ferme plus en chemin, icônes recadrées sur leur dessin (une
+  petite icône dans le coin d'un grand carré vide), champ de « Nouvelle scène » plus coupé, fil plus long (92 px)
+  et plus épais, bien plus calme (un seul retour, posé en < 1,5 s, inclinaison ≤ 16°), la ligne s'étire d'abord
+  dans « Mes apps » puis se décroche, et le cadre lâché devient la ligne de la scène (480 ms). Tests : vitest
+  602, cargo 272. **Non vu dans l'exe** ;
+  pas d'affiches pour les jeux hors Steam (les lanceurs les gardent dans des caches illisibles) ; pas de
+  renommage par double-clic (un clic lance l'app).
 - **Étape 19b — Scan et rangement, 2026-10-30** (version 0.19.1) : scan (cœur) — doublons Steam / Epic ↔ menu
   Démarrer fusionnés, lanceurs à part, catégories devinées (≈ 100 motifs de plus), « Ignorer » retenu
   (`ignoredDetections`) ; onglet « Détectées » refait : logo de chaque app (`detect_icon` : icône Shell ou petite icône
@@ -204,6 +222,11 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   l'installation, trois choix — « Garder seulement Kayro » (les autres apps ne démarrent plus avec Windows), « Ne rien
   changer », ou **personnalisé** : la liste des apps lancées au démarrage, on coche celles qu'on veut **garder**.
   Réversible (ce qui a été retiré est noté pour pouvoir le remettre), jamais d'app système ni de pilote touchés.
+- [ ] **Après la v1 — logos et affiches de façon concrète** (demandé le 2026-10-30) : certaines apps restent
+  sans logo, et les jeux hors Steam (Fortnite, Epic, GOG, Riot…) sans affiche, même après le scan avancé (les
+  lanceurs gardent leurs images dans des caches qu'on ne peut pas relier à un jeu). Piste : une source en ligne
+  **optionnelle, désactivée par défaut et expliquée** (ex. SteamGridDB : logos, affiches, héros par nom de jeu),
+  ou un bouton « Chercher une image » par app ; à décider avec l'utilisateur (réseau = règle CLAUDE.md).
 - [ ] **Assistant de premier lancement** (reporté de l'étape 19) : Kayro vide au premier lancement, l'utilisateur
   clique « + » ; un petit assistant proposerait les apps détectées.
 - [ ] Démarrage : mesurer « démarrage du PC → logo » (journal

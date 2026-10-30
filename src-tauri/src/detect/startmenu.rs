@@ -218,6 +218,11 @@ impl DetectSource for StartMenuSource {
                 suggested_category: String::new(),
                 launcher: false,
                 ignored: false,
+                install_dir: shortcut
+                    .target
+                    .parent()
+                    .map(|d| d.to_string_lossy().into_owned()),
+                logo_path: None,
             };
             found.push((candidate, app));
         }

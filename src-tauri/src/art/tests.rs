@@ -195,7 +195,6 @@ fn only_real_small_images_are_accepted_from_the_user() {
         user::UserArtError::Unreadable
     );
     let png = f.outside("ok.png", PNG);
-    assert_eq!(err(&png, ArtRole::Icon), user::UserArtError::NotSettable);
     let huge = f._dir.path().join("huge.jpg");
     fs::File::create(&huge)
         .unwrap()
@@ -209,7 +208,8 @@ fn only_real_small_images_are_accepted_from_the_user() {
     assert!(
         !f.roots.user.exists(),
         "nothing written for a refused image"
-    );
+    );    // Step 19c: an icon of the user's own is accepted (the advanced scan's logo).
+    assert!(user::set(&f.roots.user, "app", ArtRole::Icon, &png).is_ok());
 }
 
 #[test]

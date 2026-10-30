@@ -17,6 +17,8 @@ fn app(id: &str, name: &str, source: AppSource) -> DetectedApp {
         suggested_category: String::new(),
         launcher: false,
         ignored: false,
+        install_dir: None,
+        logo_path: None,
     }
 }
 
@@ -31,7 +33,11 @@ fn report(source: SourceKind, apps: Vec<DetectedApp>) -> SourceReport {
 }
 
 fn steam(id: &str, name: &str) -> DetectedApp {
-    app(&format!("steam-{id}"), name, AppSource::Steam { app_id: id.into() })
+    app(
+        &format!("steam-{id}"),
+        name,
+        AppSource::Steam { app_id: id.into() },
+    )
 }
 
 fn menu(id: &str, name: &str) -> DetectedApp {
@@ -43,8 +49,14 @@ fn a_game_seen_by_steam_and_the_start_menu_is_proposed_once() {
     let mut twin = menu("a", "Hades II");
     twin.already_added = true;
     let mut reports = vec![
-        report(SourceKind::Steam, vec![steam("1", "Hades II"), steam("2", "Celeste")]),
-        report(SourceKind::Startmenu, vec![twin, menu("b", "Discord"), menu("c", "CELESTE")]),
+        report(
+            SourceKind::Steam,
+            vec![steam("1", "Hades II"), steam("2", "Celeste")],
+        ),
+        report(
+            SourceKind::Startmenu,
+            vec![twin, menu("b", "Discord"), menu("c", "CELESTE")],
+        ),
     ];
     merge_twins(&mut reports);
     let names = |r: &SourceReport| r.apps.iter().map(|a| a.name.clone()).collect::<Vec<_>>();
@@ -59,7 +71,11 @@ fn a_game_seen_by_steam_and_the_start_menu_is_proposed_once() {
 fn stores_and_launchers_are_marked() {
     let mut reports = vec![report(
         SourceKind::Startmenu,
-        vec![menu("a", "Steam"), menu("b", "Riot Client"), menu("c", "Discord")],
+        vec![
+            menu("a", "Steam"),
+            menu("b", "Riot Client"),
+            menu("c", "Discord"),
+        ],
     )];
     mark_launchers(&mut reports);
     let flags: Vec<bool> = reports[0].apps.iter().map(|a| a.launcher).collect();
@@ -69,7 +85,10 @@ fn stores_and_launchers_are_marked() {
 #[test]
 fn ignored_apps_are_marked_by_id() {
     let mut scan = ScanReport {
-        sources: vec![report(SourceKind::Startmenu, vec![menu("a", "A"), menu("b", "B")])],
+        sources: vec![report(
+            SourceKind::Startmenu,
+            vec![menu("a", "A"), menu("b", "B")],
+        )],
         total_ms: 0,
         cancelled: false,
     };

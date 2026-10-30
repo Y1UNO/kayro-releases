@@ -15,6 +15,7 @@ import { DEFAULT_GEOMETRY, isVisible, slotOffset, type Geometry } from "./carous
 import { cssVars } from "./cssVars";
 import { useAppIcon } from "./useAppIcon";
 import { cardTilt } from "./cardTilt";
+import { RenameField, useRenaming } from "./RenameField";
 import fail from "./LaunchFail.module.css";
 import styles from "./AppCard.module.css";
 import face from "./AppCardFace.module.css";
@@ -86,6 +87,8 @@ export function AppCard({
   }, [failed]);
   const poster = usePosterUrl(app);
   const icon = useAppIcon(app);
+  const renaming = useRenaming(app.id);
+  const plate = useRef<HTMLSpanElement>(null);
   // A card without a picture takes its icon's colours (V10 b). With a poster, the active card shows
   // its name in small plain type (2026-10-30: the poster's own title made the logo a double).
   const onPoster = Boolean(poster && mode === "stage");
@@ -162,8 +165,10 @@ export function AppCard({
           {running && <span className={styles.running} aria-hidden="true" />}
           <span className={fail.ring} data-on={failed ? "" : undefined} aria-hidden="true" />
           <span
+            ref={plate}
             className={onPoster ? `${styles.plate} ${styles.onPoster}` : styles.plate}
             data-face=""
+            data-renaming={renaming || undefined}
           >
             {app.name}
           </span>
@@ -178,6 +183,7 @@ export function AppCard({
         >
           <EditIcon size={16} />
         </button>
+        {renaming && <RenameField app={app} plate={plate} />}
       </div>
     </div>
   );

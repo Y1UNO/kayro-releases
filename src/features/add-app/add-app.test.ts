@@ -232,6 +232,8 @@ describe("detected apps ticked by default (step 19b)", () => {
     suggestedCategory: "jeux",
     launcher: false,
     ignored: false,
+    installDir: null,
+    logoPath: null,
     ...over,
   });
 

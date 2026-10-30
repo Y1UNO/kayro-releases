@@ -32,6 +32,8 @@ function asDetected(item: Item): DetectedApp {
       suggestedCategory: "",
       launcher: false,
       ignored: false,
+      installDir: null,
+      logoPath: null,
     }
   );
 }

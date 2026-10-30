@@ -77,6 +77,11 @@
 .body {
   flex: 1;
   min-height: 0;
+  /* Step 19c: room for a field's focus halo (4 px) inside the scrolling body, taken from the
+     panel's own padding (the content stays where it was); never a horizontal scroll. */
+  padding: 6px;
+  margin: -6px;
+  overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;

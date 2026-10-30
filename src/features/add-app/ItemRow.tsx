@@ -10,6 +10,7 @@ const ORIGIN_LABELS = {
   steam: "addApps.detected.sourceSteam",
   epic: "addApps.detected.sourceEpic",
   startmenu: "addApps.detected.sourceStartmenu",
+  deep: "addApps.detected.sourceDeep",
   drop: null,
 } as const satisfies Record<Origin, string | null>;
 

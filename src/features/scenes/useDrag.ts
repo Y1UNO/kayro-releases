@@ -22,6 +22,8 @@ interface Options<P> {
   /** The drag ends (dropped or cancelled), before the drop changes anything: the rows still show
    *  the drag's shifts (useListMotion's `snapshot`). */
   onEnd?: () => void;
+  /** Step 19c: the pointer moved (once per frame while dragging). */
+  onMove?: (payload: P, x: number, y: number) => void;
 }
 
 const THRESHOLD = 5;
@@ -43,15 +45,17 @@ export function insertionIndex(
   return middles.filter((m) => m < y).length;
 }
 
-export function useDrag<P>({ list, rows, onDrop, onEnd }: Options<P>) {
+export function useDrag<P>({ list, rows, onDrop, onEnd, onMove }: Options<P>) {
   const [drag, setDrag] = useState<DragState<P> | null>(null);
   const clickBlocked = useRef(false);
   const stop = useRef<(() => void) | null>(null);
   const drop = useRef(onDrop);
   const ending = useRef(onEnd);
+  const moving = useRef(onMove);
   useEffect(() => {
     drop.current = onDrop;
     ending.current = onEnd;
+    moving.current = onMove;
   });
   useEffect(() => () => stop.current?.(), []);
 
@@ -75,9 +79,10 @@ export function useDrag<P>({ list, rows, onDrop, onEnd }: Options<P>) {
       const startY = e.clientY;
       let active = false;
       // Once per frame whatever the mouse sends (step 13): the rows are measured once per frame.
-      const frame = new PointerFrame<number>((_k, _el, x, y) =>
-        setDrag({ payload, x, y, index: indexAt(x, y) }),
-      );
+      const frame = new PointerFrame<number>((_k, _el, x, y) => {
+        moving.current?.(payload, x, y);
+        setDrag({ payload, x, y, index: indexAt(x, y) });
+      });
 
       const move = (ev: PointerEvent) => {
         if (!active && Math.hypot(ev.clientX - startX, ev.clientY - startY) < THRESHOLD) return;

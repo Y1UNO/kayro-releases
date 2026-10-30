@@ -150,5 +150,17 @@
       "Clic droit : « Déplacer vers » une autre catégorie, « Avancer » / « Reculer » (Alt + flèches) ; glisse une carte entre deux autres.",
       "Dans une scène, l'app glissée pend au curseur au bout d'un fil de lumière."
     ]
+  },
+  {
+    "version": "0.19.2",
+    "date": "30/10/2026",
+    "title": "Finitions",
+    "points": [
+      "Scan avancé : Kayro fouille tes dossiers de programmes et de jeux pour trouver les apps oubliées et de meilleurs logos.",
+      "Logos ronds partout ; une carte sans image prend les couleurs de son logo, centré.",
+      "Clic droit plus court et rangé, avec « Renommer » directement sur la carte.",
+      "Le fil des scènes est une vraie corde lumineuse et calme : on tire la ligne de l'app, elle se décroche, puis devient sa ligne dans la scène.",
+      "Clic droit partout dans Kayro ; logos mieux cadrés."
+    ]
   }
 ]

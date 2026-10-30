@@ -57,6 +57,13 @@ const WidgetDev: ComponentType | null =
 
 const appRoot = createRoot(root);
 
+// Step 19c: never the browser's own menu (« Précédent », « Inspecter »…) on a right click: Kayro's
+// menus answer where they exist; text fields keep theirs (copy, paste).
+document.addEventListener("contextmenu", (e) => {
+  const field = e.target instanceof Element && e.target.closest("input, textarea, [contenteditable]");
+  if (!field) e.preventDefault();
+});
+
 // A window built for a passage between display modes (round 4b, `?enter=1`): the page starts
 // faded out and comes in on its first show (src/features/modes/usePassage.ts).
 if (new URLSearchParams(location.search).get("enter") === "1") {

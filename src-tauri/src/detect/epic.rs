@@ -188,6 +188,8 @@ pub(crate) fn parse_item(v: &Value) -> Result<Option<DetectedApp>, String> {
         suggested_category: String::new(),
         launcher: false,
         ignored: false,
+        install_dir: string(v, "InstallLocation").map(str::to_string),
+        logo_path: None,
     }))
 }
 

@@ -77,6 +77,8 @@ impl ArtRole {
             ArtRole::Poster
                 | ArtRole::Hero
                 | ArtRole::Logo
+                // Step 19c: the logo the advanced scan found becomes the app's icon.
+                | ArtRole::Icon
                 | ArtRole::CharLeft
                 | ArtRole::CharRight
         )

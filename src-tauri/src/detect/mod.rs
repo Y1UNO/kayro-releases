@@ -5,6 +5,8 @@
 //! that cannot be understood is skipped and logged, never an error for the whole scan.
 
 pub mod category;
+pub mod deep;
+pub mod deep_pick;
 pub mod epic;
 pub mod filters;
 pub mod relevance;
@@ -29,6 +31,8 @@ pub enum SourceKind {
     Steam,
     Epic,
     Startmenu,
+    /// Step 19c: found by the advanced scan in a program or game folder.
+    Deep,
 }
 
 impl SourceKind {
@@ -36,7 +40,7 @@ impl SourceKind {
     pub fn default_category(self) -> &'static str {
         match self {
             SourceKind::Steam | SourceKind::Epic => "jeux",
-            SourceKind::Startmenu => "autres",
+            SourceKind::Startmenu | SourceKind::Deep => "autres",
         }
     }
 }
@@ -62,6 +66,10 @@ pub struct DetectedApp {
     pub launcher: bool,
     /// The user chose « Ignorer » for it (`Settings::ignored_detections`): hidden unless asked.
     pub ignored: bool,
+    /// Step 19c: the app's folder when known (Start Menu target, Epic install, advanced scan).
+    pub install_dir: Option<String>,
+    /// Step 19c, advanced scan: a sharper logo found in that folder (a PNG of the app's own).
+    pub logo_path: Option<String>,
 }
 
 impl DetectedApp {

@@ -6,6 +6,7 @@ import { hubStore } from "../../store";
 import { CATEGORY_IDS, CATEGORY_LABELS } from "../home/categories";
 import { normalize } from "../home/search";
 import { itemFromDetected, picksByDefault, type Item, type ItemList } from "./items";
+import { DeepScan } from "./DeepScan";
 import { ItemPanel, type ItemGroup } from "./ItemPanel";
 import type { FileDrop } from "./useFileDrop";
 import styles from "./AddApps.module.css";
@@ -106,6 +107,8 @@ export function DetectedTab({ list, drop, onAdded, onCancel }: Props) {
   const { status, rescan } = useScan(list);
   const [view, setView] = useState<View>("new");
   const [query, setQuery] = useState("");
+  /** Step 19c: « Scan avancé » open (its explanation, then its bar). */
+  const [deep, setDeep] = useState(false);
 
   const counts = useMemo(() => {
     const by: Record<View, number> = { new: 0, added: 0, ignored: 0 };
@@ -172,8 +175,27 @@ export function DetectedTab({ list, drop, onAdded, onCancel }: Props) {
             </Chip>
           ))}
       </div>
+      <Chip className={`${styles.chip} ${extra.deepChip}`} onClick={() => setDeep(true)}>
+        {t("addApps.detected.deepButton")}
+      </Chip>
     </div>
   );
+
+  if (deep) {
+    return (
+      <DeepScan
+        onClose={() => setDeep(false)}
+        onDone={(report) => {
+          const items = report.sources.flatMap((s) =>
+            s.apps.map((app) => itemFromDetected(app, s.source)),
+          );
+          list.replaceAll(items, picksByDefault(items));
+          setView("new");
+          setDeep(false);
+        }}
+      />
+    );
+  }
 
   const empty = query.trim()
     ? t("addApps.detected.emptySearch", { query: query.trim() })

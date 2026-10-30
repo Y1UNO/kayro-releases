@@ -38,21 +38,28 @@
   color: rgba(255, 255, 255, 0.94);
 }
 
-/* Program icon in place of the monogram (same corner, about the same weight). */
+/* Step 19c: the program's logo in the middle of the card (was in the top corner, 84 px), with a
+   soft shadow of its own shape; the face behind it glows in the logo's colours (below). */
 .icon {
   position: absolute;
-  left: 20px;
-  top: 20px;
-  width: 84px;
-  height: 84px;
+  left: 50%;
+  top: 41%;
+  width: 46%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
   object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
 }
 
-[data-mode="grid"] .icon {
-  left: 14px;
-  top: 14px;
-  width: 54px;
-  height: 54px;
+/* The face of a card with a logo: a halo of the logo's own colour behind it, its colours richer
+   (ICON_FACE), the foot still dark under the name. */
+.face:has(~ .icon) {
+  background:
+    radial-gradient(circle at 50% 41%, color-mix(in srgb, var(--f1), white 28%) 0%, transparent 42%),
+    linear-gradient(180deg, transparent 58%, rgba(8, 5, 12, 0.55)),
+    radial-gradient(120% 70% at 20% 0%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(165deg, var(--f1), var(--f2) 85%);
+  opacity: 1;
 }
 
 [data-mode="grid"] .letter {

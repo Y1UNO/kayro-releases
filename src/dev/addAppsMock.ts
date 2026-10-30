@@ -33,6 +33,8 @@ function detected(
     suggestedCategory: category,
     launcher: ["Steam", "Epic Games Launcher", "Riot Client"].includes(name),
     ignored: false,
+    installDir: null,
+    logoPath: null,
   };
 }
 
@@ -79,6 +81,30 @@ export function installAddAppsMock(allApps: () => AppEntry[]): void {
     });
   };
   detect.cancel = async () => ok(undefined);
+  // Step 19c: the advanced scan finds two more apps, one with a logo.
+  detect.deep = async () => {
+    await wait(2500);
+    const base = await detect.scan();
+    if (!base.ok) return base;
+    const extra = (id: string, name: string, category: string): DetectedApp => ({
+      ...detected(id, name, "startmenu", category),
+      source: { kind: "manual" },
+      launch: { kind: "exe", path: `D:/Games/${name}/${name}.exe`, args: [], cwd: null, elevated: false },
+    });
+    return ok({
+      ...base.value,
+      sources: [
+        ...base.value.sources,
+        {
+          source: "deep",
+          skipped: 0,
+          error: null,
+          ms: 2400,
+          apps: [extra("deep-1", "Hollow Knight", "jeux"), extra("deep-2", "CPU-Z", "logiciels")],
+        },
+      ],
+    });
+  };
   // Step 19b: a round coloured logo for most apps, none for a few (the monogram stays).
   detect.icon = async (app) => {
     await wait(150);
@@ -88,7 +114,13 @@ export function installAddAppsMock(allApps: () => AppEntry[]): void {
     return ok(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`);
   };
 
-  ipc.appIcon = async () => ok(null);
+  // Step 19c: a logo for most apps (the cards show it in the middle).
+  ipc.appIcon = async (id) => {
+    if (id.length % 3 === 0) return ok(null);
+    const hue = [...id].reduce((h, c) => h + c.charCodeAt(0) * 7, 0) % 360;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="6" y="6" width="52" height="52" rx="14" fill="hsl(${hue} 75% 55%)"/><circle cx="32" cy="32" r="12" fill="white"/></svg>`;
+    return ok(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`);
+  };
   ipc.appsInspect = async (inputs) => {
     await wait(120);
     const refused: Refused[] = [];

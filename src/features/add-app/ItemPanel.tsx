@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "../../design";
 import { t } from "../../i18n";
+import { artIpc } from "../../ipc/commands";
 import { errorText } from "../../ipc/errors";
 import { hubStore } from "../../store";
 import { categoryOf } from "../home/categories";
@@ -81,6 +82,12 @@ export function ItemPanel({
     }
     const refused = new Set(result.value.failed.map((f) => f.index));
     const done = items.filter((_, index) => !refused.has(index));
+    // Step 19c: a logo found by the advanced scan becomes the app's icon (its own image).
+    done.forEach((item, i) => {
+      const logo = item.detected?.logoPath;
+      const added = result.value.added[i];
+      if (logo && added) void artIpc.setUser(added.id, "icon", logo);
+    });
     list.markAdded(done.map((i) => i.key));
     if (refused.size === 0) {
       onAdded(done.length);

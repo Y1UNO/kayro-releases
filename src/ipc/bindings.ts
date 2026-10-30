@@ -153,6 +153,12 @@ export const commands = {
 	launchCover: (on: boolean, hide: boolean) => __TAURI_INVOKE<void>("launch_cover", { on, hide }),
 	/**  `data:` URL of the icon of `app`, or none. */
 	detectIcon: (app: DetectedApp) => typedError<string | null, AppError>(__TAURI_INVOKE("detect_icon", { app })),
+	/**
+	 *  « Scan avancé » (step 19c), started by the user: the usual scan, then the program and game
+	 *  folders of the PC's disks (apps the Start Menu does not list), then a sharper logo in every
+	 *  app's folder. Read-only; progress as `DeepProgress`; `detect_cancel` stops it.
+	 */
+	detectDeep: () => typedError<ScanReport, AppError>(__TAURI_INVOKE("detect_deep")),
 	/**  The apps in the order of `ids` (every app's id, each once). */
 	appsReorder: (ids: string[]) => typedError<AppsFile, AppError>(__TAURI_INVOKE("apps_reorder", { ids })),
 	startupApps: () => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_apps")),
@@ -181,6 +187,7 @@ export const events = {
 	appStateChanged: makeEvent<AppStateChanged>("app-state-changed"),
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
 	artChanged: makeEvent<ArtChanged>("art-changed"),
+	deepProgress: makeEvent<DeepProgress>("deep-progress"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
 	launchLanded: makeEvent<LaunchLanded>("launch-landed"),
@@ -383,6 +390,13 @@ export type ColorRole =
 /**  When the colours change (V8): once the selection rests, at once, or only when an app starts. */
 export type ColorTrigger = "select" | "instant" | "launch";
 
+/**  Step 19c: where the advanced scan is (folders read, apps found; `logos`: looking for logos). */
+export type DeepProgress = {
+	folders: number,
+	found: number,
+	logos: boolean,
+};
+
 /**  Emitted while a scan runs, once per source and state change. */
 export type DetectProgress = {
 	source: SourceKind,
@@ -411,6 +425,10 @@ export type DetectedApp = {
 	launcher: boolean,
 	/**  The user chose « Ignorer » for it (`Settings::ignored_detections`): hidden unless asked. */
 	ignored: boolean,
+	/**  Step 19c: the app's folder when known (Start Menu target, Epic install, advanced scan). */
+	installDir: string | null,
+	/**  Step 19c, advanced scan: a sharper logo found in that folder (a PNG of the app's own). */
+	logoPath: string | null,
 };
 
 export type Direction = "up" | "down" | "left" | "right" | "none";
@@ -1011,7 +1029,9 @@ export type SlotsFile = {
 export type SoundPack = "premium" | "retro" | "chiptune";
 
 /**  Where a detected app comes from (also the identity of a [`DetectSource`]). */
-export type SourceKind = "steam" | "epic" | "startmenu";
+export type SourceKind = "steam" | "epic" | "startmenu" | 
+/**  Step 19c: found by the advanced scan in a program or game folder. */
+"deep";
 
 export type SourceReport = {
 	source: SourceKind,

@@ -353,6 +353,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_moods::mood_export,
             ipc_desktop::launch_cover::<tauri::Wry>,
             crate::ipc_detect::detect_icon,
+            crate::ipc_detect::detect_deep::<tauri::Wry>,
             crate::ipc_detect::apps_reorder::<tauri::Wry>,
             crate::ipc_startup::startup_apps,
             crate::ipc_startup::startup_app_set,
@@ -378,6 +379,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_moods::MoodsChanged,
             crate::desktop::cover::LaunchLanded,
             crate::ipc_update::UpdateAvailable,
+            crate::ipc_detect::DeepProgress,
             crate::ipc_update::UpdateProgress
         ])
 }
