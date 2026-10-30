@@ -1,7 +1,7 @@
 # Kayro — Accueil
 
 > [!info] Où on en est
-> - **Dernière étape close** : 19c — Finitions (le 2026-10-30, version 0.19.2 publiée ; versions sur github.com/Y1UNO/kayro-releases)
+> - **Dernière étape close** : 19c — Finitions (le 2026-10-30, versions 0.19.2 et 0.19.3 publiées ; versions sur github.com/Y1UNO/kayro-releases)
 > - **À envoyer** : le dernier `Kayro_<version>_Installer.exe` de la page des versions ; ensuite Kayro se met à jour seul
 > - **Prochaine étape** : 20 — Kysland ; puis 18 — Audit avant la v1
 > - **DA** : gelée le 2026-10-14 (v1)

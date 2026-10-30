@@ -16,7 +16,9 @@ describe("tether rope (step 19c)", () => {
   it("hangs still and straight under the pointer", () => {
     const r = run(144, 1000, () => ({ x: 0, y: 0 }));
     expect(hookOf(r).x).toBeCloseTo(0, 1);
-    expect(Math.abs(hookOf(r).y - THREAD)).toBeLessThan(1.5);
+    // Elastic: the frame's weight stretches the thread a little, no more.
+    expect(hookOf(r).y - THREAD).toBeGreaterThan(0);
+    expect(hookOf(r).y - THREAD).toBeLessThan(THREAD * 0.06);
     expect(tiltOf(r)).toBeCloseTo(0, 1);
   });
 
@@ -39,9 +41,12 @@ describe("tether rope (step 19c)", () => {
     expect(Math.abs(hookOf(ends[0]!).x - hookOf(ends[2]!).x)).toBeLessThan(2);
   });
 
-  it("the thread never stretches, and goes slack when the pointer drops", () => {
+  it("the thread stretches when pulled (capped), springs back, and goes slack when the pointer drops", () => {
     const pulled = run(144, 300, (t) => ({ x: t * 3, y: -t }));
-    expect(ropeLength(pulled)).toBeLessThan(THREAD * 1.06);
+    expect(ropeLength(pulled)).toBeGreaterThan(THREAD * 1.08);
+    expect(ropeLength(pulled)).toBeLessThan(THREAD * 1.26);
+    const back = run(144, 2000, (t) => (t < 300 ? { x: t * 3, y: -t } : { x: 900, y: -300 }));
+    expect(ropeLength(back)).toBeLessThan(THREAD * 1.06);
     // A quick drop: the frame is below, the thread folds (its points are not on a line).
     const r = makeRope(0, 0);
     for (let i = 0; i < 4; i += 1) stepRope(r, 0, i * 15, 1000 / 144);

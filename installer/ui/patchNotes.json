@@ -162,5 +162,13 @@
       "Le fil des scènes est une vraie corde lumineuse et calme : on tire la ligne de l'app, elle se décroche, puis devient sa ligne dans la scène.",
       "Clic droit partout dans Kayro ; logos mieux cadrés."
     ]
+  },
+  {
+    "version": "0.19.3",
+    "date": "30/10/2026",
+    "title": "Fil élastique",
+    "points": [
+      "Le fil des scènes est un peu élastique : il s'étire quand on tire, puis revient en douceur."
+    ]
   }
 ]

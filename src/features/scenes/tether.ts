@@ -1,6 +1,6 @@
 /**
  * Step 19b–19c, dragging an app into a scene: the app's frame hangs from the pointer on a thread of
- * light. The thread is a real rope (Verlet points held at a fixed length: it bends, folds and goes
+ * light. The thread is a real rope (Verlet points, a little elastic: it stretches, bends, folds, goes
  * slack), the frame a small body hung from its hook, slowed by the air: pulled to the right, it
  * trails on the left and turns (its top towards the pull), swings, then settles. Fixed time steps
  * (any screen rate), pure numbers; the drawing is in TetherGhost.tsx.
@@ -24,6 +24,11 @@ const BODY_MASS = 9;
 /** Integration step (s) and constraint passes per step. */
 const STEP = 1 / 240;
 const PASSES = 16;
+// 19c, the user: « a bit elastic, for more flow »: a stretch is taken back softly, capped.
+/** Share of a stretch taken back per constraint pass (1 = a rigid thread). */
+const GIVE = 0.3;
+/** The thread never gets longer than this (× its rest length). */
+const STRETCH_MAX = 1.25;
 /** The frame's tilt is capped (degrees). */
 export const MAX_TILT = 10;
 /** Share of the hanging angle shown as the frame's turn (it leans gently, it does not spin). */
@@ -62,12 +67,20 @@ export function makeRope(px: number, py: number, hx = px, hy = py + THREAD): Rop
   return { x, y, ox: [...x], oy: [...y], bx: hx, by: hy + BODY, obx: hx, oby: hy + BODY, rest: 0 };
 }
 
-/** Moves `a` and `b` (inverse masses `wa`, `wb`) to be `len` apart. */
-function hold(r: Rope, a: number, b: number, len: number, wa: number, wb: number) {
+/**
+ * Moves `a` and `b` (inverse masses `wa`, `wb`) to be `len` apart. `give` < 1: a stretch is only
+ * taken back by that share per pass (an elastic thread), never beyond `STRETCH_MAX`.
+ */
+function hold(r: Rope, a: number, b: number, len: number, wa: number, wb: number, give = 1) {
   const dx = r.x[b]! - r.x[a]!;
   const dy = r.y[b]! - r.y[a]!;
   const d = Math.hypot(dx, dy) || 1e-6;
-  const k = (d - len) / d / (wa + wb);
+  let s = d - len;
+  if (s > 0 && give < 1) {
+    const over = Math.max(0, s - len * (STRETCH_MAX - 1));
+    s = over + (s - over) * give;
+  }
+  const k = s / d / (wa + wb);
   r.x[a]! += dx * k * wa;
   r.y[a]! += dy * k * wa;
   r.x[b]! -= dx * k * wb;
@@ -103,7 +116,7 @@ function stepOnce(r: Rope, px: number, py: number) {
       const i = pass % 2 === 0 ? k : n - 1 - k;
       const wa = i === 0 ? 0 : 1;
       const wb = i + 1 === n ? 1 / HOOK_MASS : 1;
-      hold(r, i, i + 1, SEG, wa, wb);
+      hold(r, i, i + 1, SEG, wa, wb, GIVE);
     }
     // Hook ↔ body: a stiff stick (the frame does not stretch).
     const hx = r.x[n]!;
@@ -119,6 +132,8 @@ function stepOnce(r: Rope, px: number, py: number) {
     r.bx -= dx * k * wbody;
     r.by -= dy * k * wbody;
   }
+  // Last, from the pointer out: no segment past its longest (`give` 0 keeps only the cap).
+  for (let i = 0; i < n; i += 1) hold(r, i, i + 1, SEG, 0, 1, 0);
 }
 
 /** The rope `dtMs` later, its first point on the pointer (`px`, `py`). Mutates `r`. */

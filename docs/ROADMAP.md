@@ -123,7 +123,8 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
   dans « Mes apps » puis se décroche, et le cadre lâché devient la ligne de la scène (480 ms). Tests : vitest
   602, cargo 272. **Non vu dans l'exe** ;
   pas d'affiches pour les jeux hors Steam (les lanceurs les gardent dans des caches illisibles) ; pas de
-  renommage par double-clic (un clic lance l'app).
+  renommage par double-clic (un clic lance l'app). 0.19.3 : fil un peu élastique (`GIVE` 0,3 par passe, plafond
+  ×1,25 ; repos +3,5 %, revient seul).
 - **Étape 19b — Scan et rangement, 2026-10-30** (version 0.19.1) : scan (cœur) — doublons Steam / Epic ↔ menu
   Démarrer fusionnés, lanceurs à part, catégories devinées (≈ 100 motifs de plus), « Ignorer » retenu
   (`ignoredDetections`) ; onglet « Détectées » refait : logo de chaque app (`detect_icon` : icône Shell ou petite icône
