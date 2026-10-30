@@ -5,7 +5,7 @@ import { t } from "../../i18n";
 import type { AppEntry, Step } from "../../ipc/bindings";
 import type { StepView } from "../../store";
 import { useAppIcon } from "../home/useAppIcon";
-import { DragGhost } from "../home/Overlays";
+import { TetherGhost } from "./TetherGhost";
 import { stepSentence } from "./describe";
 import { resolved, type Action, type EditorDraft } from "./draft";
 import { RunMark } from "./RunMark";
@@ -93,11 +93,11 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
     nudge(i, e.key === "ArrowUp" ? -1 : 1);
   }
 
-  const ghostName =
+  const dragged =
     drag?.payload.kind === "app"
-      ? byId.get(drag.payload.appId)?.name
+      ? byId.get(drag.payload.appId)
       : drag
-        ? byId.get(items[drag.payload.from]?.appId ?? "")?.name
+        ? byId.get(items[drag.payload.from]?.appId ?? "")
         : undefined;
 
   return (
@@ -248,7 +248,8 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
           <p className={styles.hint}>{t("scenes.simple.previewNote")}</p>
         </Surface>
       </div>
-      {drag && ghostName && <DragGhost name={ghostName} x={drag.x} y={drag.y} />}
+      {/* Step 19b: the app hangs from the pointer on a thread of light. */}
+      {drag && dragged && <TetherGhost key={dragged.id} app={dragged} x={drag.x} y={drag.y} />}
     </div>
   );
 }

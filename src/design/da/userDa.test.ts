@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS } from "../../features/settings/settingsModel";
+import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS, DETECT_DEFAULTS } from "../../features/settings/settingsModel";
 import type { Settings } from "../../ipc/bindings";
 import { motionTokens } from "../motion/tokens";
 import { sameUserChoices, userOverrides, withUser } from "./userDa";
@@ -9,6 +9,7 @@ const S: Settings = {
   ...VISUAL_DEFAULTS,
   ...SOUND_DEFAULTS,
   ...UPDATE_DEFAULTS,
+  ...DETECT_DEFAULTS,
   openingScreen: "last",
   schemaVersion: 2,
   themeId: "bleu-gris",

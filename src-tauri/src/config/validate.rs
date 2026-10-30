@@ -229,6 +229,9 @@ pub fn hotkey(value: &str) -> Check {
     }
 }
 
+/// Bound of `Settings::ignored_detections` (a scan proposes a few hundred apps at most).
+const MAX_IGNORED: usize = 2000;
+
 pub fn validate_settings(s: &Settings) -> Check {
     validate_id(&s.theme_id).or_else(|_| err("themeId", "invalid theme id"))?;
     hotkey(&s.hotkey)?;
@@ -241,6 +244,10 @@ pub fn validate_settings(s: &Settings) -> Check {
     }
     if !(SOUND_VOLUME_MIN..=SOUND_VOLUME_MAX).contains(&s.sound_volume) {
         return err("soundVolume", "must be between 0 and 1");
+    }
+    let ignored = &s.ignored_detections;
+    if ignored.len() > MAX_IGNORED || ignored.iter().any(|id| validate_id(id).is_err()) {
+        return err("ignoredDetections", "too many or invalid ids");
     }
     Ok(())
 }

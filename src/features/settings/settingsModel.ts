@@ -83,3 +83,6 @@ export const SOUND_DEFAULTS = {
  * (step 18b); started with Windows, no home screen unless asked (step 19).
  */
 export const UPDATE_DEFAULTS = { updateAuto: false, startupHome: false } as const satisfies SettingsPatch;
+
+/** Step 19b: no detected app ignored (`Settings::default`). */
+export const DETECT_DEFAULTS = { ignoredDetections: [] as string[] } satisfies SettingsPatch;

@@ -11,7 +11,7 @@ import { WidgetApp } from "../features/widget/WidgetApp";
 import type { AppEntry, SceneFile } from "../ipc/bindings";
 import { desktopStore, hubStore, sceneStore } from "../store";
 import styles from "./Widget.module.css";
-import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS } from "../features/settings/settingsModel";
+import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS, DETECT_DEFAULTS } from "../features/settings/settingsModel";
 
 const NAMES = ["Valorant", "Discord", "Spotify", "OBS Studio", "Steam", "Minecraft", "Blender"];
 const APPS: AppEntry[] = NAMES.map((name, i) => ({
@@ -45,6 +45,7 @@ function install(params: URLSearchParams): true {
       ...VISUAL_DEFAULTS,
       ...SOUND_DEFAULTS,
       ...UPDATE_DEFAULTS,
+      ...DETECT_DEFAULTS,
       openingScreen: "last",
       schemaVersion: 2,
       themeId: params.get("theme") ?? ACTIVE_THEME_ID,

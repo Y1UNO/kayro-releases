@@ -1,0 +1,102 @@
+/* Step 19b: the app hanging from the pointer on a thread of light (TetherGhost.tsx). */
+
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* The halo of the thread: a wide faint stroke under the bright one (no blur filter). */
+.glow {
+  fill: none;
+  stroke: var(--accent-light);
+  stroke-width: 8;
+  stroke-linecap: round;
+  opacity: 0.22;
+}
+
+.thread {
+  fill: none;
+  stroke: url(#kayro-tether);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.bead {
+  fill: var(--accent-light);
+}
+
+/* The glass frame: its hook (top centre) is the transform's origin, on the thread's end. */
+.frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: 260px;
+  padding: 9px 16px 9px 10px;
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  border-radius: var(--radius-row, 14px);
+  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--card) 92%, white 10%),
+    color-mix(in srgb, var(--card) 70%, black)
+  );
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  will-change: transform;
+}
+
+/* The little ring the thread is tied to. */
+.hook {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  translate: -50% 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-light);
+  background: var(--card);
+}
+
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--field) 70%, white 6%);
+  font-family: var(--font-title);
+  font-size: 17px;
+}
+
+.icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

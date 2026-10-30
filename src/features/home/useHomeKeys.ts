@@ -13,6 +13,8 @@ export interface HomeKeyHandlers {
   onEdit: () => void;
   /** Context-menu key or Shift+F10: menu of the selected app. */
   onMenu: () => void;
+  /** Step 19b, Alt + arrows: the selected app one place backward (-1) or forward (1). */
+  onNudge: (dir: -1 | 1) => void;
 }
 
 /**
@@ -48,10 +50,16 @@ export function useHomeKeys(handlers: HomeKeyHandlers, enabled: boolean): void {
         h.onSearch();
         return;
       }
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-
       const target = e.target instanceof Element ? e.target : null;
-      if (target?.closest("input, textarea, select, [contenteditable], [data-own-keys]")) return;
+      const inField = target?.closest("input, textarea, select, [contenteditable], [data-own-keys]");
+      // Alt + ← would also be the browser's « back »: always taken here.
+      if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.startsWith("Arrow")) {
+        e.preventDefault();
+        if (!inField) h.onNudge(e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 1);
+        return;
+      }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (inField) return;
 
       switch (e.key) {
         case "ArrowLeft":

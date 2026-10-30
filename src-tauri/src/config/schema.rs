@@ -108,6 +108,8 @@ pub struct Settings {
     /// Step 19: started with Windows, the hub opens on its home screen (still logo) instead of
     /// waiting in the notification area.
     pub startup_home: bool,
+    /// Step 19b: detected apps the user chose to ignore (their ids), hidden from the next scans.
+    pub ignored_detections: Vec<String>,
 }
 
 /// Bounds of [`Settings::atmosphere_intensity`].
@@ -156,6 +158,7 @@ impl Default for Settings {
             sound_launch: true,
             update_auto: false,
             startup_home: false,
+            ignored_detections: Vec::new(),
         }
     }
 }
@@ -200,6 +203,7 @@ pub struct SettingsPatch {
     pub sound_launch: Option<bool>,
     pub update_auto: Option<bool>,
     pub startup_home: Option<bool>,
+    pub ignored_detections: Option<Vec<String>>,
 }
 
 impl Settings {
@@ -248,6 +252,7 @@ impl Settings {
             sound_launch,
             update_auto,
             startup_home,
+            ignored_detections,
         );
     }
 }

@@ -174,6 +174,29 @@ impl ConfigState {
         Ok(app)
     }
 
+    /// Step 19b: the apps in a new order (the order of the cards). `ids` must be exactly the apps'
+    /// ids, each once: anything else is refused and nothing changes.
+    pub fn reorder_apps(&self, ids: &[String]) -> Result<AppsFile, AppError> {
+        let mut guard = lock(&self.apps);
+        let mut next = guard.clone();
+        let mut by_id: std::collections::HashMap<&str, &AppEntry> =
+            guard.apps.iter().map(|a| (a.id.as_str(), a)).collect();
+        let mut ordered = Vec::with_capacity(ids.len());
+        for id in ids {
+            let app = by_id
+                .remove(id.as_str())
+                .ok_or_else(|| AppError::validation("ids", "unknown or repeated app id"))?;
+            ordered.push(app.clone());
+        }
+        if !by_id.is_empty() {
+            return Err(AppError::validation("ids", "every app must be listed"));
+        }
+        next.apps = ordered;
+        store::save(&self.paths.apps(), &next)?;
+        *guard = next.clone();
+        Ok(next)
+    }
+
     pub fn remove_app(&self, id: &str) -> Result<(), AppError> {
         let mut guard = lock(&self.apps);
         let mut next = guard.clone();

@@ -9,7 +9,7 @@ l'autorises : une petite vérification des **mises à jour** (voir plus bas).
 
 ## 1. Installer
 
-1. Lance `Kayro_0.19.0_Installer.exe`, clique sur **Continuer** (la case « raccourci sur le bureau » est
+1. Lance `Kayro_0.19.1_Installer.exe`, clique sur **Continuer** (la case « raccourci sur le bureau » est
    cochée par défaut), choisis ce qui se passe **au démarrage du PC** (voir plus bas), puis **Installer**. À la
    fin, **Lancer Kayro**. Si Kayro est déjà ouvert, l'installeur propose de le fermer
    proprement d'abord ; une ancienne version est mise à jour, tes réglages restent.
@@ -20,14 +20,17 @@ l'autorises : une petite vérification des **mises à jour** (voir plus bas).
 4. Si ton PC n'a pas WebView2 (le moteur d'affichage de Microsoft, presque toujours présent sur Windows 11),
    c'est l'installeur classique de Windows qui s'ouvre, et il le télécharge : il faut Internet **à ce moment-là
    seulement**.
-5. En cas de souci, le dossier `secours` contient l'installeur classique (`Kayro_0.19.0_x64-setup.exe`) : il
+5. En cas de souci, le dossier `secours` contient l'installeur classique (`Kayro_0.19.1_x64-setup.exe`) : il
    installe exactement la même chose, dans une fenêtre Windows ordinaire.
 
 ## 2. Utiliser
 
 - **Au premier lancement**, Kayro est vide : clique sur **+** en haut à droite (« Ajouter des applications »).
-  L'onglet **Détectées** liste ce qu'il a trouvé (Steam, Epic, menu Démarrer…) : coche ce que tu veux, puis
-  **Ajouter**. Les onglets **Glisser-déposer** et **Manuel** servent pour le reste.
+  L'onglet **Détectées** liste ce qu'il a trouvé (Steam, Epic, menu Démarrer…), rangé par catégorie avec le logo de
+  chaque app ; les apps sûres sont déjà cochées : vérifie, puis **Ajouter**. « Ignorer » cache une app pour les
+  prochaines fois. Les onglets **Glisser-déposer** et **Manuel** servent pour le reste.
+- **Ranger** (nouveau en 0.19.1) : clic droit sur une carte › **Déplacer vers** une autre catégorie, **Avancer** /
+  **Reculer** (ou Alt + ← / →) ; en vue grille, glisse une carte entre deux autres.
 - **Ctrl + Alt + H** affiche ou cache Kayro. Si un autre programme utilise déjà ce raccourci, Kayro te le dit :
   choisis-en un autre dans **Réglages › Général**.
 - La croix **cache** Kayro sans le fermer : il reste dans la zone de notification (près de l'horloge). Pour le

@@ -27,7 +27,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [ ] 18 | Audit : perf, sécurité, robustesse, accessibilité | 1–16 | F |
 | [x] 18b | Mises à jour : rechercher et installer une nouvelle version depuis Kayro (réseau optionnel, voir « Plus tard ») | 18, installeur maison | F |
 | [x] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis ; **démarrage** : choix des apps lancées avec Windows à l'installation, démarrage express sur le logo (voir « Plus tard ») | 18 | F |
-| [ ] 19b | **Scan intelligent et rangement fluide** (demandé le 2026-10-30) : un scan bien plus malin (filtres de bruit, doublons, lanceurs et outils à part, catégorie devinée, « Ignorer ») et plus simple à l'ajout d'apps ; changer une app de catégorie (et la réordonner) de façon fluide. Détails : « Plus tard » › Détection | 5, 19 | G |
+| [x] 19b | **Scan intelligent et rangement fluide** (demandé le 2026-10-30) : un scan bien plus malin (filtres de bruit, doublons, lanceurs et outils à part, catégorie devinée, « Ignorer ») et plus simple à l'ajout d'apps ; changer une app de catégorie (et la réordonner) de façon fluide. Détails : « Plus tard » › Détection | 5, 19 | G |
 | [ ] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
@@ -106,6 +106,15 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
   couleurs du jeu retiré** (Désactivé · Stylisé). Tests : vitest 565, cargo 250, clippy / eslint / tsc
   propres. **Non mesuré** (CPU / GPU des ambiances : à faire en A/B avec `npm run perf -- --exe`, accord requis) ;
   non vu dans l'exe par moi ; carte spéciale sans repli CSS ; anneau de glyphes en partie derrière les cartes latérales.
+- **Étape 19b — Scan et rangement, 2026-10-30** (version 0.19.1) : scan (cœur) — doublons Steam / Epic ↔ menu
+  Démarrer fusionnés, lanceurs à part, catégories devinées (≈ 100 motifs de plus), « Ignorer » retenu
+  (`ignoredDetections`) ; onglet « Détectées » refait : logo de chaque app (`detect_icon` : icône Shell ou petite icône
+  Steam), groupes par catégorie, recherche, vues Nouvelles / Déjà ajoutées / Ignorées, apps sûres cochées d'office.
+  Rangement : clic droit « Déplacer vers » et « Avancer / Reculer » (Alt + flèches), glisser une carte à côté d'une
+  autre (repère lumineux), cartes qui glissent à leur place (FLIP, grille) ; `apps_reorder`. Scènes : l'app glissée pend
+  au curseur sur un fil de lumière (ressort amorti, `tether.ts`). Tests : vitest 599, cargo 264. **Non vu dans l'exe** ;
+  le balancement du fil n'est vérifié que par les tests (aperçu en arrière-plan) ; quelques apps de la bibliothèque
+  sans logo (ex. « 15 Bands Graphic EQ ») : cause non cherchée.
 - **Étape 19 — Démarrage, 2026-10-30** (version 0.19.0) : crate partagé `crates/startup` (installeur + Kayro) qui
   coupe les apps lancées avec Windows comme le Gestionnaire des tâches (marque `StartupApproved`, jamais la clé `Run`
   ni le dossier Démarrage ; format non documenté par Microsoft, connu par l'usage) ; seulement les entrées du compte,
@@ -212,13 +221,13 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   on veut sur l'écran ; posé **en haut**, il s'aimante et s'intègre en île (forme pilule centrée, s'étire pour
   afficher une info, se rétracte). Animations et sons propres ; garder la veille douce et la règle « jamais devant un
   jeu en plein écran ».
-- [ ] Détection : filtres de bruit renforcés (désinstallateurs, aide/documentation, « Check For Updates », « About/Configure
+- [x] Détection : filtres de bruit renforcés (fait avant l'étape 19b ; doublons entre sources à l'étape 19b) (désinstallateurs, aide/documentation, « Check For Updates », « About/Configure
   Java », « Module Docs », « Report a Problem », « Windows App Cert Kit », variantes mode compatibilité / sans échec,
   doublons de même nom et même cible).
-- [ ] Détection : bouton « Ignorer » par app (`ignoredDetections` dans settings.json, case « Afficher les ignorées »).
-- [ ] Détection : groupe « Lanceurs et outils » (Riot Client, Epic Games Launcher, Steam, Roblox Studio, Unity Hub, GOG
+- [x] Détection (étape 19b) : bouton « Ignorer » par app (`ignoredDetections` dans settings.json, case « Afficher les ignorées »).
+- [x] Détection (étape 19b) : groupe « Lanceurs et outils » (Riot Client, Epic Games Launcher, Steam, Roblox Studio, Unity Hub, GOG
   Galaxy, Battle.net…) replié et décoché par défaut.
-- [ ] Détection : meilleure suggestion de catégorie par liste de motifs locale.
+- [x] Détection (étape 19b) : meilleure suggestion de catégorie par liste de motifs locale.
 - [ ] Fil lumineux (`GlideThread`) pendant « Recherche de vos applications… » et « Chargement de vos données… ».
 - [ ] Scènes : mesurer en local le temps de démarrage réel de chaque app lors des tests de scène (`launchTimings.json`
   dans le dossier de données) pour proposer des délais calibrés sur la machine.

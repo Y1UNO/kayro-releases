@@ -14,7 +14,7 @@ import { AddAppsDialog } from "../add-app/AddAppsDialog";
 import { EditAppDialog } from "../add-app/EditAppDialog";
 import { AppGrid } from "./AppGrid";
 import { AppMenu, type MenuTarget } from "./AppMenu";
-import { CATEGORY_IDS, CATEGORY_LABELS, groupByCategory, type CategoryId } from "./categories";
+import { CATEGORY_IDS, groupByCategory, type CategoryId } from "./categories";
 import { Carousel } from "./Carousel";
 import { CategoryTabs } from "./CategoryTabs";
 import { CategoryTitle } from "./CategoryTitle";
@@ -26,6 +26,7 @@ import { LaunchToast } from "./LaunchToast";
 import { DragGhost, Notice } from "./Overlays";
 import { SceneDock } from "./SceneDock";
 import { TopBar } from "./TopBar";
+import { useArrange } from "./useArrange";
 import { useCategoryDrag } from "./useCategoryDrag";
 import { CategoryFan, FanTitle } from "./fan/CategoryFan";
 import { useCategoryLink } from "./fan/useCategoryLink";
@@ -110,20 +111,11 @@ export function HomeScreen({
     return () => window.clearTimeout(id);
   }, [notice]);
 
+  const arrange = useArrange(setNotice);
   const { drag, onPointerDown } = useCategoryDrag(
     (id) => apps.find((a) => a.id === id),
-    (app, category) => {
-      void hubStore
-        .getState()
-        .updateApp({ ...app, category })
-        .then((r) => {
-          if (r.ok) {
-            setNotice(
-              t("home.menu.moved", { name: app.name, category: t(CATEGORY_LABELS[category]) }),
-            );
-          }
-        });
-    },
+    arrange.moveTo,
+    arrange.dropNear,
   );
 
   const setFocus = useCallback(
@@ -198,6 +190,10 @@ export function HomeScreen({
       onMenu: () => {
         const app = onFan ? undefined : list[focus];
         if (app) setMenu({ app, ...cardCentre(app.id) });
+      },
+      onNudge: (dir) => {
+        const app = onFan ? undefined : list[focus];
+        if (app && arrange.step(app, list, dir)) setFocus(focus + dir);
       },
     },
     !paletteOpen && !menu,
@@ -381,6 +377,8 @@ export function HomeScreen({
             onFavorite={(app) =>
               void hubStore.getState().updateApp({ ...app, favorite: !app.favorite })
             }
+            onMove={arrange.moveTo}
+            onNudge={(app, dir) => arrange.step(app, list, dir) && app === list[focus] && setFocus(focus + dir)}
           />
         )}
         {drag && <DragGhost name={drag.app.name} x={drag.x} y={drag.y} />}

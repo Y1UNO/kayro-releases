@@ -16,7 +16,12 @@ pub const ICON_PX: u32 = 128;
 /// `shell:AppsFolder` item; an Epic game through the program its manifest names. Links, Steam
 /// games and other protocols have none (Steam's own small icon comes through `crate::art`).
 pub fn icon_source(app: &AppEntry) -> Option<String> {
-    match (&app.launch, &app.source) {
+    icon_source_for(&app.launch, &app.source)
+}
+
+/// `icon_source` for an app not in the library yet (a detected one, step 19b).
+pub fn icon_source_for(launch: &Launch, source: &AppSource) -> Option<String> {
+    match (launch, source) {
         (Launch::Exe { path, .. } | Launch::Lnk { path }, _) => Some(path.clone()),
         (Launch::Uwp { aumid }, _) => Some(format!("{APPS_FOLDER}{aumid}")),
         (Launch::Uri { .. }, AppSource::Epic { app_name }) => {
@@ -96,10 +101,15 @@ pub fn encode_png(icon: &Rgba) -> Result<Vec<u8>, String> {
 /// `data:image/png;base64,…`: how the interface receives an icon (the CSP allows `data:` images,
 /// and no file-protocol scope has to be opened onto the data folder).
 pub fn png_data_url(png: &[u8]) -> String {
+    data_url("image/png", png)
+}
+
+/// `data:<mime>;base64,…` of `bytes`.
+pub fn data_url(mime: &str, bytes: &[u8]) -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity(22 + png.len().div_ceil(3) * 4);
-    out.push_str("data:image/png;base64,");
-    for chunk in png.chunks(3) {
+    let mut out = String::with_capacity(20 + mime.len() + bytes.len().div_ceil(3) * 4);
+    out.push_str(&format!("data:{mime};base64,"));
+    for chunk in bytes.chunks(3) {
         let n = chunk
             .iter()
             .enumerate()
@@ -122,8 +132,17 @@ pub fn icon_png(
     app: &AppEntry,
     extract: &dyn Fn(&str) -> Option<Rgba>,
 ) -> Option<Vec<u8>> {
-    let source = icon_source(app)?;
-    let file = file_for(icons_dir, &app.id, &source);
+    icon_png_from(icons_dir, &app.id, icon_source(app)?, extract)
+}
+
+/// `icon_png` of the app `id` whose icon comes from `source` (a program, a shortcut…).
+pub fn icon_png_from(
+    icons_dir: &Path,
+    id: &str,
+    source: String,
+    extract: &dyn Fn(&str) -> Option<Rgba>,
+) -> Option<Vec<u8>> {
+    let file = file_for(icons_dir, id, &source);
     if let Ok(bytes) = fs::read(&file) {
         return Some(bytes);
     }
@@ -131,7 +150,7 @@ pub fn icon_png(
     let bytes = match encode_png(&icon) {
         Ok(b) => b,
         Err(e) => {
-            tracing::warn!(app = %app.id, error = %e, "icon: could not encode");
+            tracing::warn!(app = %id, error = %e, "icon: could not encode");
             return None;
         }
     };
@@ -139,7 +158,7 @@ pub fn icon_png(
         .and_then(|()| crate::config::atomic::write_atomic(&file, &bytes));
     if let Err(e) = stored {
         // The icon is still served; only the cache is missing.
-        tracing::warn!(app = %app.id, error = %e, "icon: could not cache");
+        tracing::warn!(app = %id, error = %e, "icon: could not cache");
     }
     Some(bytes)
 }

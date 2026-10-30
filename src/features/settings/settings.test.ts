@@ -8,6 +8,7 @@ import {
   isVisualDefault,
   SOUND_DEFAULTS,
   UPDATE_DEFAULTS,
+  DETECT_DEFAULTS,
   VISUAL_DEFAULTS as V,
   visualSnapshot,
 } from "./settingsModel";
@@ -25,6 +26,7 @@ const SETTINGS: Settings = {
   ...V,
   ...SOUND_DEFAULTS,
   ...UPDATE_DEFAULTS,
+  ...DETECT_DEFAULTS,
   openingScreen: "last",
   schemaVersion: 2,
   themeId: "bleu-gris",

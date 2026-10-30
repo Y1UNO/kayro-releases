@@ -11,6 +11,7 @@ pub mod relevance;
 pub mod scan;
 pub mod startmenu;
 pub mod steam;
+pub mod tidy;
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
@@ -57,6 +58,10 @@ pub struct DetectedApp {
     pub already_added: bool,
     /// Category proposed for the app (see [`category::suggest_category`]); the user may change it.
     pub suggested_category: String,
+    /// A store or launcher (Steam, Riot Client…): proposed apart, unticked (step 19b).
+    pub launcher: bool,
+    /// The user chose « Ignorer » for it (`Settings::ignored_detections`): hidden unless asked.
+    pub ignored: bool,
 }
 
 impl DetectedApp {

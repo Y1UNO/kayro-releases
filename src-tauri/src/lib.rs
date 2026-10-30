@@ -8,6 +8,7 @@ pub mod intake;
 pub mod ipc;
 pub mod ipc_art;
 pub mod ipc_desktop;
+pub mod ipc_detect;
 pub mod ipc_moods;
 pub mod ipc_scenes;
 pub mod ipc_startup;

@@ -4,94 +4,19 @@ import { Button } from "../../design";
 import { t } from "../../i18n";
 import { errorText } from "../../ipc/errors";
 import { hubStore } from "../../store";
-import { CATEGORY_IDS, CATEGORY_LABELS, categoryOf } from "../home/categories";
-import { monogram } from "../home/cardLook";
-import { toNewApp, type Item, type ItemList, type Origin } from "./items";
+import { categoryOf } from "../home/categories";
+import { toNewApp, type Item, type ItemList } from "./items";
+import { ItemRow } from "./ItemRow";
 import styles from "./AddApps.module.css";
+import extra from "./Detected.module.css";
 
-const ORIGIN_LABELS = {
-  steam: "addApps.detected.sourceSteam",
-  epic: "addApps.detected.sourceEpic",
-  startmenu: "addApps.detected.sourceStartmenu",
-  drop: null,
-} as const satisfies Record<Origin, string | null>;
-
-interface RowProps {
-  item: Item;
-  checked: boolean;
-  name: string;
-  category: string;
-  editableName: boolean;
-  onToggle: (key: string) => void;
-  onName: (key: string, name: string) => void;
-  onCategory: (key: string, category: string) => void;
-}
-
-/** One proposed app: checkbox, monogram, name, source, category. A click anywhere selects. */
-function Row({
-  item,
-  checked,
-  name,
-  category,
-  editableName,
-  onToggle,
-  onName,
-  onCategory,
-}: RowProps) {
-  const origin = ORIGIN_LABELS[item.origin];
-  const locked = item.alreadyAdded;
-  return (
-    <li
-      className={styles.row}
-      data-disabled={locked || undefined}
-      onClick={() => !locked && onToggle(item.key)}
-    >
-      <input
-        type="checkbox"
-        className={styles.box}
-        checked={checked && !locked}
-        disabled={locked}
-        aria-label={t("addApps.row.pick", { name })}
-        onChange={() => onToggle(item.key)}
-        onClick={(e) => e.stopPropagation()}
-      />
-      <span className={styles.tile} aria-hidden="true">
-        {monogram(name)}
-      </span>
-      {editableName && !locked ? (
-        <input
-          className={`${styles.input} ${styles.nameInput}`}
-          value={name}
-          maxLength={80}
-          aria-label={t("addApps.row.name", { name: item.name })}
-          onChange={(e) => onName(item.key, e.target.value)}
-          onClick={(e) => e.stopPropagation()}
-        />
-      ) : (
-        <span className={styles.name} title={name}>
-          {name}
-        </span>
-      )}
-      {origin && <span className={styles.source}>{t(origin)}</span>}
-      {locked ? (
-        <span className={styles.already}>{t("addApps.detected.already")}</span>
-      ) : (
-        <select
-          className={`${styles.select} ${styles.pill}`}
-          value={category}
-          aria-label={t("addApps.row.category", { name })}
-          onChange={(e) => onCategory(item.key, e.target.value)}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {CATEGORY_IDS.map((id) => (
-            <option key={id} value={id}>
-              {t(CATEGORY_LABELS[id])}
-            </option>
-          ))}
-        </select>
-      )}
-    </li>
-  );
+/** A part of the list with its title (19b: the detected apps by category). */
+export interface ItemGroup {
+  key: string;
+  label: string;
+  items: readonly Item[];
+  /** Closed until the user opens it (stores and launchers). */
+  folded?: boolean;
 }
 
 interface Props {
@@ -108,6 +33,10 @@ interface Props {
   beforeFooter?: ReactNode;
   /** Lets "Tout ajouter" send every addable visible row at once. */
   addAll?: boolean;
+  /** The rows in titled parts instead of one list (19b). */
+  groups?: readonly ItemGroup[];
+  /** « Ignorer » on each row (detected apps). */
+  onIgnore?: (key: string, ignored: boolean) => void;
   onAdded: (count: number) => void;
   onCancel: () => void;
 }
@@ -123,14 +52,17 @@ export function ItemPanel({
   header,
   empty,
   addAll = false,
+  groups,
+  onIgnore,
   beforeFooter,
   onAdded,
   onCancel,
 }: Props) {
   const [busy, setBusy] = useState(false);
+  const [opened, setOpened] = useState<ReadonlySet<string>>(new Set());
   const [status, setStatus] = useState<Status>(null);
 
-  const addable = visible.filter((i) => !i.alreadyAdded);
+  const addable = visible.filter((i) => !i.alreadyAdded && !i.ignored);
   const allSelected = addable.length > 0 && addable.every((i) => list.selected.has(i.key));
   const count = list.chosen.length;
 
@@ -159,6 +91,21 @@ export function ItemPanel({
       });
     }
   }
+
+  const row = (item: Item) => (
+    <ItemRow
+      key={item.key}
+      item={item}
+      checked={list.selected.has(item.key)}
+      name={list.edits[item.key]?.name ?? item.name}
+      category={list.edits[item.key]?.category ?? item.category}
+      editableName={editableNames}
+      onToggle={list.toggle}
+      onName={list.setName}
+      onCategory={(key, value) => list.setCategory(key, categoryOf({ category: value }))}
+      onIgnore={onIgnore}
+    />
+  );
 
   const summary =
     count === 0
@@ -191,21 +138,36 @@ export function ItemPanel({
       )}
       {visible.length === 0 ? (
         empty
+      ) : groups ? (
+        <div className={styles.list} aria-label={label} role="group">
+          {groups.map((g) => {
+            const open = !g.folded || opened.has(g.key);
+            return (
+              <section key={g.key} className={extra.group}>
+                <button
+                  type="button"
+                  className={extra.groupHead}
+                  aria-expanded={open}
+                  onClick={() =>
+                    setOpened((s) => {
+                      const next = new Set(s);
+                      if (!next.delete(g.key)) next.add(g.key);
+                      return next;
+                    })
+                  }
+                  disabled={!g.folded}
+                >
+                  <span>{g.label}</span>
+                  <span className={extra.groupCount}>{g.items.length}</span>
+                </button>
+                {open && <ul className={extra.groupList}>{g.items.map(row)}</ul>}
+              </section>
+            );
+          })}
+        </div>
       ) : (
         <ul className={styles.list} aria-label={label}>
-          {visible.map((item) => (
-            <Row
-              key={item.key}
-              item={item}
-              checked={list.selected.has(item.key)}
-              name={list.edits[item.key]?.name ?? item.name}
-              category={list.edits[item.key]?.category ?? item.category}
-              editableName={editableNames}
-              onToggle={list.toggle}
-              onName={list.setName}
-              onCategory={(key, value) => list.setCategory(key, categoryOf({ category: value }))}
-            />
-          ))}
+          {visible.map(row)}
         </ul>
       )}
       {beforeFooter}

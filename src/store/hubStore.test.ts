@@ -3,12 +3,13 @@ import type { AppEntry, AppError, NewApp, Settings } from "../ipc/bindings";
 import type { Ipc, Outcome } from "../ipc/commands";
 import type { EventSource } from "../ipc/events";
 import { createHubStore } from "./hubStore";
-import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS } from "../features/settings/settingsModel";
+import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS, DETECT_DEFAULTS } from "../features/settings/settingsModel";
 
 const SETTINGS: Settings = {
   ...VISUAL_DEFAULTS,
   ...SOUND_DEFAULTS,
   ...UPDATE_DEFAULTS,
+  ...DETECT_DEFAULTS,
   schemaVersion: 2,
   themeId: "crepuscule",
   openingScreen: "last",
@@ -55,6 +56,7 @@ function fakeIpc(over: Partial<Ipc> = {}): Ipc {
     appIcon: async () => ok(null),
     appsUpdate: async (e) => ok(e),
     appsRemove: async () => ok(null),
+    appsReorder: async (ids) => ok({ schemaVersion: 1, apps: ids.map((id) => entry(id)) }),
     appReady: async () => ok(false),
     appLaunch: async () => ok({ kind: "started", pid: 1 }),
     appFocus: async () => ok("focused"),

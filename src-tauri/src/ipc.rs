@@ -188,13 +188,16 @@ pub async fn detect_scan<R: Runtime>(
     detect: State<'_, DetectState>,
 ) -> Result<ScanReport, AppError> {
     let existing = config.apps().apps;
+    let ignored = config.settings().ignored_detections;
     let token = detect.begin();
     let scan_token = token.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
         let sources = default_sources();
-        run_scan(&sources, &existing, &scan_token, &|progress| {
+        let mut report = run_scan(&sources, &existing, &scan_token, &|progress| {
             notify(progress.emit(&app));
-        })
+        });
+        crate::detect::tidy::mark_ignored(&mut report, &ignored);
+        report
     })
     .await;
     detect.finish(&token);
@@ -209,7 +212,7 @@ pub fn detect_cancel(detect: State<'_, DetectState>) {
 }
 
 /// Tells the interface the list changed, and the process watcher to look at the new list.
-fn apps_changed<R: Runtime>(app: &AppHandle<R>, state: &ConfigState) {
+pub(crate) fn apps_changed<R: Runtime>(app: &AppHandle<R>, state: &ConfigState) {
     notify(AppsChanged(state.apps()).emit(app));
     if let Some(palettes) = app.try_state::<ipc_art::PaletteWorker>() {
         palettes.request(app);
@@ -349,6 +352,8 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_moods::mood_delete::<tauri::Wry>,
             ipc_moods::mood_export,
             ipc_desktop::launch_cover::<tauri::Wry>,
+            crate::ipc_detect::detect_icon,
+            crate::ipc_detect::apps_reorder::<tauri::Wry>,
             crate::ipc_startup::startup_apps,
             crate::ipc_startup::startup_app_set,
             crate::ipc_startup::startup_apps_restore,

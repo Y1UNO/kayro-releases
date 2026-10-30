@@ -4,6 +4,8 @@ import {
   commands,
   type AppEntry,
   type AppError,
+  type AppsFile,
+  type DetectedApp,
   type NewApp,
   type Settings,
   type StartupApp,
@@ -66,6 +68,8 @@ export const ipc = {
   appsAdd: (app: NewApp): Promise<Outcome<AppEntry>> => checked(commands.appsAdd(app)),
   appsUpdate: (entry: AppEntry): Promise<Outcome<AppEntry>> => checked(commands.appsUpdate(entry)),
   appsRemove: (id: string): Promise<Outcome<null>> => checked(commands.appsRemove(id)),
+  /** Step 19b: every app's id in the new order of the cards. */
+  appsReorder: (ids: string[]): Promise<Outcome<AppsFile>> => checked(commands.appsReorder(ids)),
   /** Adds several apps with one write; the refused ones are listed in `failed`. */
   appsAddMany: (apps: NewApp[]): Promise<Outcome<AddReport>> => checked(commands.appsAddMany(apps)),
   /** Proposes apps for dropped / pasted files and addresses. Read-only. */
@@ -90,6 +94,8 @@ export const detect = {
   /** Resolves with what was found; a newer scan cancels this one. */
   scan: (): Promise<Outcome<ScanReport>> => checked(commands.detectScan()),
   cancel: (): Promise<Outcome<void>> => plain(commands.detectCancel()),
+  /** Step 19b: the icon of a proposed app (`data:` URL), or null. */
+  icon: (app: DetectedApp): Promise<Outcome<string | null>> => checked(commands.detectIcon(app)),
 };
 
 /** Scenes, slots, and the sharing of scenes (`.hubscene`). */

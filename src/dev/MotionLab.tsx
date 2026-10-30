@@ -32,7 +32,7 @@ import { ipc } from "../ipc/commands";
 import { hubStore } from "../store";
 import { MotionLab4b } from "./MotionLab4b";
 import styles from "./MotionLab.module.css";
-import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS } from "../features/settings/settingsModel";
+import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS, DETECT_DEFAULTS } from "../features/settings/settingsModel";
 import { effectiveQuality } from "../design/quality";
 
 const NAMES = ["Riot Client", "Minecraft", "Steam", "Epic Games", "Battle.net", "OBS Studio"];
@@ -57,6 +57,7 @@ function seedStore(params: URLSearchParams): true {
       ...VISUAL_DEFAULTS,
       ...SOUND_DEFAULTS,
       ...UPDATE_DEFAULTS,
+      ...DETECT_DEFAULTS,
       openingScreen: "last",
       schemaVersion: 2,
       themeId: params.get("theme") ?? ACTIVE_THEME_ID,

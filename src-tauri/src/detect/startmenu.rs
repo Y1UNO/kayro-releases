@@ -216,6 +216,8 @@ impl DetectSource for StartMenuSource {
                 hero_path: None,
                 already_added: false,
                 suggested_category: String::new(),
+                launcher: false,
+                ignored: false,
             };
             found.push((candidate, app));
         }

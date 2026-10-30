@@ -31,6 +31,8 @@ function detected(
     heroPath: null,
     alreadyAdded: added,
     suggestedCategory: category,
+    launcher: ["Steam", "Epic Games Launcher", "Riot Client"].includes(name),
+    ignored: false,
   };
 }
 
@@ -77,6 +79,14 @@ export function installAddAppsMock(allApps: () => AppEntry[]): void {
     });
   };
   detect.cancel = async () => ok(undefined);
+  // Step 19b: a round coloured logo for most apps, none for a few (the monogram stays).
+  detect.icon = async (app) => {
+    await wait(150);
+    if (app.name.length % 4 === 0) return ok(null);
+    const hue = [...app.name].reduce((h, c) => h + c.charCodeAt(0), 0) % 360;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="hsl(${hue} 70% 55%)"/><path d="M10 16l4 4 8-8" stroke="white" stroke-width="3" fill="none"/></svg>`;
+    return ok(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`);
+  };
 
   ipc.appIcon = async () => ok(null);
   ipc.appsInspect = async (inputs) => {
@@ -145,5 +155,9 @@ export function installAddAppsMock(allApps: () => AppEntry[]): void {
     return ok(toEntry(a, 0));
   };
   ipc.appsUpdate = async (e) => ok(e);
+  ipc.appsReorder = async (ids) => {
+    const byId = new Map(getApps().map((a) => [a.id, a]));
+    return ok({ schemaVersion: 1, apps: ids.flatMap((id) => byId.get(id) ?? []) });
+  };
   ipc.appsRemove = async () => ok(null);
 }

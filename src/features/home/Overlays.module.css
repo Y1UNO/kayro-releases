@@ -87,3 +87,26 @@
     transform: translate(-50%, var(--m-rise-k));
   }
 }
+
+/* Step 19b: a line between kinds of actions, and the shortcut of an item. */
+.item[data-separated] {
+  margin-top: 9px;
+  position: relative;
+}
+
+.item[data-separated]::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.shortcut {
+  font: inherit;
+  font-size: var(--fs-12, 12px);
+  font-weight: 500;
+  color: var(--text-2);
+}

@@ -139,5 +139,16 @@
       "Rien n'est supprimé : Réglages › Démarrage rallume chaque app, ou tout remet comme avant.",
       "Au démarrage du PC, Kayro s'ouvre sur son logo : un clic ou Entrée, et tu es dans tes apps."
     ]
+  },
+  {
+    "version": "0.19.1",
+    "date": "30/10/2026",
+    "title": "Ajouter et ranger",
+    "points": [
+      "Le scan est plus malin : chaque app avec son logo, rangée par catégorie, les sûres déjà cochées, les doublons fusionnés.",
+      "« Ignorer » une app proposée, une recherche, les lanceurs (Steam, Riot…) mis à part.",
+      "Clic droit : « Déplacer vers » une autre catégorie, « Avancer » / « Reculer » (Alt + flèches) ; glisse une carte entre deux autres.",
+      "Dans une scène, l'app glissée pend au curseur au bout d'un fil de lumière."
+    ]
   }
 ]

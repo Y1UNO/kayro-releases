@@ -9,6 +9,10 @@ export interface PopMenuItem {
   label: string;
   /** A choice among several (the display mode): shown checked, announced as a radio item. */
   checked?: boolean;
+  /** A thin line before it: the start of another kind of action (19b). */
+  separated?: boolean;
+  /** Its keyboard shortcut, shown on the right (19b). */
+  shortcut?: string;
   onSelect: () => void;
 }
 
@@ -92,12 +96,14 @@ export function PopMenu({ x, y, align = "start", label, items, onClose }: Props)
             role={item.checked === undefined ? "menuitem" : "menuitemradio"}
             aria-checked={item.checked}
             className={styles.item}
+            data-separated={item.separated || undefined}
             onClick={() => {
               onClose();
               item.onSelect();
             }}
           >
             <span>{item.label}</span>
+            {item.shortcut && <kbd className={styles.shortcut}>{item.shortcut}</kbd>}
             {item.checked && <CheckIcon size={16} className={styles.check} />}
           </button>
         ))}

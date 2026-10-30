@@ -25,6 +25,12 @@ export interface Item {
   /** The suggested category. */
   category: CategoryId;
   alreadyAdded: boolean;
+  /** A store or launcher (Steam, Riot Client…): shown apart, never ticked by default (19b). */
+  launcher: boolean;
+  /** The user chose « Ignorer » for it (19b). */
+  ignored: boolean;
+  /** What the scan found (detected apps only): asked for the app's icon. */
+  detected: DetectedApp | null;
 }
 
 export interface ItemEdits {
@@ -46,7 +52,20 @@ export function itemFromDetected(app: DetectedApp, origin: SourceKind): Item {
     match: app.match,
     category: categoryFrom(app.suggestedCategory),
     alreadyAdded: app.alreadyAdded,
+    launcher: app.launcher,
+    ignored: app.ignored,
+    detected: app,
   };
+}
+
+/**
+ * Ticked when the scan ends (19b): what is surely worth adding — new, not ignored, not a store or
+ * launcher, in a known category (« Autre » stays for the user to choose).
+ */
+export function picksByDefault(items: readonly Item[]): string[] {
+  return items
+    .filter((i) => !i.alreadyAdded && !i.ignored && !i.launcher && i.category !== "autres")
+    .map((i) => i.key);
 }
 
 export function itemFromCandidate(c: Candidate): Item {
@@ -59,6 +78,9 @@ export function itemFromCandidate(c: Candidate): Item {
     match: c.match,
     category: categoryFrom(c.suggestedCategory),
     alreadyAdded: c.alreadyAdded,
+    launcher: false,
+    ignored: false,
+    detected: null,
   };
 }
 
@@ -82,7 +104,10 @@ export interface ItemList {
   edits: Readonly<Record<string, ItemEdits>>;
   /** Selected and not already in the list: what "Ajouter" would send. */
   chosen: readonly Item[];
-  replaceAll: (items: Item[]) => void;
+  /** New list; `picked` are ticked (none when omitted). */
+  replaceAll: (items: Item[], picked?: readonly string[]) => void;
+  /** « Ignorer » / « Ne plus ignorer » (19b): an ignored app is never ticked. */
+  setIgnored: (key: string, ignored: boolean) => void;
   /** Adds new items (existing keys are left alone), selected unless already added. */
   append: (items: Item[]) => void;
   toggle: (key: string) => void;
@@ -99,10 +124,15 @@ export function useItemList(): ItemList {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [edits, setEdits] = useState<Record<string, ItemEdits>>({});
 
-  const replaceAll = useCallback((next: Item[]) => {
+  const replaceAll = useCallback((next: Item[], picked: readonly string[] = []) => {
     setItems(next);
-    setSelected(new Set());
+    setSelected(new Set(picked));
     setEdits({});
+  }, []);
+
+  const setIgnored = useCallback((key: string, ignored: boolean) => {
+    setItems((current) => current.map((i) => (i.key === key ? { ...i, ignored } : i)));
+    if (ignored) setSelected((current) => new Set([...current].filter((k) => k !== key)));
   }, []);
 
   const append = useCallback((added: Item[]) => {
@@ -162,6 +192,7 @@ export function useItemList(): ItemList {
     edits,
     chosen,
     replaceAll,
+    setIgnored,
     append,
     toggle,
     setMany,

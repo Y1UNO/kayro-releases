@@ -77,7 +77,12 @@
       "unfavorite": "Retirer des favoris",
       "remove": "Retirer de {app}…",
       "editButton": "Modifier {name}",
-      "moved": "« {name} » est maintenant dans {category}."
+      "moved": "« {name} » est maintenant dans {category}.",
+      "moveTo": "Déplacer vers {category}",
+      "forward": "Avancer",
+      "backward": "Reculer",
+      "keyForward": "Alt + →",
+      "keyBackward": "Alt + ←"
     },
     "settings": {
       "open": "Réglages"
@@ -157,12 +162,25 @@
       "startmenu": "Menu Démarrer · {count}",
       "sourceSteam": "Steam",
       "sourceEpic": "Epic",
-      "sourceStartmenu": "Menu Démarrer"
+      "sourceStartmenu": "Menu Démarrer",
+      "search": "Chercher une app",
+      "viewLabel": "Quelles apps montrer",
+      "viewNew": "Nouvelles · {count}",
+      "viewAdded": "Déjà ajoutées · {count}",
+      "viewIgnored": "Ignorées · {count}",
+      "launchers": "Lanceurs et outils",
+      "picked": "Les apps sûres sont déjà cochées : vérifie, puis « Ajouter ».",
+      "emptyNew": "Tout est déjà dans {app}. Glisse un .exe ou un lien pour en ajouter d’autres.",
+      "emptySearch": "Aucune app ne correspond à « {query} »."
     },
     "row": {
       "pick": "Choisir {name}",
       "category": "Catégorie de {name}",
-      "name": "Nom de {name}"
+      "name": "Nom de {name}",
+      "ignore": "Ignorer {name} : il ne sera plus proposé",
+      "unignore": "Proposer de nouveau {name}",
+      "ignoreShort": "Ignorer",
+      "unignoreShort": "Réafficher"
     },
     "drop": {
       "zone": "Glisse ici un .exe, un raccourci ou un lien",

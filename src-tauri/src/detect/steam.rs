@@ -219,6 +219,8 @@ fn scan_library(library: &Path, steam_root: &Path, ctx: &ScanCtx) -> Vec<Detecte
             hero_path: hero.map(|p| p.to_string_lossy().into_owned()),
             already_added: false,
             suggested_category: String::new(),
+            launcher: false,
+            ignored: false,
         };
         apps.extend(ctx.accept(SourceKind::Steam, app));
     }

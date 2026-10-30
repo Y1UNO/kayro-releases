@@ -344,3 +344,34 @@
   border-color: transparent;
   box-shadow: none;
 }
+
+/* Step 19b: where a dragged app would land, a thin line of light beside the card. */
+.slot[data-drop-side]::after,
+.cell[data-drop-side]::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  bottom: 8%;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, transparent, var(--accent-light), transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent-light) 70%, transparent);
+  pointer-events: none;
+  animation: dropMark var(--m-micro, 140ms) ease-out both;
+}
+
+.slot[data-drop-side="before"]::after,
+.cell[data-drop-side="before"]::after {
+  left: calc(var(--space-5) / -2 - 1px);
+}
+
+.slot[data-drop-side="after"]::after,
+.cell[data-drop-side="after"]::after {
+  right: calc(var(--space-5) / -2 - 1px);
+}
+
+@keyframes dropMark {
+  from {
+    opacity: 0;
+  }
+}

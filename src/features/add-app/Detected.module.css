@@ -1,0 +1,117 @@
+/* Step 19b: the detected apps by category, with their logo, a search and « Ignorer ». */
+
+.detectBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.search {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.tileIcon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+/* With a logo, the tile turns into a quiet glass frame (the logo's own colours carry it). */
+.tile[data-icon] {
+  background: color-mix(in srgb, var(--field) 60%, white 6%);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.group + .group {
+  margin-top: var(--space-3);
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.groupHead:disabled {
+  cursor: default;
+}
+
+.groupHead[aria-expanded="false"]::after {
+  content: "▸";
+}
+
+.groupHead[aria-expanded="true"]:not(:disabled)::after {
+  content: "▾";
+}
+
+.groupHead:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.groupCount {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--field);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.groupList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ignore {
+  flex: none;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-12, 12px);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--m-micro, 140ms) ease, border-color var(--m-micro, 140ms) ease;
+}
+
+/* Shown on the row under the pointer or with the keyboard; always for an ignored app. */
+li:hover > .ignore,
+.ignore:focus-visible,
+li[data-disabled] > .ignore {
+  opacity: 1;
+}
+
+.ignore:hover {
+  border-color: var(--line, rgba(255, 255, 255, 0.18));
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ignore {
+    transition: none;
+  }
+}

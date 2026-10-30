@@ -151,6 +151,10 @@ export const commands = {
 	 *  (`LaunchLanded`); off ends it, `hide` taking the hub off the screen.
 	 */
 	launchCover: (on: boolean, hide: boolean) => __TAURI_INVOKE<void>("launch_cover", { on, hide }),
+	/**  `data:` URL of the icon of `app`, or none. */
+	detectIcon: (app: DetectedApp) => typedError<string | null, AppError>(__TAURI_INVOKE("detect_icon", { app })),
+	/**  The apps in the order of `ids` (every app's id, each once). */
+	appsReorder: (ids: string[]) => typedError<AppsFile, AppError>(__TAURI_INVOKE("apps_reorder", { ids })),
 	startupApps: () => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_apps")),
 	startupAppSet: (id: string, enabled: boolean) => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_app_set", { id, enabled })),
 	startupAppsRestore: () => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_apps_restore")),
@@ -403,6 +407,10 @@ export type DetectedApp = {
 	alreadyAdded: boolean,
 	/**  Category proposed for the app (see [`category::suggest_category`]); the user may change it. */
 	suggestedCategory: string,
+	/**  A store or launcher (Steam, Riot Client…): proposed apart, unticked (step 19b). */
+	launcher: boolean,
+	/**  The user chose « Ignorer » for it (`Settings::ignored_detections`): hidden unless asked. */
+	ignored: boolean,
 };
 
 export type Direction = "up" | "down" | "left" | "right" | "none";
@@ -839,6 +847,7 @@ export type SettingsPatch_Deserialize = {
 	soundLaunch?: boolean | null,
 	updateAuto?: boolean | null,
 	startupHome?: boolean | null,
+	ignoredDetections?: string[] | null,
 };
 
 /**  Partial update: absent (or null) fields are left as they are. */
@@ -879,6 +888,7 @@ export type SettingsPatch_Serialize = {
 	soundLaunch: boolean | null,
 	updateAuto: boolean | null,
 	startupHome: boolean | null,
+	ignoredDetections: string[] | null,
 };
 
 export type Settings_Deserialize = {
@@ -932,6 +942,8 @@ export type Settings_Deserialize = {
 	 *  waiting in the notification area.
 	 */
 	startupHome: boolean,
+	/**  Step 19b: detected apps the user chose to ignore (their ids), hidden from the next scans. */
+	ignoredDetections: string[],
 };
 
 export type Settings_Serialize = {
@@ -985,6 +997,8 @@ export type Settings_Serialize = {
 	 *  waiting in the notification area.
 	 */
 	startupHome: boolean,
+	/**  Step 19b: detected apps the user chose to ignore (their ids), hidden from the next scans. */
+	ignoredDetections: string[],
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */
