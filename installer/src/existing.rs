@@ -81,7 +81,11 @@ fn same_path(a: &Path, b: &Path) -> bool {
 }
 
 /// Asks the running Kayro to quit as with « Quitter » (never a kill), then waits for it (10 s).
+/// Not running: nothing to start (an old Kayro without `--quit` would open instead).
 pub fn close_softly(exe: &Path) -> bool {
+    if !running(exe) {
+        return true;
+    }
     if Command::new(exe).arg("--quit").spawn().is_err() {
         return false;
     }

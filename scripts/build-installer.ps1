@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
-  Compile Kayro en release et produit l'installeur NSIS (Kayro_<version>_x64-setup.exe).
+  Compile Kayro en release et produit l'installeur NSIS (Kayro_<version>_x64-setup.exe), puis
+  l'installeur maison qui le porte (Kayro_<version>_Installer.exe, fenetre au style de Kayro).
 .DESCRIPTION
   Pour envoyer Kayro a quelqu'un. Ne touche pas au raccourci du bureau (c'est le role de build-local.ps1),
   mais recompile target\release\Kayro.exe au passage : Kayro doit donc etre ferme.
@@ -48,3 +49,22 @@ finally { Pop-Location }
 if (-not (Test-Path $setup)) { Stop-Here "installeur introuvable : $setup" }
 $size = (Get-Item $setup).Length / 1MB
 Write-Host ("Pret : {0} ({1:N1} Mo)" -f $setup, $size) -ForegroundColor Green
+
+# 3. Kayro's own installer (installer/): its page, then the window carrying the NSIS installer.
+$styled = Join-Path $root ("target\release\bundle\{0}_{1}_Installer.exe" -f $conf.productName, $conf.version)
+Push-Location $root
+try {
+    Write-Host 'Installeur maison : page (Vite) puis fenetre (cargo)...'
+    npx vite build --config installer/vite.config.ts
+    if ($LASTEXITCODE -ne 0) { Stop-Here "la page de l'installeur n'a pas ete construite (code $LASTEXITCODE)." }
+    $env:KAYRO_PAYLOAD = $setup
+    cargo build --release -p kayro-setup
+    if ($LASTEXITCODE -ne 0) { Stop-Here "l'installeur maison n'a pas compile (code $LASTEXITCODE)." }
+}
+finally {
+    Remove-Item Env:KAYRO_PAYLOAD -ErrorAction SilentlyContinue
+    Pop-Location
+}
+Copy-Item (Join-Path $root 'target\release\KayroSetup.exe') $styled -Force
+$size = (Get-Item $styled).Length / 1MB
+Write-Host ("Pret : {0} ({1:N1} Mo)" -f $styled, $size) -ForegroundColor Green

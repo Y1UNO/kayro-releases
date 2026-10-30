@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kayro</title>
+  </head>
+  <body>
+    <div class="sky" aria-hidden="true">
+      <span class="glow g1"></span>
+      <span class="glow g2"></span>
+      <div id="motes" class="motes"></div>
+    </div>
+    <header class="bar" data-tauri-drag-region>
+      <span class="brand" data-tauri-drag-region>Kayro</span>
+      <div class="winbtns">
+        <button id="min" type="button" class="winbtn">
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6h8" /></svg>
+        </button>
+        <button id="close" type="button" class="winbtn">
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" /></svg>
+        </button>
+      </div>
+    </header>
+    <main class="layout">
+      <div class="fan" aria-hidden="true">
+        <div class="ring"></div>
+        <div class="card c1"></div>
+        <div class="card c3"></div>
+        <div class="card c2"><img id="logo" class="logo" alt="" /></div>
+        <div class="floor"></div>
+      </div>
+      <section id="panel" class="panel" aria-live="polite"></section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
