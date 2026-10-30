@@ -2024,6 +2024,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "kayro-setup"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "sysinfo",
+ "tauri",
+ "tauri-build",
+ "windows",
+]
+
+[[package]]
 name = "keyboard-types"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

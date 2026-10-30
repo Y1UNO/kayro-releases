@@ -1,0 +1,21 @@
+[package]
+name = "kayro-setup"
+version = "0.0.0"
+description = "Kayro — installeur"
+edition = "2021"
+publish = false
+rust-version = "1.90"
+
+# Kayro's own installer (scripts/build-installer.ps1): a styled window around the NSIS installer.
+[[bin]]
+name = "KayroSetup"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2.7.1", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.2", features = [] }
+serde = { version = "1.0.229", features = ["derive"] }
+sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }
+windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_System_Registry"] }

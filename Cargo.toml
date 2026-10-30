@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["src-tauri", "spikes/01-affichage", "spikes/02-widget", "spikes/03-verre", "spikes/04-immersif", "spikes/05-tray-instance", "spikes/06-launch"]
+members = ["src-tauri", "installer", "spikes/01-affichage", "spikes/02-widget", "spikes/03-verre", "spikes/04-immersif", "spikes/05-tray-instance", "spikes/06-launch"]
 
 [profile.release]
 strip = true

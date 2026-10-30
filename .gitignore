@@ -38,3 +38,7 @@ spikes/**/gen/
 # Coffre Obsidian (docs/)
 docs/.obsidian/
 docs/.trash/
+
+# Installer (installer/): its built page and generated schemas.
+installer/dist
+installer/gen
