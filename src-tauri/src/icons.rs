@@ -35,7 +35,10 @@ pub fn icon_source_for(launch: &Launch, source: &AppSource) -> Option<String> {
 
 fn file_for(dir: &Path, id: &str, source: &str) -> PathBuf {
     // « v2 » (step 19c): icons are now trimmed; the older, untrimmed files are not served again.
-    dir.join(format!("{id}-{}.png", short_hash(&format!("v2|{}", source.to_lowercase()))))
+    dir.join(format!(
+        "{id}-{}.png",
+        short_hash(&format!("v2|{}", source.to_lowercase()))
+    ))
 }
 
 /// Step 19c: the icon cut to what it draws, centred in a square with a small margin. Windows
@@ -404,7 +407,11 @@ mod tests {
                 pixels[(y * 256 + x) * 4 + 3] = 255;
             }
         }
-        let t = trim(&Rgba { width: 256, height: 256, pixels });
+        let t = trim(&Rgba {
+            width: 256,
+            height: 256,
+            pixels,
+        });
         assert_eq!((t.width, t.height), (36, 36));
         // Opaque in the middle, a clear margin around.
         assert_eq!(t.pixels[(18 * 36 + 18) * 4 + 3], 255);

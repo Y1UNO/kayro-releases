@@ -33,6 +33,9 @@ interface Props {
   onClose: () => void;
 }
 
+/** A submenu's width, its gap and a margin (Overlays.module.css `.sub`). */
+const SUBMENU_ROOM = 200 + 4 + 8;
+
 /** The buttons of the menu level that holds `el` (not those of a submenu inside it). */
 function levelButtons(el: Element | null): HTMLElement[] {
   const level = el?.closest("[role=menu]");
@@ -50,7 +53,7 @@ function levelButtons(el: Element | null): HTMLElement[] {
  */
 export function PopMenu({ x, y, align = "start", label, items, onClose }: Props) {
   const menu = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ x, y });
+  const [pos, setPos] = useState({ x, y, flip: false });
   const [open, setOpen] = useState<string | null>(null);
   // Step 19c: the pointer crosses other lines on its way to the submenu: it closes only if the
   // pointer stays away a moment (« Déplacer vers » vanished on the way).
@@ -67,9 +70,12 @@ export function PopMenu({ x, y, align = "start", label, items, onClose }: Props)
     if (!el) return;
     const r = el.getBoundingClientRect();
     const left = align === "end" ? x - r.width : x;
+    const at = Math.max(8, Math.min(left, window.innerWidth - r.width - 8));
     setPos({
-      x: Math.max(8, Math.min(left, window.innerWidth - r.width - 8)),
+      x: at,
       y: Math.max(8, Math.min(y, window.innerHeight - r.height - 8)),
+      // No room on the right for a submenu: it opens on the left, towards the screen.
+      flip: at + r.width + SUBMENU_ROOM > window.innerWidth,
     });
     const buttons = levelButtons(el.querySelector("[role=menu]"));
     (buttons.find((b) => b.getAttribute("aria-checked") === "true") ?? buttons[0])?.focus();
@@ -93,7 +99,12 @@ export function PopMenu({ x, y, align = "start", label, items, onClose }: Props)
   // A submenu that opens takes the focus on its first item.
   useEffect(() => {
     if (!open) return;
-    const sub = menu.current?.querySelector(`[data-submenu="${open}"]`);
+    const sub = menu.current?.querySelector<HTMLElement>(`[data-submenu="${open}"]`);
+    // Past the bottom of the window: it rises until it fits.
+    if (sub) {
+      const over = sub.getBoundingClientRect().bottom - (window.innerHeight - 8);
+      if (over > 0) sub.style.transform = `translateY(${-Math.ceil(over)}px)`;
+    }
     levelButtons(sub?.querySelector("button") ?? null)[0]?.focus();
   }, [open]);
 
@@ -163,7 +174,12 @@ export function PopMenu({ x, y, align = "start", label, items, onClose }: Props)
   );
 
   return createPortal(
-    <div ref={menu} className={styles.menu} style={{ left: pos.x, top: pos.y }}>
+    <div
+      ref={menu}
+      className={styles.menu}
+      data-flip={pos.flip || undefined}
+      style={{ left: pos.x, top: pos.y }}
+    >
       <Surface
         flat
         radius="var(--radius-panel)"

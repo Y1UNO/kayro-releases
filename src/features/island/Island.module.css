@@ -73,9 +73,8 @@
     0 0 0 1.5px rgb(139 61 255 / var(--glitch)),
     /* On the top edge, a strip of black above it, into the bezel: no line of light between. */ 0
       calc(-3px * (1 - var(--rim))) 0 0 #000;
-  /* The music's bass makes it breathe a little (useBeat). */
+  /* The music's bass makes it breathe a little (useBeat, 30 times a second, no transition). */
   scale: calc(1 + var(--breath, 0) * 0.03);
-  transition: scale 90ms linear;
 }
 
 .island[data-open] {

@@ -3,7 +3,7 @@
 > [!info] Où on en est
 > - **Dernière étape close** : 20 — Kysland (le 2026-10-31, version 0.20.0 publiée ; versions sur github.com/Y1UNO/kayro-releases)
 > - **À envoyer** : le dernier `Kayro_<version>_Installer.exe` de la page des versions ; ensuite Kayro se met à jour seul
-> - **Prochaine étape** : 18 — Audit avant la v1
+> - **En cours** : 18 — Audit avant la v1 (mesures du 31/10 faites, ménage fait ; restent le CPU de l'accueil, le premier lancement à vide, la relecture sécurité et accessibilité). En attente de feu vert : « raccourci + île toujours là »
 > - **DA** : gelée le 2026-10-14 (v1)
 
 ## Référence

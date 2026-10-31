@@ -150,6 +150,11 @@ function unstable(a, b) {
   );
 }
 async function measure(c, q) {
+  if (c.prepare && (await c.prepare(X)) === false) {
+    rec({ id: c.id, q, skipped: "rien à préparer (pas de musique ?)" });
+    say(c.id, q, "passée : rien à préparer (pas de musique ?)");
+    return;
+  }
   const rows = [];
   let redo = 0;
   for (let t = 1; t <= TRIALS; t++) {
@@ -209,7 +214,10 @@ async function hiddenCost(q) {
 async function blockM(cases) {
   await startApp();
   for (const q of QUALITIES) {
-    const list = cases.filter((c) => (c.qualities ?? ["high", "eco"]).includes(q));
+    const list = cases.filter(
+      (c) =>
+        (c.qualities ?? ["high", "eco"]).includes(q) && (c.needs ?? null) === (args.island ?? null),
+    );
     if (!list.length) continue;
     say("=== qualité", q);
     await apply({ ...BASE, quality: q });
@@ -365,7 +373,8 @@ async function main() {
   const screen = await win.ask("screen");
   if (args.exe) L.setExe(String(args.exe)); // A/B of two builds (README)
   rec({ id: "écran", screen, exe: L.EXE });
-  const n = makeData(QUALITIES[0], screen, wantsArt(args)); // step 14: pictures for G cases
+  // Step 14: pictures for G cases. Step 20: `--island across`, the island across two screens.
+  const n = makeData(QUALITIES[0], screen, wantsArt(args), args.island ?? null);
   say("dossier de test :", n, "apps ; résultats :", OUT);
   await win.ask("awake on");
   if (args.trace) return trace(args.trace);

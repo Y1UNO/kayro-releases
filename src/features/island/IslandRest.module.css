@@ -27,7 +27,9 @@
   opacity: var(--rest-music, 0);
 }
 
-/* The cover as a small record: it turns while the music plays. */
+/* The cover as a small record: it turns while the music plays, a step at each beat (useBeat sets
+   --spin about 30 times a second: no animation of its own, the island is redrawn at that rate,
+   not at the screen's). */
 .vinyl {
   position: relative;
   width: 22px;
@@ -36,11 +38,7 @@
   overflow: hidden;
   background: rgb(var(--album-d, 60 60 70));
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
-  animation: spin 7s linear infinite paused;
-}
-
-.vinyl[data-playing] {
-  animation-play-state: running;
+  transform: rotate(var(--spin, 0deg));
 }
 
 .vinyl img {
@@ -77,8 +75,8 @@
   height: 18px;
   border-radius: 2px;
   background: rgb(var(--album-a, var(--tone)));
+  /* No transition: the levels come 30 times a second, enough to move (and cheap). */
   transform: scaleY(calc(0.16 + var(--lv) * 0.84));
-  transition: transform 90ms linear;
 }
 
 .bars i:nth-child(1) {
@@ -173,12 +171,6 @@
   object-fit: cover;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @keyframes coverIn {
   from {
     transform: translateX(130%) rotate(-50deg);
@@ -200,7 +192,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vinyl,
   .vinyl img,
   [data-beat="fake"] .bars i {
     animation: none;

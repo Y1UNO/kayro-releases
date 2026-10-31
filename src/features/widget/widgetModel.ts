@@ -42,8 +42,7 @@ export function categoryApps(
     .slice(0, limit);
 }
 
-export type WidgetHit =
-  { kind: "app"; app: AppEntry } | { kind: "scene"; scene: SceneFile };
+export type WidgetHit = { kind: "app"; app: AppEntry } | { kind: "scene"; scene: SceneFile };
 
 /** Search of the panel: scenes first, then apps; a name starting with the query ranks first. */
 export function searchPanel(

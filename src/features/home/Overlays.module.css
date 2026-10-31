@@ -180,6 +180,17 @@
   width: 12px;
 }
 
+/* Near the right edge of the window, the submenu opens on the left (towards the screen). */
+[data-flip] .sub {
+  left: auto;
+  right: calc(100% + 4px);
+}
+
+[data-flip] .sub::before {
+  left: auto;
+  right: -12px;
+}
+
 .row {
   position: relative;
   display: flex;

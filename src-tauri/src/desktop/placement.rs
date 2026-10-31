@@ -1,10 +1,9 @@
-//! Where the windows are: remembering placements, the screen of the immersive mode, and the
-//! widget following the size of its content.
+//! Where the windows are: remembering placements and the screen of the immersive mode.
 
 use tauri::{AppHandle, Manager, Runtime, WebviewWindow};
 
 use super::geometry;
-use super::windows::{self, MAIN, WIDGET};
+use super::windows::{self, MAIN};
 use super::{refit_immersive, settings};
 use crate::config::schema::DisplayMode;
 use crate::config::ConfigState;
@@ -62,45 +61,6 @@ pub fn choose_immersive_screen<R: Runtime>(app: &AppHandle<R>, name: &str) -> Re
             refit_immersive(app, &window);
         }
     }
-    Ok(())
-}
-
-/// Resizes the widget to its content (logical pixels), keeping its centre and top edge.
-pub fn fit_widget<R: Runtime>(app: &AppHandle<R>, width: f64, height: f64) -> Result<(), AppError> {
-    let Some(window) = windows::get(app, WIDGET) else {
-        return Ok(());
-    };
-    let screens = windows::screens(app);
-    let scale = window.scale_factor().unwrap_or(1.0);
-    let size = (
-        (width * scale).ceil() as u32,
-        (height * scale).ceil() as u32,
-    );
-    let pos = window.outer_position()?;
-    let current = window.outer_size()?;
-    let centre = (pos.x + (current.width / 2) as i32, pos.y);
-    let work = geometry::screen_at(&screens, centre.0, centre.1)
-        .or_else(|| {
-            let ui = app.state::<ConfigState>().ui_state();
-            geometry::find_screen(&screens, ui.widget.monitor.as_ref())
-        })
-        .map(|i| screens[i].work);
-    let rect = crate::config::ui_state::Rect {
-        x: pos.x,
-        y: pos.y,
-        width: current.width,
-        height: current.height,
-    };
-    let next = match work {
-        Some(work) => geometry::refit_widget(rect, size, work),
-        None => crate::config::ui_state::Rect {
-            width: size.0,
-            height: size.1,
-            ..rect
-        },
-    };
-    let _ = window.set_position(tauri::PhysicalPosition::new(next.x, next.y));
-    window.set_size(tauri::PhysicalSize::new(next.width, next.height))?;
     Ok(())
 }
 

@@ -129,7 +129,11 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let config = ConfigState::load(DataPaths::new(dir.path()));
         assert!(!config.settings().update_auto);
-        std::fs::write(dir.path().join("install-choices.json"), r#"{"updateAuto":true}"#).unwrap();
+        std::fs::write(
+            dir.path().join("install-choices.json"),
+            r#"{"updateAuto":true}"#,
+        )
+        .unwrap();
         apply_install_choices(&config, dir.path());
         assert!(config.settings().update_auto);
         assert!(!dir.path().join("install-choices.json").exists());

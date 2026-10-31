@@ -111,7 +111,10 @@ mod tests {
         assert_eq!(names.len(), 3);
         assert!(!names.iter().any(|n| n == "notes.txt"));
         let mut today = String::new();
-        zip.by_name("kayro.2026-10-29.log").unwrap().read_to_string(&mut today).unwrap();
+        zip.by_name("kayro.2026-10-29.log")
+            .unwrap()
+            .read_to_string(&mut today)
+            .unwrap();
         assert_eq!(today, "aujourd'hui");
     }
 

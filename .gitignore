@@ -1,7 +1,6 @@
 # Dépendances et builds
 node_modules/
 dist/
-dist-bench/
 build/
 target/
 src-tauri/target/

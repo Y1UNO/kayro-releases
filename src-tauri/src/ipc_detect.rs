@@ -34,9 +34,9 @@ pub async fn detect_icon(
         // Step 19c: the logo the advanced scan found in the app's folder comes first.
         if let Some(logo) = &app.logo_path {
             let png = std::fs::read(logo).ok().and_then(|b| icons::decode_png(&b));
-            if let Some(png) =
-                png.and_then(|i| icons::encode_png(&icons::shrink(&icons::trim(&i), icons::ICON_PX)).ok())
-            {
+            if let Some(png) = png.and_then(|i| {
+                icons::encode_png(&icons::shrink(&icons::trim(&i), icons::ICON_PX)).ok()
+            }) {
                 return Some(icons::png_data_url(&png));
             }
         }

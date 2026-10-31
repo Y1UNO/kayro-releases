@@ -16,7 +16,6 @@ function fakeIpc(over: Partial<DesktopIpc> = {}): DesktopIpc {
   return {
     hide: never,
     drag: never,
-    fitWidget: never,
     painted: never,
     monitors: never,
     chooseMonitor: never,

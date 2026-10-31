@@ -202,8 +202,16 @@ mod tests {
         // The slot list must be honest: a name used by a step has to be listed, and vice versa
         // is harmless, but a path in the list is not.
         assert!(parse_value(&with("slots", json!(["messagerie"]))).is_err());
-        assert!(parse_value(&with("slots", json!(["a", "a", "plateforme-jeux", "messagerie"]))).is_err());
-        assert!(parse_value(&with("slots", json!(["C:\\x.exe", "plateforme-jeux", "messagerie"]))).is_err());
+        assert!(parse_value(&with(
+            "slots",
+            json!(["a", "a", "plateforme-jeux", "messagerie"])
+        ))
+        .is_err());
+        assert!(parse_value(&with(
+            "slots",
+            json!(["C:\\x.exe", "plateforme-jeux", "messagerie"])
+        ))
+        .is_err());
     }
 
     #[test]
@@ -213,7 +221,11 @@ mod tests {
         assert!(parse_value(&with("name", json!(""))).is_err());
         assert!(parse_value(&with("name", json!("a\u{7}b"))).is_err());
         assert!(parse_value(&with("name", json!("x".repeat(201)))).is_err());
-        assert!(parse_value(&with("steps", json!([{ "type": "wait", "ms": 99_999_999u64 }]))).is_err());
+        assert!(parse_value(&with(
+            "steps",
+            json!([{ "type": "wait", "ms": 99_999_999u64 }])
+        ))
+        .is_err());
         assert!(parse_value(&with("steps", json!([{ "type": "wait", "ms": -1 }]))).is_err());
         assert!(parse(b"").is_err());
         assert!(parse(b"not json").is_err());
@@ -240,13 +252,19 @@ mod tests {
     #[test]
     fn deeply_nested_json_is_an_error_not_a_crash() {
         let depth = 100_000;
-        let mut text = String::from(r#"{"format":"hubscene","schemaVersion":1,"name":"x","slots":[],"steps":"#);
+        let mut text = String::from(
+            r#"{"format":"hubscene","schemaVersion":1,"name":"x","slots":[],"steps":"#,
+        );
         text.push_str(&"[".repeat(depth));
         text.push_str(&"]".repeat(depth));
         text.push('}');
         assert!(parse(text.as_bytes()).is_err());
         // Same inside an unknown field, and inside an object.
-        let nested = format!(r#"{{"format":"hubscene","extra":{}1{}}}"#, "[".repeat(depth), "]".repeat(depth));
+        let nested = format!(
+            r#"{{"format":"hubscene","extra":{}1{}}}"#,
+            "[".repeat(depth),
+            "]".repeat(depth)
+        );
         assert!(parse(nested.as_bytes()).is_err());
         let objects = format!("{}1{}", r#"{"a":"#.repeat(depth), "}".repeat(depth));
         assert!(parse(objects.as_bytes()).is_err());

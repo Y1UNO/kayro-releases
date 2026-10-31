@@ -42,10 +42,17 @@ export function useBeat(island: RefObject<HTMLElement | null>, playing: boolean)
     }
     el.setAttribute("data-beat", "fake");
     void mediaIpc.beat(true);
+    // The record turns a step at each beat (one turn in 7 s): redrawn at the beat's rate only.
+    let angle = 0;
+    let last = performance.now();
     const off = onMediaBeat((levels) => {
+      const now = performance.now();
+      angle = (angle + (Math.min(now - last, 200) / 7000) * 360) % 360;
+      last = now;
       el.setAttribute("data-beat", "live");
       levels.forEach((l, i) => el.style.setProperty(`--b${i}`, l.toFixed(3)));
       el.style.setProperty("--breath", (levels[0] ?? 0).toFixed(3));
+      el.style.setProperty("--spin", `${angle.toFixed(1)}deg`);
     });
     return () => {
       void mediaIpc.beat(false);

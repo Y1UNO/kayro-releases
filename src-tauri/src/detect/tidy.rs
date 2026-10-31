@@ -28,7 +28,10 @@ pub fn merge_twins(reports: &mut [SourceReport]) {
         return;
     }
     let mut added_twins = HashSet::new();
-    for report in reports.iter_mut().filter(|r| r.source == SourceKind::Startmenu) {
+    for report in reports
+        .iter_mut()
+        .filter(|r| r.source == SourceKind::Startmenu)
+    {
         report.apps.retain(|a| {
             let key = normalise(&a.name);
             if !stores.contains(&key) {

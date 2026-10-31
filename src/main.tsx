@@ -49,11 +49,6 @@ const MotionDev: ComponentType | null =
     ? lazy(() => import("./dev/MotionLab"))
     : null;
 
-// The widget (art direction round 4b: its glass unrolls) with fake data. Dev only.
-const WidgetDev: ComponentType | null =
-  import.meta.env.DEV && location.pathname === "/dev/widget"
-    ? lazy(() => import("./dev/Widget"))
-    : null;
 
 const appRoot = createRoot(root);
 
@@ -77,7 +72,7 @@ const CapriDev: ComponentType | null =
     ? lazy(() => import("./dev/Capri"))
     : null;
 
-const DevPage = Catalogue ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev ?? CapriDev;
+const DevPage = Catalogue ?? HomeDev ?? ScenesDev ?? MotionDev ?? CapriDev;
 // Step 17b: the interface sounds follow the settings as soon as they are read.
 startSounds();
 // Step 18b: the check at start (if allowed) and the download's progress.

@@ -55,7 +55,7 @@ const json = (o) => JSON.stringify(o, null, 2);
  * `screen` (primary screen, from win.ps1): every mode opens there. Without a saved placement the
  * app would open on the screen under the mouse, which may be a slower one.
  */
-export function makeData(quality = "high", screen = null, art = false) {
+export function makeData(quality = "high", screen = null, art = false, island = null) {
   rmSync(DATA, { recursive: true, force: true });
   mkdirSync(join(DATA, "scenes"), { recursive: true });
   const apps = [];
@@ -78,16 +78,31 @@ export function makeData(quality = "high", screen = null, art = false) {
     }
   writeFileSync(join(DATA, "apps.json"), json({ schemaVersion: 1, apps }));
   if (art) makeArt(apps.filter((a) => a.category === ART_CATEGORY));
-  writeSettings({ quality });
+  // Step 20: across two screens, the island glitches in « Capri ».
+  writeSettings(island === "across" ? { quality, islandPassage: "glitch" } : { quality });
   if (screen) {
     const monitor = {
       name: screen.name,
       rect: { x: screen.x, y: screen.y, width: screen.width, height: screen.height },
     };
     const at = { monitor, rect: null }; // rect null: full screen, or centred on it
+    // Step 20, `--island across`: the island floating on the main screen's left edge (another
+    // screen on its left), its window (720 × 420, anchor at 360, 150) centred on that edge.
+    const across = {
+      monitor: null,
+      rect: { x: screen.x - 360, y: screen.y + 450, width: 720, height: 420 },
+    };
+    const widget = island === "across" ? across : at;
     writeFileSync(
       join(DATA, "state.json"),
-      json({ schemaVersion: 1, immersive: at, window: at, widget: at, recents: [] }),
+      json({
+        schemaVersion: 1,
+        immersive: at,
+        window: at,
+        widget,
+        widgetDocked: island !== "across",
+        recents: [],
+      }),
     );
   }
   writeFileSync(
