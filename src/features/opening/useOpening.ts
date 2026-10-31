@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { daStore } from "../../design/da";
 import { setIntroCue, type IntroFrame } from "../../fx/gpu/cues";
 import { desktopIpc } from "../../ipc/commands";
 import { onWindowVisibility } from "../../ipc/events";
 import { startExpressMode } from "./expressMode";
+import { afterIntro } from "./afterIntro";
 
 /** Dark page, nothing drawn: the engine waits for an opening that starts at the next show. */
 const WAITING: IntroFrame = {
@@ -90,7 +91,16 @@ export function useOpening(): {
     return () => void (owns = false);
   }, [state]);
 
-  const finish = useCallback(() => setState("off"), []);
+  // « Après l'intro »: once the intro's opening is over, the hub stays, the island comes, or it hides.
+  const current = useRef(state);
+  useEffect(() => {
+    current.current = state;
+  }, [state]);
+  const finish = useCallback(() => {
+    const wasIntro = current.current === "express";
+    setState("off");
+    if (wasIntro) afterIntro();
+  }, []);
   return {
     hidden: state !== "off",
     play: state === "play" || state === "express",

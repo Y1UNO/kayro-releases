@@ -12,14 +12,14 @@ pub use super::game_colors::{
 };
 use super::migrate::{current_version, Migration};
 pub use super::scene::SceneFile;
-use super::store::{lenient_merge, Document, LoadReport};
-use super::validate::validate_settings;
-use super::visual::{settings_v1_to_v2, DEFAULT_THEME};
 pub use super::sounds::SoundPack;
 use super::sounds::SOUND_VOLUME_DEFAULT;
+use super::store::{lenient_merge, Document, LoadReport};
+use super::validate::validate_settings;
+use super::visual::{settings_v1_to_v2, settings_v2_to_v3, DEFAULT_THEME};
 pub use super::visual::{
-    CardFloat, CardHoverStyle, Elasticity, IslandPassage, MotionStyle, OpeningScreen,
-    OpeningStyle, ThemeTransition, WidgetUnroll,
+    CardFloat, CardHoverStyle, Elasticity, IslandPassage, MotionStyle, OpeningScreen, OpeningStyle,
+    StartupAfter, StartupOpen, ThemeTransition, WidgetUnroll,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
@@ -110,6 +110,9 @@ pub struct Settings {
     /// Step 19: started with Windows, the hub opens on its home screen (still logo) instead of
     /// waiting in the notification area.
     pub startup_home: bool,
+    /// « Au démarrage » and « Après l'intro » (they replace `startup_home`, migrated v2 → v3).
+    pub startup_open: StartupOpen,
+    pub startup_after: StartupAfter,
     /// Step 19b: detected apps the user chose to ignore (their ids), hidden from the next scans.
     pub ignored_detections: Vec<String>,
 }
@@ -161,6 +164,8 @@ impl Default for Settings {
             sound_launch: true,
             update_auto: false,
             startup_home: false,
+            startup_open: StartupOpen::default(),
+            startup_after: StartupAfter::default(),
             ignored_detections: Vec::new(),
         }
     }
@@ -207,6 +212,8 @@ pub struct SettingsPatch {
     pub sound_launch: Option<bool>,
     pub update_auto: Option<bool>,
     pub startup_home: Option<bool>,
+    pub startup_open: Option<StartupOpen>,
+    pub startup_after: Option<StartupAfter>,
     pub ignored_detections: Option<Vec<String>>,
 }
 
@@ -257,13 +264,15 @@ impl Settings {
             sound_launch,
             update_auto,
             startup_home,
+            startup_open,
+            startup_after,
             ignored_detections,
         );
     }
 }
 
 /// v1 → v2 (R5): Mauve became Encre, the five pre-logo themes fall back to Bleu-gris.
-pub const SETTINGS_MIGRATIONS: &[Migration] = &[settings_v1_to_v2];
+pub const SETTINGS_MIGRATIONS: &[Migration] = &[settings_v1_to_v2, settings_v2_to_v3];
 
 impl Document for Settings {
     const NAME: &'static str = "settings.json";

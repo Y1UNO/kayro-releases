@@ -20,7 +20,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 13 | Performance : états, qualité adaptative, benchmark, réglages, sans échec | 6, 8, 12 | D |
 | [x] 14 | Couleurs du jeu : art local, palette OKLab, modes | 5, 8 | E |
 | [x] P | Prétest : installeur NSIS, « Exporter les logs », version visible, note `docs/PRETEST.md` | 14 | F |
-| [ ] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
+| [x] 15 | Réglages · Apparence : thèmes, import/export, « suivre le soleil » | 3, 14 | E |
 | [x] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
 | [x] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
 | [x] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages des sons, à définir à l'étape 17b, `docs/SONS.md` | 12b, 13 | E |
@@ -206,12 +206,27 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   image de jeu : un dossier d'images par carte, rempli par l'utilisateur. Références dans reference/ambiances/.
 
 ### Étape 18 — Audit
+- [x] **Mesures du 2026-10-31** (banc `npm run perf`, exe de production, ce PC 280 Hz, Steam ouvert en fond ; médianes de
+  2 essais, CPU en % de la machine) — images : p95 3,7 ms et 0 image > 8 ms au repos partout.
+  - Éventail R1 : 2,6–2,8 % (Élevée), 1,7–1,9 % (Éco) ; carrousel R2 : 2,1–2,6 % (Élevée, était 3,3 %), 3,1–3,3 % (Éco) ;
+    mode fenêtre R7 : 3,7 % (Élevée), 2,7–3,2 % (Éco) ; hub masqué R10 : 0,08 %. Mémoire de l'arbre : 520–800 Mo
+    (Élevée), 420–470 Mo (Éco) — au-delà du budget de 250 Mo du PLAN.
+  - **Kysland** : accrochée sans musique R8 : 0,04–0,19 %, GPU 0 ; avec musique R11 : **4,5 % → 1,3 %** (GPU île
+    2 → 0,26 %, dwm 6 → 1,55 %) après correction (le vinyle tournait en animation CSS et barres / respiration en
+    transitions : l'île était redessinée à 280 i/s ; tout avance maintenant au rythme des niveaux, 30 i/s) ; à cheval
+    en Capri au repos R12 (musique en pause) : 1,1 %, dwm 1,7 %. Mémoire ~260–290 Mo.
+  - Ouverture (bloc L) : 3–4 images lentes (82–93 ms) au tout début, comme avant ; `--quit` 57–65 ms.
+- [x] **Démarrage à la carte (0.20.1, 2026-10-31)** : Réglages › Démarrage, « Au démarrage de Windows » : Intro (défaut,
+  le logo puis la cinématique) · Immersif · Kysland (passe en mode widget) · Caché ; « Après l'intro » : Immersif ·
+  Kysland · Caché. `startupOpen` / `startupAfter` remplacent `startupHome` (migration réglages v2 → v3 : écran
+  d'accueil → Intro, discret → Caché). Vérifié dans l'exe avec un `APPDATA` de test (7 cas, départ `--silent`).
+- [ ] CPU au repos encore au-dessus de 1 % : éventail, carrousel et mode fenêtre (2–3,7 %), musique de l'île (1,3 %).
 - [ ] CPU au repos : carrousel avec flottaison « Visible » 3,2–3,3 % en Élevée (cible CLAUDE.md < 1 %).
 - [ ] Mesures non faites à l'étape 13 : 60 Hz, Équilibré et Ultra, repli CSS (ouverture, moteur coupé), replis
   « budget » et « contexte perdu » en vrai, CPU / GPU pendant l'ouverture, instant exact des images lentes.
 - [ ] Tests : Windows 10, mise à l'échelle 125 / 150 %, écran 60 Hz, premier lancement sans config.
-- [ ] `spikes/` (étape 2, membres du workspace Cargo) et `src-tauri/examples/spike_launch.rs` : garder ou archiver.
-- [ ] Écarts `cargo fmt` connus (`scene_ops.rs`, `share.rs`, `platform/mod.rs`) et prettier (`widgetModel.ts`,
+- [x] `spikes/` (étape 2) et `src-tauri/examples/spike_launch.rs` : retirés le 2026-10-31 (tag `archive-avant-audit-18`) ; les mesures non suivies `spikes/*/captures` restent sur le disque.
+- [x] (2026-10-31, `cargo fmt` et prettier passés ; ancien widget `features/widget/` et commandes `widget_fit` / `window_drag` retirés, `widgetModel.ts` gardé pour l'île) Écarts `cargo fmt` connus (`scene_ops.rs`, `share.rs`, `platform/mod.rs`) et prettier (`widgetModel.ts`,
   `passage.test.ts`) ; ligne `dist-bench/` de `.gitignore` (plus aucun build « bench »).
 - [ ] Verre des barres, du dock et des boutons (`glassBars`, `glassDock`, `glassButtons`, éteints) : gardés au gel,
   car ils portent l'imbrication de la pastille de sélection ; à simplifier avec une mesure avant / après au pixel.
@@ -238,7 +253,7 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
 - [x] **Démarrage express** (2026-10-30, étape 19, fait ; temps jusqu'au logo encore à mesurer) : au démarrage du PC, Kayro s'ouvre le plus vite possible sur le
   logo KAYRO **immobile** ; un clic dessus ou Entrée lance l'animation d'ouverture actuelle, et on arrive sur le hub
   complet (Kayro devient l'écran d'accueil du PC). À mesurer : temps jusqu'au logo.
-- [ ] **Mises à jour** (2026-10-30, étape 18b, avant d'envoyer d'autres versions) : « Rechercher une mise à jour »
+- [x] **Mises à jour** (2026-10-30, étape 18b, fait et publié depuis la 0.18.1, avant d'envoyer d'autres versions) : « Rechercher une mise à jour »
   dans Réglages et, au choix, une vérification automatique ; téléchargement puis installation par l'installeur
   maison (patch notes affichées). Seule fonction réseau de Kayro : **désactivée par défaut et expliquée** (CLAUDE.md
   › Réseau), source unique (ex. les « releases » GitHub du projet), fichiers **signés** et vérifiés avant de lancer

@@ -1638,7 +1638,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hub"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "image",
  "kayro-startup",
@@ -3849,60 +3849,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29b1fc02b446f7244a92924fe68c0555921209f1d342990cd1539e9138e69502"
 dependencies = [
  "specta",
-]
-
-[[package]]
-name = "spike-01-affichage"
-version = "0.0.0"
-dependencies = [
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-global-shortcut",
-]
-
-[[package]]
-name = "spike-02-widget"
-version = "0.0.0"
-dependencies = [
- "serde_json",
- "tauri",
- "tauri-build",
-]
-
-[[package]]
-name = "spike-03-verre"
-version = "0.0.0"
-dependencies = [
- "sysinfo",
- "tauri",
- "tauri-build",
-]
-
-[[package]]
-name = "spike-04-immersif"
-version = "0.0.0"
-dependencies = [
- "serde_json",
- "tauri",
- "tauri-build",
-]
-
-[[package]]
-name = "spike-05-tray-instance"
-version = "0.0.0"
-dependencies = [
- "tauri",
- "tauri-build",
- "tauri-plugin-autostart",
- "tauri-plugin-single-instance",
-]
-
-[[package]]
-name = "spike-06-launch"
-version = "0.0.0"
-dependencies = [
- "windows",
 ]
 
 [[package]]

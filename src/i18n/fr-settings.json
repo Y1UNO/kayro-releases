@@ -16,11 +16,20 @@
         "help": "{app} se lance à l’ouverture de ta session.",
         "failed": "Impossible de modifier le démarrage avec Windows."
       },
-      "screen": {
+      "open": {
         "label": "Au démarrage de Windows",
-        "help": "Écran d’accueil : {app} s’ouvre sur son logo, un clic ou Entrée et tu es dans tes apps. Discret : il attend dans la zone de notification. L’écran d’accueil s’ouvre toujours en plein écran (Immersif).",
-        "home": "Écran d’accueil",
-        "quiet": "Discret"
+        "help": "Intro : {app} s’ouvre sur son logo, un clic ou Entrée lance la cinématique. Immersif : tes apps tout de suite. Kysland : seulement l’île en haut de l’écran. Caché : il attend dans la zone de notification.",
+        "intro": "Intro",
+        "immersive": "Immersif",
+        "island": "Kysland",
+        "hidden": "Caché"
+      },
+      "after": {
+        "label": "Après l’intro",
+        "help": "Ce qui reste à l’écran une fois la cinématique finie.",
+        "immersive": "Immersif",
+        "island": "Kysland",
+        "hidden": "Caché"
       },
       "apps": {
         "label": "Apps lancées avec Windows",

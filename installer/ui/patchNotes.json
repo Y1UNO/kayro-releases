@@ -183,5 +183,15 @@
       "Ses propres sons, et elle se cache devant un jeu en plein écran.",
       "L'effet Capri : pics rouges pailletés, vert néon et noir cerné de violet, dans l'île, l'installeur et les mises à jour, qui s'ouvrent maintenant sur une page de nouveautés."
     ]
+  },
+  {
+    "version": "0.20.1",
+    "date": "31/10/2026",
+    "title": "Démarrage à ta façon",
+    "points": [
+      "Réglages › Démarrage : au démarrage de Windows, Kayro s'ouvre sur l'intro (par défaut), en immersif, en Kysland, ou reste caché.",
+      "Après l'intro, choisis ce qui reste : Kayro en immersif, Kysland, ou rien à l'écran.",
+      "Kysland consomme beaucoup moins pendant la musique ; le clic droit s'ouvre toujours vers l'écran."
+    ]
   }
 ]

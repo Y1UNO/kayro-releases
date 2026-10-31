@@ -1,4 +1,4 @@
-//! IPC of the desktop side: hiding, dragging and fitting the widget, screens, shortcuts, starting
+//! IPC of the desktop side: hiding, the island (Kysland), screens, shortcuts, starting
 //! with Windows, recent apps (registered in `ipc::builder`).
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -131,11 +131,12 @@ pub fn passage_faded<R: Runtime>(
     crate::desktop::passage::faded(&app, id, veil);
 }
 
-/// Starts moving the calling window with the mouse (the widget has no title bar).
+/// « Après l'intro : Kysland », the widget mode already chosen: the intro's window goes, the
+/// island comes (async: windows are destroyed and built).
 #[tauri::command]
 #[specta::specta]
-pub fn window_drag<R: Runtime>(window: WebviewWindow<R>) -> Result<(), AppError> {
-    Ok(window.start_dragging()?)
+pub async fn startup_island<R: Runtime>(app: AppHandle<R>) {
+    crate::desktop::island_after_intro(&app);
 }
 
 /// Step 20 (Kysland): a press on the island starts its gesture (`calm`: « reduce motion »).
@@ -164,7 +165,10 @@ pub fn island_open<R: Runtime>(app: AppHandle<R>, open: bool, calm: bool) {
 /// thread.
 #[tauri::command]
 #[specta::specta]
-pub async fn island_effects<R: Runtime>(app: AppHandle<R>, frame: crate::desktop::island::effects::FxFrame) {
+pub async fn island_effects<R: Runtime>(
+    app: AppHandle<R>,
+    frame: crate::desktop::island::effects::FxFrame,
+) {
     crate::desktop::island::effects::show(&app, &frame);
 }
 
@@ -185,7 +189,10 @@ pub async fn media_now<R: Runtime>(app: AppHandle<R>) -> Option<crate::media::No
 /// Step 20: previous, play/pause or next on the player shown.
 #[tauri::command]
 #[specta::specta]
-pub async fn media_control<R: Runtime>(app: AppHandle<R>, action: crate::media::MediaAction) -> bool {
+pub async fn media_control<R: Runtime>(
+    app: AppHandle<R>,
+    action: crate::media::MediaAction,
+) -> bool {
     crate::media::control(&app, action)
 }
 
@@ -216,17 +223,6 @@ pub async fn island_backdrop<R: Runtime>(app: AppHandle<R>) -> Option<f64> {
 #[specta::specta]
 pub fn window_painted<R: Runtime>(app: AppHandle<R>) {
     crate::desktop::painted(&app);
-}
-
-/// Resizes the widget window to its content, in logical pixels.
-#[tauri::command]
-#[specta::specta]
-pub fn widget_fit<R: Runtime>(app: AppHandle<R>, width: f64, height: f64) -> Result<(), AppError> {
-    let sane = |v: f64| v.is_finite() && (1.0..=4000.0).contains(&v);
-    if !sane(width) || !sane(height) {
-        return Err(AppError::validation("size", "size out of range"));
-    }
-    crate::desktop::fit_widget(&app, width, height)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]

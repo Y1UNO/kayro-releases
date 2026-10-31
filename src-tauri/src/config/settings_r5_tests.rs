@@ -18,7 +18,7 @@ fn load_settings(content: &str) -> (tempfile::TempDir, Settings) {
 #[test]
 fn defaults_are_the_validated_look() {
     let s = Settings::default();
-    assert_eq!(s.schema_version, 2);
+    assert_eq!(s.schema_version, 3);
     assert_eq!(s.theme_id, "bleu-gris");
     assert_eq!(s.quality, Quality::Balanced);
     assert_eq!(s.atmosphere_intensity, 1.0);
@@ -48,7 +48,7 @@ fn a_v1_file_migrates_with_a_backup_and_keeps_its_values() {
     assert!(dir.path().join("settings.json.bak").exists());
     let on_disk: serde_json::Value =
         serde_json::from_slice(&fs::read(dir.path().join("settings.json")).unwrap()).unwrap();
-    assert_eq!(on_disk["schemaVersion"], 2);
+    assert_eq!(on_disk["schemaVersion"], 3);
     assert_eq!(on_disk["cardFloat"], "visible");
 }
 
@@ -159,4 +159,25 @@ fn opening_screen_defaults_to_the_last_one_and_survives_odd_values() {
         ..Default::default()
     });
     assert_eq!(s.opening_screen, OpeningScreen::Main);
+}
+
+#[test]
+fn the_start_up_choices_follow_the_old_home_screen_setting() {
+    use super::schema::{StartupAfter, StartupOpen};
+    // « Écran d'accueil » becomes the intro, « Discret » nothing on screen; new: the intro.
+    let (_d, home) = load_settings(r#"{"schemaVersion":2,"startupHome":true}"#);
+    assert_eq!(home.startup_open, StartupOpen::Intro);
+    let (_d, quiet) = load_settings(r#"{"schemaVersion":2,"startupHome":false}"#);
+    assert_eq!(quiet.startup_open, StartupOpen::Hidden);
+    let fresh = Settings::default();
+    assert_eq!(
+        (fresh.startup_open, fresh.startup_after),
+        (StartupOpen::Intro, StartupAfter::Immersive)
+    );
+    let (_d, chosen) =
+        load_settings(r#"{"schemaVersion":3,"startupOpen":"island","startupAfter":"hidden"}"#);
+    assert_eq!(
+        (chosen.startup_open, chosen.startup_after),
+        (StartupOpen::Island, StartupAfter::Hidden)
+    );
 }

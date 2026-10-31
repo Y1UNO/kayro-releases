@@ -81,6 +81,39 @@ pub enum IslandPassage {
     Glitch,
 }
 
+/// « Au démarrage » (started with Windows): the intro (the still logo, a click or Enter plays the
+/// opening), the hub in immersive mode, the island (Kysland), or nothing on screen (the
+/// notification area).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum StartupOpen {
+    #[default]
+    Intro,
+    Immersive,
+    Island,
+    Hidden,
+}
+
+/// « Après l'intro »: what the intro's opening ends on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum StartupAfter {
+    #[default]
+    Immersive,
+    Island,
+    Hidden,
+}
+
+/// v2 → v3 (start-up choices): « Écran d'accueil » becomes the intro, « Discret » hidden.
+pub fn settings_v2_to_v3(mut v: Value) -> Result<Value, String> {
+    let o = v.as_object_mut().ok_or("not an object")?;
+    if !o.contains_key("startupOpen") {
+        let home = o.get("startupHome").and_then(Value::as_bool).unwrap_or(false);
+        o.insert("startupOpen".into(), (if home { "intro" } else { "hidden" }).into());
+    }
+    Ok(v)
+}
+
 /// « Élasticité du widget »: overshoot of its springs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]

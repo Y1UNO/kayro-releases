@@ -83,14 +83,15 @@ export const commands = {
 	sceneImport: (path: string, links: { [key in string]: string }) => typedError<SceneFile_Serialize, AppError>(__TAURI_INVOKE("scene_import", { path, links })),
 	/**  Hides the hub (Escape, the widget's own button…). */
 	windowHide: () => __TAURI_INVOKE<void>("window_hide"),
-	/**  Starts moving the calling window with the mouse (the widget has no title bar). */
-	windowDrag: () => typedError<null, AppError>(__TAURI_INVOKE("window_drag")),
 	/**  The page tells it painted after being shown (measurement only, see `KAYRO_BENCH_SHOW`). */
 	windowPainted: () => __TAURI_INVOKE<void>("window_painted"),
-	/**  Resizes the widget window to its content, in logical pixels. */
-	widgetFit: (width: number | null, height: number | null) => typedError<null, AppError>(__TAURI_INVOKE("widget_fit", { width, height })),
 	/**  Step 20 (Kysland): a press on the island starts its gesture (`calm`: « reduce motion »). */
 	islandGrab: (calm: boolean) => __TAURI_INVOKE<void>("island_grab", { calm }),
+	/**
+	 *  « Après l'intro : Kysland », the widget mode already chosen: the intro's window goes, the
+	 *  island comes (async: windows are destroyed and built).
+	 */
+	startupIsland: () => __TAURI_INVOKE<void>("startup_island"),
 	/**  Step 20: where the island is (the page's first frame). */
 	islandState: () => __TAURI_INVOKE<IslandState>("island_state"),
 	/**  Step 20: the page's effects are over (the window is cut to the island again). */
@@ -1009,6 +1010,8 @@ export type SettingsPatch_Deserialize = {
 	soundLaunch?: boolean | null,
 	updateAuto?: boolean | null,
 	startupHome?: boolean | null,
+	startupOpen?: StartupOpen | null,
+	startupAfter?: StartupAfter | null,
 	ignoredDetections?: string[] | null,
 };
 
@@ -1051,6 +1054,8 @@ export type SettingsPatch_Serialize = {
 	soundLaunch: boolean | null,
 	updateAuto: boolean | null,
 	startupHome: boolean | null,
+	startupOpen: StartupOpen | null,
+	startupAfter: StartupAfter | null,
 	ignoredDetections: string[] | null,
 };
 
@@ -1107,6 +1112,9 @@ export type Settings_Deserialize = {
 	 *  waiting in the notification area.
 	 */
 	startupHome: boolean,
+	/**  « Au démarrage » and « Après l'intro » (they replace `startup_home`, migrated v2 → v3). */
+	startupOpen: StartupOpen,
+	startupAfter: StartupAfter,
 	/**  Step 19b: detected apps the user chose to ignore (their ids), hidden from the next scans. */
 	ignoredDetections: string[],
 };
@@ -1164,6 +1172,9 @@ export type Settings_Serialize = {
 	 *  waiting in the notification area.
 	 */
 	startupHome: boolean,
+	/**  « Au démarrage » and « Après l'intro » (they replace `startup_home`, migrated v2 → v3). */
+	startupOpen: StartupOpen,
+	startupAfter: StartupAfter,
 	/**  Step 19b: detected apps the user chose to ignore (their ids), hidden from the next scans. */
 	ignoredDetections: string[],
 };
@@ -1191,6 +1202,9 @@ export type SourceReport = {
 	ms: number,
 };
 
+/**  « Après l'intro »: what the intro's opening ends on. */
+export type StartupAfter = "immersive" | "island" | "hidden";
+
 export type StartupApp = {
 	id: string,
 	name: string,
@@ -1209,6 +1223,13 @@ export type StartupLock =
 "system" | 
 /**  Kayro itself: its own switch is « Démarrer avec Windows ». */
 "kayro";
+
+/**
+ *  « Au démarrage » (started with Windows): the intro (the still logo, a click or Enter plays the
+ *  opening), the hub in immersive mode, the island (Kysland), or nothing on screen (the
+ *  notification area).
+ */
+export type StartupOpen = "intro" | "immersive" | "island" | "hidden";
 
 /**  One step. `required`: if it fails, the rest of the scene is not run. */
 export type Step = { type: "launch"; slot: string; required?: boolean } | { type: "wait"; ms: number; required?: boolean } | { type: "waitReady"; slot: string; timeoutMs: number; required?: boolean } | { type: "focus"; slot: string; required?: boolean } | 

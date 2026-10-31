@@ -23,7 +23,8 @@ mod windows;
 
 pub use modes::settings_changed;
 use placement::save_placement;
-pub use placement::{choose_immersive_screen, fit_widget, screen_names};
+pub use express::island_after_intro;
+pub use placement::{choose_immersive_screen, screen_names};
 pub use quit::{on_exit, quit};
 pub use shortcuts::{on_hotkey, scenes_changed, take_pending_scene, trigger_scene};
 
@@ -36,7 +37,7 @@ use specta::Type;
 use tauri::{AppHandle, Manager, Runtime, WebviewWindow, WindowEvent};
 use tauri_specta::Event;
 
-use crate::config::schema::{DisplayMode, OpeningScreen, Settings};
+use crate::config::schema::{DisplayMode, OpeningScreen, Settings, StartupOpen};
 use crate::config::ConfigState;
 use crate::error::AppError;
 
@@ -80,7 +81,6 @@ pub struct DesktopState {
     express_immersive: AtomicBool,
 }
 
-
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|p| p.into_inner())
 }
@@ -100,11 +100,18 @@ fn settings<R: Runtime>(app: &AppHandle<R>) -> Settings {
 /// login) creates the window hidden, or nothing at all in economy mode, and plays no opening.
 /// Step 19, « Écran d'accueil »: at login the hub comes on screen at once on its still logo,
 /// always in immersive mode (economy mode too); the user's mode comes back once it is hidden.
+/// « Au démarrage » (2026-10-31) chooses: the intro (that logo), the hub in immersive mode
+/// (its usual opening), the island (Kysland: the widget mode, kept), or nothing on screen.
 pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
     hotkeys::init(app);
     let s = settings(app);
-    if silent && s.startup_home {
-        return express::start(app, &s);
+    if silent {
+        match s.startup_open {
+            StartupOpen::Intro => return express::start(app, &s, true),
+            StartupOpen::Immersive => return express::start(app, &s, false),
+            StartupOpen::Island => return express::island(app, &s),
+            StartupOpen::Hidden => {}
+        }
     }
     if silent {
         crate::ipc_desktop::OPENING.silent_start();
@@ -367,7 +374,11 @@ pub fn page_ready<R: Runtime>(app: &AppHandle<R>, label: &str) -> bool {
     let state = app.state::<DesktopState>();
     if let Some(t0) = lock(&state.building_since).take() {
         let since_start = crate::STARTED.get().map(|s| s.elapsed().as_millis() as u64);
-        tracing::info!(ms = t0.elapsed().as_millis() as u64, ?since_start, "page ready");
+        tracing::info!(
+            ms = t0.elapsed().as_millis() as u64,
+            ?since_start,
+            "page ready"
+        );
     }
     if !state.want_visible.swap(false, Ordering::SeqCst) {
         return false;

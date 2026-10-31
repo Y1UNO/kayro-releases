@@ -136,11 +136,8 @@ export const desktopIpc = {
    */
   launchCover: (on: boolean, hide: boolean): Promise<Outcome<void>> =>
     plain(commands.launchCover(on, hide)),
-  /** Starts moving the window with the mouse (call from a pointer-down). */
-  drag: (): Promise<Outcome<null>> => checked(commands.windowDrag()),
-  /** The widget window follows the size of its content (logical pixels). */
-  fitWidget: (width: number, height: number): Promise<Outcome<null>> =>
-    checked(commands.widgetFit(width, height)),
+  /** « Après l'intro : Kysland », already in the widget mode: the intro's window gives way to it. */
+  startupIsland: (): Promise<Outcome<void>> => plain(commands.startupIsland()),
   /** Step 20 (Kysland): a press on the island; the core drives the gesture from there. */
   islandGrab: (calm: boolean): Promise<Outcome<void>> => plain(commands.islandGrab(calm)),
   /** Step 20: where the island is (on the top edge or floating, and in which corner). */

@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { Button } from "../../design";
 import { t } from "../../i18n";
-import type { StartupApp } from "../../ipc/bindings";
+import type { StartupAfter, StartupApp, StartupOpen } from "../../ipc/bindings";
 import { desktopIpc } from "../../ipc/commands";
 import { hubStore, useHub } from "../../store";
 import { ChoiceRow, ToggleRow } from "./SettingRow";
 import styles from "./Settings.module.css";
 
-type Screen = "home" | "quiet";
 type Status = { text: string; kind: "ok" | "error" } | null;
 
 /**
@@ -67,14 +66,26 @@ export function StartupSection() {
         onChange={(enabled) => void changeAutostart(enabled)}
       />
       {autostart && (
-        <ChoiceRow<Screen>
-          label={t("settings.startup.screen.label")}
-          help={t("settings.startup.screen.help")}
-          value={settings.startupHome ? "home" : "quiet"}
-          onChange={(v) => void hubStore.getState().setSettings({ startupHome: v === "home" })}
-          options={(["home", "quiet"] as const).map((v) => ({
+        <ChoiceRow<StartupOpen>
+          label={t("settings.startup.open.label")}
+          help={t("settings.startup.open.help")}
+          value={settings.startupOpen}
+          onChange={(startupOpen) => void hubStore.getState().setSettings({ startupOpen })}
+          options={(["intro", "immersive", "island", "hidden"] as const).map((v) => ({
             value: v,
-            label: t(`settings.startup.screen.${v}`),
+            label: t(`settings.startup.open.${v}`),
+          }))}
+        />
+      )}
+      {autostart && settings.startupOpen === "intro" && (
+        <ChoiceRow<StartupAfter>
+          label={t("settings.startup.after.label")}
+          help={t("settings.startup.after.help")}
+          value={settings.startupAfter}
+          onChange={(startupAfter) => void hubStore.getState().setSettings({ startupAfter })}
+          options={(["immersive", "island", "hidden"] as const).map((v) => ({
+            value: v,
+            label: t(`settings.startup.after.${v}`),
           }))}
         />
       )}
