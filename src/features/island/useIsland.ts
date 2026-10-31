@@ -13,6 +13,8 @@ export interface IslandControls {
   close: () => void;
   activity: (a: { media: boolean; stretch: boolean; dots: boolean }) => void;
   trackChanged: () => void;
+  /** The opened island's size, which follows its content. */
+  panelSize: (width: number, height: number) => void;
 }
 
 interface Refs {
@@ -78,5 +80,6 @@ export function useIsland(refs: Refs, options: EngineOptions): IslandControls {
     close: () => engine.current?.closePanel(),
     activity: (a) => engine.current?.activity(a),
     trackChanged: () => engine.current?.trackChanged(),
+    panelSize: (w, h) => engine.current?.panelSize(w, h),
   };
 }

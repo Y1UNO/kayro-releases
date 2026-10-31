@@ -148,6 +148,9 @@ export const desktopIpc = {
   /** Step 20: the island opens or closes (its panel): the core gives its window that region. */
   islandOpen: (open: boolean, calm: boolean): Promise<Outcome<void>> =>
     plain(commands.islandOpen(open, calm)),
+  /** The opened island's size, which follows its content (logical pixels). */
+  islandPanel: (width: number, height: number): Promise<Outcome<void>> =>
+    plain(commands.islandPanel(width, height)),
   /** Step 20: the island's largest size at rest (logical), for its click region. */
   islandFootprint: (width: number, height: number): Promise<Outcome<void>> =>
     plain(commands.islandFootprint(width, height)),

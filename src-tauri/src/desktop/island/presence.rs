@@ -50,9 +50,7 @@ fn build<R: Runtime>(app: &AppHandle<R>) {
     if screens.is_empty() {
         return;
     }
-    let ui = app
-        .state::<crate::config::ConfigState>()
-        .ui_state();
+    let ui = app.state::<crate::config::ConfigState>().ui_state();
     let i = windows::choose_screen(app, &screens, &ui.widget, None);
     WANT.store(true, Ordering::SeqCst);
     match windows::create_widget(app, &screens[i], &ui.widget) {

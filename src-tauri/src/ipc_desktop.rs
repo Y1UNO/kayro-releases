@@ -145,6 +145,13 @@ pub async fn window_show<R: Runtime>(app: AppHandle<R>) {
     crate::desktop::show(&app);
 }
 
+/// The opened island's size, which follows its content (logical pixels).
+#[tauri::command]
+#[specta::specta]
+pub fn island_panel<R: Runtime>(app: AppHandle<R>, width: f64, height: f64) {
+    crate::desktop::island::set_panel_size(&app, width, height);
+}
+
 /// Step 20 (Kysland): a press on the island starts its gesture (`calm`: « reduce motion »).
 #[tauri::command]
 #[specta::specta]

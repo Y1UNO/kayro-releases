@@ -14,7 +14,23 @@ pub(super) const SHOULDER: f64 = 10.0;
 pub(super) const FLOAT_HOVER: (f64, f64) = (190.0, 48.0);
 pub(super) const SHADOW: f64 = 16.0;
 /// The opened island: its size and its corners (page: islandShape.ts `OPEN`).
-pub const OPEN_SIZE: (f64, f64) = (420.0, 180.0);
+/// The opened island's size follows its content (the page's `panelSize`), within these bounds.
+const OPEN_MIN: (f64, f64) = (240.0, 60.0);
+const OPEN_MAX: (f64, f64) = (420.0, 200.0);
+static OPEN_SIZE: Mutex<(f64, f64)> = Mutex::new((360.0, 148.0));
+
+/// The opened island's size now (logical).
+pub fn open_size() -> (f64, f64) {
+    *OPEN_SIZE.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+pub fn set_open_size(width: f64, height: f64) {
+    let ok = |v: f64, lo: f64, hi: f64| if v.is_finite() { v.clamp(lo, hi) } else { hi };
+    *OPEN_SIZE.lock().unwrap_or_else(|e| e.into_inner()) = (
+        ok(width, OPEN_MIN.0, OPEN_MAX.0),
+        ok(height, OPEN_MIN.1, OPEN_MAX.1),
+    );
+}
 const OPEN_RADIUS: f64 = 28.0;
 
 /// The island's largest size at rest as the page draws it now (wider with music or a launch,
@@ -103,7 +119,7 @@ pub fn moving_region(scale: f64) -> Region {
 /// The click region of the opened island (its panel, with its shoulders or its shadow).
 pub fn open_region(docked: bool, slot: Slot, scale: f64) -> Region {
     let p = |v: f64| physical(v, scale);
-    let (w, h) = OPEN_SIZE;
+    let (w, h) = open_size();
     if !docked {
         let half = w / 2.0 + SHADOW;
         return Region {

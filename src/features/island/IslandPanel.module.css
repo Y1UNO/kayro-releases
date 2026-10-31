@@ -1,7 +1,7 @@
 /*
- * Step 20 (Kysland): the opened island (IslandPanel.tsx), 420 × 180 (the core's OPEN_SIZE).
- * Laid out at its full size from the island's top-left corner (no reflow while it grows), cut
- * by the island's corners, shown once it has grown (--content, from the engine). On black:
+ * Step 20 (Kysland): the opened island (IslandPanel.tsx), 360 wide and as tall as what it shows
+ * (panelSize.ts: the search, then the results or the music). Laid out from the island's top-left
+ * corner, cut by its corners, shown once it has grown (--content, from the engine). On black:
  * near-white text, « bleu neige » accents, the album's colours for the music.
  */
 
@@ -21,13 +21,12 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 420px;
-  height: 180px;
+  width: 360px;
   box-sizing: border-box;
-  padding: 16px 18px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   opacity: var(--content);
   color: #f3f7fb;
   font-family: var(--font-ui);
@@ -96,7 +95,6 @@
 }
 
 .results {
-  height: 96px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -149,7 +147,7 @@
 }
 
 .music {
-  height: 96px;
+  height: 64px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -157,12 +155,12 @@
 
 .cover {
   position: relative;
-  width: 84px;
-  height: 84px;
+  width: 64px;
+  height: 64px;
   flex: none;
   padding: 0;
   border: 0;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   background: rgb(255 255 255 / 0.06);
   box-shadow: 0 6px 18px rgb(var(--album-d, 0 0 0) / 0.5);

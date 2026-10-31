@@ -234,6 +234,14 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
     plus, jusqu'à la première ouverture. Un ancien `displayMode: widget` se lit comme immersif.
   - Limites : gain de la tâche non mesuré (il faut redémarrer le PC) ; la désinstallation laisse la tâche (elle
     vise alors un exe absent et ne fait rien) — couper « Démarrer avec Windows » avant de désinstaller.
+  - Mesuré au redémarrage du 31/10 : tâche lancée **2 s** après la connexion (24–57 s avec la clé `Run`), écran
+    de réveil à 8,5 s (3,6 s après le lancement du processus, disque encore très occupé), Kayro peint à 12 s.
+- [x] **Île : ouverture et relais (0.20.3, 2026-10-31)** : l'île disparaissait au clic (tao, qui la croyait cachée
+  puisque le cœur la montre lui-même, la recachait en changeant « focusable » : l'activation passe maintenant par
+  Win32) ; ouverte, elle fait 360 de large et la hauteur de ce qu'elle montre (recherche seule 66, musique 140,
+  1 à 3 résultats 106–170 ; avant 420 × 180), la recherche prend le clavier ; une autre app qui passe devant Kayro
+  le cache et l'île prend le relais (pas pendant le voile de lancement, ni 45 s après un démarrage avec Windows).
+  Testé par l'utilisateur dans l'exe.
 - [ ] CPU au repos encore au-dessus de 1 % : éventail, carrousel et mode fenêtre (2–3,7 %), musique de l'île (1,3 %).
 - [ ] CPU au repos : carrousel avec flottaison « Visible » 3,2–3,3 % en Élevée (cible CLAUDE.md < 1 %).
 - [ ] Mesures non faites à l'étape 13 : 60 Hz, Équilibré et Ultra, repli CSS (ouverture, moteur coupé), replis

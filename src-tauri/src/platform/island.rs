@@ -232,6 +232,38 @@ const SHELL_CLASSES: &[&str] = &[
     "Shell_SecondaryTrayWnd",
 ];
 
+/// Windows' own passing windows that take the focus without being a program in front: the Start
+/// menu and the search, Alt+Tab and the task view, menus, the notification area's overflow.
+const PASSING_CLASSES: &[&str] = &[
+    "Windows.UI.Core.CoreWindow",
+    "XamlExplorerHostIslandWindow",
+    "MultitaskingViewFrame",
+    "TaskSwitcherWnd",
+    "ForegroundStaging",
+    "NotifyIconOverflowWindow",
+    "TopLevelWindowForOverflowXamlIsland",
+    "#32768",
+];
+
+/// Another program's window is in front (not one of this process, not the desktop, the taskbar
+/// or one of Windows' passing windows).
+pub fn other_program_in_front(own: u32) -> bool {
+    // SAFETY: read-only queries; a stale handle only makes them fail.
+    unsafe {
+        let front = GetForegroundWindow();
+        if front.is_invalid() {
+            return false;
+        }
+        let mut pid = 0u32;
+        GetWindowThreadProcessId(front, Some(&mut pid));
+        let class = class_of(front);
+        pid != 0
+            && pid != own
+            && !SHELL_CLASSES.contains(&class.as_str())
+            && !PASSING_CLASSES.contains(&class.as_str())
+    }
+}
+
 fn class_of(h: HWND) -> String {
     let mut buf = [0u16; 64];
     // SAFETY: the buffer outlives the call.

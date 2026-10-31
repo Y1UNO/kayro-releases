@@ -20,9 +20,9 @@ pub mod tray;
 mod wake;
 mod windows;
 
+pub use express::intro_done;
 pub use modes::settings_changed;
 use placement::save_placement;
-pub use express::intro_done;
 pub use placement::{choose_immersive_screen, screen_names};
 pub use quit::{on_exit, quit};
 pub use shortcuts::{on_hotkey, scenes_changed, take_pending_scene, trigger_scene};
@@ -45,6 +45,10 @@ use windows::{MAIN, WIDGET};
 /// Losing the focus right after a show is not the user clicking away (Windows may still be
 /// settling who is in front).
 const BLUR_GRACE: Duration = Duration::from_millis(300);
+/// Started with Windows: the programs that open by themselves meanwhile (and take the front)
+/// do not hide Kayro (`on_program_in_front`).
+const LOGIN_GRACE: Duration = Duration::from_secs(45);
+static SILENT_START: AtomicBool = AtomicBool::new(false);
 
 /// The hub appeared (or went away). `bench` asks the page to report when it painted.
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -98,6 +102,7 @@ fn settings<R: Runtime>(app: &AppHandle<R>) -> Settings {
 pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
     hotkeys::init(app);
     let s = settings(app);
+    SILENT_START.store(silent, Ordering::SeqCst);
     if silent {
         match s.startup_open {
             StartupOpen::Intro => return express::start(app, &s, true),
@@ -309,6 +314,29 @@ pub fn hide<R: Runtime>(app: &AppHandle<R>) {
         express::leave(app, &window, mode);
     }
     island::sync(app);
+}
+
+/// From the foreground hook, 2026-10-31: another program came in front of Kayro (an app it
+/// launched, Alt+Tab…). With « Kysland toujours à l'écran », Kayro hides and the island takes
+/// over. Never right after a show, during a launch cover (it keeps Kayro in front on purpose),
+/// or in the first moments after Windows started it.
+pub fn on_program_in_front<R: Runtime>(app: &AppHandle<R>) {
+    if !settings(app).island_always || cover::covering() || windows::visible(app).is_none() {
+        return;
+    }
+    let state = app.state::<DesktopState>();
+    if lock(&state.shown_at).is_some_and(|t| t.elapsed() <= BLUR_GRACE) {
+        return;
+    }
+    let since_start = crate::STARTED.get().map(Instant::elapsed);
+    if SILENT_START.load(Ordering::SeqCst) && since_start.is_some_and(|t| t < LOGIN_GRACE) {
+        return;
+    }
+    if crate::platform::island::other_program_in_front(std::process::id()) {
+        tracing::info!("another program in front: Kayro hides, the island comes");
+        let app = app.clone();
+        std::thread::spawn(move || hide(&app));
+    }
 }
 
 /// Shortcut and notification-area behaviour: hide when in front, bring forward when hidden or

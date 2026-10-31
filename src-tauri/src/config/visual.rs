@@ -108,8 +108,14 @@ pub enum StartupAfter {
 pub fn settings_v2_to_v3(mut v: Value) -> Result<Value, String> {
     let o = v.as_object_mut().ok_or("not an object")?;
     if !o.contains_key("startupOpen") {
-        let home = o.get("startupHome").and_then(Value::as_bool).unwrap_or(false);
-        o.insert("startupOpen".into(), (if home { "intro" } else { "hidden" }).into());
+        let home = o
+            .get("startupHome")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+        o.insert(
+            "startupOpen".into(),
+            (if home { "intro" } else { "hidden" }).into(),
+        );
     }
     Ok(v)
 }

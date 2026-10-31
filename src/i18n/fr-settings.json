@@ -79,7 +79,7 @@
       },
       "islandAlways": {
         "label": "Kysland toujours à l’écran",
-        "help": "Quand {app} est fermé, l’île reste en haut de l’écran ; le raccourci ouvre ou ferme {app}. Elle se cache devant un jeu en plein écran."
+        "help": "Quand {app} est fermé, l’île reste en haut de l’écran ; le raccourci ouvre ou ferme {app}, et une app qui passe devant {app} le ferme. L’île se cache devant un jeu en plein écran."
       },
       "update": {
         "auto": "Rechercher les mises à jour au démarrage",

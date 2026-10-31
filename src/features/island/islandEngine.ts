@@ -3,6 +3,7 @@ import { desktopIpc } from "../../ipc/commands";
 import { Bubbles, type Point } from "./bubbles";
 import {
   SPRING_OF,
+  START,
   kickSquish,
   num,
   type EngineOptions,
@@ -30,17 +31,17 @@ import { humIsland, playIsland } from "./islandSounds";
 export type { EngineOptions, Parts } from "./engineParts";
 
 const KEYS = Object.keys(SPRING_OF) as Key[];
+type Values_ = Record<Key, Animated>;
 
 /**
  * Step 20 (Kysland): drives the island's look. A few springs (on the edge ↔ floating, notch ↔
  * corner, hover, pull, lean, jelly, presence, opened, the screen's lightness), stepped on
  * `requestAnimationFrame` **only while one moves, a bubble lives or the glitch shows**, then the
  * loop stops and the core is told (it cuts the window to the island again). Resting across two
- * screens in « Glitch », the edge keeps glitching on a slow timer (its held frames, 14 a second),
- * until the island moves, opens or hides.
+ * screens in « Glitch », the edge keeps glitching on a slow timer (14 held frames a second).
  */
 export class IslandEngine {
-  private v = Object.fromEntries(KEYS.map((k) => [k, anim(0)])) as Record<Key, Animated>;
+  private v = Object.fromEntries(KEYS.map((k) => [k, anim(START[k] ?? 0)])) as Values_;
   private parts: Parts = { island: null, layer: null, canvas: null };
   private ctx: CanvasRenderingContext2D | null = null;
   private bubbles = new Bubbles();
@@ -88,9 +89,7 @@ export class IslandEngine {
   /** Shown again: closed, coming out of the bezel, its colours measured anew. */
   appear(): void {
     const { presence: p, open } = this.v;
-    p.x = 0;
-    p.v = 0;
-    p.to = 1;
+    [p.x, p.v, p.to] = [0, 0, 1];
     open.x = open.to = 0;
     this.closing = false;
     this.onOpenChange(false);
@@ -137,6 +136,14 @@ export class IslandEngine {
     this.kick();
   }
 
+  /** The opened island's size follows its content (closed: it opens at that size). */
+  panelSize(w: number, h: number): void {
+    const { openW, openH } = this.v;
+    [openW.to, openH.to] = [w, h];
+    if (!this.isOpen) [openW.x, openH.x] = [w, h];
+    this.kick();
+  }
+
   closePanel(): void {
     if (!this.isOpen) return;
     this.v.open.to = 0;
@@ -149,9 +156,7 @@ export class IslandEngine {
   /** What the island shows at rest: music, a launch stretching it, the running apps' dots. */
   activity(a: { media: boolean; stretch: boolean; dots: boolean }): void {
     const v = this.v;
-    const to = (x: Animated, on: boolean) => {
-      x.to = on ? 1 : 0;
-    };
+    const to = (x: Animated, on: boolean) => void (x.to = on ? 1 : 0);
     to(v.media, a.media);
     to(v.stretch, a.stretch);
     to(v.dots, a.dots);

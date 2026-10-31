@@ -132,6 +132,7 @@ pub fn run() {
                     move |pid| {
                         desktop::cover::on_foreground(pid);
                         desktop::island::on_foreground(&for_island);
+                        desktop::on_program_in_front(&for_island);
                     }
                 },
             ));

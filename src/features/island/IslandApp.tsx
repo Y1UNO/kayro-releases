@@ -15,6 +15,7 @@ import { runningApps, searchPanel, type WidgetHit } from "../widget/widgetModel"
 import { IslandPanel } from "./IslandPanel";
 import { IslandRest } from "./IslandRest";
 import { footprint, rgbOf, trackKey } from "./music";
+import { panelSize } from "./panelSize";
 import { useIsland } from "./useIsland";
 import { useBeat, useLaunchStretch, useNowPlaying } from "./useIslandData";
 import styles from "./Island.module.css";
@@ -90,6 +91,25 @@ export function IslandApp() {
     void desktopIpc.islandFootprint(room.width, room.height);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown.media, shown.stretch, shown.dots, activity]);
+
+  // Opened, it is as big as what it shows; the click region grows at once, shrinks once the
+  // island has (no cut while it shrinks).
+  const searching = query.trim() !== "";
+  const size = panelSize({ searching, hits: hits.length, music: np !== null });
+  const { panelSize: resize } = controls;
+  const sent = useRef({ width: 0, height: 0 });
+  useEffect(() => {
+    resize(size.width, size.height);
+    const send = () => {
+      sent.current = size;
+      void desktopIpc.islandPanel(size.width, size.height);
+    };
+    const grows = size.width > sent.current.width || size.height > sent.current.height;
+    if (grows) return send();
+    const id = window.setTimeout(send, 450);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [size.width, size.height]);
 
   // The album's colours: the record's ring, the bars, the halo.
   const colors = np?.colors;

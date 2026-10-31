@@ -12,8 +12,8 @@ export const STAGE = { width: 720, height: 420 } as const;
 export const ANCHOR = { x: 360, y: 150 } as const;
 export const DOCKED = { width: 184, height: 32 } as const;
 export const FLOATING = { width: 176, height: 44 } as const;
-/** Opened (its panel): the core's `OPEN_SIZE` (desktop/island/regions.rs). */
-export const OPEN = { width: 420, height: 180, radius: 28 } as const;
+/** Opened (its panel): its size follows its content (`panelSize.ts`); this one at first. */
+export const OPEN = { width: 360, height: 140, radius: 26 } as const;
 /** What hovering adds, docked and floating (inside the core's click region). */
 export const HOVER_GROW = { docked: [20, 4], floating: [14, 4] } as const;
 export const SHOULDER = 10;
@@ -92,6 +92,9 @@ export interface Values {
   presence: number;
   /** 0 = the island, 1 = opened into its panel. */
   open: number;
+  /** The opened island's size, which follows its content (`OPEN` when not given). */
+  openW?: number;
+  openH?: number;
   /** At rest: music shown (cover and bars), a launch stretching it, the running apps' dots. */
   media: number;
   stretch: number;
@@ -143,8 +146,9 @@ export function shapeOf(v: Values): Shape {
   const dotsShown = clamp(v.dots, 0, 1) * (1 - clamp(v.morph, 0, 1));
   const dots = dotsShown * hover * 26 * closed;
   const band = lerp(DOCKED.height, FLOATING.height, m) + growH * hover;
-  let width = lerp(lerp(DOCKED.width, FLOATING.width, m) + growW * hover + grown, OPEN.width, o);
-  let height = lerp(band + dots, OPEN.height, o);
+  const [openW, openH] = [v.openW ?? OPEN.width, v.openH ?? OPEN.height];
+  let width = lerp(lerp(DOCKED.width, FLOATING.width, m) + growW * hover + grown, openW, o);
+  let height = lerp(band + dots, openH, o);
   let x = 0;
   let y = 0;
   // Docked and pulled down: it stretches like a drop, and narrows.

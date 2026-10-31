@@ -204,5 +204,15 @@
       "Au démarrage de Windows, Kayro part beaucoup plus tôt, et son écran affiche tout de suite « Kayro se réveille » au lieu du bureau.",
       "Corrigé : Kayro pouvait ne pas s'ouvrir au démarrage de Windows."
     ]
+  },
+  {
+    "version": "0.20.3",
+    "date": "31/10/2026",
+    "title": "L'île qui s'ouvre bien",
+    "points": [
+      "Corrigé : Kysland disparaissait quand on cliquait dessus. Elle s'ouvre maintenant, et la recherche est prête à taper.",
+      "Ouverte, l'île est plus petite et prend juste la taille de ce qu'elle montre : la recherche, la musique, les résultats.",
+      "Une app qui passe devant Kayro le ferme, et Kysland prend le relais."
+    ]
   }
 ]

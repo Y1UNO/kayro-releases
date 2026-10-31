@@ -94,6 +94,8 @@ export const commands = {
 	introDone: (island: boolean) => __TAURI_INVOKE<void>("intro_done", { island }),
 	/**  Shows Kayro (the island's « Passer en immersif »). */
 	windowShow: () => __TAURI_INVOKE<void>("window_show"),
+	/**  The opened island's size, which follows its content (logical pixels). */
+	islandPanel: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("island_panel", { width, height }),
 	/**  Step 20: where the island is (the page's first frame). */
 	islandState: () => __TAURI_INVOKE<IslandState>("island_state"),
 	/**  Step 20: the page's effects are over (the window is cut to the island again). */

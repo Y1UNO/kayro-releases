@@ -163,7 +163,7 @@ describe("the opened island", () => {
     expect(corner.radii).toEqual([0, 0, OPEN.radius, 0]);
     expect(edges({ ...rest, corner: -1, open: 1 })[0]).toBeCloseTo(-DOCKED.width / 2, 5);
     const floating = shapeOf({ ...rest, morph: 1, open: 1 });
-    expect(floating.radii).toEqual([28, 28, 28, 28]);
+    expect(floating.radii).toEqual([OPEN.radius, OPEN.radius, OPEN.radius, OPEN.radius]);
   });
 
   it("shows its content only once it has grown, and hovering no longer grows it", () => {

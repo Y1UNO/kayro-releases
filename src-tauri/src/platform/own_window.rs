@@ -6,7 +6,8 @@ use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::Input::KeyboardAndMouse::{keybd_event, KEYEVENTF_KEYUP, VK_MENU};
 use windows::Win32::UI::WindowsAndMessaging::{
     BringWindowToTop, GetForegroundWindow, GetWindowLongPtrW, GetWindowThreadProcessId,
-    SetForegroundWindow, SetWindowLongPtrW, GWL_EXSTYLE, WS_EX_APPWINDOW, WS_EX_TOOLWINDOW,
+    SetForegroundWindow, SetWindowLongPtrW, GWL_EXSTYLE, WS_EX_APPWINDOW, WS_EX_NOACTIVATE,
+    WS_EX_TOOLWINDOW,
 };
 
 fn hwnd(raw: isize) -> HWND {
@@ -22,6 +23,21 @@ pub fn set_tool_window(raw: isize) {
         let style = GetWindowLongPtrW(hwnd(raw), GWL_EXSTYLE);
         let wanted = (style & !(WS_EX_APPWINDOW.0 as isize)) | WS_EX_TOOLWINDOW.0 as isize;
         SetWindowLongPtrW(hwnd(raw), GWL_EXSTYLE, wanted);
+    }
+}
+
+/// Whether a click (or the core) may make the window active, without the toolkit: its own
+/// « focusable » setting re-applies every flag it keeps, its « hidden » one too, and the island is
+/// shown and hidden by the core (it would vanish at the first click, 0.20.2).
+pub fn set_activatable(raw: isize, on: bool) {
+    // SAFETY: plain style read/write on a window of this process; a stale handle just fails.
+    unsafe {
+        let style = GetWindowLongPtrW(hwnd(raw), GWL_EXSTYLE);
+        let no = WS_EX_NOACTIVATE.0 as isize;
+        let wanted = if on { style & !no } else { style | no };
+        if wanted != style {
+            SetWindowLongPtrW(hwnd(raw), GWL_EXSTYLE, wanted);
+        }
     }
 }
 

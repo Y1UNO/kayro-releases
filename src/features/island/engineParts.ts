@@ -1,5 +1,5 @@
 import type { IslandPassage } from "../../ipc/bindings";
-import { SPRINGS, SQUISH_LIMIT, type Animated, type Values } from "./islandShape";
+import { OPEN, SPRINGS, SQUISH_LIMIT, type Animated, type Values } from "./islandShape";
 
 /** Step 20 (Kysland): the island engine's options, parts and small helpers. */
 export interface EngineOptions {
@@ -32,11 +32,16 @@ export const SPRING_OF: Record<Key, (typeof SPRINGS)[keyof typeof SPRINGS]> = {
   squish: SPRINGS.squish,
   presence: SPRINGS.presence,
   open: SPRINGS.open,
+  openW: SPRINGS.open,
+  openH: SPRINGS.open,
   media: SPRINGS.rest,
   stretch: SPRINGS.rest,
   dots: SPRINGS.rest,
   light: SPRINGS.backdrop,
 };
+
+/** Where the values start (0 for the others): the opened size at its first one. */
+export const START: Partial<Record<Key, number>> = { openW: OPEN.width, openH: OPEN.height };
 
 /** A number from the core (a non-finite one arrives as null). */
 export const num = (v: number | null): number => v ?? 0;

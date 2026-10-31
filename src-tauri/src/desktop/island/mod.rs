@@ -12,8 +12,8 @@
 mod backdrop;
 mod drive;
 pub mod effects;
-mod presence;
 pub mod physics;
+mod presence;
 mod raster;
 mod regions;
 pub mod slots;
@@ -32,8 +32,8 @@ use crate::config::ui_state::{Placement, Rect};
 use crate::config::ConfigState;
 use crate::platform::island::{self as win, Region};
 pub use backdrop::{backdrop_at, backdrop_now};
-pub use presence::{on_foreground, page_ready, quiet, sync};
 use physics::V2;
+pub use presence::{on_foreground, page_ready, quiet, sync};
 use regions::physical;
 pub use regions::{moving_region, open_region, rest_region};
 use slots::Slot;
@@ -265,7 +265,8 @@ fn region_now(scale: f64) -> Region {
 
 /// Where a floating island goes so that, opened, its panel fits in `work`.
 pub fn fit_open(a: V2, work: &Rect, scale: f64) -> V2 {
-    let (w, h) = (regions::OPEN_SIZE.0 * scale, regions::OPEN_SIZE.1 * scale);
+    let (w, h) = regions::open_size();
+    let (w, h) = (w * scale, h * scale);
     let x0 = f64::from(work.x) + w / 2.0;
     let x1 = (f64::from(work.x) + f64::from(work.width) - w / 2.0).max(x0);
     let y0 = f64::from(work.y);
@@ -283,9 +284,8 @@ pub fn set_open<R: Runtime>(app: &AppHandle<R>, open: bool, calm: bool) {
     let Ok(h) = window.hwnd() else { return };
     let raw = h.0 as isize;
     // Opened, it takes the keyboard (its search); closed, it never takes the focus again.
-    let _ = window.set_focusable(open);
+    crate::platform::own_window::set_activatable(raw, open);
     if open {
-        let _ = window.set_focus();
         crate::platform::own_window::force_foreground(raw);
     }
     if drive::running() {
@@ -311,6 +311,21 @@ pub fn set_open<R: Runtime>(app: &AppHandle<R>, open: bool, calm: bool) {
 pub fn set_footprint<R: Runtime>(app: &AppHandle<R>, width: f64, height: f64) {
     regions::set_footprint(width, height);
     if drive::running() || OPEN.load(Ordering::SeqCst) {
+        return;
+    }
+    if let Some(window) = windows::get(app, WIDGET) {
+        if let Ok(h) = window.hwnd() {
+            let scale = window.scale_factor().unwrap_or(1.0);
+            win::set_region(h.0 as isize, Some(region_now(scale)));
+        }
+    }
+}
+
+/// The opened island's size follows its content: the click region follows it (a gesture
+/// still running applies it at its end).
+pub fn set_panel_size<R: Runtime>(app: &AppHandle<R>, width: f64, height: f64) {
+    regions::set_open_size(width, height);
+    if drive::running() || !OPEN.load(Ordering::SeqCst) {
         return;
     }
     if let Some(window) = windows::get(app, WIDGET) {

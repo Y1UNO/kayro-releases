@@ -213,11 +213,7 @@ export function IslandPanel(p: Props) {
               </button>
             </div>
           </div>
-        ) : (
-          <div className={styles.music}>
-            <p className={styles.empty}>{t("island.music.none")}</p>
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

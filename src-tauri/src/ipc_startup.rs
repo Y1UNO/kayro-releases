@@ -121,7 +121,10 @@ pub fn set_autostart<R: Runtime>(app: &AppHandle<R>, enabled: bool) -> Result<bo
     // A development build never registers itself: its console window would open at login, and
     // an older build would put the user's newer settings aside (31/10 bug).
     if cfg!(debug_assertions) {
-        tracing::info!(enabled, "start with Windows left alone by a development build");
+        tracing::info!(
+            enabled,
+            "start with Windows left alone by a development build"
+        );
         return Ok(autostart_on(app));
     }
     let name = app.package_info().name.clone();
@@ -170,7 +173,10 @@ pub fn autostart_follow<R: Runtime>(app: &AppHandle<R>) {
         return;
     }
     match set_autostart(app, true) {
-        Ok(_) => tracing::info!(?legacy, "start with Windows: the logon task starts this Kayro"),
+        Ok(_) => tracing::info!(
+            ?legacy,
+            "start with Windows: the logon task starts this Kayro"
+        ),
         Err(e) => tracing::warn!(error = %e, "start with Windows: could not point it back"),
     }
 }

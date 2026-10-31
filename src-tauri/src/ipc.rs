@@ -327,6 +327,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_desktop::island_grab::<tauri::Wry>,
             ipc_desktop::intro_done::<tauri::Wry>,
             ipc_desktop::window_show::<tauri::Wry>,
+            ipc_desktop::island_panel::<tauri::Wry>,
             ipc_desktop::island_state::<tauri::Wry>,
             ipc_desktop::island_rest,
             ipc_desktop::island_open::<tauri::Wry>,

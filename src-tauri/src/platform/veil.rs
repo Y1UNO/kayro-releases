@@ -91,7 +91,12 @@ unsafe fn line(dc: HDC, client: &RECT, centre_y: i32, size: i32, text: &str, rgb
             bottom: centre_y + size,
         };
         let mut wide: Vec<u16> = text.encode_utf16().collect();
-        DrawTextW(dc, &mut wide, &mut r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        DrawTextW(
+            dc,
+            &mut wide,
+            &mut r,
+            DT_CENTER | DT_VCENTER | DT_SINGLELINE,
+        );
         SelectObject(dc, old);
         let _ = DeleteObject(font.into());
     }
@@ -121,7 +126,14 @@ extern "system" fn veil_proc(h: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LRESU
                     let big = (height / 14).max(24);
                     line(dc, &client, mid - big / 3, big, t.title, t.title_rgb);
                     let small = (height / 60).max(12);
-                    line(dc, &client, mid + big / 2 + small, small, t.line, t.line_rgb);
+                    line(
+                        dc,
+                        &client,
+                        mid + big / 2 + small,
+                        small,
+                        t.line,
+                        t.line_rgb,
+                    );
                 }
                 let _ = EndPaint(h, &ps);
                 LRESULT(0)
