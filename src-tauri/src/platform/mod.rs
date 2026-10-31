@@ -5,6 +5,7 @@
 pub mod com;
 pub mod icon;
 pub mod island;
+pub mod logon_task;
 pub mod loopback;
 pub mod media;
 pub mod overlay;

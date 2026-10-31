@@ -9,22 +9,33 @@ use crate::config::schema::DisplayMode;
 use crate::config::ConfigState;
 use crate::error::AppError;
 
+/// Remembers where `main` is, for `mode`.
 pub(super) fn save_placement<R: Runtime>(
     app: &AppHandle<R>,
     window: &WebviewWindow<R>,
     mode: DisplayMode,
 ) {
+    store(app, window, Some(mode));
+}
+
+/// Remembers where the island is.
+pub(super) fn save_island_placement<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
+    store(app, window, None);
+}
+
+/// `mode`: `main`'s; None for the island.
+fn store<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>, mode: Option<DisplayMode>) {
     let screens = windows::screens(app);
     let Some(placement) = windows::capture_placement(window, &screens) else {
         return;
     };
     let result = app.state::<ConfigState>().update_ui_state(|ui| {
         let slot = match mode {
-            DisplayMode::Immersive => &mut ui.immersive,
-            DisplayMode::Window => &mut ui.window,
-            DisplayMode::Widget => &mut ui.widget,
+            Some(DisplayMode::Immersive) => &mut ui.immersive,
+            Some(DisplayMode::Window) => &mut ui.window,
+            None => &mut ui.widget,
         };
-        let next = if mode == DisplayMode::Immersive {
+        let next = if mode == Some(DisplayMode::Immersive) {
             // Only the screen matters: the window is exactly that screen.
             crate::config::ui_state::Placement {
                 monitor: placement.monitor,

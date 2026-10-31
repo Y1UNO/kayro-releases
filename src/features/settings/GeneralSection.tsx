@@ -70,6 +70,12 @@ export function GeneralSection() {
           </p>
         )}
       </section>
+      <ToggleRow
+        label={t("settings.general.islandAlways.label")}
+        help={t("settings.general.islandAlways.help")}
+        checked={settings.islandAlways}
+        onChange={(islandAlways) => void set({ islandAlways })}
+      />
       <ChoiceRow<OpeningScreen>
         label={t("settings.general.openingScreen.label")}
         help={t("settings.general.openingScreen.help")}

@@ -48,7 +48,6 @@ type Mode = (typeof MODES)[number]["value"];
 const VIEWS = [
   { value: "immersive", label: "Immersif" },
   { value: "window", label: "Fenêtre" },
-  { value: "widget", label: "Widget" },
 ] as const;
 
 const CATEGORIES = ["Jeux", "Stream", "Créativité", "Logiciels", "Autre"];

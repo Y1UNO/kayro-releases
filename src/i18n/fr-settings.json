@@ -18,7 +18,7 @@
       },
       "open": {
         "label": "Au démarrage de Windows",
-        "help": "Intro : {app} s’ouvre sur son logo, un clic ou Entrée lance la cinématique. Immersif : tes apps tout de suite. Kysland : seulement l’île en haut de l’écran. Caché : il attend dans la zone de notification.",
+        "help": "Intro : {app} s’ouvre sur son logo, un clic ou Entrée lance la cinématique. Immersif : tes apps tout de suite. Kysland : seulement l’île en haut de l’écran. Caché : rien à l’écran (ni l’île) jusqu’à ce que tu ouvres {app}.",
         "intro": "Intro",
         "immersive": "Immersif",
         "island": "Kysland",
@@ -76,6 +76,10 @@
         "label": "Raccourci pour afficher ou cacher {app}",
         "failedAtStart": "Le raccourci {hotkey} est déjà utilisé par une autre application. {app} reste accessible par la zone de notification : choisissez un autre raccourci.",
         "saved": "Raccourci enregistré."
+      },
+      "islandAlways": {
+        "label": "Kysland toujours à l’écran",
+        "help": "Quand {app} est fermé, l’île reste en haut de l’écran ; le raccourci ouvre ou ferme {app}. Elle se cache devant un jeu en plein écran."
       },
       "update": {
         "auto": "Rechercher les mises à jour au démarrage",
@@ -140,7 +144,7 @@
       },
       "launch": {
         "label": "Mode d’affichage",
-        "help": "Change tout de suite ; c’est aussi le mode au prochain lancement. Immersif : sans bordure, à la taille de l’écran. Fenêtre : classique. Widget : une barre en haut de l’écran, toujours au premier plan."
+        "help": "Change tout de suite ; c’est aussi le mode au prochain lancement. Immersif : sans bordure, à la taille de l’écran. Fenêtre : classique. Quand {app} est fermé, Kysland reste en haut de l’écran."
       },
       "screen": {
         "label": "Écran du mode immersif",

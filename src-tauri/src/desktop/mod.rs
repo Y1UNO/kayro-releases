@@ -1,11 +1,10 @@
 //! The hub's presence on the desktop: display modes, showing and hiding, the global shortcuts
 //! and the notification-area menu (ARCHITECTURE.md §4, PLAN.md §3 spikes a/b/04/05).
 //!
-//! One window exists at a time. « Instantané » keeps it loaded while hidden; « Mode économe »
-//! destroys it and builds it again on demand. Changing to or from the widget builds the new
-//! window first and retires the old one once the new one is painted, so nothing flickers; on
-//! screen, a mode change is a passage (round 4b: the page fades out, the window changes, the page
-//! comes back, see `passage`).
+//! Kayro's window (`main`, immersive or normal) and the island (Kysland, `widget`): the island is
+//! on screen whenever Kayro is not (`island::sync`). « Instantané » keeps `main` loaded while
+//! hidden; « Mode économe » destroys it and builds it again on demand. On screen, a mode change is
+//! a passage (round 4b: the page fades out, the window changes, the page comes back, `passage`).
 
 pub mod cover;
 mod express;
@@ -18,12 +17,12 @@ mod placement;
 mod quit;
 mod shortcuts;
 pub mod tray;
-mod veil_play;
+mod wake;
 mod windows;
 
 pub use modes::settings_changed;
 use placement::save_placement;
-pub use express::island_after_intro;
+pub use express::intro_done;
 pub use placement::{choose_immersive_screen, screen_names};
 pub use quit::{on_exit, quit};
 pub use shortcuts::{on_hotkey, scenes_changed, take_pending_scene, trigger_scene};
@@ -65,8 +64,6 @@ pub struct SceneHotkey(pub String);
 pub struct DesktopState {
     /// A window is being prepared and must be shown as soon as its page has painted.
     want_visible: AtomicBool,
-    /// Window to destroy once the new one is on screen (mode change involving the widget).
-    retire: Mutex<Option<&'static str>>,
     shown_at: Mutex<Option<Instant>>,
     pending_scene: Mutex<Option<String>>,
     pressed_at: Mutex<Option<Instant>>,
@@ -74,8 +71,6 @@ pub struct DesktopState {
     building_since: Mutex<Option<Instant>>,
     /// The passage between modes whose fade-out is awaited (round 4b).
     passage: passage::Waiting,
-    /// A passage that builds a window is in flight: mode changes wait for its end.
-    mode_gate: Mutex<modes::ModeGate>,
     /// Step 19: the express start shows `main` in immersive mode whatever the setting, until the
     /// hub is first hidden (or the mode is changed): it then goes back to the user's mode.
     express_immersive: AtomicBool,
@@ -97,11 +92,9 @@ fn settings<R: Runtime>(app: &AppHandle<R>) -> Settings {
 // ───────────────────────────── start-up and windows ─────────────────────────────
 
 /// Called once from `setup`, after the notification-area icon exists. A silent start (Windows
-/// login) creates the window hidden, or nothing at all in economy mode, and plays no opening.
-/// Step 19, « Écran d'accueil »: at login the hub comes on screen at once on its still logo,
-/// always in immersive mode (economy mode too); the user's mode comes back once it is hidden.
-/// « Au démarrage » (2026-10-31) chooses: the intro (that logo), the hub in immersive mode
-/// (its usual opening), the island (Kysland: the widget mode, kept), or nothing on screen.
+/// login) follows « Au démarrage » (2026-10-31): the intro (the still logo, always immersive),
+/// the hub in immersive mode (its usual opening), the island (Kysland), or nothing on screen.
+/// The last two build Kayro's window hidden (nothing in economy mode) and play no opening.
 pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
     hotkeys::init(app);
     let s = settings(app);
@@ -109,20 +102,20 @@ pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
         match s.startup_open {
             StartupOpen::Intro => return express::start(app, &s, true),
             StartupOpen::Immersive => return express::start(app, &s, false),
-            StartupOpen::Island => return express::island(app, &s),
-            StartupOpen::Hidden => {}
+            StartupOpen::Island => {}
+            StartupOpen::Hidden => island::quiet(),
         }
-    }
-    if silent {
         crate::ipc_desktop::OPENING.silent_start();
-    }
-    if silent && s.economy_mode {
-        tracing::info!("silent start, economy mode: no window yet");
-        return;
+        if s.economy_mode {
+            tracing::info!("silent start, economy mode: no window yet");
+        } else if let Err(e) = create_for(app, s.display_mode, false) {
+            tracing::error!(error = %e, "could not create the window");
+        }
+        return island::sync(app);
     }
     app.state::<DesktopState>()
         .want_visible
-        .store(!silent, Ordering::SeqCst);
+        .store(true, Ordering::SeqCst);
     if let Err(e) = create_for(app, s.display_mode, false) {
         tracing::error!(error = %e, "could not create the window");
     }
@@ -154,10 +147,6 @@ fn create_for<R: Runtime>(
         DisplayMode::Window => {
             let i = windows::opening_screen(app, &screens, &ui.window, None, choice);
             windows::create_main(app, mode, &screens[i], &ui.window, entering)?
-        }
-        DisplayMode::Widget => {
-            let i = windows::choose_screen(app, &screens, &ui.widget, None);
-            windows::create_widget(app, &screens[i], &ui.widget, entering)?
         }
     };
     attach_events(app, &window);
@@ -203,62 +192,35 @@ fn on_focus<R: Runtime>(app: &AppHandle<R>, label: &str, focused: bool) {
 
 // ───────────────────────────── showing and hiding ─────────────────────────────
 
-/// Puts a built window on screen and in front.
+/// Puts Kayro's window on screen and in front; the island and the wake cover go.
 fn reveal<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
     let state = app.state::<DesktopState>();
     state.want_visible.store(false, Ordering::SeqCst);
     *lock(&state.shown_at) = Some(Instant::now());
-    island::forget_duck();
     let _ = window.show();
     let _ = window.unminimize();
     let _ = window.set_focus();
     finish_show(window);
-    if let Some(label) = lock(&state.retire).take() {
-        // Never the window just shown (a passage given up may still name it).
-        if label != window.label() {
-            retire(app, label);
-        }
-    }
-    modes::passage_ended(app, window);
+    wake::lift(app);
+    island::sync(app);
     crate::ipc::notify(
         WindowVisibility {
             visible: true,
             bench: lock(&state.pressed_at).is_some(),
         }
-        .emit(app),
+        .emit_to(app, MAIN),
     );
 }
 
-/// Runs behind the `show` in the toolkit's queue. The toolkit rewrites a window's extended
-/// style on every show (it always adds « appears in the taskbar and Alt+Tab »), so the widget's
-/// tool-window style is applied again here; and the focus is taken for real when Windows
+/// Runs behind the `show` in the toolkit's queue: the focus is taken for real when Windows
 /// refused the first request.
 fn finish_show<R: Runtime>(window: &WebviewWindow<R>) {
     let Ok(hwnd) = window.hwnd() else { return };
-    let (raw, widget) = (hwnd.0 as isize, window.label() == WIDGET);
+    let raw = hwnd.0 as isize;
     if let Err(e) = window.run_on_main_thread(move || {
-        if widget {
-            crate::platform::own_window::set_tool_window(raw);
-        }
         crate::platform::own_window::force_foreground(raw);
     }) {
         tracing::warn!(error = %e, "could not finish showing the window");
-    }
-}
-
-/// Destroys a window that a mode change replaced.
-fn retire<R: Runtime>(app: &AppHandle<R>, label: &str) {
-    if label == WIDGET {
-        island::effects::hide();
-    }
-    if let Some(old) = windows::get(app, label) {
-        let mode = if label == WIDGET {
-            DisplayMode::Widget
-        } else {
-            settings(app).display_mode
-        };
-        save_placement(app, &old, mode);
-        let _ = old.destroy();
     }
 }
 
@@ -269,7 +231,7 @@ pub fn show<R: Runtime>(app: &AppHandle<R>) {
         return reveal(app, &window); // still the express start's immersive window
     }
     let mode = settings(app).display_mode;
-    match windows::get(app, windows::label_for(mode)) {
+    match windows::get(app, MAIN) {
         Some(window) => {
             if mode == DisplayMode::Immersive {
                 refit_immersive(app, &window);
@@ -321,22 +283,15 @@ fn follow_opening_screen<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<
     }
 }
 
-/// Hides the hub. In economy mode the window is destroyed.
+/// Hides the hub (the island comes, see `island::sync`). In economy mode the window is destroyed.
 pub fn hide<R: Runtime>(app: &AppHandle<R>) {
-    island::forget_duck();
-    island::effects::hide();
-    crate::media::beat(app, false);
     let state = app.state::<DesktopState>();
     state.want_visible.store(false, Ordering::SeqCst);
     let Some(window) = windows::visible(app) else {
-        return;
+        return island::sync(app);
     };
-    let mode = if window.label() == WIDGET {
-        DisplayMode::Widget
-    } else {
-        settings(app).display_mode
-    };
-    let express = state.end_express_immersive() && window.label() == MAIN;
+    let mode = settings(app).display_mode;
+    let express = state.end_express_immersive();
     if !express {
         save_placement(app, &window, mode);
     }
@@ -346,13 +301,14 @@ pub fn hide<R: Runtime>(app: &AppHandle<R>) {
             visible: false,
             bench: false,
         }
-        .emit(app),
+        .emit_to(app, MAIN),
     );
     if settings(app).economy_mode {
         let _ = window.destroy();
     } else if express {
         express::leave(app, &window, mode);
     }
+    island::sync(app);
 }
 
 /// Shortcut and notification-area behaviour: hide when in front, bring forward when hidden or
@@ -380,14 +336,15 @@ pub fn page_ready<R: Runtime>(app: &AppHandle<R>, label: &str) -> bool {
             "page ready"
         );
     }
+    if label == WIDGET {
+        island::page_ready(app);
+        return false;
+    }
     if !state.want_visible.swap(false, Ordering::SeqCst) {
         return false;
     }
-    // A passage to or from the widget: the window on screen fades out before this one shows.
-    if !modes::swap_after_fade(app, label) {
-        if let Some(window) = windows::get(app, label) {
-            reveal(app, &window);
-        }
+    if let Some(window) = windows::get(app, MAIN) {
+        reveal(app, &window);
     }
     let measuring = lock(&state.pressed_at).is_some();
     measuring

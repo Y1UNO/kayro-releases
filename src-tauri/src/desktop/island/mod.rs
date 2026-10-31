@@ -12,6 +12,7 @@
 mod backdrop;
 mod drive;
 pub mod effects;
+mod presence;
 pub mod physics;
 mod raster;
 mod regions;
@@ -31,6 +32,7 @@ use crate::config::ui_state::{Placement, Rect};
 use crate::config::ConfigState;
 use crate::platform::island::{self as win, Region};
 pub use backdrop::{backdrop_at, backdrop_now};
+pub use presence::{on_foreground, page_ready, quiet, sync};
 use physics::V2;
 use regions::physical;
 pub use regions::{moving_region, open_region, rest_region};
@@ -337,48 +339,8 @@ fn settled<R: Runtime>(app: &AppHandle<R>, docked: bool, slot: Slot) {
         tracing::warn!(error = %e, "could not remember where the island is");
     }
     if let Some(window) = windows::get(app, WIDGET) {
-        super::placement::save_placement(app, &window, crate::config::schema::DisplayMode::Widget);
+        super::placement::save_island_placement(app, &window);
     }
-}
-
-/// From the foreground hook: a program in full screen in front of the island's screen hides it;
-/// it comes back (without taking the focus) once that program is no longer in front.
-pub fn on_foreground<R: Runtime>(app: &AppHandle<R>) {
-    let Some(window) = windows::get(app, WIDGET) else {
-        DUCKED.store(false, Ordering::SeqCst);
-        return;
-    };
-    let Ok(h) = window.hwnd() else { return };
-    let raw = h.0 as isize;
-    let cover = win::full_screen_in_front(raw, std::process::id());
-    let ducked = DUCKED.load(Ordering::SeqCst);
-    let tell = |visible: bool| {
-        let shown = super::WindowVisibility {
-            visible,
-            bench: false,
-        };
-        crate::ipc::notify(shown.emit(app));
-    };
-    if cover && !ducked && window.is_visible().unwrap_or(false) {
-        DUCKED.store(true, Ordering::SeqCst);
-        win::show_quietly(raw, false);
-        effects::hide();
-        crate::media::beat(app, false);
-        // The page stops its loops (veille douce), as when the hub hides.
-        tell(false);
-        tracing::info!("island hidden: a program in full screen is in front");
-    } else if !cover && ducked {
-        DUCKED.store(false, Ordering::SeqCst);
-        win::show_quietly(raw, true);
-        crate::platform::own_window::set_tool_window(raw);
-        tell(true);
-        tracing::info!("island back");
-    }
-}
-
-/// The hub was shown or hidden on purpose: a hidden island is no longer waiting to come back.
-pub fn forget_duck() {
-    DUCKED.store(false, Ordering::SeqCst);
 }
 
 #[cfg(test)]

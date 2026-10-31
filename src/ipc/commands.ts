@@ -137,7 +137,10 @@ export const desktopIpc = {
   launchCover: (on: boolean, hide: boolean): Promise<Outcome<void>> =>
     plain(commands.launchCover(on, hide)),
   /** « Après l'intro : Kysland », already in the widget mode: the intro's window gives way to it. */
-  startupIsland: (): Promise<Outcome<void>> => plain(commands.startupIsland()),
+  /** « Après l'intro »: the intro's window goes; the island comes (`island`) or nothing. */
+  introDone: (island: boolean): Promise<Outcome<void>> => plain(commands.introDone(island)),
+  /** Shows Kayro (the island's « Passer en immersif »). */
+  show: (): Promise<Outcome<void>> => plain(commands.windowShow()),
   /** Step 20 (Kysland): a press on the island; the core drives the gesture from there. */
   islandGrab: (calm: boolean): Promise<Outcome<void>> => plain(commands.islandGrab(calm)),
   /** Step 20: where the island is (on the top edge or floating, and in which corner). */

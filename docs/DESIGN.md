@@ -336,14 +336,16 @@ petit (0,42 s, vers le haut seulement) toutes les 2,6 s ; titre Cormorant 38 px 
 éclats rouges et verts ; bouton noir cerné de violet, rouge et déchiré au survol. **Réduire** : aucun éclat, aucune
 déchirure.
 
-### 4.6 Passages entre modes en fondu, voile natif (`src/features/modes/passage.ts`, `src-tauri/src/desktop/passage.rs`, `veil_play.rs`)
+### 4.6 Passages entre modes en fondu, écran de réveil (`src/features/modes/passage.ts`, `src-tauri/src/desktop/passage.rs`, `wake.rs`)
 Fenêtres opaques ; un passage efface la page (**micro 140 ms**, `sortie`), le cœur change la fenêtre pendant le noir
 (noir à 0,004, attente de la page 600 ms au plus), puis la page revient (**moyen 360 ms**, `vive`) et les cartes
 remontent en cascade (45 ms, +14 px, 12 au plus) ; filet : la page revient seule après 2,5 s.
-Entre `main` et le widget, un **voile natif** Win32 (`platform/veil.rs`, une couleur unie, pas de WebView) fait la
-jonction : `main` → widget, voile de la couleur de `main` qui s'efface en 0,7 × court = **168 ms** ; widget → `main`,
-voile qui monte en court = **240 ms**. Bouton ↗ « Ouvrir en fenêtre » dans le widget.
-- **Éco**, **réduire**, niveau 2 coupé : changement direct, sans voile.
+Depuis le 2026-10-31, plus de mode Widget : Kysland est à l'écran dès que Kayro est fermé et part quand il s'ouvre
+(sans voile). Le **voile natif** Win32 (`platform/veil.rs`, une couleur unie, pas de WebView) sert d'**écran de
+réveil** : démarré avec Windows sur l'intro ou l'immersif, l'écran passe au noir de `main` (#06060C) avec « Kayro »
+(1/14 de la hauteur) et « se réveille… » (1/60), puis s'efface en **280 ms** (ease-in-out) une fois Kayro peint ;
+il part de toute façon après 20 s.
+- **Éco**, **réduire**, niveau 2 coupé : passage direct ; l'écran de réveil reste (un fondu d'opacité seul).
 
 ### 4.7 Flottaison (`src/features/home/float/`, `fanFloat.ts`, jetons `FLOAT_LEVELS`, `FLOAT_RHYTHM`)
 Un sinus par carte (période × 0,90–1,07, départs décalés de 0,6–0,7 s), bascule alternée ; ombre au sol dans le moteur

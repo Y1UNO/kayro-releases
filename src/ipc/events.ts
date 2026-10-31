@@ -1,4 +1,5 @@
 import type { UnlistenFn } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   events,
   type AppArt,
@@ -111,11 +112,20 @@ export function onThemesChanged(handler: (themes: ThemeFile[]) => void): Promise
   return listenTo(events.themesChanged.listen, handler);
 }
 
-/** The hub appeared or went away; `bench` asks the page to report when it painted. */
+/**
+ * This window (Kayro's, or the island's) appeared or went away; `bench` asks the page to report
+ * when it painted. Only this window's: the island comes when Kayro goes, and the other way round.
+ */
 export function onWindowVisibility(
   handler: (e: { visible: boolean; bench: boolean }) => void,
 ): Promise<Unlisten> {
-  return listenTo(events.windowVisibility.listen, handler);
+  let own: ReturnType<typeof events.windowVisibility>;
+  try {
+    own = events.windowVisibility(getCurrentWebviewWindow());
+  } catch {
+    return Promise.resolve(noop); // not running inside Tauri (plain browser, tests)
+  }
+  return listenTo(own.listen, handler);
 }
 
 /** Step 20 (Kysland): one frame of a gesture on the island (stretch, lean, magnet). */

@@ -19,6 +19,7 @@ const SETTINGS: Settings = {
   language: "fr",
   atmosphereIntensity: 1,
   displayMode: "immersive",
+  islandAlways: true,
   hideOnEscape: true,
   hideOnBlur: false,
   economyMode: false,

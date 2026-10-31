@@ -88,10 +88,12 @@ export const commands = {
 	/**  Step 20 (Kysland): a press on the island starts its gesture (`calm`: « reduce motion »). */
 	islandGrab: (calm: boolean) => __TAURI_INVOKE<void>("island_grab", { calm }),
 	/**
-	 *  « Après l'intro : Kysland », the widget mode already chosen: the intro's window goes, the
-	 *  island comes (async: windows are destroyed and built).
+	 *  « Après l'intro »: Kysland (`island`) or « Caché »: the intro's window goes (async: a window
+	 *  may be built or destroyed).
 	 */
-	startupIsland: () => __TAURI_INVOKE<void>("startup_island"),
+	introDone: (island: boolean) => __TAURI_INVOKE<void>("intro_done", { island }),
+	/**  Shows Kayro (the island's « Passer en immersif »). */
+	windowShow: () => __TAURI_INVOKE<void>("window_show"),
 	/**  Step 20: where the island is (the page's first frame). */
 	islandState: () => __TAURI_INVOKE<IslandState>("island_state"),
 	/**  Step 20: the page's effects are over (the window is cut to the island again). */
@@ -141,7 +143,10 @@ export const commands = {
 	hotkeysGet: () => __TAURI_INVOKE<HotkeysReport>("hotkeys_get"),
 	/**  The scene a shortcut asked to confirm, if the page was not there to hear the event. */
 	sceneHotkeyTake: () => __TAURI_INVOKE<string | null>("scene_hotkey_take"),
-	/**  Whether Windows starts the hub at login (the Run key is the source of truth). */
+	/**
+	 *  Whether Windows starts the hub at login: its logon task (2026-10-31), or the `Run` key an
+	 *  older version wrote (moved to a task at the next start, `autostart_follow`).
+	 */
 	autostartGet: () => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_get")),
 	autostartSet: (enabled: boolean) => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_set", { enabled })),
 	/**
@@ -479,10 +484,25 @@ export type DetectedApp = {
 export type Direction = "up" | "down" | "left" | "right" | "none";
 
 /**
- *  How the hub is shown: a borderless window the size of the chosen screen, a normal window,
- *  or a small bar at the top of the screen (ARCHITECTURE.md §4).
+ *  How the hub is shown: a borderless window the size of the chosen screen, or a normal window
+ *  (ARCHITECTURE.md §4). The widget mode went on 2026-10-31: the island (Kysland) is there
+ *  whenever Kayro is not (`island_always`), so an older file's `widget` reads as immersive.
  */
-export type DisplayMode = "immersive" | "window" | "widget";
+export type DisplayMode = DisplayMode_Serialize | DisplayMode_Deserialize;
+
+/**
+ *  How the hub is shown: a borderless window the size of the chosen screen, or a normal window
+ *  (ARCHITECTURE.md §4). The widget mode went on 2026-10-31: the island (Kysland) is there
+ *  whenever Kayro is not (`island_always`), so an older file's `widget` reads as immersive.
+ */
+export type DisplayMode_Deserialize = "immersive" | "widget" | "window";
+
+/**
+ *  How the hub is shown: a borderless window the size of the chosen screen, or a normal window
+ *  (ARCHITECTURE.md §4). The widget mode went on 2026-10-31: the island (Kysland) is there
+ *  whenever Kayro is not (`island_always`), so an older file's `widget` reads as immersive.
+ */
+export type DisplayMode_Serialize = "immersive" | "window";
 
 /**  « Élasticité du widget »: overshoot of its springs. */
 export type Elasticity = "soft" | "normal" | "strong";
@@ -979,7 +999,8 @@ export type SettingsPatch_Deserialize = {
 	hotkey?: string | null,
 	language?: string | null,
 	atmosphereIntensity?: number | null,
-	displayMode?: DisplayMode | null,
+	displayMode?: DisplayMode_Deserialize | null,
+	islandAlways?: boolean | null,
 	hideOnEscape?: boolean | null,
 	hideOnBlur?: boolean | null,
 	economyMode?: boolean | null,
@@ -1023,7 +1044,8 @@ export type SettingsPatch_Serialize = {
 	hotkey: string | null,
 	language: string | null,
 	atmosphereIntensity: number | null,
-	displayMode: DisplayMode | null,
+	displayMode: DisplayMode_Serialize | null,
+	islandAlways: boolean | null,
 	hideOnEscape: boolean | null,
 	hideOnBlur: boolean | null,
 	economyMode: boolean | null,
@@ -1068,7 +1090,9 @@ export type Settings_Deserialize = {
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
-	displayMode: DisplayMode,
+	displayMode: DisplayMode_Deserialize,
+	/**  « Kysland toujours à l'écran » (Raccourcis clavier): the island shows whenever Kayro is not. */
+	islandAlways: boolean,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */
@@ -1128,7 +1152,9 @@ export type Settings_Serialize = {
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
-	displayMode: DisplayMode,
+	displayMode: DisplayMode_Serialize,
+	/**  « Kysland toujours à l'écran » (Raccourcis clavier): the island shows whenever Kayro is not. */
+	islandAlways: boolean,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */

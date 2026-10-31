@@ -34,6 +34,7 @@ const SETTINGS: Settings = {
   hotkey: "Ctrl+Alt+H",
   language: "fr",
   displayMode: "immersive",
+  islandAlways: true,
   hideOnEscape: true,
   hideOnBlur: false,
   economyMode: false,

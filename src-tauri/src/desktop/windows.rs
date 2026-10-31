@@ -1,5 +1,5 @@
 //! Building and configuring Kayro's two windows. `main` serves the immersive and the normal
-//! modes (same window, reconfigured); `widget` is a transparent window of its own.
+//! modes (same window, reconfigured); `widget` is the island's transparent window (Kysland).
 
 use tauri::window::Color;
 use tauri::{
@@ -18,23 +18,13 @@ pub const WIDGET: &str = "widget";
 /// `--bg-bottom` is, the colour the opening fades from (round 5; it was the old default's purple).
 const BACKGROUND: Color = Color(6, 6, 12, 255);
 
-pub fn label_for(mode: DisplayMode) -> &'static str {
-    match mode {
-        DisplayMode::Widget => WIDGET,
-        DisplayMode::Immersive | DisplayMode::Window => MAIN,
-    }
-}
-
 pub fn get<R: Runtime>(app: &AppHandle<R>, label: &str) -> Option<WebviewWindow<R>> {
     app.get_webview_window(label)
 }
 
-/// The window currently on screen, if any.
+/// Kayro's window when it is on screen (the island is not counted: it is there when Kayro is not).
 pub fn visible<R: Runtime>(app: &AppHandle<R>) -> Option<WebviewWindow<R>> {
-    [MAIN, WIDGET]
-        .into_iter()
-        .filter_map(|label| get(app, label))
-        .find(|w| w.is_visible().unwrap_or(false) && !w.is_minimized().unwrap_or(false))
+    get(app, MAIN).filter(|w| w.is_visible().unwrap_or(false) && !w.is_minimized().unwrap_or(false))
 }
 
 pub fn screens<R: Runtime>(app: &AppHandle<R>) -> Vec<Screen> {
@@ -228,11 +218,10 @@ pub fn create_widget<R: Runtime>(
     app: &AppHandle<R>,
     screen: &Screen,
     saved: &Placement,
-    entering: bool,
 ) -> tauri::Result<WebviewWindow<R>> {
     use crate::config::ConfigState;
     use tauri::Manager;
-    let window = WebviewWindowBuilder::new(app, WIDGET, page("w=widget", entering))
+    let window = WebviewWindowBuilder::new(app, WIDGET, page("w=widget", false))
         .title(&app.package_info().name)
         .visible(false)
         .decorations(false)

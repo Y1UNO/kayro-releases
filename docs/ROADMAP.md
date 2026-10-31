@@ -220,6 +220,20 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   le logo puis la cinématique) · Immersif · Kysland (passe en mode widget) · Caché ; « Après l'intro » : Immersif ·
   Kysland · Caché. `startupOpen` / `startupAfter` remplacent `startupHome` (migration réglages v2 → v3 : écran
   d'accueil → Intro, discret → Caché). Vérifié dans l'exe avec un `APPDATA` de test (7 cas, départ `--silent`).
+- [x] **L'île toujours là, réveil rapide (0.20.2, 2026-10-31)** — signalé après la 0.20.1 :
+  - Au redémarrage, Kayro ne s'ouvrait **pas** (une invite de commandes) : la clé `Run` lançait
+    `target\debug\Kayro.exe` (0.18.1, avec console), trop vieux pour les réglages v3 qu'il a mis de côté
+    (restaurés). Une version de développement n'inscrit plus jamais Kayro au démarrage.
+  - « Démarrer avec Windows » passe par une **tâche planifiée à l'ouverture de session** (sans droits admin) au
+    lieu de la clé `Run`, que Windows lit en dernier (mesuré : Kayro parti 24 s et 57 s après la connexion).
+    Une ancienne entrée `Run` devient la tâche au lancement suivant ; une tâche qui vise un autre exe est repointée.
+  - **Écran de réveil** : sur l'intro ou l'immersif, l'écran passe tout de suite au noir avec « Kayro · se réveille… »
+    (voile natif, avant la page), qui s'efface quand Kayro est peint.
+  - **Plus de mode Widget** : Kysland est là dès que Kayro est fermé (« Kysland toujours à l'écran », Général, activé
+    par défaut), part quand il s'ouvre ; le raccourci ouvre ou ferme Kayro. « Caché » au démarrage : rien, l'île non
+    plus, jusqu'à la première ouverture. Un ancien `displayMode: widget` se lit comme immersif.
+  - Limites : gain de la tâche non mesuré (il faut redémarrer le PC) ; la désinstallation laisse la tâche (elle
+    vise alors un exe absent et ne fait rien) — couper « Démarrer avec Windows » avant de désinstaller.
 - [ ] CPU au repos encore au-dessus de 1 % : éventail, carrousel et mode fenêtre (2–3,7 %), musique de l'île (1,3 %).
 - [ ] CPU au repos : carrousel avec flottaison « Visible » 3,2–3,3 % en Élevée (cible CLAUDE.md < 1 %).
 - [ ] Mesures non faites à l'étape 13 : 60 Hz, Équilibré et Ultra, repli CSS (ouverture, moteur coupé), replis

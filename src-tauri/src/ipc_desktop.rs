@@ -6,7 +6,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri::{AppHandle, Runtime, State, WebviewWindow};
-use tauri_plugin_autostart::ManagerExt;
 use tauri_specta::Event;
 
 use crate::config::schema::SettingsPatch;
@@ -131,12 +130,19 @@ pub fn passage_faded<R: Runtime>(
     crate::desktop::passage::faded(&app, id, veil);
 }
 
-/// « Après l'intro : Kysland », the widget mode already chosen: the intro's window goes, the
-/// island comes (async: windows are destroyed and built).
+/// « Après l'intro »: Kysland (`island`) or « Caché »: the intro's window goes (async: a window
+/// may be built or destroyed).
 #[tauri::command]
 #[specta::specta]
-pub async fn startup_island<R: Runtime>(app: AppHandle<R>) {
-    crate::desktop::island_after_intro(&app);
+pub async fn intro_done<R: Runtime>(app: AppHandle<R>, island: bool) {
+    crate::desktop::intro_done(&app, island);
+}
+
+/// Shows Kayro (the island's « Passer en immersif »).
+#[tauri::command]
+#[specta::specta]
+pub async fn window_show<R: Runtime>(app: AppHandle<R>) {
+    crate::desktop::show(&app);
 }
 
 /// Step 20 (Kysland): a press on the island starts its gesture (`calm`: « reduce motion »).
@@ -294,32 +300,6 @@ pub fn hotkeys_get(state: State<'_, hotkeys::HotkeyState>) -> HotkeysReport {
 #[specta::specta]
 pub fn scene_hotkey_take<R: Runtime>(app: AppHandle<R>) -> Option<String> {
     crate::desktop::take_pending_scene(&app)
-}
-
-/// Whether Windows starts the hub at login (the Run key is the source of truth).
-#[tauri::command]
-#[specta::specta]
-pub fn autostart_get<R: Runtime>(app: AppHandle<R>) -> Result<bool, AppError> {
-    app.autolaunch()
-        .is_enabled()
-        .map_err(|e| AppError::new(ErrorCode::Internal, e.to_string()))
-}
-
-#[tauri::command]
-#[specta::specta]
-pub fn autostart_set<R: Runtime>(app: AppHandle<R>, enabled: bool) -> Result<bool, AppError> {
-    let launch = app.autolaunch();
-    let result = if enabled {
-        launch.enable()
-    } else {
-        launch.disable()
-    };
-    result.map_err(|e| AppError::new(ErrorCode::Internal, e.to_string()))?;
-    // Off: the registry as before the first enable. On (step 19): an « off » mark left by the
-    // Task Manager would keep Windows from starting it.
-    crate::platform::startup::forget_startup_approval(&app.package_info().name);
-    tracing::info!(enabled, "start with Windows changed");
-    autostart_get(app)
 }
 
 /// « Exporter les logs »: zips the log folder into the exports folder, selects it in Explorer

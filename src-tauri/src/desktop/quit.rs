@@ -12,10 +12,9 @@ use std::time::Duration;
 
 use tauri::{AppHandle, Runtime};
 
-use super::windows::{self, WIDGET};
+use super::windows;
 use super::{save_placement, settings};
 use crate::config::atomic::WRITES;
-use crate::config::schema::DisplayMode;
 
 /// How long the event loop has to end by itself after « Quitter ».
 const GRACE: Duration = Duration::from_secs(3);
@@ -34,12 +33,7 @@ fn begin_leaving(flag: &AtomicBool) -> bool {
 /// `GRACE` if the loop did not.
 pub fn quit<R: Runtime>(app: &AppHandle<R>) {
     if let Some(w) = windows::visible(app) {
-        let mode = if w.label() == WIDGET {
-            DisplayMode::Widget
-        } else {
-            settings(app).display_mode
-        };
-        save_placement(app, &w, mode);
+        save_placement(app, &w, settings(app).display_mode);
     }
     tracing::info!("quit: asking the event loop to end");
     app.exit(0);

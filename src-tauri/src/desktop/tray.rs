@@ -19,10 +19,9 @@ const MODE: &str = "Mode d'affichage";
 const SCENES: &str = "Scènes";
 const NO_SCENES: &str = "Aucune scène";
 const QUIT: &str = "Quitter";
-const MODES: [(DisplayMode, &str, &str); 3] = [
+const MODES: [(DisplayMode, &str, &str); 2] = [
     (DisplayMode::Immersive, "mode:immersive", "Immersif"),
     (DisplayMode::Window, "mode:window", "Fenêtre"),
-    (DisplayMode::Widget, "mode:widget", "Widget"),
 ];
 
 /// Light taskbar → black glyph; dark taskbar → white glyph.

@@ -123,7 +123,7 @@ export function VisualSection() {
         help={t("settings.visual.launch.help")}
         value={settings.displayMode}
         onChange={(displayMode) => set({ displayMode })}
-        options={(["immersive", "window", "widget"] as const).map((m) => ({
+        options={(["immersive", "window"] as const).map((m) => ({
           value: m,
           label: t(`home.modes.${m}`),
         }))}

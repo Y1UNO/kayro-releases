@@ -135,6 +135,7 @@ export default function HomeDev() {
         language: "fr",
         atmosphereIntensity: Number(params.get("intensity")) || 1,
         displayMode: "immersive",
+        islandAlways: true,
         hideOnEscape: true,
         hideOnBlur: false,
         economyMode: false,

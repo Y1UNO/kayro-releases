@@ -181,3 +181,14 @@ fn the_start_up_choices_follow_the_old_home_screen_setting() {
         (StartupOpen::Island, StartupAfter::Hidden)
     );
 }
+
+#[test]
+fn the_old_widget_mode_reads_as_immersive_with_the_island_always_there() {
+    use super::schema::DisplayMode;
+    // 2026-10-31: no more widget mode; the island shows whenever Kayro is not (on by default).
+    let (_d, old) = load_settings(r#"{"schemaVersion":3,"displayMode":"widget"}"#);
+    assert_eq!(old.display_mode, DisplayMode::Immersive);
+    assert!(old.island_always);
+    let (_d, off) = load_settings(r#"{"schemaVersion":3,"islandAlways":false}"#);
+    assert!(!off.island_always);
+}

@@ -46,15 +46,16 @@ pub enum ColorMode {
     Light,
 }
 
-/// How the hub is shown: a borderless window the size of the chosen screen, a normal window,
-/// or a small bar at the top of the screen (ARCHITECTURE.md §4).
+/// How the hub is shown: a borderless window the size of the chosen screen, or a normal window
+/// (ARCHITECTURE.md §4). The widget mode went on 2026-10-31: the island (Kysland) is there
+/// whenever Kayro is not (`island_always`), so an older file's `widget` reads as immersive.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]
 pub enum DisplayMode {
     #[default]
+    #[serde(alias = "widget")]
     Immersive,
     Window,
-    Widget,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
@@ -69,6 +70,8 @@ pub struct Settings {
     /// Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »).
     pub atmosphere_intensity: f32,
     pub display_mode: DisplayMode,
+    /// « Kysland toujours à l'écran » (Raccourcis clavier): the island shows whenever Kayro is not.
+    pub island_always: bool,
     /// Escape hides the hub once there is nothing left to close.
     pub hide_on_escape: bool,
     /// Losing the focus hides the hub (the widget only folds its panel).
@@ -134,6 +137,7 @@ impl Default for Settings {
             language: "fr".into(),
             atmosphere_intensity: ATMOSPHERE_DEFAULT,
             display_mode: DisplayMode::default(),
+            island_always: true,
             hide_on_escape: true,
             hide_on_blur: false,
             economy_mode: false,
@@ -182,6 +186,7 @@ pub struct SettingsPatch {
     pub language: Option<String>,
     pub atmosphere_intensity: Option<f32>,
     pub display_mode: Option<DisplayMode>,
+    pub island_always: Option<bool>,
     pub hide_on_escape: Option<bool>,
     pub hide_on_blur: Option<bool>,
     pub economy_mode: Option<bool>,
@@ -234,6 +239,7 @@ impl Settings {
             language,
             atmosphere_intensity,
             display_mode,
+            island_always,
             hide_on_escape,
             hide_on_blur,
             economy_mode,

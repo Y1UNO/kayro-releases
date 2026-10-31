@@ -67,6 +67,7 @@ function seedStore(params: URLSearchParams): true {
       language: "fr",
       atmosphereIntensity: 1,
       displayMode: "immersive",
+      islandAlways: true,
       hideOnEscape: true,
       hideOnBlur: false,
       economyMode: false,
@@ -174,7 +175,6 @@ export default function MotionLab() {
                   options={[
                     { value: "immersive", label: "Immersif" },
                     { value: "window", label: "Fenêtre" },
-                    { value: "widget", label: "Widget" },
                   ]}
                 />
                 {toggles.map((on, i) => (

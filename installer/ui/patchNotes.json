@@ -193,5 +193,16 @@
       "Après l'intro, choisis ce qui reste : Kayro en immersif, Kysland, ou rien à l'écran.",
       "Kysland consomme beaucoup moins pendant la musique ; le clic droit s'ouvre toujours vers l'écran."
     ]
+  },
+  {
+    "version": "0.20.2",
+    "date": "31/10/2026",
+    "title": "L'île toujours là",
+    "points": [
+      "Kysland reste en haut de l'écran dès que Kayro est fermé ; le raccourci ouvre ou ferme Kayro. Réglage dans Général, à côté du raccourci.",
+      "Le mode Widget disparaît : l'île le remplace, Kayro s'ouvre en immersif ou en fenêtre.",
+      "Au démarrage de Windows, Kayro part beaucoup plus tôt, et son écran affiche tout de suite « Kayro se réveille » au lieu du bureau.",
+      "Corrigé : Kayro pouvait ne pas s'ouvrir au démarrage de Windows."
+    ]
   }
 ]

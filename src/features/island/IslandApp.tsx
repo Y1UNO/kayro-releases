@@ -22,6 +22,14 @@ import styles from "./Island.module.css";
 /** Search results shown in the opened island. */
 const HITS = 3;
 
+/** « Passer en immersif »: Kayro comes in immersive mode (the island goes by itself). */
+async function openImmersive(): Promise<void> {
+  const { settings, setSettings } = hubStore.getState();
+  if (settings && settings.displayMode !== "immersive")
+    await setSettings({ displayMode: "immersive" });
+  await desktopIpc.show();
+}
+
 /**
  * Step 20 (Kysland): the widget window's page, the island. At rest it shows the music playing
  * (a small turning record, bars on the beat), stretches when an app starts, and on hover shows
@@ -173,7 +181,7 @@ export function IslandApp() {
             onSelect={setSelected}
             onLaunch={launch}
             onMedia={(action) => void mediaIpc.control(action)}
-            onImmersive={() => void hubStore.getState().setSettings({ displayMode: "immersive" })}
+            onImmersive={() => void openImmersive()}
             onClose={close}
           />
         </div>

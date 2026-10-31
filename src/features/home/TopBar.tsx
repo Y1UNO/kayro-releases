@@ -18,7 +18,7 @@ import { PopMenu } from "./PopMenu";
 import { TopBarShell } from "./TopBarShell";
 import styles from "./TopBar.module.css";
 
-const MODES: readonly DisplayMode[] = ["immersive", "window", "widget"];
+const MODES: readonly DisplayMode[] = ["immersive", "window"];
 
 /**
  * The display mode (round 5, proposal 6): a rare action, one round button that opens a small menu
