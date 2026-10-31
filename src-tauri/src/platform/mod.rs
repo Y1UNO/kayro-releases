@@ -4,6 +4,10 @@
 
 pub mod com;
 pub mod icon;
+pub mod island;
+pub mod loopback;
+pub mod media;
+pub mod overlay;
 pub mod own_window;
 pub mod process;
 pub mod shell;

@@ -6,6 +6,10 @@ import {
   type AppError,
   type AppsFile,
   type DetectedApp,
+  type FxFrame,
+  type IslandState,
+  type MediaAction,
+  type NowPlaying,
   type NewApp,
   type Settings,
   type StartupApp,
@@ -137,6 +141,22 @@ export const desktopIpc = {
   /** The widget window follows the size of its content (logical pixels). */
   fitWidget: (width: number, height: number): Promise<Outcome<null>> =>
     checked(commands.widgetFit(width, height)),
+  /** Step 20 (Kysland): a press on the island; the core drives the gesture from there. */
+  islandGrab: (calm: boolean): Promise<Outcome<void>> => plain(commands.islandGrab(calm)),
+  /** Step 20: where the island is (on the top edge or floating, and in which corner). */
+  islandState: (): Promise<Outcome<IslandState>> => plain(commands.islandState()),
+  /** Step 20: the island opens or closes (its panel): the core gives its window that region. */
+  islandOpen: (open: boolean, calm: boolean): Promise<Outcome<void>> =>
+    plain(commands.islandOpen(open, calm)),
+  /** Step 20: the island's largest size at rest (logical), for its click region. */
+  islandFootprint: (width: number, height: number): Promise<Outcome<void>> =>
+    plain(commands.islandFootprint(width, height)),
+  /** Step 20: a held frame of the island's effects (the glitch's spikes on an edge). */
+  islandEffects: (frame: FxFrame): Promise<Outcome<void>> => plain(commands.islandEffects(frame)),
+  /** Step 20: the island's effects are over (the core cuts its window to it again). */
+  islandRest: (): Promise<Outcome<void>> => plain(commands.islandRest()),
+  /** Step 20: the lightness of the screen around the island (0–1), for its colours. */
+  islandBackdrop: (): Promise<Outcome<number | null>> => plain(commands.islandBackdrop()),
   /** Measurement only: the page painted after being shown. */
   painted: (): Promise<Outcome<void>> => plain(commands.windowPainted()),
   monitors: (): Promise<Outcome<MonitorInfo[]>> => plain(commands.monitorsList()),
@@ -152,8 +172,7 @@ export const desktopIpc = {
   setStartupApp: (id: string, enabled: boolean): Promise<Outcome<StartupApp[]>> =>
     checked(commands.startupAppSet(id, enabled)),
   /** Puts back every app Kayro switched off, exactly as it was. */
-  restoreStartupApps: (): Promise<Outcome<StartupApp[]>> =>
-    checked(commands.startupAppsRestore()),
+  restoreStartupApps: (): Promise<Outcome<StartupApp[]>> => checked(commands.startupAppsRestore()),
   setAutostart: (enabled: boolean): Promise<Outcome<boolean>> =>
     checked(commands.autostartSet(enabled)),
   /** Zips the logs into the exports folder and shows it in Explorer; returns the zip's path. */
@@ -218,4 +237,12 @@ export const updateIpc = {
   /** What the check at start found (it may end before the page listens). */
   pending: (): Promise<Outcome<UpdateInfo | null>> => plain(commands.updatePending()),
   install: (): Promise<Outcome<null>> => checked(commands.updateInstall()),
+};
+
+/** Step 20 (Kysland): the music playing on the PC (Windows' media controls, Spotify first). */
+export const mediaIpc = {
+  now: (): Promise<Outcome<NowPlaying | null>> => plain(commands.mediaNow()),
+  control: (action: MediaAction): Promise<Outcome<boolean>> => plain(commands.mediaControl(action)),
+  /** Follow the beat (the island's bars) while music plays and the island shows. */
+  beat: (on: boolean): Promise<Outcome<void>> => plain(commands.mediaBeat(on)),
 };

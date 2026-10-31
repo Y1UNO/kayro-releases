@@ -287,6 +287,55 @@ l'animation.
 - **Éco** : ni halo ni reflet, ressorts gardés. **Réduire** / niveau 2 coupé : direct. Réglages « Dépliage du widget »
   Déroulé (défaut) · Sobre (× 0,94 → 1 + fondu 240 ms, lignes à 30 ms, repli 180 ms) et « Élasticité du widget ».
 
+### 4.5 b Kysland, l'île (étape 20 : `src/features/island/`, `src-tauri/src/desktop/island/`)
+Remplace le widget (la barre et le panneau du 4.5 y reviendront avec les fonctions). Noir pur #000, sans verre.
+**Sur le bord haut** (sous la barre des tâches si elle est en haut) : au centre, encoche 184 × 32, coins du haut carrés,
+épaules concaves de 10 px ; **glissée** le long du bord (ressort 900 / 0,9, elle traîne en gelée, inclinaison ≤ 12°),
+elle se range au centre ou dans un **coin haut** : à ras du bord haut et du bord de côté (épaule le long du bord haut et
+le long du côté, seul le coin bas intérieur arrondi). Survol + 20 × 4 et filet de la teinte en bas. **Décrocher** : tirer
+vers le bas (résistance, l'encoche s'étire en goutte) jusqu'à 56 px, gouttes qui tombent. **Flottante** : capsule
+176 × 44, contour 1,5 px de la teinte, ombre courte (plus de lueur extérieure : coupée par la région de clic, elle faisait un voile carré) ; suit la main (ressort 1400 / 0,86),
+penche (± 7°) et s'étire (≤ 7 %) avec la vitesse. **Teinte** : bleu neige (#D6ECFF) sur un écran sombre, bleu encre
+(#1C3454) sur un écran clair, selon la clarté mesurée autour de l'île (une moyenne, rien n'est gardé). **Bord d'écran** :
+elle s'y écrase sans jamais déborder sur l'écran voisin. **Passage d'un écran à l'autre** (réglage « Passage de
+Kysland », aussi dans l'île ouverte) : **Forcer** (défaut) — poussée au-delà de 110 px, elle passe par le bord dans une
+gerbe de bulles pleines de la teinte qui la suivent en partie (sillage, ≈ 1,3 s, fondu avant le bord de la fenêtre) ;
+**Capri** (nom affiché ; valeur `glitch`) — aucune résistance, elle peut rester à cheval sur deux écrans, et le bord entre eux « glitche » autour
+d'elle : pics dentelés (rouge #FF1F4D pailleté de blanc, vert néon #3DFF7A, noir cerné de violet #8B3DFF), fantômes
+rouge et vert, tranches décalées, redessinés par images tenues (≈ 14 i/s), plus fort quand elle est centrée sur le bord.
+Les pics vivent **sur le bord** : une couche native transparente aux clics (`platform/overlay.rs`, sans WebView) les
+montre là où ils sont nés ; quand l'île s'en va, ils y restent et s'effacent (jamais coupés). Laissée à cheval, le bord
+glitche encore doucement (niveau 0,3) avec un sursaut toutes les 1,4–4 s. En « Glitch », l'accroche, le décrochage et le
+rangement dans un coin font aussi jaillir des pics du bord haut, vers le bas. **Sons** : ceux de Kysland, deux jeux
+(Forcer : ronds, en verre ; Glitch : numériques, hachés, secs) ; les styles et familles de Réglages › Sons ne les
+changent pas, seuls « Sons » et le volume s'appliquent. **Raccrocher** : lâchée à moins de 90 px du haut
+(aimant : son haut se carre déjà), elle rejoint la place la plus proche (gauche, centre, droite), ressort 520 / 0,7 avec
+un dépassement dans le bord, son « clac » et gouttes au contact. **Au repos** (`IslandRest.tsx`) : avec une musique, l'île s'élargit de 44 px — à gauche la pochette en petit disque
+qui tourne (7 s par tour, à l'arrêt en pause, trou central), à droite 5 barres de la couleur d'accent de l'album qui
+suivent le rythme (son de sortie écouté en direct, 5 bandes, ~30 i/s ; animation de secours si l'écoute est impossible) ;
+l'île « respire » sur les basses (± 3 %) ; au survol, une lueur intérieure aux couleurs de l'album (rien hors de l'île). Une app qui démarre l'élargit de
+130 px 2,4 s (logo et nom). Au survol, accrochée seulement, s'il y a des apps ouvertes, elle grandit de 26 px vers le bas : leurs logos
+apparaissent un à un (un clic met l'app au premier plan). Nouveau morceau : la pochette arrive en glissant, petit sursaut
+(un glitch en « Glitch »). **Ouverture** : un clic l'ouvre en panneau noir 420 × 180 (coins 28 px, à ras du bord et du
+coin où elle est accrochée ; flottante près d'un bord, elle se décale pour tenir à l'écran), ressort 300 / 0,76, contenu
+en fondu en fin de croissance : recherche (apps et scènes qui ne ferment rien, 3 résultats, flèches et Entrée), carte
+musique (pochette 84 px — clic : lecture/pause —, titre, artiste, ligne de progression, triangles aux coins arrondis),
+bouton rond « Passer en immersif » (4 flèches vers les coins) ; champ de recherche sans contour (il s'éclaircit). Ouverte, elle prend le clavier ; elle se referme sur Échap, en perdant le
+focus, ou 0,7 s après que la souris l'a quittée (sauf recherche en cours). Fenêtre fixe 720 × 420, région de clic découpée à
+l'île au repos, jamais de cadre de Windows. Aucune boucle au repos ; masquée devant un programme en plein écran sur son
+écran. **Éco** : sans bulles, gouttes ni glitch. **Réduire** : ressorts sans dépassement, sans bulles ni glitch (aucun
+clignotement).
+
+### 4.5 c Capri hors de l'île (étape 20 : `src/features/capri/capri.ts`)
+Le même dessin partout (pics : rouge #FF1F4D pailleté de blanc, vert #3DFF7A, noir #07070A cerné de violet #8B3DFF ;
+images tenues 70 ms). **Installeur** : sur les écrans d'accueil et de démarrage, un petit écran 260 × 170 au bord noir
+remplace l'éventail : l'île y sort du bord, joue la musique, éclate en Capri (3,6 s et 7 s), s'ouvre puis se referme
+(boucle 9 s) ; « Kysland » se déchire en rouge et vert pendant les éclats. **Page de mise à jour** et **Nouveautés**
+(`CapriSheet`) : carte noire 500 px, contour violet 1,5 px, éclat Capri de 0,9 s au bord haut à l'ouverture puis un
+petit (0,42 s, vers le haut seulement) toutes les 2,6 s ; titre Cormorant 38 px déchiré pendant les éclats ; puces en
+éclats rouges et verts ; bouton noir cerné de violet, rouge et déchiré au survol. **Réduire** : aucun éclat, aucune
+déchirure.
+
 ### 4.6 Passages entre modes en fondu, voile natif (`src/features/modes/passage.ts`, `src-tauri/src/desktop/passage.rs`, `veil_play.rs`)
 Fenêtres opaques ; un passage efface la page (**micro 140 ms**, `sortie`), le cœur change la fenêtre pendant le noir
 (noir à 0,004, attente de la page 600 ms au plus), puis la page revient (**moyen 360 ms**, `vive`) et les cartes

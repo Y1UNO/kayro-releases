@@ -7,6 +7,9 @@ import {
   type AppRunState,
   type DetectProgress,
   type HotkeysReport,
+  type IslandFrame,
+  type IslandMoment,
+  type NowPlaying,
   type ModePassage,
   type ProgressEvent,
   type Settings,
@@ -113,6 +116,26 @@ export function onWindowVisibility(
   handler: (e: { visible: boolean; bench: boolean }) => void,
 ): Promise<Unlisten> {
   return listenTo(events.windowVisibility.listen, handler);
+}
+
+/** Step 20 (Kysland): one frame of a gesture on the island (stretch, lean, magnet). */
+export function onIslandFrame(handler: (f: IslandFrame) => void): Promise<Unlisten> {
+  return listenTo(events.islandFrame.listen, handler);
+}
+
+/** Step 20: a moment of a gesture on the island (torn off, through an edge, docked…). */
+export function onIslandMoment(handler: (m: IslandMoment) => void): Promise<Unlisten> {
+  return listenTo(events.islandMoment.listen, handler);
+}
+
+/** Step 20: the music playing changed (null: nothing plays any more). */
+export function onMediaChanged(handler: (now: NowPlaying | null) => void): Promise<Unlisten> {
+  return listenTo(events.mediaChanged.listen, handler);
+}
+
+/** Step 20: the beat, five levels (0–1) from the bass up, about 30 times a second. */
+export function onMediaBeat(handler: (levels: number[]) => void): Promise<Unlisten> {
+  return listenTo(events.mediaBeat.listen, (levels) => handler(levels.map((l) => l ?? 0)));
 }
 
 /** A shortcut asks to confirm a scene that closes apps. */

@@ -1,14 +1,15 @@
 import { useMemo } from "react";
-import { Button, Dialog } from "../../design";
 import { t } from "../../i18n";
 import { errorText } from "../../ipc/errors";
 import { Message } from "../home/Message";
 import { installUpdate, notePoints, openUpdate, updateStore, useUpdate } from "./updateStore";
+import { CapriSheet } from "./CapriSheet";
 import styles from "./Update.module.css";
 
 /**
  * Step 18b: « Mise à jour disponible » — the version, its patch notes, then the download (a bar
- * filling in the logo's gradient) and the restart. Never forced: « Plus tard » closes it.
+ * filling) and the restart. Never forced: « Plus tard » closes it. Step 20: in the Capri look
+ * (CapriSheet).
  */
 export function UpdateDialog() {
   const open = useUpdate((s) => s.open);
@@ -17,58 +18,43 @@ export function UpdateDialog() {
   const progress = useUpdate((s) => s.progress);
   const error = useUpdate((s) => s.error);
   const busy = status === "downloading";
-  const points = notePoints(info?.notes);
-
-  return (
-    <Dialog
-      open={open && info !== null}
-      onClose={() => !busy && openUpdate(false)}
-      title={t("update.title")}
-    >
-      {info && (
-        <div className={styles.body}>
-          <p className={styles.versions}>
-            <span>{t("update.from", { version: info.current })}</span>
-            <span className={styles.arrow} aria-hidden="true" />
-            <span className={styles.next}>{t("update.to", { version: info.version })}</span>
-          </p>
-          {points.length > 0 && (
-            <ul className={styles.notes}>
-              {points.map((p) => (
-                <li key={p}>{p}</li>
-              ))}
-            </ul>
-          )}
-          {busy ? (
-            <div className={styles.progress} role="status">
-              <div className={styles.track}>
-                <span
-                  className={styles.fill}
-                  data-unknown={progress === null || undefined}
-                  style={{ transform: `scaleX(${progress ?? 0.35})` }}
-                />
-              </div>
-              <p className={styles.help}>{t("update.downloading")}</p>
-            </div>
-          ) : (
-            <>
-              <p className={styles.help}>{t("update.restart")}</p>
-              {status === "error" && error && (
-                <p className={styles.warn} role="alert">
-                  {errorText(error)}
-                </p>
-              )}
-              <div className={styles.actions}>
-                <Button onClick={() => openUpdate(false)}>{t("update.later")}</Button>
-                <Button variant="primary" onClick={() => void installUpdate()}>
-                  {t("update.install")}
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+  if (!info) return null;
+  const footer = busy ? (
+    <div className={styles.progress} role="status">
+      <div className={styles.track}>
+        <span
+          className={styles.fill}
+          data-unknown={progress === null || undefined}
+          style={{ transform: `scaleX(${progress ?? 0.35})` }}
+        />
+      </div>
+      <p className={styles.help}>{t("update.downloading")}</p>
+    </div>
+  ) : (
+    <>
+      <p className={styles.help}>{t("update.restart")}</p>
+      {status === "error" && error && (
+        <p className={styles.warn} role="alert">
+          {errorText(error)}
+        </p>
       )}
-    </Dialog>
+    </>
+  );
+  return (
+    <CapriSheet
+      open={open}
+      eyebrow={t("update.title")}
+      title={t("update.to", { version: info.version })}
+      sub={t("update.since", { version: info.current })}
+      points={notePoints(info.notes)}
+      primary={t("update.install")}
+      onPrimary={() => void installUpdate()}
+      secondary={t("update.later")}
+      onSecondary={() => openUpdate(false)}
+      onClose={() => openUpdate(false)}
+      busy={busy}
+      footer={footer}
+    />
   );
 }
 

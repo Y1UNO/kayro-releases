@@ -29,7 +29,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis ; **démarrage** : choix des apps lancées avec Windows à l'installation, démarrage express sur le logo (voir « Plus tard ») | 18 | F |
 | [x] 19b | **Scan intelligent et rangement fluide** (demandé le 2026-10-30) : un scan bien plus malin (filtres de bruit, doublons, lanceurs et outils à part, catégorie devinée, « Ignorer ») et plus simple à l'ajout d'apps ; changer une app de catégorie (et la réordonner) de façon fluide. Détails : « Plus tard » › Détection | 5, 19 | G |
 | [x] 19c | **Finitions ajout et rangement** (2026-10-30) : scan avancé du PC, logos ronds, cartes aux couleurs du logo, renommer sur la carte, clic droit rangé, fil physique | 19b | G |
-| [ ] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
+| [x] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
 
@@ -145,6 +145,9 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
   592, cargo 258 + 7 + 4. **Non mesuré** (temps jusqu'au logo, journalisé `since_start`) ; non vu dans l'exe ;
   assistant de premier lancement non fait (→ « Plus tard »). Apps du Store : leur propre interrupteur (`State` de
   leur `StartupTask`, comme Paramètres › Applications › Démarrage), même journal ; celles de Windows verrouillées.
+- **Étape 20 — Kysland, 2026-10-31** (branche `step-20-kysland`, 0.20.0) : le widget devient une île (`src/features/island/`, `src-tauri/src/desktop/island/`). Encoche noire collée au bord haut (centre ou coins), décrochage par traction, gestes pilotés par le cœur au rythme de la composition (`DwmFlush`), fenêtre fixe 720 × 420 découpée par région (les clics passent à côté), cadre Windows 11 coupé ; passage d'écran « Forcer » (bulles) ou « Glitch » (libre, pics sur une couche native transparente aux clics, `platform/overlay.rs`, rastériseur maison) ; teinte selon la clarté de l'écran (lecture GDI ponctuelle) ; musique via les contrôles multimédias de Windows (`media/`, Spotify d'abord) et rythme par écoute du son de sortie (WASAPI en boucle, 5 bandes, rien gardé) ; recherche au clavier (la fenêtre ne prend le focus qu'ouverte) ; sons propres (Forcer en notes, Glitch fabriqué échantillon par échantillon). 635 vitest, 302 tests Rust.
+  - **Capri** (0.20.0 aussi) : l'effet « Glitch » s'appelle Capri ; module partagé `src/features/capri/` ; aperçu animé de Kysland dans l'installeur ; mises à jour et « Nouveautés » (une fois par version, `localStorage`) sur une page Capri ; l'île annonce une mise à jour. La page de mise à jour Capri ne s'appliquera qu'à partir de la mise à jour suivante (la 0.19 affiche l'ancienne).
+  - **Non testé / non mesuré** : aucune mesure de perf (CPU pendant musique et glitch, fluidité du glisser) ; écrans à échelles différentes et empilés ; Windows 10. Les raccourcis de scène qui ferment des apps ne s'ouvrent pas en mode Widget (pas de confirmation dans l'île) ; l'ancien widget (`features/widget/`) n'est plus branché, ses réglages « Dépliage » et « Élasticité » ne servent plus.
 - **Étape 18b — Mises à jour, 2026-10-30** (versions 0.18.0 et 0.18.1, note `docs/MISES-A-JOUR.md`) :
   `tauri-plugin-updater` 2.14.0 ; versions publiées sur le dépôt **public** `Y1UNO/kayro-releases` (installeurs,
   signature, `latest.json` ; jamais le code) par `scripts/publish-release.ps1` (`gh`) ; clé privée hors du dépôt
@@ -240,7 +243,7 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   maison (patch notes affichées). Seule fonction réseau de Kayro : **désactivée par défaut et expliquée** (CLAUDE.md
   › Réseau), source unique (ex. les « releases » GitHub du projet), fichiers **signés** et vérifiés avant de lancer
   quoi que ce soit (plugin updater de Tauri ou équivalent, à vérifier à l'étape). Demander à l'utilisateur où héberger.
-- [ ] **Kysland** (« Kayro Island », 2026-10-30, étape 20) : le widget refait façon Dynamic Island d'Apple, version
+- [x] **Kysland** (« Kayro Island », 2026-10-30, étape 20) : le widget refait façon Dynamic Island d'Apple, version
   Windows. On le **décroche** d'un geste avec une certaine résistance (il faut tirer, effet ressort), on le balade où
   on veut sur l'écran ; posé **en haut**, il s'aimante et s'intègre en île (forme pilule centrée, s'étire pour
   afficher une info, se rétracte). Animations et sons propres ; garder la veille douce et la règle « jamais devant un

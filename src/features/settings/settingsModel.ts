@@ -36,6 +36,7 @@ export const VISUAL_DEFAULTS = {
   themeTransition: "wave",
   widgetUnroll: "unroll",
   widgetSpring: "normal",
+  islandPassage: "force",
   cardHover: "full",
   bokeh: true,
   particles: true,

@@ -170,5 +170,18 @@
     "points": [
       "Le fil des scènes est un peu élastique : il s'étire quand on tire, puis revient en douceur."
     ]
+  },
+  {
+    "version": "0.20.0",
+    "date": "31/10/2026",
+    "title": "Kysland",
+    "points": [
+      "Le widget devient Kysland, une île noire collée au haut de l'écran comme une encoche : au centre ou dans un coin.",
+      "Tire-la vers le bas pour la décrocher, promène-la, change d'écran (en forçant, ou avec l'effet Capri), repose-la en haut.",
+      "La musique en cours (Spotify…) : pochette en vinyle qui tourne, barres qui bougent au rythme, morceau précédent ou suivant.",
+      "Clique dessus : recherche (Entrée lance l'app), musique, passage en immersif. Elle s'étire quand une app démarre et montre tes apps ouvertes au survol.",
+      "Ses propres sons, et elle se cache devant un jeu en plein écran.",
+      "L'effet Capri : pics rouges pailletés, vert néon et noir cerné de violet, dans l'île, l'installeur et les mises à jour, qui s'ouvrent maintenant sur une page de nouveautés."
+    ]
   }
 ]

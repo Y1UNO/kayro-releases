@@ -163,6 +163,11 @@
           "unroll": "Déroulé",
           "sober": "Sobre"
         },
+        "islandPassage": {
+          "label": "Kysland : passage d’un écran à l’autre",
+          "force": "Forcer (bulles)",
+          "glitch": "Capri"
+        },
         "widgetSpring": {
           "label": "Élasticité du widget",
           "soft": "Douce",

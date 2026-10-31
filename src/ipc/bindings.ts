@@ -89,6 +89,46 @@ export const commands = {
 	windowPainted: () => __TAURI_INVOKE<void>("window_painted"),
 	/**  Resizes the widget window to its content, in logical pixels. */
 	widgetFit: (width: number | null, height: number | null) => typedError<null, AppError>(__TAURI_INVOKE("widget_fit", { width, height })),
+	/**  Step 20 (Kysland): a press on the island starts its gesture (`calm`: « reduce motion »). */
+	islandGrab: (calm: boolean) => __TAURI_INVOKE<void>("island_grab", { calm }),
+	/**  Step 20: where the island is (the page's first frame). */
+	islandState: () => __TAURI_INVOKE<IslandState>("island_state"),
+	/**  Step 20: the page's effects are over (the window is cut to the island again). */
+	islandRest: () => __TAURI_INVOKE<void>("island_rest"),
+	/**  Step 20: the page opens or closes the island (its panel); `calm`: « reduce motion ». */
+	islandOpen: (open: boolean, calm: boolean) => __TAURI_INVOKE<void>("island_open", { open, calm }),
+	/**
+	 *  Step 20: a held frame of the island's effects that its window must not cut (the glitch's
+	 *  spikes on an edge), shown by a click-through layer. Async: rasterised off the interface's
+	 *  thread.
+	 */
+	islandEffects: (frame: FxFrame) => __TAURI_INVOKE<void>("island_effects", { frame }),
+	/**  Step 20: the island's largest size at rest (logical), for its click region. */
+	islandFootprint: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("island_footprint", { width, height }),
+	/**  Step 20: the music playing (Spotify first), read from Windows; starts following the players. */
+	mediaNow: () => __TAURI_INVOKE<{
+	title: string,
+	artist: string,
+	/**  The player's app id (« Spotify.exe »…). */
+	player: string,
+	playing: boolean,
+	positionMs: number | null,
+	durationMs: number | null,
+	/**  When `position_ms` was read (ms since the Unix epoch, 0 unknown): the page moves it on. */
+	atMs: number | null,
+	/**  The cover as a data URL, and its dominant and accent colours (`#rrggbb`). */
+	cover: string | null,
+	colors: [string, string] | null,
+} | null>("media_now"),
+	/**  Step 20: previous, play/pause or next on the player shown. */
+	mediaControl: (action: MediaAction) => __TAURI_INVOKE<boolean>("media_control", { action }),
+	/**  Step 20: follow the beat (the island's bars) while music plays and the island shows. */
+	mediaBeat: (on: boolean) => __TAURI_INVOKE<void>("media_beat", { on }),
+	/**
+	 *  Step 20: the lightness of the screen around the island (0–1), for its colours. Async: one
+	 *  small read of the screen, never on the interface's thread.
+	 */
+	islandBackdrop: () => __TAURI_INVOKE<number | null>("island_backdrop"),
 	monitorsList: () => __TAURI_INVOKE<MonitorInfo[]>("monitors_list"),
 	/**  Picks the screen of the immersive mode (a `name` from `monitors_list`). */
 	monitorChoose: (name: string) => typedError<null, AppError>(__TAURI_INVOKE("monitor_choose", { name })),
@@ -190,7 +230,11 @@ export const events = {
 	deepProgress: makeEvent<DeepProgress>("deep-progress"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
+	islandFrame: makeEvent<IslandFrame>("island-frame"),
+	islandMoment: makeEvent<IslandMoment>("island-moment"),
 	launchLanded: makeEvent<LaunchLanded>("launch-landed"),
+	mediaBeat: makeEvent<MediaBeat>("media-beat"),
+	mediaChanged: makeEvent<MediaChanged>("media-changed"),
 	modePassage: makeEvent<ModePassage>("mode-passage"),
 	moodsChanged: makeEvent<MoodsChanged_Deserialize>("moods-changed"),
 	palettesChanged: makeEvent<PalettesChanged>("palettes-changed"),
@@ -470,6 +514,24 @@ export type FocusResult = "focused" |
 /**  Running, but no window could be brought forward (tray app, other privileges…). */
 "failed";
 
+/**  A held frame of the effects: its shapes, their opacity, the island window's scale. */
+export type FxFrame = {
+	shapes: FxShape[],
+	alpha: number | null,
+	scale: number | null,
+};
+
+/**
+ *  One shape of an effect: a polygon, desktop logical pixels (x, y pairs), its colours
+ *  (0xRRGGBB) and white specks (x, y pairs).
+ */
+export type FxShape = {
+	pts: (number | null)[],
+	fill: number,
+	stroke: number | null,
+	dots: (number | null)[],
+};
+
 export type HotkeyProblem = 
 /**  Not a combination the hub can register. */
 "invalid" | 
@@ -508,6 +570,63 @@ export type InspectReport = {
 	refused: Refused[],
 };
 
+/**  One frame of a gesture, for the page (logical pixels). */
+export type IslandFrame = {
+	holding: boolean,
+	vx: number | null,
+	vy: number | null,
+	pullX: number | null,
+	pullY: number | null,
+	tension: number | null,
+	near: number | null,
+	/**  -1 (left corner) … 1 (right corner). */
+	corner: number | null,
+	/**  The window's position (physical pixels) and scale: bubbles stay where they were born. */
+	x: number,
+	y: number,
+	scale: number | null,
+	/**  The island's screen, as insets of the window (logical): nothing of it is drawn past them. */
+	clip: [(number | null), (number | null), (number | null), (number | null)],
+	/**
+	 *  « Glitch »: the edge between two screens cutting through the island, in the window
+	 *  (logical): a vertical one's x, a horizontal one's y.
+	 */
+	seamX: number | null,
+	seamY: number | null,
+	/**  The lightness behind the island (0–1), when it was just measured. */
+	backdrop: number | null,
+};
+
+/**  A moment of a gesture; `dirX`/`dirY` for a crossing, `docked` and `corner` once at rest. */
+export type IslandMoment = {
+	kind: IslandMomentKind,
+	dirX: number | null,
+	dirY: number | null,
+	docked: boolean,
+	corner: number | null,
+};
+
+export type IslandMomentKind = "detached" | "crossed" | "docking" | "touched" | "snapped" | "dropped" | "tap" | "settled";
+
+/**
+ *  Step 20 (Kysland): how the floating island goes from one screen to another. « Forcer »: the
+ *  edge holds it until it is pushed through (bubbles); « Glitch »: no resistance, it may sit
+ *  across two screens, and the edge between them glitches around it (spikes).
+ */
+export type IslandPassage = "force" | "glitch";
+
+/**  Where the island is, for the page's first frame. */
+export type IslandState = {
+	docked: boolean,
+	corner: number | null,
+	/**
+	 *  Floating across two screens: the edge between them, in the window (logical), as in
+	 *  `IslandFrame` (the « Glitch » goes on from the first frame).
+	 */
+	seamX: number | null,
+	seamY: number | null,
+};
+
 /**  How to start an app. Exactly one of a closed set of kinds; each is validated on its own. */
 export type Launch = { kind: "exe"; path: string; args: string[]; cwd: string | null; elevated: boolean } | { kind: "lnk"; path: string } | 
 /**  Protocol URI of a known launcher (`steam://…`, `com.epicgames.launcher://…`). */
@@ -533,6 +652,14 @@ export type LaunchStyle =
 export type MatchRule = {
 	exe: string | null,
 };
+
+export type MediaAction = "previous" | "toggle" | "next";
+
+/**  The beat: five levels (0–1), bass to treble, about 30 times a second while asked for. */
+export type MediaBeat = (number | null)[];
+
+/**  The music changed (None: nothing plays any more). */
+export type MediaChanged = NowPlaying | null;
 
 /**  A step of a passage, for the page of window `label`. */
 export type ModePassage = {
@@ -641,6 +768,22 @@ export type NewApp = {
 	art: Art,
 	moodId: string | null,
 	favorite: boolean,
+};
+
+/**  The track the island shows. */
+export type NowPlaying = {
+	title: string,
+	artist: string,
+	/**  The player's app id (« Spotify.exe »…). */
+	player: string,
+	playing: boolean,
+	positionMs: number | null,
+	durationMs: number | null,
+	/**  When `position_ms` was read (ms since the Unix epoch, 0 unknown): the page moves it on. */
+	atMs: number | null,
+	/**  The cover as a data URL, and its dominant and accent colours (`#rrggbb`). */
+	cover: string | null,
+	colors: [string, string] | null,
 };
 
 /**
@@ -847,6 +990,7 @@ export type SettingsPatch_Deserialize = {
 	openingScreen?: OpeningScreen | null,
 	widgetUnroll?: WidgetUnroll | null,
 	widgetSpring?: Elasticity | null,
+	islandPassage?: IslandPassage | null,
 	cardHover?: CardHoverStyle | null,
 	bokeh?: boolean | null,
 	particles?: boolean | null,
@@ -888,6 +1032,7 @@ export type SettingsPatch_Serialize = {
 	openingScreen: OpeningScreen | null,
 	widgetUnroll: WidgetUnroll | null,
 	widgetSpring: Elasticity | null,
+	islandPassage: IslandPassage | null,
 	cardHover: CardHoverStyle | null,
 	bokeh: boolean | null,
 	particles: boolean | null,
@@ -934,6 +1079,8 @@ export type Settings_Deserialize = {
 	openingScreen: OpeningScreen,
 	widgetUnroll: WidgetUnroll,
 	widgetSpring: Elasticity,
+	/**  Step 20: « Passage de Kysland » (from one screen to another). */
+	islandPassage: IslandPassage,
 	cardHover: CardHoverStyle,
 	bokeh: boolean,
 	particles: boolean,
@@ -989,6 +1136,8 @@ export type Settings_Serialize = {
 	openingScreen: OpeningScreen,
 	widgetUnroll: WidgetUnroll,
 	widgetSpring: Elasticity,
+	/**  Step 20: « Passage de Kysland » (from one screen to another). */
+	islandPassage: IslandPassage,
 	cardHover: CardHoverStyle,
 	bokeh: boolean,
 	particles: boolean,

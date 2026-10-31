@@ -6,7 +6,17 @@ import { configureSounds, playSound, setSoundsVisible } from "./engine";
 import { SILENT, type SoundPrefs } from "./gate";
 
 export { playSound };
-export { previewSound, soundWave, stopSound, type PlayOptions } from "./engine";
+export {
+  playOwn,
+  playOwnSamples,
+  setOwnLoop,
+  startOwnLoop,
+  stopOwnLoop,
+  previewSound,
+  soundWave,
+  stopSound,
+  type PlayOptions,
+} from "./engine";
 export type { SoundEvent } from "./manifest";
 
 /** The sound choices of the settings (null: not read yet, silent). */

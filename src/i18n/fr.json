@@ -314,6 +314,26 @@
       }
     }
   },
+  "island": {
+    "label": "Île {app} : clique pour l’ouvrir, tire-la vers le bas pour la décrocher, fais-la glisser le long du bord jusqu’à un coin, pose-la en haut d’un écran pour l’y raccrocher",
+    "openLabel": "Île {app} ouverte",
+    "toImmersive": "Passer en immersif",
+    "update": "Mise à jour {version} prête",
+    "front": "Mettre {name} au premier plan",
+    "search": {
+      "label": "Rechercher une app ou une scène",
+      "placeholder": "Rechercher une app ou une scène…",
+      "none": "Rien trouvé.",
+      "scene": "Scène"
+    },
+    "music": {
+      "play": "Lecture",
+      "pause": "Pause",
+      "previous": "Morceau précédent",
+      "next": "Morceau suivant",
+      "none": "Rien en lecture pour l’instant."
+    }
+  },
   "widget": {
     "label": "Widget {app}",
     "bar": "Barre {app}",
@@ -342,6 +362,7 @@
     "title": "Mise à jour disponible",
     "from": "Kayro {version}",
     "to": "Kayro {version}",
+    "since": "Tu es en {version}. Tes réglages, tes apps et tes images restent.",
     "restart": "Kayro va se fermer, s'installer et redémarrer tout seul. Tes réglages, tes apps et tes images restent.",
     "install": "Installer et redémarrer",
     "later": "Plus tard",
@@ -351,5 +372,10 @@
     "checking": "Recherche en cours…",
     "upToDate": "Kayro est à jour (version {version}).",
     "found": "La version {version} est disponible."
+  },
+  "whatsNew": {
+    "eyebrow": "Nouveautés",
+    "title": "Kayro {version}",
+    "go": "C’est parti"
   }
 }

@@ -11,6 +11,7 @@ pub mod cover;
 mod express;
 pub mod geometry;
 pub mod hotkeys;
+pub mod island;
 mod modes;
 pub mod passage;
 mod placement;
@@ -200,6 +201,7 @@ fn reveal<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
     let state = app.state::<DesktopState>();
     state.want_visible.store(false, Ordering::SeqCst);
     *lock(&state.shown_at) = Some(Instant::now());
+    island::forget_duck();
     let _ = window.show();
     let _ = window.unminimize();
     let _ = window.set_focus();
@@ -239,6 +241,9 @@ fn finish_show<R: Runtime>(window: &WebviewWindow<R>) {
 
 /// Destroys a window that a mode change replaced.
 fn retire<R: Runtime>(app: &AppHandle<R>, label: &str) {
+    if label == WIDGET {
+        island::effects::hide();
+    }
     if let Some(old) = windows::get(app, label) {
         let mode = if label == WIDGET {
             DisplayMode::Widget
@@ -311,6 +316,9 @@ fn follow_opening_screen<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<
 
 /// Hides the hub. In economy mode the window is destroyed.
 pub fn hide<R: Runtime>(app: &AppHandle<R>) {
+    island::forget_duck();
+    island::effects::hide();
+    crate::media::beat(app, false);
     let state = app.state::<DesktopState>();
     state.want_visible.store(false, Ordering::SeqCst);
     let Some(window) = windows::visible(app) else {

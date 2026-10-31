@@ -70,6 +70,17 @@ pub enum WidgetUnroll {
     Sober,
 }
 
+/// Step 20 (Kysland): how the floating island goes from one screen to another. « Forcer »: the
+/// edge holds it until it is pushed through (bubbles); « Glitch »: no resistance, it may sit
+/// across two screens, and the edge between them glitches around it (spikes).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum IslandPassage {
+    #[default]
+    Force,
+    Glitch,
+}
+
 /// « Élasticité du widget »: overshoot of its springs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]

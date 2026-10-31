@@ -12,10 +12,10 @@ import { loadCustomThemes } from "./design/themes/custom";
 import { loadMoods } from "./features/moods/moodsStore";
 import { applyDefaultLogoColours } from "./brand";
 import { GameAtmosphere } from "./features/gameColors/GameAtmosphere";
-import { WidgetApp } from "./features/widget/WidgetApp";
+import { IslandApp } from "./features/island/IslandApp";
 import { startSounds } from "./sound";
 import { listenForUpdates } from "./features/update/updateStore";
-import { artStore, desktopStore, hubStore, sceneStore } from "./store";
+import { artStore, hubStore, sceneStore } from "./store";
 import "./index.css";
 import "./design/themeSwap.css";
 
@@ -60,7 +60,8 @@ const appRoot = createRoot(root);
 // Step 19c: never the browser's own menu (« Précédent », « Inspecter »…) on a right click: Kayro's
 // menus answer where they exist; text fields keep theirs (copy, paste).
 document.addEventListener("contextmenu", (e) => {
-  const field = e.target instanceof Element && e.target.closest("input, textarea, [contenteditable]");
+  const field =
+    e.target instanceof Element && e.target.closest("input, textarea, [contenteditable]");
   if (!field) e.preventDefault();
 });
 
@@ -70,7 +71,13 @@ if (new URLSearchParams(location.search).get("enter") === "1") {
   document.documentElement.dataset.entering = "";
   document.body.style.opacity = "0";
 }
-const DevPage = Catalogue ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev;
+// Step 20, the Capri patch notes page: development builds only.
+const CapriDev: ComponentType | null =
+  import.meta.env.DEV && location.pathname === "/dev/capri"
+    ? lazy(() => import("./dev/Capri"))
+    : null;
+
+const DevPage = Catalogue ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev ?? CapriDev;
 // Step 17b: the interface sounds follow the settings as soon as they are read.
 startSounds();
 // Step 18b: the check at start (if allowed) and the download's progress.
@@ -85,12 +92,12 @@ if (DevPage) {
     </StrictMode>,
   );
 } else if (new URLSearchParams(location.search).get("w") === "widget") {
-  // The widget window: a transparent page with no atmosphere, its own bar and panel.
+  // The widget window (step 20, Kysland): a transparent stage with the island (its search finds
+  // apps and scenes, its icons come from the art index).
   document.documentElement.dataset.window = "widget";
   void Promise.all([
     hubStore.getState().init(),
     sceneStore.getState().init(),
-    desktopStore.getState().init(),
     artStore.getState().init(),
     loadCustomThemes(),
   ]).finally(() => {
@@ -98,7 +105,7 @@ if (DevPage) {
     appRoot.render(
       <StrictMode>
         <ThemeProvider initialThemeId={hubStore.getState().settings?.themeId}>
-          <WidgetApp />
+          <IslandApp />
         </ThemeProvider>
       </StrictMode>,
     );

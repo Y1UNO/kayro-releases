@@ -19,6 +19,7 @@ mod legacy;
 mod logging;
 pub mod logs_export;
 pub mod paths;
+pub mod media;
 pub mod platform;
 pub mod procwatch;
 pub mod scenes;
@@ -119,7 +120,14 @@ pub fn run() {
                     use tauri_specta::Event;
                     ipc::notify(ipc::AppStateChanged(state).emit(&for_events));
                 },
-                desktop::cover::on_foreground,
+                {
+                    // Step 20: a program in full screen in front hides the island.
+                    let for_island = app.handle().clone();
+                    move |pid| {
+                        desktop::cover::on_foreground(pid);
+                        desktop::island::on_foreground(&for_island);
+                    }
+                },
             ));
             // 30/10: the launch cover tells the page when the game's window came to the front.
             let for_cover = app.handle().clone();

@@ -138,6 +138,79 @@ pub fn window_drag<R: Runtime>(window: WebviewWindow<R>) -> Result<(), AppError>
     Ok(window.start_dragging()?)
 }
 
+/// Step 20 (Kysland): a press on the island starts its gesture (`calm`: « reduce motion »).
+#[tauri::command]
+#[specta::specta]
+pub fn island_grab<R: Runtime>(app: AppHandle<R>, calm: bool) {
+    crate::desktop::island::grab(&app, calm);
+}
+
+/// Step 20: where the island is (the page's first frame).
+#[tauri::command]
+#[specta::specta]
+pub fn island_state<R: Runtime>(app: AppHandle<R>) -> crate::desktop::island::IslandState {
+    crate::desktop::island::state_now(&app)
+}
+
+/// Step 20: the page opens or closes the island (its panel); `calm`: « reduce motion ».
+#[tauri::command]
+#[specta::specta]
+pub fn island_open<R: Runtime>(app: AppHandle<R>, open: bool, calm: bool) {
+    crate::desktop::island::set_open(&app, open, calm);
+}
+
+/// Step 20: a held frame of the island's effects that its window must not cut (the glitch's
+/// spikes on an edge), shown by a click-through layer. Async: rasterised off the interface's
+/// thread.
+#[tauri::command]
+#[specta::specta]
+pub async fn island_effects<R: Runtime>(app: AppHandle<R>, frame: crate::desktop::island::effects::FxFrame) {
+    crate::desktop::island::effects::show(&app, &frame);
+}
+
+/// Step 20: the island's largest size at rest (logical), for its click region.
+#[tauri::command]
+#[specta::specta]
+pub fn island_footprint<R: Runtime>(app: AppHandle<R>, width: f64, height: f64) {
+    crate::desktop::island::set_footprint(&app, width, height);
+}
+
+/// Step 20: the music playing (Spotify first), read from Windows; starts following the players.
+#[tauri::command]
+#[specta::specta]
+pub async fn media_now<R: Runtime>(app: AppHandle<R>) -> Option<crate::media::NowPlaying> {
+    crate::media::now(&app)
+}
+
+/// Step 20: previous, play/pause or next on the player shown.
+#[tauri::command]
+#[specta::specta]
+pub async fn media_control<R: Runtime>(app: AppHandle<R>, action: crate::media::MediaAction) -> bool {
+    crate::media::control(&app, action)
+}
+
+/// Step 20: follow the beat (the island's bars) while music plays and the island shows.
+#[tauri::command]
+#[specta::specta]
+pub fn media_beat<R: Runtime>(app: AppHandle<R>, on: bool) {
+    crate::media::beat(&app, on);
+}
+
+/// Step 20: the page's effects are over (the window is cut to the island again).
+#[tauri::command]
+#[specta::specta]
+pub fn island_rest() {
+    crate::desktop::island::page_at_rest();
+}
+
+/// Step 20: the lightness of the screen around the island (0–1), for its colours. Async: one
+/// small read of the screen, never on the interface's thread.
+#[tauri::command]
+#[specta::specta]
+pub async fn island_backdrop<R: Runtime>(app: AppHandle<R>) -> Option<f64> {
+    crate::desktop::island::backdrop_now(&app)
+}
+
 /// The page tells it painted after being shown (measurement only, see `KAYRO_BENCH_SHOW`).
 #[tauri::command]
 #[specta::specta]

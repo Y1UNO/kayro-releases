@@ -123,3 +123,12 @@ Fichier JSON déclaratif, jamais de code :
 
 ## 9. Distribution (plus tard)
 Installeur Windows (NSIS via le bundler Tauri), WebView2 installé par l'installeur si absent. L'avertissement SmartScreen restera sans certificat de signature Windows (payant), à expliquer aux amis. Mises à jour automatiques : la clé de signature de l'updater Tauri est gratuite ; attention, un dépôt GitHub privé ne sert pas directement de source de mises à jour, prévoir un dépôt de releases public ou un autre hébergement le moment venu.
+
+## Musique en cours (étape 20, Kysland)
+`src-tauri/src/media/` : la musique que Windows connaît (ses contrôles multimédias : Spotify en priorité, navigateur,
+tout lecteur), lue en local (titre, artiste, pochette et ses 2 couleurs, lecture/pause, position) et 3 commandes
+(précédent, lecture/pause, suivant). Le **rythme** des barres vient du son de sortie de Windows écouté en direct
+(`platform/loopback.rs`, WASAPI en boucle de sortie, pas le micro) : seuls 5 niveaux sont calculés à la volée
+(`media/beat.rs`), rien n'est enregistré, gardé ni envoyé ; l'écoute ne tourne que pendant la lecture, île visible,
+et s'arrête quand Kayro se masque ou qu'un programme passe en plein écran devant elle.
+

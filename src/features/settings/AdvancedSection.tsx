@@ -15,6 +15,7 @@ import type {
   ColorPick,
   ColorTrigger,
   Elasticity,
+  IslandPassage,
   OpeningStyle,
   SettingsPatch,
   ThemeTransition,
@@ -179,6 +180,12 @@ export function AdvancedSection({ below }: Props) {
               value={settings.widgetSpring}
               onChange={(widgetSpring) => set({ widgetSpring })}
               options={opts("widgetSpring", ["soft", "normal", "strong"] as const)}
+            />
+            <ChoiceRow<IslandPassage>
+              label={t("settings.visual.advanced.islandPassage.label")}
+              value={settings.islandPassage}
+              onChange={(islandPassage) => set({ islandPassage })}
+              options={opts("islandPassage", ["force", "glitch"] as const)}
             />
             <ChoiceRow<CardHoverStyle>
               label={t("settings.visual.advanced.cardHover.label")}

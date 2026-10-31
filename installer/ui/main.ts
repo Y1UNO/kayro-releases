@@ -2,6 +2,7 @@ import "@fontsource-variable/cormorant-garamond";
 import "@fontsource-variable/manrope";
 import "./style.css";
 import "./startup.css";
+import "./kysland.css";
 import icon from "../../src-tauri/icons/128x128@2x.png";
 import {
   fakeBackend,
@@ -11,6 +12,7 @@ import {
   type StartupEntry,
 } from "./backend";
 import { t, type MessageKey } from "./messages";
+import { kyslandPreview, type Preview } from "./kysland";
 import { notesView, scrollToNewest } from "./notes";
 import { startupChoice, startupRows } from "./startup";
 
@@ -42,6 +44,8 @@ let installing = false;
 /** The screen of the « Installation » tab, and the tab shown. */
 let current: Screen | null = null;
 let tab: "install" | "notes" = "install";
+/** Step 20: Kysland, shown in a small screen on the first screens (welcome, startup). */
+let preview: Preview | null = null;
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -176,6 +180,7 @@ async function swap(nodes: Node[]) {
 async function show(s: Screen) {
   current = s;
   document.body.dataset.state = s.name;
+  preview?.setActive(s.name === "welcome" || s.name === "startup");
   if (tab !== "install") return; // shown when the user comes back to the tab
   await swap(build(s));
   panel.querySelector<HTMLElement>("[data-primary]")?.focus();
@@ -257,6 +262,8 @@ function setupChrome() {
 async function main() {
   setupChrome();
   info = await backend.info();
+  preview = kyslandPreview(info.version, reduced);
+  document.querySelector(".fan")?.append(preview.el);
   startupEntries = await backend.startupList().catch(() => []);
   if (!info.ready) return show({ name: "missing" });
   if (info.newerInstalled) return show({ name: "newer" });

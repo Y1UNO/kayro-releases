@@ -8,6 +8,8 @@ const fr = {
   notesEyebrow: "De l'idée à aujourd'hui",
   notesTitle: "Patch notes",
   notesNow: "Cette version",
+  kysName: "Kysland",
+  kysSub: "Nouveau dans la {version}",
   chip: "Version {version} · prétest",
   desktop: "Créer un raccourci sur le bureau",
   updateAuto: "Rechercher les mises à jour automatiquement",

@@ -94,7 +94,7 @@ extern "system" fn veil_proc(h: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LRESU
 
 /// `cell`'s value, or `register`'s when it gives one (non-zero): a failure is not kept, the next
 /// call tries again.
-fn kept_nonzero(cell: &OnceLock<u16>, register: impl FnOnce() -> u16) -> Option<u16> {
+pub(crate) fn kept_nonzero(cell: &OnceLock<u16>, register: impl FnOnce() -> u16) -> Option<u16> {
     if let Some(&atom) = cell.get() {
         return Some(atom);
     }

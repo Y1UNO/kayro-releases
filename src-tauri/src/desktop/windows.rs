@@ -221,16 +221,17 @@ pub fn create_main<R: Runtime>(
     Ok(window)
 }
 
-/// First size of the widget, replaced by the page's real size as soon as it has measured itself.
-const WIDGET_START_LOGICAL: (f64, f64) = (760.0, 80.0);
-
-/// A hidden transparent widget window at the top of `screen`.
+/// A hidden transparent widget window (step 20: the island, Kysland), docked at the top of
+/// `screen` or floating where it was left. It never takes the focus: a click on the island
+/// leaves the program in front where it is.
 pub fn create_widget<R: Runtime>(
     app: &AppHandle<R>,
     screen: &Screen,
     saved: &Placement,
     entering: bool,
 ) -> tauri::Result<WebviewWindow<R>> {
+    use crate::config::ConfigState;
+    use tauri::Manager;
     let window = WebviewWindowBuilder::new(app, WIDGET, page("w=widget", entering))
         .title(&app.package_info().name)
         .visible(false)
@@ -240,15 +241,16 @@ pub fn create_widget<R: Runtime>(
         .resizable(false)
         .always_on_top(true)
         .skip_taskbar(true)
+        .focusable(false)
         .build()?;
     if let Ok(hwnd) = window.hwnd() {
         own_window::set_tool_window(hwnd.0 as isize);
     }
-    let size = (
-        (WIDGET_START_LOGICAL.0 * screen.scale).round() as u32,
-        (WIDGET_START_LOGICAL.1 * screen.scale).round() as u32,
-    );
-    put(&window, geometry::widget_rect(saved, screen, size));
+    let ui = app.state::<ConfigState>().ui_state();
+    let all = screens(app);
+    let rect = super::island::start_rect(saved, ui.widget_docked, ui.widget_slot, screen, &all);
+    put(&window, rect);
+    super::island::shape(app, &window);
     Ok(window)
 }
 

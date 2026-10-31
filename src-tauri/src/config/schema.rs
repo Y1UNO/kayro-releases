@@ -18,8 +18,8 @@ use super::visual::{settings_v1_to_v2, DEFAULT_THEME};
 pub use super::sounds::SoundPack;
 use super::sounds::SOUND_VOLUME_DEFAULT;
 pub use super::visual::{
-    CardFloat, CardHoverStyle, Elasticity, MotionStyle, OpeningScreen, OpeningStyle,
-    ThemeTransition, WidgetUnroll,
+    CardFloat, CardHoverStyle, Elasticity, IslandPassage, MotionStyle, OpeningScreen,
+    OpeningStyle, ThemeTransition, WidgetUnroll,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
@@ -84,6 +84,8 @@ pub struct Settings {
     pub opening_screen: OpeningScreen,
     pub widget_unroll: WidgetUnroll,
     pub widget_spring: Elasticity,
+    /// Step 20: « Passage de Kysland » (from one screen to another).
+    pub island_passage: IslandPassage,
     pub card_hover: CardHoverStyle,
     pub bokeh: bool,
     pub particles: bool,
@@ -139,6 +141,7 @@ impl Default for Settings {
             theme_transition: ThemeTransition::default(),
             opening_screen: OpeningScreen::default(),
             widget_unroll: WidgetUnroll::default(),
+            island_passage: IslandPassage::default(),
             widget_spring: Elasticity::default(),
             card_hover: CardHoverStyle::default(),
             bokeh: true,
@@ -185,6 +188,7 @@ pub struct SettingsPatch {
     pub opening_screen: Option<OpeningScreen>,
     pub widget_unroll: Option<WidgetUnroll>,
     pub widget_spring: Option<Elasticity>,
+    pub island_passage: Option<IslandPassage>,
     pub card_hover: Option<CardHoverStyle>,
     pub bokeh: Option<bool>,
     pub particles: Option<bool>,
@@ -234,6 +238,7 @@ impl Settings {
             opening_screen,
             widget_unroll,
             widget_spring,
+            island_passage,
             card_hover,
             bokeh,
             particles,
