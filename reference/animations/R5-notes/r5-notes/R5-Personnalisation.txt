@@ -1,0 +1,35 @@
+KAYRO · AVANT LE GEL · PERSONNALISATION (Réglages › Visuel)   (VALIDÉ par l'utilisateur)
+
+PRINCIPE (demande de l'utilisateur) : un MAXIMUM de personnalisation là où plusieurs variantes sont intéressantes, mais sans effrayer.
+- En haut de Visuel : les réglages les plus utiles et les plus visibles.
+- En dessous : une section « Personnalisation avancée », repliée par défaut, qui s'ouvre en petit menu déroulant REBONDISSANT.
+- Un bouton « Revenir aux réglages par défaut » (avec confirmation douce, réversible tant que la fenêtre est ouverte).
+
+HAUT DE « VISUEL » (toujours visibles)
+- Qualité : Auto · Éco · Équilibré · Élevé · Ultra
+- Atmosphère : Douce · Normale · Forte
+- Mouvement : Complet · Vivant · Net (défaut Vivant)
+- Suivre Windows (« Effets d'animation ») : Oui · Non
+- Affichage au lancement : Immersif · Fenêtre · Widget
+
+« PERSONNALISATION AVANCÉE » (repliée)
+| Réglage                    | Choix                                              | Défaut        |
+| Flottaison des cartes      | Aucune · Légère · Visible · Marquée                | Visible       |
+| Ouverture au lancement     | Pulsation C · Classique (V1-A sans pulsation) · Aucune | Pulsation C |
+| Changement de thème        | Onde avec impact · Fondu · Direct                  | Onde          |
+| Dépliage du widget         | Déroulé · Sobre                                    | Déroulé       |
+| Élasticité du widget       | Douce · Normale · Forte                            | Normale       |
+| Survol des cartes          | Complet (filets + voile) · Simple · Aucun          | Complet       |
+| Bokeh du fond              | Oui · Non                                          | Oui           |
+| Particules                 | Oui · Non                                          | Oui           |
+| Lumière du curseur         | Oui · Non                                          | Oui           |
+| Couleurs du jeu            | Oui · Non                                          | Oui           |
+Les options de comparaison de l'atelier qui deviennent des réglages ici sortent de l'atelier (pas de doublon).
+Chaque réglage passe par les jetons ; nouveaux champs dans schema.rs avec valeur par défaut (anciens fichiers de réglages migrés sans erreur).
+
+LE MENU DÉROULANT REBONDISSANT
+- Ligne d'en-tête « Personnalisation avancée » + chevron, toute la ligne cliquable, focus clavier, aria-expanded.
+- Ouvrir : le contenu se déroule du haut vers le bas avec le ressort vertical du widget (normale, 5 %, 680 ms) et un léger ressort latéral (2,5 %, 560 ms) — même famille que le widget validé ; le chevron pivote de 180° sur le même ressort ; les lignes arrivent en cascade de 45 ms (−10 px + opacité 260 ms).
+- Fermer : 220 ms, courbe disparition, sans rebond ni cascade.
+- Le panneau des réglages défile si le contenu dépasse (hauteur bornée, corps défilant — proposition 3 de Fable).
+- Éco : même ouverture sans halo. Réduire les animations : ouverture directe.

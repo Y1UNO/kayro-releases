@@ -1,6 +1,29 @@
 //! Step 20 (Kysland): the springs of the island's gestures, and the rubber band of its pulls.
 
-use super::physics::V2;
+/// A 2D vector (physical pixels, or logical ones scaled by the screen's factor).
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct V2 {
+    pub x: f64,
+    pub y: f64,
+}
+
+impl V2 {
+    pub const fn new(x: f64, y: f64) -> Self {
+        Self { x, y }
+    }
+    pub fn len(self) -> f64 {
+        self.x.hypot(self.y)
+    }
+    pub fn minus(self, o: V2) -> V2 {
+        V2::new(self.x - o.x, self.y - o.y)
+    }
+    pub fn plus(self, o: V2) -> V2 {
+        V2::new(self.x + o.x, self.y + o.y)
+    }
+    pub fn scale(self, k: f64) -> V2 {
+        V2::new(self.x * k, self.y * k)
+    }
+}
 
 /// A damped spring (stiffness `k`, damping ratio `zeta`), stepped in small slices.
 #[derive(Debug, Clone, Copy, PartialEq)]

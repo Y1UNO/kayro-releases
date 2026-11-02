@@ -5,7 +5,7 @@
 use std::path::{Component, Path};
 
 use super::apps::{AppEntry, Launch, NewApp};
-use super::schema::{Settings, ATMOSPHERE_MAX, ATMOSPHERE_MIN};
+use super::schema::{Settings, ATMOSPHERE_MAX, ATMOSPHERE_MIN, PEEK_DELAY_MAX, TUCK_DELAY_MAX};
 use super::sounds::{SOUND_VOLUME_MAX, SOUND_VOLUME_MIN};
 use crate::error::AppError;
 
@@ -244,6 +244,12 @@ pub fn validate_settings(s: &Settings) -> Check {
     }
     if !(SOUND_VOLUME_MIN..=SOUND_VOLUME_MAX).contains(&s.sound_volume) {
         return err("soundVolume", "must be between 0 and 1");
+    }
+    if !(0.0..=TUCK_DELAY_MAX).contains(&s.island_tuck_delay) {
+        return err("islandTuckDelay", "must be between 0 and 3");
+    }
+    if !(0.0..=PEEK_DELAY_MAX).contains(&s.island_peek_delay) {
+        return err("islandPeekDelay", "must be between 0 and 1");
     }
     let ignored = &s.ignored_detections;
     if ignored.len() > MAX_IGNORED || ignored.iter().any(|id| validate_id(id).is_err()) {

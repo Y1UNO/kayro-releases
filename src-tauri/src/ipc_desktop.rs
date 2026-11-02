@@ -185,11 +185,22 @@ pub async fn island_effects<R: Runtime>(
     crate::desktop::island::effects::show(&app, &frame);
 }
 
-/// Step 20: the island's largest size at rest (logical), for its click region.
+/// Step 20: the island's size at rest as drawn now, docked and floating (logical), for its
+/// click region.
 #[tauri::command]
 #[specta::specta]
-pub fn island_footprint<R: Runtime>(app: AppHandle<R>, width: f64, height: f64) {
-    crate::desktop::island::set_footprint(&app, width, height);
+pub fn island_footprint<R: Runtime>(
+    app: AppHandle<R>,
+    docked_width: f64,
+    docked_height: f64,
+    floating_width: f64,
+    floating_height: f64,
+) {
+    crate::desktop::island::set_footprint(
+        &app,
+        (docked_width, docked_height),
+        (floating_width, floating_height),
+    );
 }
 
 /// Step 20: the music playing (Spotify first), read from Windows; starts following the players.

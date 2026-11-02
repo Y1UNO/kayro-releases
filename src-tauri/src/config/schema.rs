@@ -15,6 +15,7 @@ pub use super::scene::SceneFile;
 pub use super::sounds::SoundPack;
 use super::sounds::SOUND_VOLUME_DEFAULT;
 use super::store::{lenient_merge, Document, LoadReport};
+pub use super::theme_file::{is_theme_colour, ThemeFile};
 use super::validate::validate_settings;
 use super::visual::{settings_v1_to_v2, settings_v2_to_v3, DEFAULT_THEME};
 pub use super::visual::{
@@ -72,6 +73,12 @@ pub struct Settings {
     pub display_mode: DisplayMode,
     /// « Kysland toujours à l'écran » (Raccourcis clavier): the island shows whenever Kayro is not.
     pub island_always: bool,
+    /// « Cacher l'île » (2026-11-02): docked and left alone, the island goes into the top edge
+    /// after `island_tuck_delay` s; the cursor held on the very top of its place for
+    /// `island_peek_delay` s brings it out.
+    pub island_tuck: bool,
+    pub island_tuck_delay: f32,
+    pub island_peek_delay: f32,
     /// Escape hides the hub once there is nothing left to close.
     pub hide_on_escape: bool,
     /// Losing the focus hides the hub (the widget only folds its panel).
@@ -125,6 +132,11 @@ pub const ATMOSPHERE_MIN: f32 = 0.3;
 pub const ATMOSPHERE_MAX: f32 = 1.3;
 /// « Normale »: the validated look.
 pub const ATMOSPHERE_DEFAULT: f32 = 1.0;
+/// « Cacher l'île »: its delays (seconds), in notches of the settings' sliders.
+pub const TUCK_DELAY_MAX: f32 = 3.0;
+pub const TUCK_DELAY_DEFAULT: f32 = 1.5;
+pub const PEEK_DELAY_MAX: f32 = 1.0;
+pub const PEEK_DELAY_DEFAULT: f32 = 0.1;
 
 impl Default for Settings {
     fn default() -> Self {
@@ -138,6 +150,9 @@ impl Default for Settings {
             atmosphere_intensity: ATMOSPHERE_DEFAULT,
             display_mode: DisplayMode::default(),
             island_always: true,
+            island_tuck: false,
+            island_tuck_delay: TUCK_DELAY_DEFAULT,
+            island_peek_delay: PEEK_DELAY_DEFAULT,
             hide_on_escape: true,
             hide_on_blur: false,
             economy_mode: false,
@@ -187,6 +202,9 @@ pub struct SettingsPatch {
     pub atmosphere_intensity: Option<f32>,
     pub display_mode: Option<DisplayMode>,
     pub island_always: Option<bool>,
+    pub island_tuck: Option<bool>,
+    pub island_tuck_delay: Option<f32>,
+    pub island_peek_delay: Option<f32>,
     pub hide_on_escape: Option<bool>,
     pub hide_on_blur: Option<bool>,
     pub economy_mode: Option<bool>,
@@ -240,6 +258,9 @@ impl Settings {
             atmosphere_intensity,
             display_mode,
             island_always,
+            island_tuck,
+            island_tuck_delay,
+            island_peek_delay,
             hide_on_escape,
             hide_on_blur,
             economy_mode,
@@ -317,79 +338,4 @@ impl Document for SlotsFile {
 /// Shared / imported files are strict: any unknown field rejects the whole file.
 pub trait StrictFile: serde::de::DeserializeOwned {
     fn check(&self) -> Result<(), String>;
-}
-
-/// Colour theme file (`themes/<id>.json`), same shape as `src/design/theme.ts`.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ThemeFile {
-    pub schema_version: u32,
-    pub id: String,
-    pub name: String,
-    pub author: String,
-    pub description: String,
-    pub bg: [String; 3],
-    pub accent: String,
-    pub glow: String,
-    pub fog: [String; 3],
-    pub card: [u8; 3],
-    pub beam: [u8; 3],
-    /// The two colours of the gradient, A and B (logo themes, personal themes).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub gradient: Option<[String; 2]>,
-    /// Soft text colour (labels).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub soft: Option<String>,
-}
-
-/// `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, or `rgb(…)` / `rgba(…)` with numbers only: a theme
-/// colour ends up in a CSS variable, so nothing else (no `url(…)`, no `;`) may get through.
-pub fn is_theme_colour(s: &str) -> bool {
-    if let Some(hex) = s.strip_prefix('#') {
-        return matches!(hex.len(), 3 | 4 | 6 | 8) && hex.bytes().all(|b| b.is_ascii_hexdigit());
-    }
-    let inner = s
-        .strip_prefix("rgba(")
-        .or_else(|| s.strip_prefix("rgb("))
-        .and_then(|r| r.strip_suffix(')'));
-    inner.is_some_and(|r| {
-        s.len() <= 48
-            && r.bytes()
-                .all(|b| b.is_ascii_digit() || matches!(b, b'.' | b',' | b' ' | b'%'))
-    })
-}
-
-fn check_header(version: u32, id: &str, name: &str) -> Result<(), String> {
-    if version != 1 {
-        return Err(format!("unsupported schemaVersion {version}"));
-    }
-    super::validate::validate_id(id).map_err(|e| e.to_string())?;
-    if name.is_empty() || name.chars().count() > 200 {
-        return Err("name must be 1–200 characters".into());
-    }
-    Ok(())
-}
-
-impl StrictFile for ThemeFile {
-    fn check(&self) -> Result<(), String> {
-        check_header(self.schema_version, &self.id, &self.name)?;
-        for (field, text) in [("author", &self.author), ("description", &self.description)] {
-            if text.is_empty() || text.chars().count() > 200 {
-                return Err(format!("{field} must be 1–200 characters"));
-            }
-        }
-        let colours = self
-            .bg
-            .iter()
-            .chain(&self.fog)
-            .chain([&self.accent, &self.glow])
-            .chain(self.gradient.iter().flatten())
-            .chain(&self.soft);
-        for c in colours {
-            if !is_theme_colour(c) {
-                return Err(format!("invalid colour «{c}»"));
-            }
-        }
-        Ok(())
-    }
 }

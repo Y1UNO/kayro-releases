@@ -10,6 +10,7 @@ use crate::config::schema::IslandPassage;
 
 pub use super::slots::{clamp_anchor, screen_of};
 use super::slots::{clamp_on_desk, corner_at, dock_top, nearest_slot, seam_of, slot_anchor, Slot};
+pub use super::springs::V2;
 pub use super::springs::*;
 
 /// Downward pull (from the press) that tears the island off the top edge.
@@ -26,30 +27,6 @@ pub const FLOAT_SIZE: (f64, f64) = (176.0, 44.0);
 const PUSH_SHOWN: f64 = 26.0;
 /// Share of the distance to the top edge the magnet takes back, at its strongest.
 const MAGNET: f64 = 0.3;
-
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct V2 {
-    pub x: f64,
-    pub y: f64,
-}
-
-impl V2 {
-    pub const fn new(x: f64, y: f64) -> Self {
-        Self { x, y }
-    }
-    pub fn len(self) -> f64 {
-        self.x.hypot(self.y)
-    }
-    pub fn minus(self, o: V2) -> V2 {
-        V2::new(self.x - o.x, self.y - o.y)
-    }
-    pub fn plus(self, o: V2) -> V2 {
-        V2::new(self.x + o.x, self.y + o.y)
-    }
-    pub fn scale(self, k: f64) -> V2 {
-        V2::new(self.x * k, self.y * k)
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Phase {
@@ -237,6 +214,11 @@ impl Gesture {
         // « Glitch »: the edge under the island where it is now, up to its rest (it may rest across).
         if self.free_between_screens() {
             look.seam = seam_of(screens, self.screen, self.p, s);
+        }
+        // Flying to the top edge (not sliding along it): how near it is, for the page's threads.
+        if let (Phase::Settling { dock: true }, false) = (self.phase, self.along) {
+            look.near =
+                (1.0 - (self.p.y - self.target.y).max(0.0) / (DOCK_ZONE * s)).clamp(0.0, 1.0);
         }
         let mut done = false;
         if let Phase::Settling { dock } = self.phase {

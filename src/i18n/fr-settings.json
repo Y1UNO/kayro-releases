@@ -6,9 +6,49 @@
       "label": "Catégories des réglages",
       "general": "Général",
       "startup": "Démarrage",
+      "shortcuts": "Raccourcis clavier",
+      "island": "Île dynamique",
       "visual": "Visuel",
       "sounds": "Sons",
       "themes": "Thèmes"
+    },
+    "shortcuts": {
+      "hotkey": {
+        "label": "Raccourci pour afficher ou cacher {app}",
+        "failedAtStart": "Le raccourci {hotkey} est déjà utilisé par une autre application. {app} reste accessible par la zone de notification : choisissez un autre raccourci.",
+        "saved": "Raccourci enregistré."
+      },
+      "island": "Île cachée : le raccourci pressé deux fois (ouvrir puis fermer {app}) la fait ressortir.",
+      "scenes": {
+        "label": "Raccourcis des scènes",
+        "help": "Ils se choisissent dans l’éditeur de chaque scène.",
+        "none": "Aucune scène n’a de raccourci.",
+        "taken": "Déjà utilisé par une autre application : il ne marche pas."
+      }
+    },
+    "island": {
+      "intro": "Kysland, l’île dynamique de {app} : la petite île noire en haut de l’écran quand {app} est fermé (musique, apps ouvertes, recherche).",
+      "always": {
+        "label": "Toujours à l’écran",
+        "help": "Quand {app} est fermé, l’île reste en haut de l’écran ; le raccourci ouvre ou ferme {app}, et une app qui passe devant {app} le ferme. L’île se cache devant un jeu en plein écran."
+      },
+      "tuck": {
+        "label": "Cacher l’île",
+        "help": "Ancrée en haut, l’île rentre dans le bord quand la souris la quitte et ressort quand la souris touche tout en haut de l’écran, à sa place. Elle ressort aussi le temps d’annoncer un lancement.",
+        "after": "Se cache après",
+        "afterHelp": "Le temps qu’elle attend une fois la souris partie.",
+        "peek": "Ressort après",
+        "peekHelp": "Le temps que la souris reste collée en haut avant qu’elle ressorte : elle ne sort pas quand on vise juste les onglets d’un navigateur.",
+        "seconds": "{value} s",
+        "now": "Aussitôt"
+      },
+      "passage": {
+        "label": "Passage d’un écran à l’autre",
+        "force": "Forcer (bulles)",
+        "glitch": "Capri",
+        "help": "Forcer : l’île résiste au bord entre deux écrans puis le traverse dans une gerbe de bulles. Capri : aucune résistance, elle peut rester à cheval et le bord « glitche » autour d’elle. Aussi dans l’île ouverte."
+      },
+      "startup": "Pour que Kysland soit seule à l’écran au démarrage de Windows : Réglages › Démarrage."
     },
     "startup": {
       "autostart": {
@@ -72,15 +112,6 @@
       "listen": "Écouter"
     },
     "general": {
-      "hotkey": {
-        "label": "Raccourci pour afficher ou cacher {app}",
-        "failedAtStart": "Le raccourci {hotkey} est déjà utilisé par une autre application. {app} reste accessible par la zone de notification : choisissez un autre raccourci.",
-        "saved": "Raccourci enregistré."
-      },
-      "islandAlways": {
-        "label": "Kysland toujours à l’écran",
-        "help": "Quand {app} est fermé, l’île reste en haut de l’écran ; le raccourci ouvre ou ferme {app}, et une app qui passe devant {app} le ferme. L’île se cache devant un jeu en plein écran."
-      },
       "update": {
         "auto": "Rechercher les mises à jour au démarrage",
         "help": "Une seule petite vérification auprès de la page des versions de Kayro sur GitHub, rien d'autre n'est envoyé. Une mise à jour ne s'installe jamais sans ton accord.",
@@ -175,11 +206,6 @@
           "label": "Dépliage du widget",
           "unroll": "Déroulé",
           "sober": "Sobre"
-        },
-        "islandPassage": {
-          "label": "Kysland : passage d’un écran à l’autre",
-          "force": "Forcer (bulles)",
-          "glitch": "Capri"
         },
         "widgetSpring": {
           "label": "Élasticité du widget",

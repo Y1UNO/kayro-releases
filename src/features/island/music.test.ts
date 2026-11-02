@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { NowPlaying } from "../../ipc/bindings";
 import { DOCKED, shapeOf, type Values } from "./islandShape";
-import { REST_GROW, footprint, progressAt, rgbOf, trackKey } from "./music";
+import { REST_GROW, progressAt, rgbOf, trackKey } from "./music";
 
 const np = (over: Partial<NowPlaying> = {}): NowPlaying => ({
   title: "Song",
@@ -59,12 +59,5 @@ describe("Kysland's music (step 20)", () => {
     expect(shapeOf({ ...rest, morph: 1, dots: 1, hover: 1 }).rest.dots).toBe(0);
     // Opened, none of it shows.
     expect(shapeOf({ ...rest, media: 1, open: 1 }).rest.music).toBe(0);
-  });
-
-  it("the click region holds the widest island at rest", () => {
-    const plain = footprint({ media: false, stretch: false, dots: false });
-    const all = footprint({ media: true, stretch: true, dots: true });
-    expect(all.width - plain.width).toBe(REST_GROW.media + REST_GROW.stretch);
-    expect(all.height - plain.height).toBe(REST_GROW.dots);
   });
 });

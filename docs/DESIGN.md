@@ -323,7 +323,7 @@ musique (pochette 84 px — clic : lecture/pause —, titre, artiste, ligne de p
 bouton rond « Passer en immersif » (4 flèches vers les coins) ; champ de recherche sans contour (il s'éclaircit). Ouverte, elle prend le clavier ; elle se referme sur Échap, en perdant le
 focus, ou 0,7 s après que la souris l'a quittée (sauf recherche en cours). Fenêtre fixe 720 × 420, région de clic découpée à
 l'île au repos, jamais de cadre de Windows. Aucune boucle au repos ; masquée devant un programme en plein écran sur son
-écran. **Éco** : sans bulles, gouttes ni glitch. **Réduire** : ressorts sans dépassement, sans bulles ni glitch (aucun
+écran. **Cacher l'île** (option, désactivée par défaut) : ancrée et laissée seule, elle rentre dans le bord haut comme une goutte après « Se cache après » (0–3 s, crans de 0,25) et ressort de même quand la souris reste collée tout en haut à sa place, marge de 24 px, « Ressort après » (0–1 s, crans de 0,1) ; « Réduire » : fondu. **Éco** : sans bulles, gouttes ni glitch. **Réduire** : ressorts sans dépassement, sans bulles ni glitch (aucun
 clignotement).
 
 ### 4.5 c Capri hors de l'île (étape 20 : `src/features/capri/capri.ts`)

@@ -57,8 +57,11 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 - Logs : `tracing`, fichier tournant dans AppData, bouton « Exporter les logs » (pour les retours de tes amis plus tard).
 - Accessibilité : contraste du texte ≥ 4,5:1, navigation complète au clavier, focus visible, respect de `prefers-reduced-motion`.
 
+## Extensions prévues avant la v1.0 (décision du 2026-11-02)
+Voix (étape 21), contrôle par les mains (22), intégrations OBS, Discord, lumières (23), moteur WebGL (24), puis l'audit final (18) et la v1.0 (`docs/ROADMAP.md`). Chacune seulement quand l'utilisateur donne son étape ; les règles de sécurité et de vie privée ci-dessus restent vraies (traitement local, ne lance que ce qui est configuré, indicateur visible ; l'exception « écoute permanente » de la voix se note dans ce fichier à l'étape 21).
+
 ## Hors périmètre pour l'instant (ne pas coder sans demande)
-Voix, contrôle par les mains, intégrations (OBS, Discord, lumières), salon d'amis, mises à jour automatiques. Prévoir les points d'extension, sans implémenter.
+Salon d'amis, assistant IA (projet séparé de l'écosystème Kayro, voir `docs/ROADMAP.md` : Kayro reste sans IA). Prévoir les points d'extension, sans implémenter.
 
 **Moteur graphique (WebGL2 / shaders) : autorisé par l'utilisateur (étape 12b).** Toujours derrière `FxLayer`, avec repli CSS automatique (WebGL2 absent, contexte perdu, budget d'image dépassé) et coût mesuré.
 

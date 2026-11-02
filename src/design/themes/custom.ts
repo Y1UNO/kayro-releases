@@ -22,8 +22,6 @@ export function setCustomThemes(files: readonly unknown[]): void {
   customThemes.setState({ list });
 }
 
-export const isPersonal = (id: string) => id.startsWith(PERSONAL_PREFIX);
-
 /** The personal theme with this id, if any. */
 export const personalTheme = (id: string): Theme | undefined =>
   customThemes.getState().list.find((t) => t.id === id);

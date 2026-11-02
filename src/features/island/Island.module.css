@@ -88,6 +88,9 @@
 /* The shoulders: inverted corners that curve the island into the bezels. Along the top (left
    and right of the island) on the top edge; along the side (below it) in a corner. */
 .shoulder {
+  /* The album's glow goes on along their curves (as on the island's edge: inset 0 0 16px). */
+  --sh-glow: rgb(var(--album-d, 0 0 0) / calc(0.3 * var(--hover) * var(--rest-music, 0)));
+
   position: absolute;
   width: var(--shoulder);
   height: var(--shoulder);
@@ -105,11 +108,18 @@
   opacity: var(--sh-tl);
   transform: scale(var(--sh-tl));
   transform-origin: 100% 0;
-  background: radial-gradient(
-    circle at 0 100%,
-    transparent calc(var(--shoulder) - 0.5px),
-    #000 var(--shoulder)
-  );
+  background:
+    radial-gradient(
+      circle at 0 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      var(--sh-glow) var(--shoulder),
+      transparent calc(var(--shoulder) + 7px)
+    ),
+    radial-gradient(
+      circle at 0 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      #000 var(--shoulder)
+    );
 }
 
 .shoulder[data-at="top-right"] {
@@ -118,11 +128,18 @@
   opacity: var(--sh-tr);
   transform: scale(var(--sh-tr));
   transform-origin: 0 0;
-  background: radial-gradient(
-    circle at 100% 100%,
-    transparent calc(var(--shoulder) - 0.5px),
-    #000 var(--shoulder)
-  );
+  background:
+    radial-gradient(
+      circle at 100% 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      var(--sh-glow) var(--shoulder),
+      transparent calc(var(--shoulder) + 7px)
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      #000 var(--shoulder)
+    );
 }
 
 .shoulder[data-at="side-left"] {
@@ -131,11 +148,18 @@
   opacity: var(--sh-sl);
   transform: scale(var(--sh-sl));
   transform-origin: 0 0;
-  background: radial-gradient(
-    circle at 100% 100%,
-    transparent calc(var(--shoulder) - 0.5px),
-    #000 var(--shoulder)
-  );
+  background:
+    radial-gradient(
+      circle at 100% 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      var(--sh-glow) var(--shoulder),
+      transparent calc(var(--shoulder) + 7px)
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      #000 var(--shoulder)
+    );
 }
 
 .shoulder[data-at="side-right"] {
@@ -144,11 +168,18 @@
   opacity: var(--sh-sr);
   transform: scale(var(--sh-sr));
   transform-origin: 100% 0;
-  background: radial-gradient(
-    circle at 0 100%,
-    transparent calc(var(--shoulder) - 0.5px),
-    #000 var(--shoulder)
-  );
+  background:
+    radial-gradient(
+      circle at 0 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      var(--sh-glow) var(--shoulder),
+      transparent calc(var(--shoulder) + 7px)
+    ),
+    radial-gradient(
+      circle at 0 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      #000 var(--shoulder)
+    );
 }
 
 @media (forced-colors: active) {

@@ -6,10 +6,10 @@ import {
   type AppPalette,
   type AppEntry,
   type AppRunState,
-  type DetectProgress,
   type HotkeysReport,
   type IslandFrame,
   type IslandMoment,
+  type IslandTucked,
   type NowPlaying,
   type ModePassage,
   type ProgressEvent,
@@ -54,17 +54,6 @@ export const tauriEvents: EventSource = {
     }
   },
 };
-
-/** Progress of a running scan: one event per source and state change. */
-export async function onDetectProgress(
-  handler: (progress: DetectProgress) => void,
-): Promise<Unlisten> {
-  try {
-    return await events.detectProgress.listen((e) => handler(e.payload));
-  } catch {
-    return noop;
-  }
-}
 
 /** Progress of the scene being played: its start, one event per step change, and its end. */
 export async function onSceneProgress(handler: (event: ProgressEvent) => void): Promise<Unlisten> {
@@ -136,6 +125,11 @@ export function onIslandFrame(handler: (f: IslandFrame) => void): Promise<Unlist
 /** Step 20: a moment of a gesture on the island (torn off, through an edge, docked…). */
 export function onIslandMoment(handler: (m: IslandMoment) => void): Promise<Unlisten> {
   return listenTo(events.islandMoment.listen, handler);
+}
+
+/** « Cacher l'île »: the core brought the island out of the top edge (the cursor touched it). */
+export function onIslandTucked(handler: (e: IslandTucked) => void): Promise<Unlisten> {
+  return listenTo(events.islandTucked.listen, handler);
 }
 
 /** Step 20: the music playing changed (null: nothing plays any more). */

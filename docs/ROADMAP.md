@@ -24,16 +24,20 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 16 | Moteur `.hubmood`, 6 packs, écran « Ambiance du jeu » | 8, 14 | E |
 | [x] 17 | Ambiances sur mesure (une par jeu « pépite ») | 16 | E |
 | [x] 17b | Sound design : moteur Web Audio, manifeste `sons.json`, réglages des sons, à définir à l'étape 17b, `docs/SONS.md` | 12b, 13 | E |
-| [ ] 18 | Audit : perf, sécurité, robustesse, accessibilité | 1–16 | F |
 | [x] 18b | Mises à jour : rechercher et installer une nouvelle version depuis Kayro (réseau optionnel, voir « Plus tard ») | 18, installeur maison | F |
 | [x] 19 | Installeur NSIS, assistant de premier lancement, doc pour les amis ; **démarrage** : choix des apps lancées avec Windows à l'installation, démarrage express sur le logo (voir « Plus tard ») | 18 | F |
 | [x] 19b | **Scan intelligent et rangement fluide** (demandé le 2026-10-30) : un scan bien plus malin (filtres de bruit, doublons, lanceurs et outils à part, catégorie devinée, « Ignorer ») et plus simple à l'ajout d'apps ; changer une app de catégorie (et la réordonner) de façon fluide. Détails : « Plus tard » › Détection | 5, 19 | G |
 | [x] 19c | **Finitions ajout et rangement** (2026-10-30) : scan avancé du PC, logos ronds, cartes aux couleurs du logo, renommer sur la carte, clic droit rangé, fil physique | 19b | G |
 | [x] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
+| [ ] 21 | **Voix** (extension A) : écoute active (mot d'éveil) ou push-to-talk, très bonne en français, 100 % locale (voir « Plus tard ») | 6, 10, 20 | H |
+| [ ] 22 | **Mains** (extension B) : gestes à la webcam, traitement local | 21 | H |
+| [ ] 23 | **Intégrations** (extension C) : OBS, Discord, lumières, en nouvelles actions de scène | 10 | H |
+| [ ] 24 | **Moteur WebGL** (extension D) : suite du moteur graphique de l'étape 12b, derrière `FxLayer` | 8, 12b | H |
+| [ ] 18 | **Audit final, juste avant la v1.0** (reporté à la fin le 2026-11-02 : l'app change encore) : perf, sécurité **et cybersécurité (test d'intrusion de Kayro)**, robustesse, accessibilité | 1–24 | I |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
 
-**Extensions après v1.0** : A voix FR · B mains (webcam) · C intégrations (OBS, Discord, lumières) · D moteur WebGL.
+**Extensions avant la v1.0** (décision du 2026-11-02 : les amis testent l'app pendant ce temps) : A voix FR (21) · B mains, webcam (22) · C intégrations, OBS, Discord, lumières (23) · D moteur WebGL (24). Puis l'audit final (18), puis la v1.0.
 
 ## Journal des étapes
 (Une entrée par étape terminée : date, décisions, limites, chiffres.)
@@ -205,7 +209,30 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   avec profondeur, personnages teintés par l'ambiance, bords fondus dans la brume, centre libre. Kayro n'embarque aucune
   image de jeu : un dossier d'images par carte, rempli par l'utilisateur. Références dans reference/ambiances/.
 
-### Étape 18 — Audit
+### Étape 18 — Audit (en dernier, juste avant la v1.0)
+Reporté à la fin le 2026-11-02 : l'app va encore beaucoup changer (voix, extensions), l'audit se fait sur la version
+finale. Ce qui est déjà fait ci-dessous (mesures, correctifs de l'île) reste acquis ; tout est à remesurer à la fin.
+- **Ménage du 2026-11-02 (2e passe)** : 6 exports TS jamais utilisés retirés (`ExpandIcon`, `isPersonal`, `SHOULDER` côté page, `ThemesIpc`, `onDetectProgress`, `mixLab`) et 2 fonctions Rust jamais appelées (`ex_style`, `is_tool_window`) ; `target/debug` (78 Go de cache de débogage, inutile : on teste l'exe de production) et `spikes/*/gen` supprimés ; `.thumbnail` ignoré ; README à jour (plus de `spikes/`). Dossiers `reference/` tranchés : suivis = notes de DA R3–R5 et démos (`animations/`, sans `vendor/`), presets archivés, planches de l'étape 14, maquette `intro-hades-ii.html` ; ignorés = sons d'exemple mixkit, captures d'inspiration, affiches PNG des ambiances, copies de React. `hub-kit.zip` et `_kit/` laissés tels quels.
+
+**Volet cybersécurité (demandé le 2026-11-02)** : un test d'intrusion de Kayro, en se mettant à la place de quelqu'un qui
+veut le pirater pour lui faire lancer autre chose ou lui voler des données. Sur ce PC uniquement, contre notre propre
+app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dans `docs/SECURITE.md`.
+- [ ] **Fichiers piégés** : `.hubmood`, thèmes, `.hubscene` géants, mal formés, zip bombs, chemins `..\`, SVG avec
+  script, champs inattendus ; images d'affiches corrompues (décodeur). But : planter Kayro ou lui faire lancer un exe.
+- [ ] **Injection dans la page** : noms d'apps, titres de musique (Spotify et autres lecteurs), patch notes, noms de
+  scènes avec du HTML / script → tenter d'exécuter du code dans la page, puis d'appeler les commandes Tauri.
+- [ ] **Commandes Tauri (IPC)** : appeler chaque commande avec des valeurs hostiles (chemins, ids inconnus, tailles
+  folles) ; vérifier que seul ce qui est configuré peut être lancé, et que la CSP et la liste blanche de permissions
+  bloquent scripts externes et accès disque.
+- [ ] **Mises à jour** : faux `latest.json`, installeur non signé ou mal signé, retour à une vieille version, réseau
+  détourné → rien ne doit s'installer.
+- [ ] **Sur le PC** : `settings.json` / config modifiés à la main pour pointer vers un autre exe, tâche planifiée de
+  démarrage détournée, DLL posée à côté de l'exe, port de débogage (CDP 9222) ouvert dans l'exe de production ?
+- [ ] **Fuites** : contenu des logs exportés (chemins, noms), aucune donnée envoyée sur le réseau hors mises à jour,
+  affiches jamais exportées dans un fichier partagé.
+- [ ] **Voix et extensions** (une fois faites) : une phrase dite ou un geste ne peut lancer que ce qui est configuré ;
+  micro et caméra coupés et signalés comme prévu ; intégrations (OBS, Discord) sans jeton en clair.
+
 - [x] **Mesures du 2026-10-31** (banc `npm run perf`, exe de production, ce PC 280 Hz, Steam ouvert en fond ; médianes de
   2 essais, CPU en % de la machine) — images : p95 3,7 ms et 0 image > 8 ms au repos partout.
   - Éventail R1 : 2,6–2,8 % (Élevée), 1,7–1,9 % (Éco) ; carrousel R2 : 2,1–2,6 % (Élevée, était 3,3 %), 3,1–3,3 % (Éco) ;
@@ -330,7 +357,48 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   Trouvé au passage : `gen_types.exe` était livré dans l'installeur → devenu un exemple cargo (`npm run gen:types`).
   Piège d'essai : lancé depuis l'app Claude (paquet MSIX), AppData est redirigé (`Packages\Claude_…\LocalCache`).
 
-### Après la v1.0 — Voix (extension A)
+### Kysland — suite (Notion « APP à faire », relu le 2026-11-02)
+- [x] **Capri discret à l'accroche** (2026-11-02) : plus de pics qui jaillissent du bord au contact. En approchant
+  du bord haut (transport et vol d'accroche), 4 fils fins rouge / vert cernés de violet poussent du bord et de
+  l'île et se rejoignent (`threads.ts`, images tenues à 14/s, un fil manque parfois : ça grésille) ; au contact,
+  l'île les écrase en étincelles le long de son haut (180 ms), puis plus rien. Le cœur donne aussi la proximité
+  pendant le vol d'accroche (`physics.rs`). Le décrochage garde ses pics. Non testé à la souris.
+  **Retouche (2026-11-02, après essai)** : 7 fils d'épaisseurs variées (0,6 à 2,2 px, parfois violets), chacun
+  entier du bord à l'île (bouts fixes, seul le milieu grésille), qui apparaissent un à un en approchant. Le
+  décrochage n'a plus de pics : les fils restent tendus pendant qu'on tire l'île, puis cassent (près de 83 px du
+  bord ou après 1,2 s) et chaque bout se rétracte (220 ms). Le glissement le long du bord (« snapped ») garde ses pics.
+- [x] **Zone de clic adaptative** (2026-11-02) : la page calcule la taille de l'île une fois ses ressorts posés
+  (`clickRegion.ts`, via `shapeOf`), ancrée et flottante ; elle l'envoie tout de suite quand l'île grandit (+6 % de
+  rebond), 450 ms après quand elle rétrécit. Rust ajoute épaules, ombre flottante (6/10/14 px) et 3 px de marge. Pas
+  de boucle : un envoi par changement (survol, musique, étirement). Limite : le « jelly » d'un tap peut dépasser ~2 px.
+  **Hitbox exacte (2026-11-02)** : ancrée (au repos et ouverte), la zone n'est plus un rectangle mais le contour de
+  l'île (`outline.rs`, polygone `CreatePolygonRgn`) : bas arrondi, épaules courbes, 1 px autour (aucun au bord
+  haut ni sur le côté collé d'un coin). Les coins vides à côté du bas arrondi laissent passer les clics. Flottante :
+  inchangée (gélule + ombre, sinon l'ombre serait coupée). Les épaules prennent aussi la lueur de l'album au survol.
+- [x] **Cacher l'île** (2026-11-02) : Réglages › Île dynamique, désactivée par défaut ; curseurs à crans « Se cache après »
+  0–3 s (1,5) et « Ressort après » 0–1 s (0,1). Ancrée seulement ; ressortie (apparition, contact) : 1,2 s au moins ;
+  ressort aussi le temps d'un lancement ou d'une annonce. Rentrée : région vide (aucun clic pris), boucles et écoute du
+  rythme arrêtées ; un fil lit le curseur 10 fois/s, 60 à moins de 32 px du haut de sa place (`tuck.rs`), arrêté dès
+  qu'elle ressort ou se cache. Limites : écran posé au-dessus (le curseur ne bute pas), barre des tâches en haut. Non
+  testé dans l'exe, CPU non mesuré.
+- [x] **Réglages triés** (2026-11-02) : deux catégories en plus. **Île dynamique** (tout Kysland : toujours à
+  l'écran, Cacher l'île et ses délais, passage Forcer / Capri, renvoi vers Démarrage) et **Raccourcis clavier** (raccourci
+  de Kayro sorti de Général, comment refaire sortir l'île, raccourcis des scènes en lecture seule). « Dépliage » et
+  « Élasticité du widget » (ancien widget, sans effet) restent dans Visuel › Personnalisation avancée : à trancher.
+- [ ] **Animation de repos** de l'île (idle), vivante mais légère (veille douce, CPU au repos).
+- [ ] **Mode musique** : l'île se place au milieu de l'écran et suit la musique, animations très fluides dans la même
+  veine « élastique / liquide » que Kysland.
+
+### Écosystème Kayro (très long terme, Notion 2026-11-02)
+- [ ] **Reconnaissance vocale premium** qui comprend très bien le français (rejoint « Voix » ci-dessous).
+- [ ] **Apps interconnectées** : chaque future app marche seule, mais installées ensemble elles se reconnaissent
+  (une « clé » / un identifiant commun) et offrent des interactions et des raccourcis entre elles.
+- [ ] **Assistant IA personnalisé**, app à part avec une connaissance de Kayro, qui part sans rien savoir de
+  l'utilisateur et grandit avec ses connexions (Obsidian…), fluide et rapide, appel aux API gratuites des grands
+  modèles quand il ne sait pas. ⚠ Contraire à la règle actuelle « Aucune IA/LLM dans l'app » (CLAUDE.md) et au
+  « réseau désactivé par défaut » : à trancher par l'utilisateur, et sans doute un projet séparé.
+
+### Avant la v1.0 — Voix (extension A, étape 21 ; avancé le 2026-11-02)
 - [ ] **Écoute active** (demandé le 2026-10-30) : lancer des apps, des scènes et d'autres actions à la voix, avec un
   mot d'éveil. **Décision de l'utilisateur (2026-10-30)** : les deux modes, au choix dans les réglages —
   **écoute active en permanence** (mot d'éveil) ou **push-to-talk** (raccourci / bouton). Le mode permanent est une

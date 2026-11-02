@@ -103,13 +103,22 @@ export const commands = {
 	/**  Step 20: the page opens or closes the island (its panel); `calm`: « reduce motion ». */
 	islandOpen: (open: boolean, calm: boolean) => __TAURI_INVOKE<void>("island_open", { open, calm }),
 	/**
+	 *  « Cacher l'île » (2026-11-02): the island went into the top edge (`tucked`; `width`: its
+	 *  width at rest, logical) or comes out by itself. False: it cannot stay in, the page brings it
+	 *  out again.
+	 */
+	islandTuck: (tucked: boolean, width: number | null) => __TAURI_INVOKE<boolean>("island_tuck", { tucked, width }),
+	/**
 	 *  Step 20: a held frame of the island's effects that its window must not cut (the glitch's
 	 *  spikes on an edge), shown by a click-through layer. Async: rasterised off the interface's
 	 *  thread.
 	 */
 	islandEffects: (frame: FxFrame) => __TAURI_INVOKE<void>("island_effects", { frame }),
-	/**  Step 20: the island's largest size at rest (logical), for its click region. */
-	islandFootprint: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("island_footprint", { width, height }),
+	/**
+	 *  Step 20: the island's size at rest as drawn now, docked and floating (logical), for its
+	 *  click region.
+	 */
+	islandFootprint: (dockedWidth: number | null, dockedHeight: number | null, floatingWidth: number | null, floatingHeight: number | null) => __TAURI_INVOKE<void>("island_footprint", { dockedWidth, dockedHeight, floatingWidth, floatingHeight }),
 	/**  Step 20: the music playing (Spotify first), read from Windows; starts following the players. */
 	mediaNow: () => __TAURI_INVOKE<{
 	title: string,
@@ -240,6 +249,7 @@ export const events = {
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
 	islandFrame: makeEvent<IslandFrame>("island-frame"),
 	islandMoment: makeEvent<IslandMoment>("island-moment"),
+	islandTucked: makeEvent<IslandTucked>("island-tucked"),
 	launchLanded: makeEvent<LaunchLanded>("launch-landed"),
 	mediaBeat: makeEvent<MediaBeat>("media-beat"),
 	mediaChanged: makeEvent<MediaChanged>("media-changed"),
@@ -650,6 +660,11 @@ export type IslandState = {
 	seamY: number | null,
 };
 
+/**  The core brought the island out of the top edge (the cursor touched the top of its place). */
+export type IslandTucked = {
+	tucked: boolean,
+};
+
 /**  How to start an app. Exactly one of a closed set of kinds; each is validated on its own. */
 export type Launch = { kind: "exe"; path: string; args: string[]; cwd: string | null; elevated: boolean } | { kind: "lnk"; path: string } | 
 /**  Protocol URI of a known launcher (`steam://…`, `com.epicgames.launcher://…`). */
@@ -1003,6 +1018,9 @@ export type SettingsPatch_Deserialize = {
 	atmosphereIntensity?: number | null,
 	displayMode?: DisplayMode_Deserialize | null,
 	islandAlways?: boolean | null,
+	islandTuck?: boolean | null,
+	islandTuckDelay?: number | null,
+	islandPeekDelay?: number | null,
 	hideOnEscape?: boolean | null,
 	hideOnBlur?: boolean | null,
 	economyMode?: boolean | null,
@@ -1048,6 +1066,9 @@ export type SettingsPatch_Serialize = {
 	atmosphereIntensity: number | null,
 	displayMode: DisplayMode_Serialize | null,
 	islandAlways: boolean | null,
+	islandTuck: boolean | null,
+	islandTuckDelay: number | null,
+	islandPeekDelay: number | null,
 	hideOnEscape: boolean | null,
 	hideOnBlur: boolean | null,
 	economyMode: boolean | null,
@@ -1095,6 +1116,14 @@ export type Settings_Deserialize = {
 	displayMode: DisplayMode_Deserialize,
 	/**  « Kysland toujours à l'écran » (Raccourcis clavier): the island shows whenever Kayro is not. */
 	islandAlways: boolean,
+	/**
+	 *  « Cacher l'île » (2026-11-02): docked and left alone, the island goes into the top edge
+	 *  after `island_tuck_delay` s; the cursor held on the very top of its place for
+	 *  `island_peek_delay` s brings it out.
+	 */
+	islandTuck: boolean,
+	islandTuckDelay: number | null,
+	islandPeekDelay: number | null,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */
@@ -1157,6 +1186,14 @@ export type Settings_Serialize = {
 	displayMode: DisplayMode_Serialize,
 	/**  « Kysland toujours à l'écran » (Raccourcis clavier): the island shows whenever Kayro is not. */
 	islandAlways: boolean,
+	/**
+	 *  « Cacher l'île » (2026-11-02): docked and left alone, the island goes into the top edge
+	 *  after `island_tuck_delay` s; the cursor held on the very top of its place for
+	 *  `island_peek_delay` s brings it out.
+	 */
+	islandTuck: boolean,
+	islandTuckDelay: number | null,
+	islandPeekDelay: number | null,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */

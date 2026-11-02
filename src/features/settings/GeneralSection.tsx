@@ -4,9 +4,7 @@ import { APP_VERSION } from "../../app/appName";
 import { Button } from "../../design";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
-import { errorText } from "../../ipc/errors";
-import { hubStore, useDesktop, useHub } from "../../store";
-import { HotkeyField } from "../scenes/HotkeyField";
+import { hubStore, useHub } from "../../store";
 import { UpdateRows } from "../update/UpdateRows";
 import type { OpeningScreen } from "../../ipc/bindings";
 import { ChoiceRow, ToggleRow } from "./SettingRow";
@@ -16,28 +14,16 @@ import styles from "./Settings.module.css";
 const OPENING_SCREENS: readonly OpeningScreen[] = ["last", "pointer", "main"];
 
 /**
- * Réglages › Général: the global shortcut, the opening screen, hiding, economy mode, updates, logs
- * (starting with Windows: Réglages › Démarrage, step 19).
+ * Réglages › Général: the opening screen, hiding, economy mode, updates, logs
+ * (starting with Windows: Réglages › Démarrage, step 19; the shortcut: Raccourcis clavier, and
+ * Kysland: Île dynamique, 2026-11-02).
  */
 export function GeneralSection() {
   const settings = useHub((s) => s.settings);
-  const scenes = useDesktop((s) => s.hotkeys?.scenes);
-  const toggleStatus = useDesktop((s) => s.hotkeys?.toggle ?? null);
-  const [message, setMessage] = useState<{ text: string; kind: "ok" | "error" } | null>(null);
   const [logs, setLogs] = useState<{ text: string; kind: "ok" | "error" } | null>(null);
 
   if (!settings) return null;
   const set = hubStore.getState().setSettings;
-
-  async function changeHotkey(hotkey: string | null) {
-    if (!hotkey) return; // the shortcut cannot be removed, only replaced
-    const result = await desktopIpc.setHotkey(hotkey);
-    setMessage(
-      result.ok
-        ? { text: t("settings.general.hotkey.saved"), kind: "ok" }
-        : { text: errorText(result.error), kind: "error" },
-    );
-  }
 
   async function exportLogs() {
     const result = await desktopIpc.exportLogs();
@@ -52,30 +38,6 @@ export function GeneralSection() {
 
   return (
     <div className={styles.rows} data-cascade="">
-      <section className={styles.row} data-row="">
-        <h3 className={styles.label}>{t("settings.general.hotkey.label")}</h3>
-        <HotkeyField
-          value={settings.hotkey}
-          taken={scenes?.map((s) => s.hotkey) ?? []}
-          onChange={(hotkey) => void changeHotkey(hotkey)}
-        />
-        {toggleStatus?.problem != null && (
-          <p className={styles.warn} role="status">
-            {t("settings.general.hotkey.failedAtStart", { hotkey: settings.hotkey })}
-          </p>
-        )}
-        {message && (
-          <p className={message.kind === "error" ? styles.warn : styles.help} role="status">
-            {message.text}
-          </p>
-        )}
-      </section>
-      <ToggleRow
-        label={t("settings.general.islandAlways.label")}
-        help={t("settings.general.islandAlways.help")}
-        checked={settings.islandAlways}
-        onChange={(islandAlways) => void set({ islandAlways })}
-      />
       <ChoiceRow<OpeningScreen>
         label={t("settings.general.openingScreen.label")}
         help={t("settings.general.openingScreen.help")}

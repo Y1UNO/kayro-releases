@@ -1,0 +1,73 @@
+KAYRO — RONDE 4a — LANGAGE DE MOUVEMENT FINAL « VIVANT INTELLIGENT »
+Choix : Vivant (ressorts, filets, magie) + le voile brillant de Fluide au survol des cartes, appliqués seulement
+là où c'est pertinent (voir « RÈGLE D'INTELLIGENCE »). Ce fichier remplace R4a-Mouvement-Vivant.txt.
+Maquettes de référence : canvas Claude Design, boards « R4a-Comparatif » (colonne Vivant, + voile de la colonne Fluide)
+et « R4a-Vivant » (échelle détaillée). À ranger dans : C:\HUB\reference\animations\
+
+INTENTION
+Kayro doit donner l'impression d'un objet vivant et un peu magique, SANS jamais fatiguer. La magie est réservée aux
+moments de CHOIX et de LANCEMENT (cartes, apps, éventail). Tout ce qui est utilitaire et répété cent fois par jour
+(onglets, interrupteurs, panneaux, boutons) reste vif et net, avec au plus un tout petit ressort.
+
+PÉRIMÈTRE
+Tout ce qui bouge dans Kayro SAUF les animations signature de la ronde 3, inchangées : ouverture V1-A, liaison A
+(éventail → deck → carrousel, onglet, retour), survol et flottaison de l'éventail de catégories.
+
+JETONS (une seule table dans le code, aucune valeur en dur ailleurs)
+Durées d'apparition : micro 140 ms · court 240 ms · moyen 360 ms · long 540 ms.
+Disparition = 0,7 × la durée d'apparition correspondante.
+Courbes :
+  - apparition   cubic-bezier(.16, 1, .3, 1)   (= lettres du nom, ouverture V1-A)
+  - disparition  cubic-bezier(.7, 0, .84, 0)
+  - déplacement  cubic-bezier(.34, 1.32, .64, 1)   (= ressort « liaison » 3,4 %, dépliage de la liaison A)
+  - rebond       cubic-bezier(.34, 1.45, .64, 1)   (6,6 % ; nouvelle entrée de SPRINGS, plafond 8 % respecté)
+Autres : cascade 45 ms · distance d'apparition 14 px · appui ×0,94 (micro) · focus : 0 0 0 3px fond, 0 0 0 5px A,
+0 0 0 7px B à 50 %, halo 26 px A à 45 %.
+
+RÈGLE D'INTELLIGENCE — QUEL NIVEAU D'EFFET OÙ
+Niveau 3 « magie » (rebond 6,6 % + filets + voile) : UNIQUEMENT les cartes d'apps du carrousel et le retour visuel
+  au lancement d'une app.
+Niveau 2 « vivant » (ressort liaison 3,4 %, cascade, montée de 14 px) : pastille d'onglet, panneaux, notifications,
+  retour d'un appui, toute entrée de liste.
+Niveau 1 « net » (apparition sans rebond, courte) : boutons et pastilles de la barre, champs, survol de texte,
+  tout ce qui est utilisé en rafale.
+Règles d'usage :
+  1. Jamais deux effets décoratifs en même temps sur un même élément, sauf sur la carte d'app survolée (voile puis filets).
+  2. Une seule carte d'app a ses filets à la fois (la survolée). Les filets démarrent après 120 ms de présence du curseur,
+     pour ne rien allumer quand la souris traverse la grille d'un coup.
+  3. Pas de filets, de voile ni d'étincelles pendant un défilement, un glisser-déposer, une transition d'éventail ou
+     de liaison, ni si plus de 8 cartes sont visibles ; dans ce cas, seul le soulèvement reste.
+  4. Le focus clavier n'a PAS les filets : seulement l'anneau lumineux (immédiat).
+  5. Mode widget, mode fenêtre : niveaux 1 et 2 seulement (pas de niveau 3).
+  6. Mode Éco : niveau 3 réduit au soulèvement + voile ; ressorts conservés, pas de filets ni d'étincelles.
+  7. « Réduire les animations » : état final direct, aucun effet décoratif.
+
+OÙ ÇA S'APPLIQUE
+  - survol bouton, pastille, onglet ............ niveau 1 · court · apparition (couleur, fond, légère montée)
+  - appui sur tout ce qui se clique ............ micro · ×0,94 ; relâché sur ressort liaison (niveau 2) ; rebond sur les cartes
+  - pastille d'onglet qui glisse ............... niveau 2 · moyen · ressort liaison (elle dépasse un peu, puis se pose)
+  - survol carte d'app (carrousel) ............. niveau 3 · court · soulèvement 10 px, ×1,03 sur le rebond ; à l'entrée,
+                                                 UN voile brillant qui glisse en travers de la carte (une fois, ~0,8 s,
+                                                 comme le voile de Fluide), puis les 2 filets lumineux A→B en sens opposés
+                                                 (mêmes couleurs que l'éventail), 4 étincelles au plus
+  - panneau (réglages, recherche) .............. niveau 2 · moyen · apparition, échelle 0,96 → 1, monte de 14 px ; lignes en
+                                                 cascade 45 ms ; fermeture 0,7× sans cascade
+  - notification « … se lance » ................ niveau 2 · moyen · apparition, monte de 14 px (rebond seulement s'il s'agit
+                                                 de la carte lancée)
+  - retour visuel au lancement d'une app ....... niveau 3 · la carte cliquée fait un éclat (anneau A + halo), 1,6 × long
+  - interrupteur ............................... niveau 2 · court · ressort liaison
+  - focus clavier .............................. immédiat, anneau lumineux ci-dessus
+Plus tard, mêmes jetons : 3c widget qui se déplie (niveau 2, cascade 45 ms, repli 0,7×) ; 3c éditeur « chaîne de
+points » (point : ressort liaison ; fil : apparition) ; 4b passage immersif ↔ fenêtre ↔ widget (long · déplacement).
+
+RÈGLES TECHNIQUES
+- Ressorts via la table SPRINGS existante (ajouter « rebond » 0,066 ; ne pas créer de seconde table). Jamais > 8 %.
+- transform et opacity uniquement hors moteur ; pas de filter animé ; le verre reste au moteur. Filets et étincelles
+  comme ceux de l'éventail (DOM, mêmes réglages de base) ; le voile brillant réutilise celui de la 2b (SheenVeil).
+- Budget p95 ≤ 5,4 ms en Élevée ET Éco, au repos et pendant le survol (mesure en vraie fenêtre, jeu fermé).
+- Atelier : écran « Mouvement » avec chaque jeton réglable, un multiplicateur de vitesse (0,7 / 1 / 1,5) et un
+  interrupteur par niveau (1, 2, 3) pour juger chaque couche séparément.
+
+MES REMARQUES (à remplir)
+Ce que j'aime :
+Ce que je veux changer :

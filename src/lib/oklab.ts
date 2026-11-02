@@ -59,11 +59,6 @@ export const labToHex = (lab: Lab) => rgbToHex(labToRgb(lab));
 
 export const chromaOf = (c: Lab) => Math.hypot(c[1], c[2]);
 export const hueOf = (c: Lab) => Math.atan2(c[2], c[1]);
-export const mixLab = (p: Lab, q: Lab, t: number): Lab => [
-  p[0] + (q[0] - p[0]) * t,
-  p[1] + (q[1] - p[1]) * t,
-  p[2] + (q[2] - p[2]) * t,
-];
 
 /** Difference of hue in degrees, 0–180. */
 export function hueGap(p: Lab, q: Lab): number {

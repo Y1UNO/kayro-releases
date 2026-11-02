@@ -13,6 +13,7 @@
  */
 import type { FxShape } from "../../ipc/bindings";
 import { CAPRI, css, spikes, type Edge } from "../capri/capri";
+import { Threads } from "./threads";
 
 export interface Point {
   x: number;
@@ -87,10 +88,14 @@ export class Glitch {
   private held = Infinity;
   private restClock = 0;
   private nextBurst = 0;
+  /** Docking: thin threads between the top edge and the island, crushed when it touches. */
+  readonly threads: Threads;
 
-  constructor(private rand: Rand = Math.random) {}
+  constructor(private rand: Rand = Math.random) {
+    this.threads = new Threads(rand);
+  }
 
-  /** A burst at once: on `edge` when given (docking, tearing off), else on the last one. */
+  /** A burst at once: on `edge` when given (a slide along the top edge ending), else on the last one. */
   trigger(edge?: Edge, strength = 1): void {
     if (edge) this.edge = edge;
     this.burst = Math.max(this.burst, strength);
@@ -104,10 +109,12 @@ export class Glitch {
     this.ghosts = [];
     this.slices = [];
     this.fresh = true;
+    this.threads.clear();
   }
 
   /** Advances by `dt` seconds (`resting`: across two screens, untouched); true while it shows. */
   step(dt: number, input: GlitchInput, resting = false): boolean {
+    const threads = this.threads.step(dt, input.island);
     const across = straddle(input);
     this.across = across;
     if (across > 0) this.edge = edgeOf(input, this.level);
@@ -126,8 +133,8 @@ export class Glitch {
     const tau = target > this.level ? 0.04 : 0.14;
     this.level += (target - this.level) * (1 - Math.exp(-dt / tau));
     if (this.level < QUIET) {
-      if (this.shapes.length > 0 || this.edge) this.clear();
-      return false;
+      if (this.shapes.length > 0 || this.edge) this.clearEdge();
+      return threads;
     }
     this.held += dt;
     if (this.held >= GLITCH_STEP) {
@@ -164,8 +171,19 @@ export class Glitch {
     }));
   }
 
-  /** Draws the island's part of the held frame (ghosts and slices) around `island`. */
+  /** The edge's glitch only (the threads go on). */
+  private clearEdge(): void {
+    this.level = this.burst = 0;
+    this.edge = null;
+    this.shapes = [];
+    this.ghosts = [];
+    this.slices = [];
+    this.fresh = true;
+  }
+
+  /** Draws the island's part of the held frame (threads, ghosts and slices) around `island`. */
   draw(ctx: CanvasRenderingContext2D, island: Box): void {
+    this.threads.draw(ctx);
     if (this.level < QUIET) return;
     const radius = Math.min(island.width, island.height) / 2;
     const ghostColours = [css(GLITCH_COLOURS.red), css(GLITCH_COLOURS.green)];

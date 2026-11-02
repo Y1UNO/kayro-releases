@@ -296,3 +296,34 @@
   outline: none;
   box-shadow: var(--m-focus);
 }
+
+/* Réglages › Raccourcis clavier: the scenes' shortcuts, read only. */
+.keyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.keyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-15);
+  color: var(--text);
+}
+
+.key {
+  padding: 2px var(--space-2);
+  border-radius: 6px;
+  background: var(--field);
+  box-shadow: var(--field-inset);
+  font-family: var(--font-ui);
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text-2);
+}

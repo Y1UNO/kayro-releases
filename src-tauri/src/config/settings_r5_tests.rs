@@ -192,3 +192,28 @@ fn the_old_widget_mode_reads_as_immersive_with_the_island_always_there() {
     let (_d, off) = load_settings(r#"{"schemaVersion":3,"islandAlways":false}"#);
     assert!(!off.island_always);
 }
+
+#[test]
+fn hiding_the_island_is_off_and_its_delays_stay_in_their_notches() {
+    let s = Settings::default();
+    assert!(!s.island_tuck);
+    assert_eq!((s.island_tuck_delay, s.island_peek_delay), (1.5, 0.1));
+    // An older file gets the defaults; delays out of range fall back to them.
+    let (_dir, s) =
+        load_settings(r#"{"schemaVersion":3,"islandTuckDelay":4,"islandPeekDelay":-1}"#);
+    assert_eq!((s.island_tuck_delay, s.island_peek_delay), (1.5, 0.1));
+    let (_dir, s) = load_settings(r#"{"schemaVersion":3,"islandTuck":true,"islandTuckDelay":0}"#);
+    assert!(s.island_tuck);
+    assert_eq!((s.island_tuck_delay, s.island_peek_delay), (0.0, 0.1));
+    let mut patched = Settings::default();
+    patched.apply(SettingsPatch {
+        island_tuck: Some(true),
+        island_tuck_delay: Some(3.0),
+        island_peek_delay: Some(1.0),
+        ..Default::default()
+    });
+    assert!(patched.island_tuck);
+    assert!(super::validate::validate_settings(&patched).is_ok());
+    patched.island_peek_delay = 1.1;
+    assert!(super::validate::validate_settings(&patched).is_err());
+}

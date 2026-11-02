@@ -16,7 +16,6 @@ export const FLOATING = { width: 176, height: 44 } as const;
 export const OPEN = { width: 360, height: 140, radius: 26 } as const;
 /** What hovering adds, docked and floating (inside the core's click region). */
 export const HOVER_GROW = { docked: [20, 4], floating: [14, 4] } as const;
-export const SHOULDER = 10;
 
 export interface Spring {
   k: number;
@@ -90,6 +89,8 @@ export interface Values {
   squish: number;
   /** 0 → 1 as the island comes out of the bezel when shown. */
   presence: number;
+  /** « Cacher l'île » with « reduce motion »: a plain fade (1 when not given). */
+  fade?: number;
   /** 0 = the island, 1 = opened into its panel. */
   open: number;
   /** The opened island's size, which follows its content (`OPEN` when not given). */
@@ -207,7 +208,7 @@ export function shapeOf(v: Values): Shape {
     scaleX,
     scaleY,
     originY: 0.5 * mm,
-    opacity: clamp(p * 2.5, 0, 1),
+    opacity: clamp(p * 2.5, 0, 1) * clamp(v.fade ?? 1, 0, 1),
     content: clamp((o - 0.6) / 0.35, 0, 1),
     rest: {
       music: clamp(v.media, 0, 1) * clamp(1 - launch, 0, 1) * closed * clamp(p, 0, 1),

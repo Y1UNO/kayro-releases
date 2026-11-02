@@ -41,3 +41,12 @@ docs/.trash/
 # Installer (installer/): its built page and generated schemas.
 installer/dist
 installer/gen
+
+# Vignettes générées par Affinity / Explorateur dans les dossiers de ressources
+.thumbnail
+
+# Références (reference/) : on suit les maquettes et les notes, pas les copies de React, les sons d'exemple, les captures ni les affiches de jeux
+reference/**/vendor/
+reference/sons/
+reference/inspirations/
+reference/ambiances/**/*.png

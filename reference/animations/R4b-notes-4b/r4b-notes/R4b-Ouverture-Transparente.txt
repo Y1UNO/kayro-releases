@@ -1,0 +1,60 @@
+KAYRO · RONDE 4b · OUVERTURE TRANSPARENTE (3 variantes : A, B, C)
+Planches : R4b-Ouverture-Transparente-A / -B / -C (toile Claude Design, rangée « Tour 4b »)
+
+DÉCISION DE L'UTILISATEUR : variante C. Toute la chronologie de A est gardée (« le timing est parfait »), MAIS la page ne s'ouvre plus à 1,65 s : elle s'ouvre en entier sur la pulsation de base de l'anneau, celle de la fin (2,45 s). Il n'y a qu'UNE pulsation.
+=> A et B restent dans le fichier pour mémoire seulement : NE PAS les coder.
+
+BASE COMMUNE (identique à l'ouverture validée V1-A, rien ne change avant 1,65 s)
+- 0 → 0,8 s    voile sombre (bureau assombri)
+- 0,1 s        halo
+- 0,2 → 1,2 s  l'anneau se dessine
+- 0,8 → 1,65 s scintillement de lune qui tourne autour de l'anneau
+- 1,65 → 2,45 s EXPANSION (la seule partie qui change entre A, B, C)
+- 2,05 s       le logo se forme
+- 2,35 s       reflet qui balaie le logo
+- 2,65 s       le logo glisse de 150 px vers la gauche
+- 2,9 s        les lettres sortent du logo, une toutes les 0,085 s
+- 3,4 s        ligne ; 3,65 s sous-titre ; braises à partir de 3,4 s
+- Durée totale ≈ 4,3 s, dont 1,65 s passées sur le bureau avant l'expansion. Tout se règle avec UN seul facteur de vitesse (variable --k dans les planches), pour pouvoir raccourcir sans retoucher l'ordre.
+- Courbe de l'expansion : cubic-bezier(.65,0,.35,1), 800 ms (courbe « long » de l'éventail, pas de rebond : un plein écran qui rebondit se voit trop).
+
+VARIANTE A · REVELATION CIRCULAIRE
+- Le fond de Kayro est révélé par un cercle (clip-path circle) qui part de l'anneau (rayon 200 px) et grandit jusqu'à couvrir l'écran (rayon 1120 px).
+- L'anneau grossit et s'efface en même temps (ringOut ×1,4).
+- Avantage : le plus simple. Aucun cadre à dessiner, un seul clip-path.
+- Inconvénient : on ne voit pas « une fenêtre » qui grandit, plutôt un fond qui se déploie.
+
+VARIANTE B · LA FENETRE GRANDIT   (la plus proche de l'idée de départ)
+- Une vraie petite fenêtre en verre arrondie (rayon 44 px, bord clair, ombre, halo) est déjà centrée sous l'anneau.
+- À 1,65 s elle grandit en rectangle arrondi jusqu'au plein écran (clip-path inset + rayon qui tombe à 0), son cadre s'estompe pendant l'arrivée.
+- Avantage : on comprend exactement ce qui se passe (une fenêtre qui s'agrandit), et c'est la même mécanique que les passages fenêtre ↔ immersif (voir R4b-Modes).
+- Inconvénient : il faut que le cadre soit joli quand il est petit (soin du bord et de l'ombre).
+
+VARIANTE C · UNE SEULE PULSATION, CELLE DE BASE, OUVRE LA PAGE   <= RETENUE
+- Tout le début est identique à A : voile, halo, anneau qui se dessine, scintillement de lune (0,8 → 1,65 s), logo à 2,05 s, reflet à 2,35 s.
+- Jusqu'à 2,45 s, le fond de Kayro n'est visible QUE dans l'anneau (cercle de rayon 200 px). Autour, le bureau assombri.
+- AUCUNE pulsation avant 2,45 s (une première onde à 1,65 s a été essayée puis RETIRÉE à la demande de l'utilisateur). Le scintillement de lune qui tourne autour de l'anneau (0,8 → 1,65 s) reste.
+- LA pulsation, 2,45 s (celle de base, la 2e animation de l'anneau après son dessin ; elle OUVRE TOUTE LA PAGE), trois choses ensemble, même durée 0,85 s, même courbe cubic-bezier(.4,0,.2,1) :
+  · l'anneau grossit ×1,4 et s'efface (exactement le ringOut de A) ;
+  · une onde lumineuse part de l'anneau, diamètre 400 → 2240 px, pleine jusqu'à 80 % puis s'efface ;
+  · le fond de Kayro se révèle en cercle derrière l'onde, rayon 200 → 1120 px (tout l'écran). À 3,3 s la page est entière.
+- La suite ne bouge pas : glissement du logo 2,65 s, lettres 2,9 s, ligne 3,4 s, sous-titre 3,65 s, braises. Durée totale ≈ 4,3 s, dont 2,45 s sur le bureau avant que la page s'ouvre.
+- L'onde est DERRIÈRE la couche de Kayro : on voit surtout son halo extérieur qui pousse le bord du cercle.
+- Coût : préférer scale d'un cercle de 400 px (transform) à une animation de width/height ; le halo à grande taille est la partie chère, à vérifier au budget. En mode Éco : pas d'onde, seulement la révélation à 2,45 s avec le ringOut.
+
+(Ma recommandation de départ était B ; l'utilisateur a choisi C, une seule pulsation qui ouvre la page. C'est C qui fait foi.)
+
+COTE TECHNIQUE (à valider par Claude Code AVANT de coder, en plan)
+1. Fenêtre Tauri : transparent: true, decorations: false, couvre l'écran principal dès le départ. L'ANIMATION se fait à l'intérieur (clip-path / transform sur UNE couche), la fenêtre système ne change PAS de taille pendant l'ouverture : zéro reflow, zéro saccade de redimensionnement.
+2. WebView2 doit supporter la transparence : fond de page transparent (body, html, racine React). Vérifier le rendu sous Windows 11 avec effets de transparence ACTIVÉS et DÉSACTIVÉS.
+3. Pas de clic-through pendant l'ouverture (accepté). Mais Échap ou clic = on saute directement à la fin (état final). Durée courte de toute façon.
+4. REPLI : si la transparence n'est pas disponible ou échoue (détection au démarrage), on garde l'ouverture opaque actuelle (R3 V1-A validée). Pas de plantage, pas d'écran noir.
+5. Démarrage silencieux (lancement avec Windows) et mode économie : PAS d'ouverture, comme aujourd'hui (opening_due). À re-tester en vrai.
+6. « Réduire les animations » : état final direct (le fond apparaît, le logo + nom restent).
+7. Après l'ouverture la fenêtre redevient ce qu'elle est (immersif), le voile sombre reste à 42 % comme dans les passages de modes.
+8. Multi-écrans : ouverture sur l'écran principal seulement.
+9. Mesure : pendant l'ouverture, pas d'image perdue visible. On ne mesure PAS le p95 de repos ici (c'est une signature, pas un état d'usage), mais on regarde qu'elle ne dépasse pas 8 ms d'image.
+
+MES REMARQUES (à remplir par l'utilisateur)
+- Variante choisie : C, une seule pulsation (celle de base, 2,45 s) qui ouvre toute la page — VALIDÉ
+- Ce que j'ajouterais ou retirerais :

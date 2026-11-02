@@ -214,5 +214,14 @@
       "Ouverte, l'île est plus petite et prend juste la taille de ce qu'elle montre : la recherche, la musique, les résultats.",
       "Une app qui passe devant Kayro le ferme, et Kysland prend le relais."
     ]
+  },
+  {
+    "version": "0.20.4",
+    "date": "02/11/2026",
+    "title": "Capri tout en finesse",
+    "points": [
+      "Quand Kysland se recolle en haut avec l'effet Capri : de fins fils de glitch relient le bord et l'île, puis l'île les écrase en se posant.",
+      "La zone cliquable de l'île suit sa vraie taille : les clics juste à côté passent aux fenêtres en dessous."
+    ]
   }
 ]

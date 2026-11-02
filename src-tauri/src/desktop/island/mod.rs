@@ -12,12 +12,14 @@
 mod backdrop;
 mod drive;
 pub mod effects;
+mod outline;
 pub mod physics;
 mod presence;
 mod raster;
 mod regions;
 pub mod slots;
 mod springs;
+mod tuck;
 
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
@@ -37,6 +39,7 @@ pub use presence::{on_foreground, page_ready, quiet, sync};
 use regions::physical;
 pub use regions::{moving_region, open_region, rest_region};
 use slots::Slot;
+pub use tuck::{set as set_tucked, IslandTucked};
 
 /// The window, in logical pixels: the island plus room for its stretches and bubbles.
 pub const WINDOW: (f64, f64) = (720.0, 420.0);
@@ -187,6 +190,7 @@ pub fn shape<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
     let ui = app.state::<ConfigState>().ui_state();
     set_place(ui.widget_docked, ui.widget_slot);
     OPEN.store(false, Ordering::SeqCst);
+    tuck::reset();
     if let Ok(h) = window.hwnd() {
         let raw = h.0 as isize;
         let scale = window.scale_factor().unwrap_or(1.0);
@@ -254,9 +258,12 @@ pub fn grab<R: Runtime>(app: &AppHandle<R>, calm: bool) {
     drive::start(app.clone(), h.0 as isize, screens, gesture, scale);
 }
 
-/// The region the window has at rest now: the opened island's panel, or the island.
+/// The region the window has at rest now: nothing (in the top edge), the opened island's
+/// panel, or the island.
 fn region_now(scale: f64) -> Region {
-    if OPEN.load(Ordering::SeqCst) {
+    if tuck::tucked() {
+        tuck::nothing()
+    } else if OPEN.load(Ordering::SeqCst) {
         open_region(is_docked(), slot_now(), scale)
     } else {
         rest_region(is_docked(), slot_now(), scale)
@@ -306,10 +313,11 @@ pub fn set_open<R: Runtime>(app: &AppHandle<R>, open: bool, calm: bool) {
     win::set_region(raw, Some(region_now(scale)));
 }
 
-/// The island's largest size at rest changed (music, a launch, the running apps' dots): the
-/// click region follows it, unless a gesture or the opened panel holds the window.
-pub fn set_footprint<R: Runtime>(app: &AppHandle<R>, width: f64, height: f64) {
-    regions::set_footprint(width, height);
+/// The island's size at rest changed (music, a launch, a hover, the running apps' dots): the
+/// click region follows it, unless a gesture or the opened panel holds the window. Logical
+/// sizes, docked and floating (the page does not know where the island is).
+pub fn set_footprint<R: Runtime>(app: &AppHandle<R>, docked: (f64, f64), floating: (f64, f64)) {
+    regions::set_footprint(docked, floating);
     if drive::running() || OPEN.load(Ordering::SeqCst) {
         return;
     }

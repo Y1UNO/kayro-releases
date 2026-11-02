@@ -317,3 +317,21 @@ fn a_settle_carries_the_island_without_a_hand() {
     ));
     assert_eq!(g.p, V2::new(2300.0, 1100.0));
 }
+
+#[test]
+fn flying_to_the_top_edge_it_tells_how_near_it_is_up_to_the_touch() {
+    let s = two();
+    let mut g = floating(V2::new(700.0, 500.0));
+    run(&mut g, &s, V2::new(700.0, 60.0), true, 0.5);
+    let mut nears = Vec::new();
+    for _ in 0..432 {
+        let step = g.step(&s, V2::new(700.0, 60.0), false, 1.0 / 144.0);
+        nears.push(step.look.near);
+        if step.moments.contains(&Moment::Touched) || step.done {
+            break;
+        }
+    }
+    // The page's threads tighten as it flies up, and are full at the touch.
+    assert!(nears.last().is_some_and(|&n| n > 0.99));
+    assert!(nears.iter().all(|n| (0.0..=1.0).contains(n)));
+}

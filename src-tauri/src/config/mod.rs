@@ -14,6 +14,7 @@ pub mod schema;
 pub mod share;
 pub mod sounds;
 pub mod store;
+pub mod theme_file;
 pub mod themes;
 pub mod ui_state;
 pub mod validate;

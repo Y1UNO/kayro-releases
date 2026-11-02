@@ -10,10 +10,11 @@ use windows::Win32::Graphics::Dwm::{
     DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_DONOTROUND,
 };
 use windows::Win32::Graphics::Gdi::{
-    CreateCompatibleDC, CreateDIBSection, CreateRectRgn, CreateRoundRectRgn, DeleteDC,
-    DeleteObject, GetDC, GetMonitorInfoW, MonitorFromWindow, ReleaseDC, SelectObject,
+    CreateCompatibleDC, CreateDIBSection, CreatePolygonRgn, CreateRectRgn, CreateRoundRectRgn,
+    DeleteDC, DeleteObject, GetDC, GetMonitorInfoW, MonitorFromWindow, ReleaseDC, SelectObject,
     SetBrushOrgEx, SetStretchBltMode, SetWindowRgn, StretchBlt, BITMAPINFO, BITMAPINFOHEADER,
     BI_RGB, DIB_RGB_COLORS, HALFTONE, HGDIOBJ, MONITORINFO, MONITOR_DEFAULTTONEAREST, SRCCOPY,
+    WINDING,
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_RBUTTON};
 use windows::Win32::UI::WindowsAndMessaging::{
@@ -65,8 +66,9 @@ pub fn move_to(raw: isize, x: i32, y: i32) {
     let _ = unsafe { SetWindowPos(hwnd(raw), None, x, y, 0, 0, flags) };
 }
 
-/// Where clicks land and what shows: a (rounded) rectangle of the window, or all of it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Where clicks land and what shows: a (rounded) rectangle of the window, or the outline of a
+/// shape (its bounds then in `x`… `height`).
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Region {
     pub x: i32,
     pub y: i32,
@@ -74,6 +76,8 @@ pub struct Region {
     pub height: i32,
     /// Diameter of the corners' rounding, 0 for square corners.
     pub round: i32,
+    /// The shape's outline (physical pixels of the window), empty for a rectangle.
+    pub outline: Vec<(i32, i32)>,
 }
 
 pub fn set_region(raw: isize, region: Option<Region>) {
@@ -81,7 +85,10 @@ pub fn set_region(raw: isize, region: Option<Region>) {
     unsafe {
         let made = region.map(|r| {
             let (x1, y1) = (r.x + r.width, r.y + r.height);
-            if r.round > 0 {
+            if r.outline.len() >= 3 {
+                let pts: Vec<POINT> = r.outline.iter().map(|&(x, y)| POINT { x, y }).collect();
+                CreatePolygonRgn(&pts, WINDING)
+            } else if r.round > 0 {
                 CreateRoundRectRgn(r.x, r.y, x1 + 1, y1 + 1, r.round, r.round)
             } else {
                 CreateRectRgn(r.x, r.y, x1, y1)

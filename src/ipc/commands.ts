@@ -148,12 +148,16 @@ export const desktopIpc = {
   /** Step 20: the island opens or closes (its panel): the core gives its window that region. */
   islandOpen: (open: boolean, calm: boolean): Promise<Outcome<void>> =>
     plain(commands.islandOpen(open, calm)),
+  /** « Cacher l'île »: in the top edge (`width`: at rest, logical) or out; false: it stays out. */
+  islandTuck: (tucked: boolean, width: number): Promise<Outcome<boolean>> =>
+    plain(commands.islandTuck(tucked, width)),
   /** The opened island's size, which follows its content (logical pixels). */
   islandPanel: (width: number, height: number): Promise<Outcome<void>> =>
     plain(commands.islandPanel(width, height)),
-  /** Step 20: the island's largest size at rest (logical), for its click region. */
-  islandFootprint: (width: number, height: number): Promise<Outcome<void>> =>
-    plain(commands.islandFootprint(width, height)),
+  /** Step 20: the island's size at rest as drawn now, docked and floating (logical), for its
+   *  click region. */
+  islandFootprint: (room: readonly [number, number, number, number]): Promise<Outcome<void>> =>
+    plain(commands.islandFootprint(...room)),
   /** Step 20: a held frame of the island's effects (the glitch's spikes on an edge). */
   islandEffects: (frame: FxFrame): Promise<Outcome<void>> => plain(commands.islandEffects(frame)),
   /** Step 20: the island's effects are over (the core cuts its window to it again). */
@@ -218,8 +222,6 @@ export const themesIpc = {
   /** Writes the shareable file in the exports folder, shows it in Explorer; returns its path. */
   exportFile: (id: string): Promise<Outcome<string>> => checked(commands.themeExport(id)),
 };
-
-export type ThemesIpc = typeof themesIpc;
 
 /** Ambiences (steps 16–17): the imported `.hubmood` files; the built-in packs live in the page. */
 export const moodsIpc = {

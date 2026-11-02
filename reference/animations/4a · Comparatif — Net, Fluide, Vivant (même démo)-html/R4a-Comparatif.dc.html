@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kayro mouvement comparatif</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Manrope',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes launch{0%{transform:scale(var(--press))}35%{transform:scale(1.04);box-shadow:0 0 0 2px var(--a),0 0 40px var(--glow)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(0,0,0,0)}}
+.gl{position:relative;background:rgba(255,255,255,0.06);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid rgba(255,255,255,0.14);box-shadow:inset 0 1px 0 rgba(255,255,255,0.3),0 20px 50px rgba(0,0,0,0.45)}
+.col button:focus-visible{outline:none;box-shadow:var(--focus)}
+.tab{transition:color var(--dc) ease}
+.pill{transition:transform var(--dm) var(--em)}
+.app{transition:transform var(--dc) var(--ecard)}
+.app:hover,.app[data-st="hover"]{transform:translateY(var(--lift)) scale(var(--hs))}
+.app:active,.app[data-st="press"]{transform:scale(var(--press));transition-duration:var(--dp);transition-timing-function:var(--eo)}
+.app[data-st="launch"]{animation:launch var(--dlaunch) var(--eo) both}
+.cv{transition:box-shadow var(--dc) ease}
+.app:hover .cv,.app[data-st="hover"] .cv{box-shadow:0 26px 50px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.5)}
+.sh{opacity:0;transform:translateX(-170%) skewX(-12deg);transition:opacity .15s ease,transform 0s linear .15s}
+.col[data-p="fluide"] .app:hover .sh,.col[data-p="fluide"] .app[data-st="hover"] .sh{opacity:1;transform:translateX(260%) skewX(-12deg);transition:opacity .1s ease,transform var(--dsheen) var(--eo)}
+.fw{opacity:0;transition:opacity var(--dc) ease}
+.col[data-p="vivant"] .app:hover .fw,.col[data-p="vivant"] .app[data-st="hover"] .fw{opacity:1}
+.fr{animation:spin 3.6s linear infinite}
+.fr2{animation:spin 3.6s linear infinite reverse}
+.knob{transition:transform var(--dc) var(--es)}
+.track{transition:background-color var(--dc) ease}
+.pn{opacity:0;transform:translateY(var(--dneg)) scale(0.96);transform-origin:50% 0;transition:opacity var(--dx) var(--ei),transform var(--dx) var(--ei)}
+.pn[data-open="true"]{opacity:1;transform:none;transition:opacity var(--dm) var(--eo),transform var(--dm) var(--eo)}
+.ln{opacity:0;transform:translateY(var(--dist));transition:opacity var(--dx) var(--ei),transform var(--dx) var(--ei)}
+.pn[data-open="true"] .ln{opacity:1;transform:none;transition:opacity var(--dm) var(--eo),transform var(--dm) var(--eo);transition-delay:var(--dly)}
+.hint{opacity:0.55;transition:opacity var(--dc) ease}
+.hint[data-open="true"]{opacity:0}
+.ts{opacity:0;transform:translateY(var(--dist));transition:opacity var(--dx) var(--ei),transform var(--dx) var(--ei)}
+.ts[data-show="true"]{opacity:1;transform:none;transition:opacity var(--dm) var(--eo),transform var(--dm) var(--etoast)}
+.dot{animation:spin .9s linear infinite}
+.play{transition:transform .2s cubic-bezier(.22,1,.36,1)}
+.play:hover{transform:translateY(-2px)}
+.play:focus-visible{outline:2px solid #F4F1FA;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.tab,.pill,.app,.cv,.sh,.fw,.knob,.track,.pn,.ln,.hint,.ts,.play{transition-duration:.01ms !important;transition-delay:0s !important}.app[data-st="launch"],.fr,.fr2,.dot{animation:none}}
+</style>
+</helmet>
+<div style="position:relative;overflow:hidden;width:1280px;height:760px;background:{{t.bg}};color:#F4F1FA">
+  <div style="position:absolute;left:340px;top:-260px;width:600px;height:520px;border-radius:50%;background:radial-gradient(closest-side,{{t.glow}},rgba(0,0,0,0));pointer-events:none"></div>
+
+  <div style="position:absolute;left:48px;top:30px;right:48px;display:flex;align-items:flex-start;justify-content:space-between">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(160deg,{{t.a}},{{t.b}});display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L14.2 10 L12 15.5 L9.8 10 Z" fill="#15132B"></path><path d="M4.2 11.5 A7.8 7.8 0 0 0 19.8 11.5 A7.8 5.2 0 0 1 4.2 11.5 Z" fill="#15132B"></path></svg></div>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:500;line-height:1">Langage de mouvement</span>
+      </div>
+      <div style="font-size:13px;color:{{t.soft}}">Même démo, trois personnalités. Survole les cartes, clique les onglets, « Réglages » et l'interrupteur, ou lance la démo.</div>
+    </div>
+    <button class="play" onClick="{{demo}}" style="display:flex;align-items:center;gap:8px;border:0;border-radius:14px;padding:12px 20px;font-size:14px;font-weight:700;color:#12101F;background:linear-gradient(135deg,{{t.a}},{{t.b}});box-shadow:0 12px 30px rgba(0,0,0,0.4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"></path></svg>Jouer la démo</button>
+  </div>
+
+  <div style="position:absolute;left:48px;top:120px;width:1184px;display:flex;gap:16px">
+    <sc-for list="{{cols}}" as="c" hint-placeholder-count="3">
+      <div class="col gl" data-p="{{c.id}}" style="width:384px;height:616px;box-sizing:border-box;border-radius:24px;position:relative;{{c.vars}}">
+        <div style="position:absolute;left:22px;top:18px;right:22px;display:flex;align-items:baseline;justify-content:space-between">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:500;line-height:1">{{c.name}}</div>
+          <div style="font-size:13px;color:{{t.soft}}">{{c.tag}}</div>
+        </div>
+        <div style="position:absolute;left:22px;top:70px;right:22px;display:flex;flex-wrap:wrap;gap:6px">
+          <sc-for list="{{c.chips}}" as="h" hint-placeholder-count="4">
+            <span style="font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:rgba(244,241,250,0.9)">{{h}}</span>
+          </sc-for>
+        </div>
+
+        <div style="position:absolute;left:22px;top:128px;font-size:10px;font-weight:700;letter-spacing:0.24em;color:{{t.soft}}">ONGLETS</div>
+        <div style="position:absolute;left:22px;top:146px;width:338px;height:44px;box-sizing:border-box;padding:5px;border-radius:14px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.1)">
+          <div class="pill" style="position:absolute;left:5px;top:5px;width:82px;height:34px;border-radius:10px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.22);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 6px 16px rgba(0,0,0,0.3);transform:translateX({{c.pillX}}px)"></div>
+          <div style="position:relative;display:flex">
+            <sc-for list="{{c.tabs}}" as="b" hint-placeholder-count="4">
+              <button class="tab" onClick="{{b.pick}}" aria-pressed="{{b.on}}" style="width:82px;height:34px;border:0;border-radius:10px;background:transparent;font-size:13px;font-weight:600;color:{{b.fg}}">{{b.name}}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:22px;top:206px;font-size:10px;font-weight:700;letter-spacing:0.24em;color:{{t.soft}}">CARTES · SURVOLE, CLIQUE POUR LANCER</div>
+        <div style="position:absolute;left:22px;top:224px;width:338px;display:flex;gap:16px">
+          <sc-for list="{{c.cards}}" as="a" hint-placeholder-count="2">
+            <button class="app" data-st="{{a.st}}" onClick="{{a.pick}}" aria-label="Lancer {{a.name}}" style="position:relative;width:161px;height:118px;padding:0;border:0;border-radius:18px;background:transparent;color:#F4F1FA;text-align:left">
+              <div class="cv" style="position:absolute;left:0;top:0;width:161px;height:118px;box-sizing:border-box;padding:12px;border-radius:18px;overflow:hidden;background:radial-gradient(120% 80% at 15% 0%,rgba(255,255,255,0.2),rgba(255,255,255,0) 55%),linear-gradient(160deg,{{a.c1}},{{a.c2}} 85%);border:1px solid rgba(255,255,255,0.2);box-shadow:0 14px 32px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.35);display:flex;flex-direction:column;justify-content:space-between">
+                <div class="sh" style="position:absolute;left:0;top:-10px;width:70px;height:140px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.28),rgba(255,255,255,0));pointer-events:none"></div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:300;line-height:0.9">{{a.letter}}</div>
+                <div style="font-size:13px;font-weight:700">{{a.name}}</div>
+              </div>
+              <div class="fw" style="position:absolute;left:-1px;top:-1px;width:163px;height:120px;box-sizing:border-box;padding:1.6px;border-radius:19px;overflow:hidden;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none">
+                <div class="fr" style="position:absolute;left:-60px;top:-82px;width:284px;height:284px;background:conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,{{t.a}} 26deg,rgba(255,255,255,0) 60deg,rgba(255,255,255,0) 360deg)"></div>
+                <div class="fr2" style="position:absolute;left:-60px;top:-82px;width:284px;height:284px;background:conic-gradient(from 180deg,rgba(255,255,255,0) 0deg,{{t.b}} 26deg,rgba(255,255,255,0) 60deg,rgba(255,255,255,0) 360deg)"></div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="position:absolute;left:22px;top:362px;width:338px;display:flex;align-items:center;justify-content:space-between">
+          <button onClick="{{c.panel}}" aria-expanded="{{c.open}}" style="display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,0.18);border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600;background:rgba(255,255,255,0.06);color:#F4F1FA"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg>Réglages</button>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:13px;color:rgba(244,241,250,0.85)">Particules</span>
+            <button onClick="{{c.toggle}}" role="switch" aria-checked="{{c.tog}}" aria-label="Particules" class="track" style="position:relative;width:46px;height:26px;padding:0;border:1px solid rgba(255,255,255,0.2);border-radius:999px;background-color:{{c.trackBg}}">
+              <span class="knob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#F4F1FA;box-shadow:0 2px 6px rgba(0,0,0,0.4);transform:translateX({{c.knobX}}px)"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="hint" data-open="{{c.open}}" style="position:absolute;left:22px;top:416px;width:338px;height:128px;box-sizing:border-box;border:1px dashed rgba(255,255,255,0.16);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:12px;color:{{t.soft}}">Panneau fermé · clique « Réglages »</div>
+        <div class="pn gl" data-open="{{c.open}}" style="position:absolute;left:22px;top:416px;width:338px;height:128px;box-sizing:border-box;padding:12px 14px;border-radius:16px;display:flex;flex-direction:column;gap:4px">
+          <sc-for list="{{c.lines}}" as="l" hint-placeholder-count="4">
+            <div class="ln" style="--dly:{{l.dly}};display:flex;justify-content:space-between;align-items:center;height:22px;font-size:13px">
+              <span style="color:rgba(244,241,250,0.78)">{{l.k}}</span>
+              <span style="font-weight:600">{{l.v}}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div class="ts gl" data-show="{{c.toast}}" style="position:absolute;left:52px;top:562px;width:278px;height:38px;box-sizing:border-box;border-radius:999px;display:flex;align-items:center;gap:10px;padding:0 16px;font-size:13px;font-weight:600">
+          <span class="dot" style="width:14px;height:14px;box-sizing:border-box;border-radius:50%;border:2px solid rgba(255,255,255,0.2);border-top-color:{{t.a}}"></span>
+          <span>{{c.app}} se lance…</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","default":"bleu-gris","options":["lavande-peche","mauve","sakura","bleu-gris","opale","cuivre"],"section":"Thème"},"vitesse":{"editor":"enum","default":"normale","options":["lente","normale","rapide"],"section":"Animation"},"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const TH = {
+      'lavande-peche': ['#B7A2F2', '#F6A98A', '#15112B', '#0C0A1A', '#06050D', '#D9CEFA', 'Lavande-pêche'],
+      'mauve': ['#C99ACB', '#9476C2', '#1A1228', '#100B1A', '#08060D', '#E6CCE8', 'Mauve'],
+      'sakura': ['#F7B7C4', '#D9708E', '#24121E', '#150A12', '#0B0509', '#FBD8DF', 'Sakura'],
+      'bleu-gris': ['#A3B0DE', '#7282BC', '#141A30', '#0B0F1E', '#05070F', '#D3DAF2', 'Bleu-gris'],
+      'opale': ['#9FD0E8', '#F2A2B8', '#10202A', '#0A131A', '#05090D', '#D2ECF6', 'Opale'],
+      'cuivre': ['#D99A6C', '#B07A78', '#24160F', '#150D09', '#0A0605', '#F0D2BC', 'Cuivre']
+    };
+    const v = TH[this.props.theme] || TH['bleu-gris'];
+    const K = { lente: 1.5, normale: 1, rapide: 0.7 };
+    const k = K[this.props.vitesse] || 1;
+    const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const hexA = (h, a) => 'rgba(' + rgb(h).join(',') + ',' + a + ')';
+    const mixArr = (h1, h2, q) => { const x = rgb(h1), y = rgb(h2); return x.map((c, i) => Math.round(c * (1 - q) + y[i] * q)); };
+    const css = (arr, q) => 'rgb(' + arr.map((c) => Math.round(c * q)).join(',') + ')';
+    const t = {
+      a: v[0], b: v[1], soft: v[5], glow: hexA(v[0], 0.22),
+      bg: 'radial-gradient(90% 75% at 50% 0%,' + v[2] + ' 0%,' + v[3] + ' 50%,' + v[4] + ' 100%)'
+    };
+    const P = [
+      { id: 'net', name: 'Net', tag: 'précis, sans rebond', d: [90, 150, 220, 320], eo: 'cubic-bezier(.2,0,0,1)', ei: 'cubic-bezier(.4,0,1,1)', em: 'cubic-bezier(.4,0,.2,1)', es: 'cubic-bezier(.25,1,.5,1)', ecard: 'cubic-bezier(.25,1,.5,1)', etoast: 'cubic-bezier(.2,0,0,1)', stag: 18, dist: 6, press: 0.97, lift: 3, hs: 1.01, reb: 'rebond 0 %', focus: '0 0 0 2px ' + v[3] + ',0 0 0 4px ' + v[0] },
+      { id: 'fluide', name: 'Fluide', tag: 'feutré, comme l\'ouverture', d: [120, 200, 300, 450], eo: 'cubic-bezier(.22,1,.36,1)', ei: 'cubic-bezier(.5,0,.75,0)', em: 'cubic-bezier(.65,0,.35,1)', es: 'cubic-bezier(.34,1.32,.64,1)', ecard: 'cubic-bezier(.34,1.32,.64,1)', etoast: 'cubic-bezier(.22,1,.36,1)', stag: 30, dist: 10, press: 0.96, lift: 6, hs: 1.02, reb: 'rebond 3,4 %', focus: '0 0 0 3px ' + v[3] + ',0 0 0 5px ' + v[0] + ',0 0 18px ' + hexA(v[0], 0.35) },
+      { id: 'vivant', name: 'Vivant', tag: 'magique, ressorts et filets', d: [140, 240, 360, 540], eo: 'cubic-bezier(.16,1,.3,1)', ei: 'cubic-bezier(.7,0,.84,0)', em: 'cubic-bezier(.34,1.32,.64,1)', es: 'cubic-bezier(.34,1.45,.64,1)', ecard: 'cubic-bezier(.34,1.45,.64,1)', etoast: 'cubic-bezier(.34,1.45,.64,1)', stag: 45, dist: 14, press: 0.94, lift: 10, hs: 1.03, reb: 'rebond 6,6 %', focus: '0 0 0 3px ' + v[3] + ',0 0 0 5px ' + v[0] + ',0 0 0 7px ' + hexA(v[1], 0.5) + ',0 0 26px ' + hexA(v[0], 0.45) }
+    ];
+    const st = this.state || {};
+    const g = (key, i, def) => (st[key + i] === undefined ? def : st[key + i]);
+    const setC = (i, patch) => { const o = {}; Object.keys(patch).forEach((key) => { o[key + i] = patch[key]; }); this.setState(o); };
+    const setAll = (patch) => { const o = {}; [0, 1, 2].forEach((i) => Object.keys(patch).forEach((key) => { o[key + i] = patch[key]; })); this.setState(o); };
+    const run = (name, steps, apply) => {
+      this._tk = this._tk || {};
+      const tok = (this._tk[name] = (this._tk[name] || 0) + 1);
+      let acc = 0;
+      steps.forEach(([d, s]) => {
+        acc += d;
+        if (acc === 0) apply(s);
+        else setTimeout(() => { if (this._tk[name] === tok) apply(s); }, Math.round(acc * k));
+      });
+    };
+    const TABS = ['Jeux', 'Stream', 'Créativité', 'Autre'];
+    const CARDS = [['Apex Legends', 0.15], ['Hades II', 0.85]];
+    const ms = (x) => Math.round(x * k) + 'ms';
+    const cols = P.map((p, i) => {
+      const tab = g('tab', i, 0), open = g('open', i, false), tog = g('tog', i, true);
+      const cs = g('cs', i, -1), cst = g('cst', i, ''), toast = g('toast', i, false), app = g('app', i, 'Apex Legends');
+      const vars = [
+        '--dp:' + ms(p.d[0]), '--dc:' + ms(p.d[1]), '--dm:' + ms(p.d[2]), '--dl:' + ms(p.d[3]), '--dx:' + ms(p.d[2] * 0.7),
+        '--dlaunch:' + ms(p.d[3] * 1.6), '--dsheen:' + ms(p.d[3] * 1.8),
+        '--eo:' + p.eo, '--ei:' + p.ei, '--em:' + p.em, '--es:' + p.es, '--ecard:' + p.ecard, '--etoast:' + p.etoast,
+        '--dist:' + p.dist + 'px', '--dneg:-' + p.dist + 'px', '--lift:-' + p.lift + 'px', '--hs:' + p.hs, '--press:' + p.press,
+        '--a:' + v[0], '--glow:' + hexA(v[0], 0.5), '--focus:' + p.focus
+      ].join(';');
+      const base = mixArr(v[0], v[1], i / 2);
+      return {
+        id: p.id, name: p.name, tag: p.tag, vars: vars,
+        chips: ['court ' + p.d[1] + ' ms', 'moyen ' + p.d[2] + ' ms', 'cascade ' + p.stag + ' ms', p.reb],
+        pillX: tab * 82,
+        tabs: TABS.map((n, j) => ({ name: n, on: j === tab ? 'true' : 'false', fg: j === tab ? '#F4F1FA' : 'rgba(244,241,250,0.6)', pick: () => setC(i, { tab: j }) })),
+        cards: CARDS.map(([n, q], j) => {
+          const c = mixArr(v[0], v[1], q);
+          return { name: n, letter: n[0], c1: css(c, 0.95), c2: css(c, 0.22), st: cs === j ? cst : '', pick: () => run('c' + i, [[0, { cs: j, cst: 'launch', toast: true, app: n }], [1200, { cst: '', toast: false }]], (s) => setC(i, s)) };
+        }),
+        open: open ? 'true' : 'false',
+        panel: () => setC(i, { open: !open }),
+        tog: tog ? 'true' : 'false',
+        toggle: () => setC(i, { tog: !tog }),
+        knobX: tog ? 20 : 0,
+        trackBg: tog ? css(base, 0.85) : 'rgba(255,255,255,0.12)',
+        lines: [['Thème', v[6]], ['Qualité', 'Élevée'], ['Particules', tog ? 'Activées' : 'Coupées'], ['Ouverture', 'Au lancement']].map(([a, b], j) => ({ k: a, v: b, dly: ms(p.stag * (j + 1)) })),
+        toast: toast ? 'true' : 'false',
+        app: app
+      };
+    });
+    const demo = () => run('demo', [
+      [0, { tab: 2, open: false, cs: -1, cst: '', toast: false }],
+      [700, { tab: 3 }],
+      [700, { cs: 0, cst: 'hover' }],
+      [800, { cst: 'press' }],
+      [180, { cst: 'launch', toast: true, app: 'Apex Legends' }],
+      [1200, { cst: '', toast: false }],
+      [500, { open: true }],
+      [1000, { tog: false }],
+      [800, { tog: true }],
+      [800, { open: false }],
+      [700, { tab: 0 }]
+    ], setAll);
+    return { t: t, cols: cols, demo: demo };
+  }
+}
+</script>
+</body>
+</html>

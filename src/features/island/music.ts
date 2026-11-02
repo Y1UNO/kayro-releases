@@ -1,9 +1,8 @@
 /**
- * Step 20 (Kysland): small pure helpers for the music the island shows and for what it holds
- * at rest. Tested.
+ * Step 20 (Kysland): small pure helpers for the music the island shows, and what the island
+ * adds at rest (islandShape.ts `shapeOf`). Tested.
  */
 import type { NowPlaying } from "../../ipc/bindings";
-import { DOCKED, FLOATING, HOVER_GROW } from "./islandShape";
 
 /** What the island adds at rest: music (cover and bars), a launch (logo and name), dots. */
 export const REST_GROW = { media: 44, stretch: 130, dots: 26 } as const;
@@ -28,16 +27,4 @@ export function rgbOf(hex: string | undefined | null): string | null {
 /** A track's identity (its cover changes with it). */
 export function trackKey(np: NowPlaying | null): string {
   return np ? `${np.title}\u001f${np.artist}\u001f${np.player}` : "";
-}
-
-/** The island's largest size at rest for what it shows (the core's click region holds it). */
-export function footprint(a: { media: boolean; stretch: boolean; dots: boolean }): {
-  width: number;
-  height: number;
-} {
-  const extra = (a.media ? REST_GROW.media : 0) + (a.stretch ? REST_GROW.stretch : 0);
-  return {
-    width: Math.max(DOCKED.width, FLOATING.width) + HOVER_GROW.docked[0] + extra,
-    height: FLOATING.height + HOVER_GROW.floating[1] + (a.dots ? REST_GROW.dots : 0),
-  };
 }

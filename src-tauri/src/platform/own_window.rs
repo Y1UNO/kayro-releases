@@ -58,17 +58,6 @@ pub fn set_show_animation(raw: isize, on: bool) {
     }
 }
 
-/// Extended style bits, for logging.
-pub fn ex_style(raw: isize) -> u32 {
-    // SAFETY: plain read.
-    unsafe { GetWindowLongPtrW(hwnd(raw), GWL_EXSTYLE) as u32 }
-}
-
-pub fn is_tool_window(raw: isize) -> bool {
-    let style = ex_style(raw);
-    style & WS_EX_TOOLWINDOW.0 != 0 && style & WS_EX_APPWINDOW.0 == 0
-}
-
 /// Brings the window in front of everything and gives it the keyboard. Windows only lets the
 /// program that has the user's attention do this: a shortcut that just fired counts, but a window
 /// shown a moment later (economy mode builds it first) no longer does. Second try: share the

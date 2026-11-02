@@ -4,16 +4,17 @@ import { Bubbles, type Point } from "./bubbles";
 import {
   SPRING_OF,
   START,
+  boxOf,
   kickSquish,
   num,
+  topEdgeAt,
   type EngineOptions,
   type Key,
   type Parts,
 } from "./engineParts";
-import { GLITCH_STEP, Glitch, type Box, type Edge } from "./glitch";
+import { GLITCH_STEP, Glitch, type Box } from "./glitch";
 import { paintIsland } from "./islandPaint";
 import {
-  ANCHOR,
   CALM,
   STAGE,
   anim,
@@ -27,6 +28,7 @@ import {
   type Values,
 } from "./islandShape";
 import { humIsland, playIsland } from "./islandSounds";
+import { tuckSprings, tuckedAway } from "./islandTuck";
 
 export type { EngineOptions, Parts } from "./engineParts";
 
@@ -62,6 +64,8 @@ export class IslandEngine {
   private lastAsked = 0;
   /** Told when the island opens or closes (its panel's content becomes usable). */
   onOpenChange: (open: boolean) => void = () => {};
+  /** Its loop stopped (« Cacher l'île » looks whether the island is in the top edge). */
+  onSettle: () => void = () => {};
 
   constructor(private opts: () => EngineOptions) {}
 
@@ -88,9 +92,10 @@ export class IslandEngine {
 
   /** Shown again: closed, coming out of the bezel, its colours measured anew. */
   appear(): void {
-    const { presence: p, open } = this.v;
+    const { presence: p, open, fade } = this.v;
     [p.x, p.v, p.to] = [0, 0, 1];
     open.x = open.to = 0;
+    fade.x = fade.to = 1;
     this.closing = false;
     this.onOpenChange(false);
     void desktopIpc.islandOpen(false, this.opts().calm);
@@ -110,6 +115,17 @@ export class IslandEngine {
 
   get isOpen(): boolean {
     return this.v.open.to === 1;
+  }
+
+  /** « Cacher l'île » (`islandTuck.ts`): into the top edge, or out of it. */
+  tuck(into: boolean): void {
+    tuckSprings(this.v, into, this.opts().calm);
+    if (!into) this.askBackdrop(true);
+    this.kick();
+  }
+
+  get tuckedAway(): boolean {
+    return tuckedAway(this.v);
   }
 
   press(): void {
@@ -190,6 +206,7 @@ export class IslandEngine {
     v.corner.to = num(f.corner);
     // Near the top edge, the capsule already squares its top a little (the magnet).
     const near = num(f.near);
+    this.glitch.threads.approach(this.opts().passage === "glitch" ? near : 0, f.holding);
     v.morph.to = f.holding ? 0 : this.docked ? v.morph.to : 1 - 0.35 * near * near;
     this.scale = num(f.scale) || 1;
     this.origin = { x: f.x / this.scale, y: f.y / this.scale };
@@ -213,7 +230,7 @@ export class IslandEngine {
         v.morph.to = 1;
         kickSquish(v.squish, 6);
         playIsland("detach", passage);
-        if (glitch) this.glitch.trigger(this.topEdge(shape));
+        if (glitch) this.glitch.threads.tear();
         else if (fx) this.bubbles.detached(size);
         break;
       case "crossed":
@@ -231,13 +248,13 @@ export class IslandEngine {
       case "touched":
         playIsland("dock", passage);
         kickSquish(v.squish, -7);
-        if (glitch) this.glitch.trigger(this.topEdge(shape));
+        if (glitch) this.glitch.threads.crush();
         else if (fx) this.bubbles.touched(size);
         break;
       case "snapped":
         playIsland("snap", passage);
         kickSquish(v.squish, -5);
-        if (glitch) this.glitch.trigger(this.topEdge(shape), 0.6);
+        if (glitch) this.glitch.trigger(topEdgeAt(this.origin, shape), 0.6);
         break;
       case "dropped":
         this.docked = false;
@@ -268,28 +285,11 @@ export class IslandEngine {
     this.restTimer = 0;
   }
 
-  /** The top edge where the island meets it (docked, or tearing off), on the desktop. */
-  private topEdge(shape: Shape): Edge {
-    const x = this.origin.x + ANCHOR.x + shape.x;
-    const reach = shape.width / 2 + 50;
-    const at = this.origin.y + ANCHOR.y;
-    return { vertical: false, at, from: x - reach, to: x + reach, sides: 1 };
-  }
-
   /** Untouched across two screens, in « Glitch »: the edge keeps glitching. */
   private restsAcross(): boolean {
     const { effects, calm, passage } = this.opts();
     const across = this.seam.x !== null || this.seam.y !== null;
     return effects && !calm && passage === "glitch" && across && !this.moving && !this.isOpen;
-  }
-
-  private box(shape: Shape): Box {
-    return {
-      x: ANCHOR.x + shape.x - shape.width / 2,
-      y: ANCHOR.y + shape.y,
-      width: shape.width,
-      height: shape.height,
-    };
   }
 
   private stepGlitch(dt: number, island: Box, resting: boolean): boolean {
@@ -349,7 +349,7 @@ export class IslandEngine {
       moving = true;
     }
     const shape = shapeOf(this.values());
-    const island = this.box(shape);
+    const island = boxOf(shape);
     const bubbles = this.bubbles.step(dt, this.speed);
     const resting = this.restsAcross();
     const glitch = this.stepGlitch(dt, island, resting);
@@ -364,14 +364,14 @@ export class IslandEngine {
     }
     this.raf = 0;
     void desktopIpc.islandRest();
-    // Only the edge's glitch is left: on its slow timer.
+    this.onSettle();
     if (resting) this.restTimer = window.setTimeout(this.restLoop, GLITCH_STEP * 1000);
   };
 
   private restLoop = (): void => {
     this.restTimer = 0;
     const shape = shapeOf(this.values());
-    const island = this.box(shape);
+    const island = boxOf(shape);
     const glitch = this.restsAcross() && this.stepGlitch(GLITCH_STEP, island, true);
     if (!glitch) {
       this.glitch.clear();

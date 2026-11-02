@@ -1,5 +1,15 @@
 import type { IslandPassage } from "../../ipc/bindings";
-import { OPEN, SPRINGS, SQUISH_LIMIT, type Animated, type Values } from "./islandShape";
+import type { Point } from "./bubbles";
+import type { Box, Edge } from "./glitch";
+import {
+  ANCHOR,
+  OPEN,
+  SPRINGS,
+  SQUISH_LIMIT,
+  type Animated,
+  type Shape,
+  type Values,
+} from "./islandShape";
 
 /** Step 20 (Kysland): the island engine's options, parts and small helpers. */
 export interface EngineOptions {
@@ -31,6 +41,7 @@ export const SPRING_OF: Record<Key, (typeof SPRINGS)[keyof typeof SPRINGS]> = {
   vy: SPRINGS.lean,
   squish: SPRINGS.squish,
   presence: SPRINGS.presence,
+  fade: SPRINGS.presence,
   open: SPRINGS.open,
   openW: SPRINGS.open,
   openH: SPRINGS.open,
@@ -41,7 +52,28 @@ export const SPRING_OF: Record<Key, (typeof SPRINGS)[keyof typeof SPRINGS]> = {
 };
 
 /** Where the values start (0 for the others): the opened size at its first one. */
-export const START: Partial<Record<Key, number>> = { openW: OPEN.width, openH: OPEN.height };
+export const START: Partial<Record<Key, number>> = {
+  openW: OPEN.width,
+  openH: OPEN.height,
+  fade: 1,
+};
+
+/** The island's box in the window (logical). */
+export const boxOf = (shape: Shape): Box => ({
+  x: ANCHOR.x + shape.x - shape.width / 2,
+  y: ANCHOR.y + shape.y,
+  width: shape.width,
+  height: shape.height,
+});
+
+/** The top edge where the island meets it (docked: a slide along it ends), on the desktop;
+ * `origin`: the window's top-left corner (logical). */
+export function topEdgeAt(origin: Point, shape: Shape): Edge {
+  const x = origin.x + ANCHOR.x + shape.x;
+  const reach = shape.width / 2 + 50;
+  const at = origin.y + ANCHOR.y;
+  return { vertical: false, at, from: x - reach, to: x + reach, sides: 1 };
+}
 
 /** A number from the core (a non-finite one arrives as null). */
 export const num = (v: number | null): number => v ?? 0;

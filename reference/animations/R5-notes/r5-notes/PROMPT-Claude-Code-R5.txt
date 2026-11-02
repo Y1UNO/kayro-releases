@@ -1,0 +1,37 @@
+/plan
+Réponds-moi toujours en français.
+
+Contexte : projet Kayro dans C:\HUB, branche step-12b-atelier-da, dernier tag da-fix-c. Ronde 5 = la dernière avant le gel de la direction artistique.
+À lire d'abord : docs/DA-JOURNAL.md, docs/PROPOSITIONS-DA.md (rapport de Fable : 8 propositions + sections A « thèmes » et B « réglages et animation de thème »), puis les notes de reference/animations/ qui commencent par R5- (elles font foi quand elles diffèrent du rapport) : R5-Reglages-Themes.txt, R5-Flottaison.txt, R5-Personnalisation.txt. Les planches sont sur ma toile Claude Design, tu n'y as pas accès : toutes les valeurs sont dans les notes.
+
+Mission : appliquer tout ce qui suit, en TROIS paquets, avec un arrêt après chacun. Fais un plan complet avant de coder et attends mon accord.
+
+PAQUET 1 — Réglages, thèmes, personnalisation
+- Réglages en catégories Général · Visuel · Thèmes (R5-Reglages-Themes.txt §1), avec le panneau à hauteur bornée et corps défilant (proposition 3 du rapport : un seul panneau à 92 % opaque, plus de verre où l'accueil transparaît).
+- Visuel : réglages principaux en haut + « Personnalisation avancée » repliée, menu déroulant rebondissant, bouton « Revenir aux réglages par défaut » (R5-Personnalisation.txt). Tous les nouveaux réglages dans schema.rs avec défauts et migration.
+- Thèmes : cartes d'aperçu, ENCRE remplace MAUVE, BLEU-GRIS par défaut, ombre de pied sous le nom des cartes de l'éventail (contraste ≥ 4,5:1).
+- Animation de changement de thème : la carte grandit puis s'écrase, impact, puis l'onde part de la lune de la carte et révèle le nouveau thème (R5-Reglages-Themes.txt §2 et §3 : View Transitions, valeurs exactes, cas Éco / réduire / widget). Attention au piège noté : aucune forme posée par-dessus la carte, et rien de l'onde avant l'impact.
+- Flottaison des éventails (catégories et sous-catégories) : réglage Aucune · Légère · Visible · Marquée, défaut Visible (R5-Flottaison.txt).
+ARRÊT 1.
+
+PAQUET 2 — Cohérence visuelle (propositions du rapport)
+- 1. Bokeh : disques doux + anneau fin, couleur éclaircie, 7 × 120 px à 0,09.
+- 2. Grille des rayons (4 familles : pilule / 16 / 26 / carte) et un seul style de petits titres en capitales (jeton --eyebrow 12 / 700 / 0,24 em) ; plus de h2 de l'éditeur en Cormorant.
+- 5. Widget aux couleurs du thème (plus de couleurs en dur), mouvement validé inchangé.
+- 6. Barre du haut et dock : CACHER (pas supprimer) les boutons micro et mains tant que ces fonctions n'existent pas ; sélecteur de mode rangé dans la pilule ; crayon visible au survol seulement ; bouton grille rangé avec les autres.
+- 7. Cartes sans affiche : face en dégradé A→B du thème avec l'icône de l'app (cache d'icônes), et filets du survol visibles dessus (cœur blanc).
+ARRÊT 2.
+
+PAQUET 3 — Écrans et finitions des signatures
+- 4. Scènes et éditeur alignés sur l'accueil : conteneur 1280 px, barre du haut partagée, mêmes marges ; les scènes présentées en cartes comme les apps.
+- 8. Finitions, sans toucher aux chronologies validées : flash de l'écran précédent à la première image (vérifier en rafale), lettres du nom qui se chevauchent, étiquettes de l'éventail masquées d'un seul côté, titres de la liaison superposés à mi-fondu.
+ARRÊT 3.
+
+À NE PAS FAIRE dans cette ronde (à noter dans DA-JOURNAL.md, section « Plus tard ») : gestion des apps qui démarrent avec Windows au premier lancement ; design propre à chaque carte de catégorie ; affiches en production ; icônes dans le carrousel ; fil lumineux pendant la détection ; Échap dans l'éditeur.
+
+Règles :
+- Choix validés protégés : ouverture V1-A + pulsation C, liaison A, langage Vivant, widget déroulé, passages en fondu, voile natif. On peut les rendre réglables (Personnalisation avancée), pas les changer par défaut.
+- À chaque arrêt : reconstruis l'exe de production (« Kayro — mettre à jour » ou build-local.ps1), dis-moi précisément quoi tester DANS L'EXE (pas l'atelier, pas npm run tauri dev). Si je joue, compile en priorité basse et ne lance pas l'exe par-dessus mon jeu.
+- Pas de commit tant que je ne l'ai pas demandé. Quand je le ferai : « Commit OK : « … », tag da-r5-1 (puis -2, -3), sur la branche step-12b-atelier-da, sans fusion dans main », exclusions habituelles (reference/, src/design/presets/history/, SceneDock.module.css). Vérifie git status avant chaque commit.
+- Aucune IA dans l'app. Budget p95 ≤ 5,4 ms (Élevée et Éco) ; mesures seulement PC libre (Get-Process), sinon « à mesurer à l'étape 13 ». Fichiers < 400 lignes. Tout passe par les jetons. Ne touche pas aux écarts de cargo fmt de scene_ops.rs, share.rs, platform/mod.rs. Prettier seulement sur les fichiers que tu modifies.
+- docs/DA-JOURNAL.md à jour à chaque paquet.

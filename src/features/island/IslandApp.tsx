@@ -14,7 +14,10 @@ import { closeTargets } from "../scenes/model";
 import { runningApps, searchPanel, type WidgetHit } from "../widget/widgetModel";
 import { IslandPanel } from "./IslandPanel";
 import { IslandRest } from "./IslandRest";
-import { footprint, rgbOf, trackKey } from "./music";
+import { islandRoom, roomPlan, SHRINK_AFTER_MS, type Room } from "./clickRegion";
+import { DOCKED } from "./islandShape";
+import { DEFAULT_DELAY_MS } from "./islandTuck";
+import { rgbOf, trackKey } from "./music";
 import { panelSize } from "./panelSize";
 import { useIsland } from "./useIsland";
 import { useBeat, useLaunchStretch, useNowPlaying } from "./useIslandData";
@@ -49,12 +52,22 @@ export function IslandApp() {
   const island = useRef<HTMLDivElement>(null);
   const layer = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const np = useNowPlaying();
+  const { stretch: launching, announce, say } = useLaunchStretch();
+  // « Cacher l'île »: its place on the top edge is as wide as the island at rest (`sentRoom`).
+  const tuckOn = useHub((s) => Boolean(s.settings?.islandAlways && s.settings.islandTuck));
+  const tuckDelay = useHub((s) => s.settings?.islandTuckDelay);
+  const sentRoom = useRef<Room | null>(null);
   const controls = useIsland(
     { island, layer, canvas },
     { calm, effects: !isEco(quality), passage },
+    {
+      enabled: tuckOn,
+      delayMs: tuckDelay != null ? tuckDelay * 1000 : DEFAULT_DELAY_MS,
+      stretched: launching !== null,
+      width: () => sentRoom.current?.[0] ?? DOCKED.width,
+    },
   );
-  const np = useNowPlaying();
-  const { stretch: launching, announce, say } = useLaunchStretch();
   // Step 20: an update found at start is said on the island (it installs from Kayro's window).
   const update = useUpdate((s) => s.announced);
   useEffect(() => {
@@ -65,7 +78,7 @@ export function IslandApp() {
   const [selected, setSelected] = useState(0);
   // Leaving or entering the widget mode fades the page out or in (round 4b).
   usePassage("widget");
-  useBeat(island, Boolean(np?.playing) && !controls.open);
+  useBeat(island, Boolean(np?.playing) && !controls.open && !controls.tucked);
 
   const live = useMemo(() => runningApps(apps, running), [apps, running]);
   // Only the scenes that close nothing: the island has no room to ask for a confirmation.
@@ -82,15 +95,30 @@ export function IslandApp() {
     })();
   }, []);
 
-  // What it shows at rest, and the room it takes (the core's click region holds it).
+  // What it shows at rest.
   const shown = { media: np !== null, stretch: launching !== null, dots: live.length > 0 };
   const { activity } = controls;
   useEffect(() => {
     activity(shown);
-    const room = footprint(shown);
-    void desktopIpc.islandFootprint(room.width, room.height);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown.media, shown.stretch, shown.dots, activity]);
+
+  // The room it takes at rest, for the core's click region: it grows at once, shrinks once the
+  // island has (no cut while it shrinks). Sent on a change only, no loop.
+  const [hovered, setHovered] = useState(false);
+  const room = islandRoom({ ...shown, hover: hovered, breath: Boolean(np?.playing) });
+  useEffect(() => {
+    const send = (r: Room) => {
+      sentRoom.current = r;
+      void desktopIpc.islandFootprint(r);
+    };
+    const { now, later } = roomPlan(sentRoom.current, room);
+    if (now) send(now);
+    if (!later) return;
+    const id = window.setTimeout(() => send(later), SHRINK_AFTER_MS);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room[0], room[1], room[2], room[3]]);
 
   // Opened, it is as big as what it shows; the click region grows at once, shrinks once the
   // island has (no cut while it shrinks).
@@ -180,8 +208,14 @@ export function IslandApp() {
           role={controls.open ? "dialog" : "img"}
           aria-label={t(controls.open ? "island.openLabel" : "island.label")}
           onPointerDown={onPointerDown}
-          onPointerEnter={() => controls.hover(true)}
-          onPointerLeave={() => controls.hover(false, query !== "")}
+          onPointerEnter={() => {
+            setHovered(true);
+            controls.hover(true);
+          }}
+          onPointerLeave={() => {
+            setHovered(false);
+            controls.hover(false, query !== "");
+          }}
         >
           <span className={styles.shoulder} data-at="top-left" />
           <span className={styles.shoulder} data-at="top-right" />
