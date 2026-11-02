@@ -221,7 +221,9 @@
     "title": "Capri tout en finesse",
     "points": [
       "Quand Kysland se recolle en haut avec l'effet Capri : de fins fils de glitch relient le bord et l'île, puis l'île les écrase en se posant.",
-      "La zone cliquable de l'île suit sa vraie taille : les clics juste à côté passent aux fenêtres en dessous."
+      "La zone cliquable de l'île suit sa vraie taille : les clics juste à côté passent aux fenêtres en dessous.",
+      "Nouvelle option « Cacher l'île » : Kysland rentre dans le bord haut comme une goutte, et ressort quand la souris touche tout en haut de l'écran, à sa place. Deux curseurs à crans règlent les délais.",
+      "Réglages mieux rangés : une catégorie « Île dynamique » pour tout Kysland (Capri compris) et une catégorie « Raccourcis clavier »."
     ]
   }
 ]
