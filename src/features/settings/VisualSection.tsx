@@ -12,6 +12,7 @@ import { desktopIpc } from "../../ipc/commands";
 import { hubStore, useHub } from "../../store";
 import type { MotionStyle } from "../../design/motion/tokens5";
 import { AdvancedSection } from "./AdvancedSection";
+import { MusicModeRows } from "./MusicModeRows";
 import { ChoiceRow, ToggleRow } from "./SettingRow";
 import {
   ATMOSPHERE,
@@ -138,6 +139,8 @@ export function VisualSection() {
           />
         )}
       </ChoiceRow>
+
+      <MusicModeRows />
 
       <AdvancedSection below={below} />
 

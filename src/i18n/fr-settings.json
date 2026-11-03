@@ -181,6 +181,60 @@
         "label": "Écran du mode immersif",
         "item": "{name} · {width}×{height}"
       },
+      "music": {
+        "title": "Mode musique",
+        "intro": "Le lecteur de Kysland, quand le mode musique est activé dans l’île ouverte : la pochette tourne dans une bulle de gelée noire qui bouge avec la musique.",
+        "bass": {
+          "label": "Intensité de la basse",
+          "help": "À quel point la basse fait cogner la bulle."
+        },
+        "crash": {
+          "label": "Intensité du crash",
+          "help": "Flash, ondes et gouttes sur les cymbales."
+        },
+        "trails": {
+          "label": "Traînées",
+          "help": "La lumière laisse des traînées qui tournent autour du lecteur."
+        },
+        "gloss": {
+          "label": "Brillance",
+          "help": "À 0, le lecteur a le noir mat de l’île. Plus haut, des reflets de gelée."
+        },
+        "advanced": "Avancé",
+        "sense": {
+          "label": "Sensibilité de détection",
+          "help": "Plus haut : les coups plus faibles comptent aussi.",
+          "kick": "Basse (kick)",
+          "snare": "Caisse claire",
+          "hat": "Charleston",
+          "crash": "Crash"
+        },
+        "delay": {
+          "label": "Décalage son/image",
+          "help": "Retarde l’image si le son arrive en retard (casque Bluetooth, par exemple).",
+          "ms": "{value} ms"
+        },
+        "quality": {
+          "label": "Qualité",
+          "help": "Auto baisse la résolution si les images tardent.",
+          "auto": "Auto",
+          "low": "Basse",
+          "medium": "Moyenne",
+          "high": "Haute"
+        },
+        "demo": {
+          "label": "Mode démo",
+          "help": "Joue le morceau de test du labo, son compris, à la place de la musique : pour régler et comparer."
+        },
+        "colors": {
+          "label": "Couleurs",
+          "help": "La lumière prend les couleurs de la pochette, ou celles du thème de Kayro.",
+          "cover": "Pochette",
+          "theme": "Thème Kayro"
+        },
+        "times": "×{value}",
+        "percent": "{value} %"
+      },
       "advanced": {
         "label": "Personnalisation avancée",
         "float": {
