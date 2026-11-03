@@ -19,7 +19,7 @@ pub use super::theme_file::{is_theme_colour, ThemeFile};
 use super::validate::validate_settings;
 use super::visual::{settings_v1_to_v2, settings_v2_to_v3, DEFAULT_THEME};
 pub use super::visual::{
-    CardFloat, CardHoverStyle, Elasticity, IslandMusicMode, IslandPassage, MotionStyle,
+    CardFloat, CardHoverStyle, Elasticity, IslandPassage, MotionStyle, MusicColors, MusicQuality,
     OpeningScreen, OpeningStyle, StartupAfter, StartupOpen, ThemeTransition, WidgetUnroll,
 };
 
@@ -80,10 +80,22 @@ pub struct Settings {
     pub island_tuck_delay: f32,
     pub island_peek_delay: f32,
     /// « Mode musique » (the opened island's switch, 2026-11-02): while music plays, the island
-    /// dances in the middle of its screen.
+    /// becomes a disc in the middle of its screen (the ink scene went on 2026-11-03).
     pub island_music: bool,
-    /// Which of the two: « Disk » or « Dancing » (the opened island's choice).
-    pub island_music_mode: IslandMusicMode,
+    /// Its settings (Visuel › Mode musique; bounds and meaning in visual.rs), « Avancé » from the
+    /// sensitivities (higher: more hits) on; `music_demo`: the test track instead of the sound.
+    pub music_bass: f32,
+    pub music_crash: f32,
+    pub music_trails: f32,
+    pub music_gloss: f32,
+    pub music_sense_kick: f32,
+    pub music_sense_snare: f32,
+    pub music_sense_hat: f32,
+    pub music_sense_crash: f32,
+    pub music_delay_ms: f32,
+    pub music_quality: MusicQuality,
+    pub music_demo: bool,
+    pub music_colors: MusicColors,
     /// Escape hides the hub once there is nothing left to close.
     pub hide_on_escape: bool,
     /// Losing the focus hides the hub (the widget only folds its panel).
@@ -159,7 +171,19 @@ impl Default for Settings {
             island_tuck_delay: TUCK_DELAY_DEFAULT,
             island_peek_delay: PEEK_DELAY_DEFAULT,
             island_music: false,
-            island_music_mode: IslandMusicMode::default(),
+            music_bass: 1.0,
+            music_crash: 1.0,
+            music_trails: 0.6,
+            // The player's ink matte, as black as the island (2026-11-03).
+            music_gloss: 0.0,
+            music_sense_kick: 1.0,
+            music_sense_snare: 1.0,
+            music_sense_hat: 1.0,
+            music_sense_crash: 1.0,
+            music_delay_ms: 0.0,
+            music_quality: MusicQuality::default(),
+            music_demo: false,
+            music_colors: MusicColors::default(),
             hide_on_escape: true,
             hide_on_blur: false,
             economy_mode: false,
@@ -213,7 +237,18 @@ pub struct SettingsPatch {
     pub island_tuck_delay: Option<f32>,
     pub island_peek_delay: Option<f32>,
     pub island_music: Option<bool>,
-    pub island_music_mode: Option<IslandMusicMode>,
+    pub music_bass: Option<f32>,
+    pub music_crash: Option<f32>,
+    pub music_trails: Option<f32>,
+    pub music_gloss: Option<f32>,
+    pub music_sense_kick: Option<f32>,
+    pub music_sense_snare: Option<f32>,
+    pub music_sense_hat: Option<f32>,
+    pub music_sense_crash: Option<f32>,
+    pub music_delay_ms: Option<f32>,
+    pub music_quality: Option<MusicQuality>,
+    pub music_demo: Option<bool>,
+    pub music_colors: Option<MusicColors>,
     pub hide_on_escape: Option<bool>,
     pub hide_on_blur: Option<bool>,
     pub economy_mode: Option<bool>,
@@ -271,7 +306,18 @@ impl Settings {
             island_tuck_delay,
             island_peek_delay,
             island_music,
-            island_music_mode,
+            music_bass,
+            music_crash,
+            music_trails,
+            music_gloss,
+            music_sense_kick,
+            music_sense_snare,
+            music_sense_hat,
+            music_sense_crash,
+            music_delay_ms,
+            music_quality,
+            music_demo,
+            music_colors,
             hide_on_escape,
             hide_on_blur,
             economy_mode,
@@ -306,6 +352,7 @@ impl Settings {
             startup_after,
             ignored_detections,
         );
+        self.clamp_music();
     }
 }
 

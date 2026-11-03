@@ -1,13 +1,19 @@
 //! Step 20 (Kysland): the music playing on the PC, for the island. What Windows' media controls
 //! show (Spotify first): title, artist, cover and its two colours, playing or paused, where in
 //! the track; three controls (previous, play/pause, next); and the beat (beat.rs) while it plays
-//! and the island shows. All local: nothing is sent, nothing is kept but the current cover.
+//! and the island shows, with the music mode's signal (music.rs, 2026-11-03) while that mode is
+//! on (listen.rs). All local: nothing is sent, nothing is kept but the current cover.
 
 pub mod beat;
+mod continuous;
+mod form;
+mod listen;
+pub mod music;
+mod onset;
+mod spectrum;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -15,6 +21,7 @@ use tauri::{AppHandle, Runtime};
 use tauri_specta::Event;
 
 use crate::platform::{loopback, media as win};
+use music::{MusicHit, Section};
 use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager as Manager;
 
 /// The track the island shows.
@@ -42,6 +49,24 @@ pub struct MediaChanged(pub Option<NowPlaying>);
 /// The beat: five levels (0–1), bass to treble, about 30 times a second while asked for.
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
 pub struct MediaBeat(pub Vec<f32>);
+
+/// The music mode's signal (2026-11-03), while the beat is followed and the mode is on (not on
+/// its test track): the hits since the frame before (a frame at most every 10 ms when there are
+/// some), and at least every 16 ms the levels: sub-bass, melody, its pitch, the build's tension
+/// (all 0–1), the silence just before a drop, where the song is. As soon as the sound is read,
+/// so the page delays the image by « Décalage son/image ». `seq` counts the frames.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+#[serde(rename_all = "camelCase")]
+pub struct MusicFrame {
+    pub hits: Vec<MusicHit>,
+    pub sub: f32,
+    pub melody: f32,
+    pub pitch: f32,
+    pub build: f32,
+    pub gap: bool,
+    pub section: Section,
+    pub seq: u32,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -171,7 +196,8 @@ pub fn control<R: Runtime>(app: &AppHandle<R>, action: MediaAction) -> bool {
     win::control(&w.manager, what)
 }
 
-/// Follows the beat while `on` (music plays and the island shows); off, the listening stops.
+/// Follows the beat while `on` (music plays and the island shows), and the music mode's signal
+/// while that mode is on; off, the listening stops.
 pub fn beat<R: Runtime>(app: &AppHandle<R>, on: bool) {
     BEAT_ON.store(on, Ordering::SeqCst);
     if !on || BEAT_RUNNING.swap(true, Ordering::SeqCst) {
@@ -182,17 +208,7 @@ pub fn beat<R: Runtime>(app: &AppHandle<R>, on: bool) {
         .name("island-beat".into())
         .spawn(move || {
             if let Some(capture) = loopback::Capture::open() {
-                let mut analyzer = beat::Analyzer::new(capture.rate);
-                let mut samples = Vec::with_capacity(beat::WINDOW * 4);
-                while BEAT_ON.load(Ordering::SeqCst) {
-                    std::thread::sleep(Duration::from_millis(33));
-                    capture.read(&mut samples);
-                    let keep = samples.len().saturating_sub(beat::WINDOW);
-                    samples.drain(..keep);
-                    let levels = analyzer.levels(&samples);
-                    crate::ipc::notify(MediaBeat(levels.to_vec()).emit(&app));
-                    samples.clear();
-                }
+                listen::run(&app, &capture, || BEAT_ON.load(Ordering::SeqCst));
             } else {
                 tracing::info!("island: the sound played cannot be listened to (no beat)");
             }

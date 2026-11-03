@@ -19,6 +19,7 @@ import { DOCKED } from "./islandShape";
 import { DEFAULT_DELAY_MS } from "./islandTuck";
 import { rgbOf, trackKey } from "./music";
 import { panelSize } from "./panelSize";
+import { lookOf } from "./stage/stageLook";
 import { useMusicStage } from "./stage/useMusicStage";
 import { useIsland } from "./useIsland";
 import { useBeat, useLaunchStretch, useNowPlaying } from "./useIslandData";
@@ -61,7 +62,7 @@ export function IslandApp() {
   const sentRoom = useRef<Room | null>(null);
   // « Mode musique »: while music plays, the island dances in the middle of its screen.
   const musicOn = useHub((s) => Boolean(s.settings?.islandMusic));
-  const musicMode = useHub((s) => s.settings?.islandMusicMode ?? "disk");
+  const settings = useHub((s) => s.settings);
   const [staged, setStaged] = useState(false);
   const controls = useIsland(
     { island, layer, canvas },
@@ -70,7 +71,11 @@ export function IslandApp() {
       enabled: tuckOn,
       delayMs: tuckDelay != null ? tuckDelay * 1000 : DEFAULT_DELAY_MS,
       // Music mode wanted (or on): the island stays out of the top edge.
-      stretched: launching !== null || staged || (musicOn && Boolean(np?.playing)),
+      // (The test track plays without music.)
+      stretched:
+        launching !== null ||
+        staged ||
+        (musicOn && (Boolean(np?.playing) || Boolean(settings?.musicDemo))),
       width: () => sentRoom.current?.[0] ?? DOCKED.width,
     },
   );
@@ -88,8 +93,7 @@ export function IslandApp() {
       open: controls.open,
       tucked: controls.tucked,
       calm,
-      effects: !isEco(quality),
-      mode: musicMode,
+      look: lookOf(settings, isEco(quality), "214 236 255"),
     },
     stageCanvas,
     island,
@@ -281,8 +285,6 @@ export function IslandApp() {
               void hubStore.getState().setSettings({ islandMusic: on });
               if (on && np?.playing) close();
             }}
-            stageMode={musicMode}
-            onStageMode={(mode) => void hubStore.getState().setSettings({ islandMusicMode: mode })}
           />
         </div>
       </div>

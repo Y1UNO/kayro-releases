@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 import { SearchIcon } from "../../design";
-import { SegmentedControl } from "../../design/components/SegmentedControl";
 import { Toggle } from "../../design/components/Toggle";
 import { t } from "../../i18n";
-import type { IslandMusicMode, MediaAction, NowPlaying } from "../../ipc/bindings";
+import type { MediaAction, NowPlaying } from "../../ipc/bindings";
 import type { WidgetHit } from "../widget/widgetModel";
 import { AppMark } from "./AppMark";
 import { progressAt, trackKey } from "./music";
@@ -26,12 +25,7 @@ interface Props {
   /** « Mode musique » (the island plays in the middle of the screen while music plays). */
   stage: boolean;
   onStage: (on: boolean) => void;
-  /** As « Disk » (a record of jelly) or « Dancing » (drops of ink). */
-  stageMode: IslandMusicMode;
-  onStageMode: (mode: IslandMusicMode) => void;
 }
-
-const STAGE_MODES = ["disk", "dancing"] as const satisfies readonly IslandMusicMode[];
 
 /** A soft triangle (rounded corners) pointing left or right: a track back or ahead, play. */
 function Triangle({ left, size = 16 }: { left?: boolean; size?: number }) {
@@ -226,23 +220,13 @@ export function IslandPanel(p: Props) {
             </div>
             <div className={styles.stageRow}>
               <span id="island-stage">{t("island.music.stage")}</span>
-              <div className={styles.stageControls}>
-                <SegmentedControl
-                  className={styles.stageModes}
-                  size="sm"
-                  label={t("island.music.stageStyle")}
-                  value={p.stageMode}
-                  options={STAGE_MODES.map((v) => ({ value: v, label: t(`island.music.${v}`) }))}
-                  onChange={p.onStageMode}
-                />
-                <Toggle
-                  className={styles.stageToggle}
-                  checked={p.stage}
-                  tabIndex={tab}
-                  aria-labelledby="island-stage"
-                  onChange={p.onStage}
-                />
-              </div>
+              <Toggle
+                className={styles.stageToggle}
+                checked={p.stage}
+                tabIndex={tab}
+                aria-labelledby="island-stage"
+                onChange={p.onStage}
+              />
             </div>
           </>
         ) : null}

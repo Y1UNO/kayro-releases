@@ -279,6 +279,7 @@ export const events = {
 	mediaChanged: makeEvent<MediaChanged>("media-changed"),
 	modePassage: makeEvent<ModePassage>("mode-passage"),
 	moodsChanged: makeEvent<MoodsChanged_Deserialize>("moods-changed"),
+	musicFrame: makeEvent<MusicFrame>("music-frame"),
 	palettesChanged: makeEvent<PalettesChanged>("palettes-changed"),
 	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
 	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
@@ -589,6 +590,8 @@ export type FxShape = {
 	dots: (number | null)[],
 };
 
+export type HitKind = "kick" | "snare" | "hat" | "crash";
+
 export type HotkeyProblem = 
 /**  Not a combination the hub can register. */
 "invalid" | 
@@ -664,13 +667,6 @@ export type IslandMoment = {
 };
 
 export type IslandMomentKind = "detached" | "crossed" | "docking" | "touched" | "snapped" | "dropped" | "tap" | "settled";
-
-/**
- *  Kysland's « Mode musique » (2026-11-03): « Disk », the island as a disc of black jelly with
- *  the cover turning in it and the instruments' colours inside, or « Dancing », black ink drops
- *  dancing together.
- */
-export type IslandMusicMode = "disk" | "dancing";
 
 /**
  *  Step 20 (Kysland): how the floating island goes from one screen to another. « Forcer »: the
@@ -847,6 +843,39 @@ export type MotionStyle =
 "complete" | "lively" | 
 /**  No bounce and no magic: entrance curve everywhere, card hover = lift only. */
 "crisp";
+
+/**  « Couleurs » of the music mode: the cover's two colours, or Kayro's theme. */
+export type MusicColors = "cover" | "theme";
+
+/**
+ *  The music mode's signal (2026-11-03), while the beat is followed and the mode is on (not on
+ *  its test track): the hits since the frame before (a frame at most every 10 ms when there are
+ *  some), and at least every 16 ms the levels: sub-bass, melody, its pitch, the build's tension
+ *  (all 0–1), the silence just before a drop, where the song is. As soon as the sound is read,
+ *  so the page delays the image by « Décalage son/image ». `seq` counts the frames.
+ */
+export type MusicFrame = {
+	hits: MusicHit[],
+	sub: number | null,
+	melody: number | null,
+	pitch: number | null,
+	build: number | null,
+	gap: boolean,
+	section: Section,
+	seq: number,
+};
+
+/**  One hit: which instrument, and how hard (0–1, against the band's recent hits). */
+export type MusicHit = {
+	kind: HitKind,
+	velocity: number | null,
+};
+
+/**
+ *  Kysland's « Mode musique » › Avancé › « Qualité » (2026-11-03): the disc's resolution, « Auto »
+ *  lowering it by itself when an image takes too long.
+ */
+export type MusicQuality = "auto" | "low" | "medium" | "high";
 
 /**  An app to add: the id is chosen by the core, never by the caller. */
 export type NewApp = {
@@ -1046,6 +1075,9 @@ export type SceneHotkeyStatus = {
 /**  Progress of the scene being played: one event per step change, plus its start and end. */
 export type SceneProgress = ProgressEvent;
 
+/**  Where the song is (`Unknown` while it cannot be told). */
+export type Section = "drop" | "break" | "build" | "unknown";
+
 export type Settings = Settings_Serialize | Settings_Deserialize;
 
 /**  Emitted after every successful change of the settings (also to the window that made it). */
@@ -1074,7 +1106,18 @@ export type SettingsPatch_Deserialize = {
 	islandTuckDelay?: number | null,
 	islandPeekDelay?: number | null,
 	islandMusic?: boolean | null,
-	islandMusicMode?: IslandMusicMode | null,
+	musicBass?: number | null,
+	musicCrash?: number | null,
+	musicTrails?: number | null,
+	musicGloss?: number | null,
+	musicSenseKick?: number | null,
+	musicSenseSnare?: number | null,
+	musicSenseHat?: number | null,
+	musicSenseCrash?: number | null,
+	musicDelayMs?: number | null,
+	musicQuality?: MusicQuality | null,
+	musicDemo?: boolean | null,
+	musicColors?: MusicColors | null,
 	hideOnEscape?: boolean | null,
 	hideOnBlur?: boolean | null,
 	economyMode?: boolean | null,
@@ -1124,7 +1167,18 @@ export type SettingsPatch_Serialize = {
 	islandTuckDelay: number | null,
 	islandPeekDelay: number | null,
 	islandMusic: boolean | null,
-	islandMusicMode: IslandMusicMode | null,
+	musicBass: number | null,
+	musicCrash: number | null,
+	musicTrails: number | null,
+	musicGloss: number | null,
+	musicSenseKick: number | null,
+	musicSenseSnare: number | null,
+	musicSenseHat: number | null,
+	musicSenseCrash: number | null,
+	musicDelayMs: number | null,
+	musicQuality: MusicQuality | null,
+	musicDemo: boolean | null,
+	musicColors: MusicColors | null,
 	hideOnEscape: boolean | null,
 	hideOnBlur: boolean | null,
 	economyMode: boolean | null,
@@ -1182,11 +1236,25 @@ export type Settings_Deserialize = {
 	islandPeekDelay: number | null,
 	/**
 	 *  « Mode musique » (the opened island's switch, 2026-11-02): while music plays, the island
-	 *  dances in the middle of its screen.
+	 *  becomes a disc in the middle of its screen (the ink scene went on 2026-11-03).
 	 */
 	islandMusic: boolean,
-	/**  Which of the two: « Disk » or « Dancing » (the opened island's choice). */
-	islandMusicMode: IslandMusicMode,
+	/**
+	 *  Its settings (Visuel › Mode musique; bounds and meaning in visual.rs), « Avancé » from the
+	 *  sensitivities (higher: more hits) on; `music_demo`: the test track instead of the sound.
+	 */
+	musicBass: number | null,
+	musicCrash: number | null,
+	musicTrails: number | null,
+	musicGloss: number | null,
+	musicSenseKick: number | null,
+	musicSenseSnare: number | null,
+	musicSenseHat: number | null,
+	musicSenseCrash: number | null,
+	musicDelayMs: number | null,
+	musicQuality: MusicQuality,
+	musicDemo: boolean,
+	musicColors: MusicColors,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */
@@ -1259,11 +1327,25 @@ export type Settings_Serialize = {
 	islandPeekDelay: number | null,
 	/**
 	 *  « Mode musique » (the opened island's switch, 2026-11-02): while music plays, the island
-	 *  dances in the middle of its screen.
+	 *  becomes a disc in the middle of its screen (the ink scene went on 2026-11-03).
 	 */
 	islandMusic: boolean,
-	/**  Which of the two: « Disk » or « Dancing » (the opened island's choice). */
-	islandMusicMode: IslandMusicMode,
+	/**
+	 *  Its settings (Visuel › Mode musique; bounds and meaning in visual.rs), « Avancé » from the
+	 *  sensitivities (higher: more hits) on; `music_demo`: the test track instead of the sound.
+	 */
+	musicBass: number | null,
+	musicCrash: number | null,
+	musicTrails: number | null,
+	musicGloss: number | null,
+	musicSenseKick: number | null,
+	musicSenseSnare: number | null,
+	musicSenseHat: number | null,
+	musicSenseCrash: number | null,
+	musicDelayMs: number | null,
+	musicQuality: MusicQuality,
+	musicDemo: boolean,
+	musicColors: MusicColors,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */

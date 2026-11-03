@@ -217,3 +217,75 @@ fn hiding_the_island_is_off_and_its_delays_stay_in_their_notches() {
     patched.island_peek_delay = 1.1;
     assert!(super::validate::validate_settings(&patched).is_err());
 }
+
+#[test]
+fn the_music_mode_settings_default_and_stay_in_their_bounds() {
+    use super::schema::{MusicColors, MusicQuality};
+    let s = Settings::default();
+    let looks = (s.music_bass, s.music_crash, s.music_trails, s.music_gloss);
+    assert_eq!(
+        looks,
+        (1.0, 1.0, 0.6, 0.0),
+        "gloss 0: the player's ink is matte"
+    );
+    let senses = [
+        s.music_sense_kick,
+        s.music_sense_snare,
+        s.music_sense_hat,
+        s.music_sense_crash,
+    ];
+    assert_eq!(senses, [1.0; 4]);
+    assert_eq!(s.music_delay_ms, 0.0);
+    assert_eq!(s.music_quality, MusicQuality::Auto);
+    assert_eq!((s.music_demo, s.music_colors), (false, MusicColors::Cover));
+    // A patch out of bounds is brought back into them (no error), and kept.
+    let dir = tempfile::tempdir().unwrap();
+    let state = ConfigState::load(DataPaths::new(dir.path()));
+    let out = state
+        .set_settings(SettingsPatch {
+            music_bass: Some(3.0),
+            music_crash: Some(-1.0),
+            music_trails: Some(1.5),
+            music_gloss: Some(0.4),
+            music_sense_kick: Some(0.1),
+            music_sense_hat: Some(9.0),
+            music_delay_ms: Some(-40.0),
+            music_quality: Some(MusicQuality::High),
+            music_demo: Some(true),
+            music_colors: Some(MusicColors::Theme),
+            ..Default::default()
+        })
+        .unwrap();
+    let looks = (
+        out.music_bass,
+        out.music_crash,
+        out.music_trails,
+        out.music_gloss,
+    );
+    assert_eq!(looks, (2.0, 0.0, 1.0, 0.4));
+    let senses = (
+        out.music_sense_kick,
+        out.music_sense_snare,
+        out.music_sense_hat,
+    );
+    assert_eq!(senses, (0.5, 1.0, 2.0));
+    assert_eq!(
+        (out.music_delay_ms, out.music_quality),
+        (0.0, MusicQuality::High)
+    );
+    let patched = state.set_settings(SettingsPatch {
+        music_delay_ms: Some(900.0),
+        ..Default::default()
+    });
+    assert_eq!(patched.unwrap().music_delay_ms, 250.0);
+    // A hand-edited file: a number out of bounds takes its default, the rest stays; the old
+    // « Dancing » choice is gone (an unknown field, dropped).
+    let (_d, s) = load_settings(
+        r#"{"schemaVersion":3,"musicDelayMs":900,"musicBass":1.5,"islandMusicMode":"dancing","musicColors":"theme","musicQuality":"ultra"}"#,
+    );
+    assert_eq!((s.music_delay_ms, s.music_bass), (0.0, 1.5));
+    assert_eq!(
+        (s.music_colors, s.music_quality),
+        (MusicColors::Theme, MusicQuality::Auto)
+    );
+}

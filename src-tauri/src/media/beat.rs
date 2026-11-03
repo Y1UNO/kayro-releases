@@ -31,8 +31,9 @@ pub struct Analyzer {
     levels: [f32; BARS],
 }
 
-/// An in-place radix-2 FFT of `re`/`im` (their length a power of two).
-fn fft(re: &mut [f32], im: &mut [f32]) {
+/// An in-place radix-2 FFT of `re`/`im` (their length a power of two). Also the music mode's
+/// (music.rs): each twiddle is computed once per stage, not once per butterfly.
+pub(crate) fn fft(re: &mut [f32], im: &mut [f32]) {
     let n = re.len();
     let mut j = 0;
     for i in 1..n {
@@ -50,9 +51,9 @@ fn fft(re: &mut [f32], im: &mut [f32]) {
     let mut len = 2;
     while len <= n {
         let angle = -2.0 * std::f32::consts::PI / len as f32;
-        for start in (0..n).step_by(len) {
-            for k in 0..len / 2 {
-                let (s, c) = (angle * k as f32).sin_cos();
+        for k in 0..len / 2 {
+            let (s, c) = (angle * k as f32).sin_cos();
+            for start in (0..n).step_by(len) {
                 let (a, b) = (start + k, start + k + len / 2);
                 let (xr, xi) = (re[b] * c - im[b] * s, re[b] * s + im[b] * c);
                 re[b] = re[a] - xr;

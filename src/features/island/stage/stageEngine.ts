@@ -1,120 +1,86 @@
-import { Attach } from "./attach";
-import { BeatInput } from "./beat";
-import { Dance } from "./dance";
-import { Detach } from "./detach";
-import { Disk } from "./disk";
-import { homeBounds, paintHome, type Home, type HomeLook } from "./home";
-import type { TitleDeps } from "./letters";
-import { Metaballs } from "./metaballs";
-import { clamp, union, type Box } from "./motion";
-import { Pace } from "./pace";
-import { RegionSender, type Part } from "./region";
-import { metricsOf, type Metrics } from "./scale";
-import { atRest, type Look, type Scene, type SceneTrack } from "./scene";
+import { Demo } from "./demo";
+import { Disc, type Drive } from "./disc";
+import { homeBounds, type Home, type HomeLook } from "./home";
+import { Isle } from "./isle";
+import { Body, Effects } from "./jelly";
+import { clamp, STEP, type Box } from "./motion";
+import { Music, type HitKind } from "./music";
+import { DEFAULT_PALETTE, paletteOfImage, paletteOfRgb, type Palette } from "./palette";
+import { boundsOf, fadeInside, RegionSender, type Part } from "./region";
+import { squareCover } from "./cover";
+import { StageView } from "./stageView";
+import type { SoundFrame, StageLook, StageStart, StageTrack } from "./stageTypes";
+import { clearUniforms, uniforms } from "./uniforms";
+
+export type { SoundFrame, StageLook, StageStart, StageTrack } from "./stageTypes";
 
 /**
- * Kysland's music mode (2026-11-03): the page's side. The island lets go of its place, falls to
- * the middle of its screen as a ball of jelly and becomes the scene the user chose (« Disk »:
- * a record of black jelly; « Dancing »: drops of ink dancing), then gathers into a ball again and
- * flies home (`detach.ts`, `attach.ts`). Here: the canvas as big as the screen, a loop in short steps (the same
- * motion at any screen rate) that runs while the music plays or something moves, every frame
- * cleared where anything was or is drawn (and wholly twice a second: nothing stale can stay),
- * and the window's region kept around what is drawn (`region.ts`).
+ * Kysland's music mode (the lab's, 2026-11-03): the page's side. The island waits at its place
+ * (drawn exactly as the page draws it), squashes, and on the next kick (600 ms at most) lets a
+ * drop go that falls to the middle of the screen and becomes the player (`isle.ts`, then
+ * `disc.ts`); leaving, the player crouches, leaps home on the next kick and the island drinks it.
+ * Here: the music (the analysed sound, delayed as set, or the test track), the physics in steps
+ * of 1/480 s, the drawing (`stageView.ts`), the window's region around what is drawn
+ * (`region.ts`). Reduced motion: the island and the player cross-fade. Logical px, s.
  */
 
-export type StageMode = "disk" | "dancing";
+type Phase = "home" | "leaving" | "show" | "returning" | "done";
 
-export interface StageTrack {
-  key: string;
-  title: string;
-  artist: string;
-  cover: string | null;
-  /** The album's accent and dominant colours, as « r g b » (none: the island's tone). */
-  accent: string | null;
-  dominant: string | null;
-  playing: boolean;
-}
-
-export interface StageStart {
-  /** The stage (the screen), logical. */
-  width: number;
-  height: number;
-  /** The island's anchor (middle of its top edge), its size, docked or floating, its corner. */
-  homeX: number;
-  homeY: number;
-  homeW: number;
-  homeH: number;
-  docked: boolean;
-  corner: number;
-  calm: boolean;
-  /** Effects on (off in Éco: fewer drops, no glow, no escaping colours). */
-  effects: boolean;
-  /** The island's tone and glows now (Island.module.css): « r g b », 0–1. */
-  tone: string;
-  rimA: number;
-  glowA: number;
-}
-
-export type EngineDeps = TitleDeps;
-
-type Phase = "home" | "intro" | "show" | "outro" | "done";
-
-/** Motion is stepped at most this long at a time (s). */
-const STEP = 1 / 240;
-/** Reduced motion: the island and the scene cross-fade this long (s). */
-const FADE = 0.35;
-/** Wholly cleared at least this often (s). */
-const WIPE = 0.5;
-
-const sceneTrack = (t: StageTrack | null): SceneTrack | null =>
-  t ? { title: t.title, cover: t.cover, accent: t.accent, dominant: t.dominant } : null;
+/** The player and the island fade (the light, the exact island) this long (s). */
+const FADE = 0.3;
+/** The island waits for a kick this long at most, and squashes this long at least (s). */
+const WAIT = 0.6;
+const SQUASH = 0.15;
 
 export class StageEngine {
   /** Where it draws changed: the window's region follows (it shows and takes clicks there). */
   onArea: (rects: Box[]) => void = () => {};
-  private ctx: CanvasRenderingContext2D | null = null;
-  private m: Metrics | null = null;
+  private view: StageView | null = null;
+  private music = new Music();
+  private fx: Effects;
+  private body = new Body();
+  private disc: Disc | null = null;
+  private isle: Isle | null = null;
+  private demo: Demo | null = null;
+  private U = uniforms();
+  private pal: Palette = DEFAULT_PALETTE;
   private home: Home | null = null;
+  private homeLook: HomeLook = { tone: "214 236 255", rimA: 0.55, dpr: 1 };
   private s: StageStart | null = null;
-  private look: HomeLook = { tone: "214 236 255", rimA: 0.55, dpr: 1 };
-  private scene: Scene | null = null;
-  private detach: Detach | null = null;
-  private attach: Attach | null = null;
-  private beatIn = new BeatInput();
-  private sender: RegionSender | null = null;
+  private look: StageLook | null = null;
   private track: StageTrack | null = null;
+  private sender: RegionSender | null = null;
   private phase: Phase = "home";
-  private sceneOn = false;
-  /** Reduced motion: 0 the island, 1 the scene. */
-  private fade = 0;
   private raf = 0;
   private last = 0;
+  private acc = 0;
   private t = 0;
+  private lit = 0;
+  private homeA = 1;
+  private waitFrom = 0;
+  private kicked = false;
+  private wantOut = false;
   private done: ((home: boolean) => void) | null = null;
   private asked: Promise<boolean> | null = null;
-  private wantOut = false;
-  private drawn: Box | null = null;
-  private wiped = -Infinity;
-  private wipe = true;
-  private forced: Box | null = null;
-  /** Too slow while it shows: the scene draws more cheaply. */
-  private pace = new Pace();
+  private queue: { at: number; f: SoundFrame }[] = [];
+  private loads = 0;
+  private cover: string | null = null;
+  private W = 1;
+  private H = 1;
 
-  constructor(
-    private canvas: HTMLCanvasElement,
-    private deps: EngineDeps,
-  ) {}
+  constructor(private canvas: HTMLCanvasElement) {
+    this.fx = new Effects(() => this.s?.height ?? 1);
+    this.music.listen = (kind, v) => this.hit(kind, v);
+  }
+
+  private drive = (): Drive => {
+    const k = this.s?.calm ? 0.35 : 1;
+    return { bass: (this.look?.bass ?? 1) * k, crash: (this.look?.crash ?? 1) * k };
+  };
 
   /** The window has grown: the island is drawn exactly where it is (nothing moves yet). */
-  start(s: StageStart, track: StageTrack | null, mode: StageMode): void {
-    this.s = s;
-    const dpr = window.devicePixelRatio || 1;
-    this.canvas.width = Math.round(s.width * dpr);
-    this.canvas.height = Math.round(s.height * dpr);
-    this.ctx = this.canvas.getContext("2d");
-    this.ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.look = { tone: s.tone, rimA: s.rimA, dpr };
-    const m = metricsOf(s.width, s.height, s.homeY, s.docked);
+  start(s: StageStart, track: StageTrack | null, look: StageLook): void {
+    [this.s, this.look, this.W, this.H] = [s, look, s.width, s.height];
     const home: Home = {
       x: s.homeX,
       y: s.homeY,
@@ -123,76 +89,107 @@ export class StageEngine {
       docked: s.docked,
       corner: s.corner,
     };
-    [this.m, this.home] = [m, home];
-    const look: Look = {
-      tone: s.tone,
-      accent: track?.accent ?? s.tone,
-      effects: s.effects,
-      calm: s.calm,
-      dpr,
+    this.home = home;
+    this.view = new StageView(this.canvas, s.width, s.height, look.quality);
+    this.homeLook = { tone: s.tone, rimA: s.rimA, dpr: Math.min(2, window.devicePixelRatio || 1) };
+    const W = () => this.W;
+    const H = () => this.H;
+    this.disc = new Disc(W, H, this.body, this.music, this.fx, this.drive);
+    const target = () => {
+      const [x, y] = this.disc!.centre();
+      return { x, y, r: this.disc!.radius() };
     };
-    this.scene =
-      mode === "dancing"
-        ? new Dance(m, look, Metaballs.under(this.canvas, s.width, s.height, dpr, s.effects))
-        : new Disk(m, look, this.deps);
-    this.track = track;
-    this.scene.track(sceneTrack(track));
-    this.sender = new RegionSender(Math.max(24, 0.03 * m.U), m.yTop);
-    this.paint();
+    this.isle = new Isle(home, W, H, this.body, this.music, this.fx, this.drive, target);
+    this.sender = new RegionSender(
+      Math.max(24, 0.03 * Math.min(s.width, s.height)),
+      s.docked ? s.homeY : 0,
+    );
+    this.configure(look);
+    this.setTrack(track);
+    this.paint(0);
     this.region(true);
   }
 
-  /** The window covers the screen: the island lets go. */
-  launch(): void {
-    const { scene, home } = this;
-    if (!scene || !home || this.phase !== "home") return;
-    this.phase = "intro";
-    this.wipe = true;
-    if (this.s?.calm) {
-      const d = scene.drop;
-      scene.enter(atRest(d.x, d.y, d.r));
-      this.sceneOn = true;
-    } else {
-      this.detach = new Detach(home, scene.drop);
-      this.forced = this.detach.corridor();
+  /** The settings changed while it shows. */
+  configure(look: StageLook): void {
+    const was = this.look;
+    this.look = look;
+    this.view?.setQuality(look.quality);
+    if (look.demo && !this.demo) {
+      this.demo = new Demo(this.music);
+      void this.demo.sound(true);
+    } else if (!look.demo && this.demo) {
+      this.demo.stop();
+      this.demo = null;
+      this.music.quiet();
     }
+    if (!was || was.colors !== look.colors || was.theme.join() !== look.theme.join())
+      this.colours();
+  }
+
+  /** The window covers the screen: the island squashes and waits for a kick to let go. */
+  launch(): void {
+    if (this.phase !== "home" || !this.isle) return;
+    // Reduced motion: the player simply fades in over the island.
+    this.phase = this.s?.calm ? "show" : "leaving";
+    [this.waitFrom, this.kicked] = [this.t, false];
+    if (!this.s?.calm) this.isle.leave();
     this.kick();
+  }
+
+  /** The player is what is drawn (and what moves). */
+  private get playing(): boolean {
+    return this.phase === "show" || (Boolean(this.s?.calm) && this.phase === "returning");
   }
 
   setTrack(track: StageTrack | null): void {
+    const was = this.track;
     this.track = track;
-    this.scene?.track(sceneTrack(track));
+    if (!track?.playing) this.music.quiet();
+    if (track && (track.title !== was?.title || track.artist !== was?.artist))
+      this.disc?.title.set(track.title, track.artist);
+    if ((track?.cover ?? null) !== this.cover) this.loadCover(track?.cover ?? null);
+    else if (track?.accent !== was?.accent || track?.dominant !== was?.dominant) this.colours();
     this.kick();
   }
 
-  /** The beat: five levels, bass first (about 30 times a second). */
-  beat(levels: readonly number[]): void {
-    this.beatIn.feed(levels);
-    if (this.track?.playing) this.kick();
+  /** What the analysed sound says (ignored while the test track plays). */
+  feed(f: SoundFrame): void {
+    if (this.demo) return;
+    this.queue.push({ at: performance.now() + (this.look?.delayMs ?? 0), f });
+    if (this.queue.length > 400) this.queue.shift();
+    this.kick();
   }
 
-  /**
-   * Flies home onto the island as it is now (`w` × `h`: narrower once the music has gone): true
-   * once drawn exactly in its place, false if it stayed.
-   */
+  /** Flies home onto the island (`w` × `h`: its size now): true once it is exactly there. */
   leave(w?: number, h?: number): Promise<boolean> {
     if (this.phase === "home" || this.phase === "done" || !this.home) return Promise.resolve(true);
-    if (w !== undefined && h !== undefined) this.home = { ...this.home, w, h };
+    if (w !== undefined && h !== undefined && this.isle)
+      this.home = Object.assign(this.home, { w, h });
     if (!this.asked) this.asked = new Promise((r) => (this.done = r));
     this.wantOut = true;
-    if (this.phase === "show") this.goHome();
+    if (this.phase === "show") this.comeHome();
+    else if (this.phase === "leaving" && this.isle?.phase === "antic1") {
+      // Not gone yet: it simply stays home.
+      this.isle.placeIsland();
+      this.finish();
+    }
     this.kick();
     return this.asked;
   }
 
-  private goHome(): void {
-    this.phase = "outro";
+  private comeHome(): void {
+    const { disc, isle } = this;
+    if (!disc || !isle) return;
+    this.phase = "returning";
     this.wantOut = false;
-    this.wipe = true;
-    this.scene?.close();
+    [this.waitFrom, this.kicked] = [this.t, false];
+    const [x, y] = disc.centre();
+    isle.placeBall(x, y, disc.radius(), disc.spin);
+    if (!this.s?.calm) isle.comeHome();
   }
 
-  /** The music came back on the way home: it turns back (false once it has touched). */
+  /** The music came back before it leapt: the player stays (false once it has leapt). */
   stay(): boolean {
     const back = () => {
       this.done?.(false);
@@ -200,186 +197,200 @@ export class StageEngine {
       this.kick();
       return true;
     };
-    if (this.phase === "intro" && this.wantOut) return back();
-    if (this.phase !== "outro" || !this.scene) return false;
-    if (this.sceneOn) {
-      this.scene.reopen();
-      this.phase = "show";
-      return back();
-    }
-    if (this.attach?.back(this.scene.drop)) return back();
-    return false;
+    if (this.phase === "leaving" && this.wantOut) return back();
+    if (this.phase !== "returning" || !this.disc || !this.isle) return false;
+    if (this.isle.phase !== "antic2" && !this.s?.calm) return false;
+    const [, y] = this.disc.centre();
+    this.disc.nudge(this.isle.ball().y - y);
+    this.phase = "show";
+    return back();
   }
 
-  /** A click at (x, y) is on the ink. */
+  /** A click at (x, y) is on the player. */
   hits(x: number, y: number): boolean {
-    return this.sceneOn && this.phase === "show" && (this.scene?.hits(x, y) ?? false);
+    if (this.phase !== "show" || !this.disc) return false;
+    const [cx, cy] = this.disc.centre();
+    return Math.hypot(x - cx, y - cy) < this.disc.radius() * this.body.S.x * 1.05;
   }
 
   dispose(): void {
     cancelAnimationFrame(this.raf);
     this.raf = 0;
-    this.scene?.dispose();
-    this.scene = null;
+    this.demo?.stop();
+    this.demo = null;
+    this.loads++;
+    this.view?.dispose();
+    this.view = null;
     this.done?.(true);
     this.done = null;
-    // The canvas as big as the screen lets its memory go until the next show.
-    this.canvas.width = 0;
-    this.canvas.height = 0;
+  }
+
+  private hit(kind: HitKind, v: number): void {
+    if (kind === "kick") this.kicked = true;
+    if (this.playing) this.disc?.on(kind, v);
+    else if (this.phase !== "home" && this.phase !== "done") this.isle?.on(kind, v);
   }
 
   private kick(): void {
-    if (this.raf || this.phase === "home" || this.phase === "done" || !this.scene) return;
+    if (this.raf || this.phase === "home" || this.phase === "done" || !this.view) return;
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.tick);
   }
 
   private tick = (now: number): void => {
     this.raf = 0;
-    const scene = this.scene;
-    if (!scene) return;
-    // A frame's time may come before the moment it was asked for (its start): never backwards.
-    const dt = clamp((now - this.last) / 1000, 0, 0.05);
+    if (!this.view || !this.isle || !this.disc) return;
+    const raw = (now - this.last) / 1000;
+    const dt = clamp(raw, 0, 0.1);
     this.last = Math.max(this.last, now);
     this.t += dt;
-    const playing = Boolean(this.track?.playing);
-    const pulse = this.beatIn.step(dt, playing);
-    if (this.sceneOn) scene.frame(pulse, playing);
-    const n = Math.max(1, Math.ceil(dt / STEP - 1e-6));
-    for (let i = 0; i < n; i++) {
-      const h = dt / n;
-      this.detach?.step(h);
-      this.attach?.step(h);
-      if (this.sceneOn) scene.step(h);
+    this.listen(now, dt);
+    this.acc += dt;
+    let n = 0;
+    const scene = this.playing ? this.disc : this.isle;
+    while (this.acc >= STEP && n < 60) {
+      scene.step(STEP);
+      this.fx.step(STEP);
+      this.acc -= STEP;
+      n++;
     }
+    if (n >= 60) this.acc = 0;
     this.advance(dt);
-    if (this.phase === "show" && this.pace.frame(dt, this.t)) this.scene?.slow();
-    this.paint();
+    this.view.pace(raw);
+    this.paint(dt);
     this.region(false);
-    const moving = this.phase === "intro" || this.phase === "outro";
-    if (this.phase !== "done" && (moving || playing || scene.busy)) {
-      this.raf = requestAnimationFrame(this.tick);
-    }
+    if (this.phase !== "done") this.raf = requestAnimationFrame(this.tick);
   };
 
-  /** From one act to the next: the ball becomes the scene, the scene a ball, the ball the island. */
+  /** The music now: the test track, or the analysed sound once its delay has passed. */
+  private listen(now: number, dt: number): void {
+    const M = this.music;
+    M.advance(dt);
+    if (this.demo) {
+      this.demo.advance(dt);
+      return;
+    }
+    while (this.queue.length && this.queue[0]!.at <= now) {
+      const { f } = this.queue.shift()!;
+      if (this.track?.playing) M.heard(f);
+    }
+  }
+
+  /** From one act to the next (the waits for a kick, the hand-offs, the fades). */
   private advance(dt: number): void {
-    const { scene, home } = this;
-    if (!scene || !home) return;
+    const { isle, disc } = this;
+    if (!isle || !disc) return;
     const calm = this.s?.calm ?? false;
-    if (calm && this.phase === "show") this.fade = Math.min(1, this.fade + dt / FADE);
-    if (this.phase === "intro") {
-      if (calm) {
-        this.fade = Math.min(1, this.fade + dt / FADE);
-        if (this.fade >= 1) this.phase = "show";
-      } else if (this.detach?.ready) {
-        scene.enter(this.detach.body());
-        [this.sceneOn, this.detach, this.phase] = [true, null, "show"];
+    const waited = this.t - this.waitFrom;
+    const fadeIn = (k: number) => Math.min(1, k + dt / FADE);
+    const fadeOut = (k: number) => Math.max(0, k - dt / FADE);
+    if (this.phase === "leaving") {
+      [this.lit, this.homeA] = [fadeIn(this.lit), fadeOut(this.homeA)];
+      if (isle.phase === "antic1" && ((this.kicked && waited > SQUASH) || waited > WAIT)) {
+        isle.go();
+      } else if (isle.played) {
+        disc.spin = isle.spin;
+        this.phase = "show";
       }
-      if (this.phase === "show" && this.wantOut) this.goHome();
-      return;
+    } else if (this.phase === "show") {
+      [this.lit, this.homeA] = [fadeIn(this.lit), fadeOut(this.homeA)];
+      if (this.wantOut) this.comeHome();
+    } else if (this.phase === "returning") {
+      if (calm) {
+        [this.lit, this.homeA] = [fadeOut(this.lit), fadeIn(this.homeA)];
+        if (this.lit <= 0) this.finish();
+        return;
+      }
+      if (isle.phase === "antic2" && ((this.kicked && waited > SQUASH) || waited > WAIT)) isle.go();
+      if (isle.touched) [this.lit, this.homeA] = [fadeOut(this.lit), fadeIn(this.homeA)];
+      if (isle.atHome && this.homeA >= 1) this.finish();
     }
-    if (this.phase !== "outro") return;
-    if (calm) {
-      this.fade = Math.max(0, this.fade - dt / FADE);
-      if (this.fade <= 0) this.finish();
-      return;
-    }
-    const body = this.sceneOn ? scene.closed() : null;
-    if (body) {
-      this.attach = new Attach(home, body);
-      this.forced = this.attach.corridor();
-      scene.hide();
-      this.sceneOn = false;
-    }
-    const a = this.attach;
-    if (a?.returned) {
-      scene.enter(a.body());
-      [this.sceneOn, this.attach, this.phase] = [true, null, "show"];
-    } else if (a?.settled) this.finish();
   }
 
   /** Exactly the island in its place: the page may show it again. */
   private finish(): void {
     this.phase = "done";
-    this.sceneOn = false;
-    this.scene?.hide();
-    this.wipe = true;
+    [this.lit, this.homeA] = [0, 1];
+    this.isle?.placeIsland();
+    this.paint(0);
     this.done?.(true);
     [this.done, this.asked] = [null, null];
   }
 
-  /** What is drawn now, as boxes (with their speed). */
+  private colours(): void {
+    const look = this.look;
+    const t = this.track;
+    if (look?.colors === "theme") this.pal = paletteOfRgb(look.theme[0], look.theme[1]);
+    else if (!this.cover && t?.accent) this.pal = paletteOfRgb(t.accent, t.dominant ?? t.accent);
+  }
+
+  /** The cover, drawn square for its texture and its colours. */
+  private loadCover(src: string | null): void {
+    this.cover = src;
+    const id = ++this.loads;
+    if (!src) {
+      this.pal = DEFAULT_PALETTE;
+      this.colours();
+      return;
+    }
+    void squareCover(src).then((c) => {
+      if (id !== this.loads || !this.view || !c) return;
+      this.view.setCover(c);
+      if (this.look?.colors !== "theme") this.pal = paletteOfImage(c);
+    });
+  }
+
+  /** The scene's shapes and light, then the island and the title on the 2D canvas. */
+  private paint(dt: number): void {
+    const { view, isle, disc, home, U, music: M } = this;
+    if (!view || !isle || !disc || !home) return;
+    clearUniforms(U, this.W, this.H);
+    const show = this.playing;
+    if (show) disc.fill(U);
+    else isle.fill(U);
+    this.fx.fill(U, this.drive().crash);
+    if (show) U.fade = disc.radius() * this.body.S.x * 2.15;
+    const lit = this.phase === "home" || this.phase === "done" ? 0 : this.lit;
+    const box = boundsOf(this.parts(), this.W, this.H);
+    // The light is gone before the edges of what is drawn (no cut).
+    U.fade = Math.min(U.fade, fadeInside(box, U.fc[0]!, U.fc[1]!, this.W, this.H));
+    const F = StageView.frame(U, this.pal, this.look!, M, lit, this.t, dt, box);
+    const home2d = { h: home, look: this.homeLook, alpha: this.homeA };
+    view.draw(F, this.t, home2d, show ? disc.titleBox() : null, (ctx) => {
+      if (show) disc.overlay(ctx, this.pal.c1, this.lit);
+    });
+  }
+
   private parts(): Part[] {
     const out: Part[] = [];
-    if (this.sceneOn) this.scene?.parts(out);
-    if (this.detach) out.push(this.detach.part());
-    if (this.attach) out.push(this.attach.part());
-    const home = this.home;
-    const showsHome = this.phase === "home" || this.phase === "done" || (this.s?.calm ?? false);
-    if (home && (showsHome || (this.phase === "intro" && !this.sceneOn))) {
-      const b = homeBounds(home);
+    const { home, disc, isle } = this;
+    if (!home || !disc || !isle) return out;
+    const b = homeBounds(home);
+    const pad = this.H * 0.15;
+    if (this.homeA > 0 || this.phase === "home" || this.phase === "done") {
       out.push({ x0: b.x0 - 12, y0: b.y0 - 6, x1: b.x1 + 12, y1: b.y1 + 16 });
+    }
+    // The player's light while it plays, and while its trails die out on the way home.
+    if (this.playing || (this.phase === "returning" && this.t - this.waitFrom < 0.6)) {
+      const [cx, cy] = disc.centre();
+      const r = Math.max(disc.radius() * this.body.S.x * 2.15, disc.reach());
+      out.push({ x0: cx - r, y0: cy - r, x1: cx + r, y1: cy + r });
+      if (this.playing) out.push(disc.titleBox());
+    }
+    if (this.phase === "leaving" || this.phase === "returning") {
+      const r = isle.reach();
+      if (Number.isFinite(r.x0))
+        out.push({ x0: r.x0 - pad, y0: r.y0 - pad, x1: r.x1 + pad, y1: r.y1 + pad });
+      const w = this.fx.reach();
+      const [cx, cy] = [this.U.fc[0]!, this.U.fc[1]!];
+      if (w > 0) out.push({ x0: cx - w, y0: cy - w, x1: cx + w, y1: cy + w });
     }
     return out;
   }
 
-  /** Sends the region when what is drawn left it (or a corridor must be there at once). */
+  /** Sends the region when what is drawn left it. */
   private region(force: boolean): void {
-    const sender = this.sender;
-    if (!sender) return;
-    const drawn = this.parts();
-    const forced = this.forced;
-    if (forced) drawn.push(forced);
-    this.forced = null;
-    const rects = sender.offer(drawn, this.t, force || forced !== null);
+    const rects = this.sender?.offer(this.parts(), this.t, force);
     if (rects) this.onArea(rects);
-  }
-
-  private paint(): void {
-    const { ctx, m, home } = this;
-    if (!ctx || !m || !home) return;
-    const parts = this.parts();
-    let box: Box | null = null;
-    for (const p of parts) box = box ? union(box, p) : { x0: p.x0, y0: p.y0, x1: p.x1, y1: p.y1 };
-    if (box) box = { x0: box.x0 - 12, y0: box.y0 - 12, x1: box.x1 + 12, y1: box.y1 + 12 };
-    // Cleared where anything was or is drawn; wholly at each change of act, and now and then.
-    if (this.wipe || !this.drawn || !box || this.t - this.wiped >= WIPE) {
-      ctx.clearRect(0, 0, m.W, m.H);
-      [this.wipe, this.wiped] = [false, this.t];
-    } else {
-      const c = union(this.drawn, box);
-      ctx.clearRect(c.x0, c.y0, c.x1 - c.x0, c.y1 - c.y0);
-    }
-    this.drawn = box;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, m.yTop, m.W, m.H - m.yTop);
-    ctx.clip();
-    const calm = this.s?.calm ?? false;
-    const p = this.phase;
-    if (p === "home" || p === "done") {
-      paintHome(ctx, home, this.look);
-    } else if (calm) {
-      if (this.fade < 1) paintHome(ctx, home, this.look, 1 - this.fade);
-      ctx.globalAlpha = clamp(this.fade, 0, 1);
-      if (this.sceneOn) this.scene?.draw(ctx);
-      ctx.globalAlpha = 1;
-    } else {
-      const d = this.detach;
-      // Floating, its shadow and rim fade as it lets go.
-      if (d && !home.docked) paintHome(ctx, home, this.look, 1 - clamp(d.t / 0.3, 0, 1), true);
-      if (this.sceneOn) this.scene?.draw(ctx);
-      const shape = d ?? this.attach;
-      if (shape) {
-        const path = new Path2D();
-        shape.trace(path);
-        ctx.fillStyle = "#000";
-        ctx.fill(path);
-      }
-      const look = this.attach && !home.docked ? this.attach.look : 0;
-      if (look > 0) paintHome(ctx, home, this.look, look);
-    }
-    ctx.restore();
   }
 }

@@ -6,14 +6,17 @@ import {
   type AppPalette,
   type AppEntry,
   type AppRunState,
+  type HitKind,
   type HotkeysReport,
   type IslandFrame,
   type IslandMoment,
   type IslandStage,
   type IslandTucked,
+  type MusicFrame,
   type NowPlaying,
   type ModePassage,
   type ProgressEvent,
+  type Section,
   type Settings,
   type MoodFile,
   type ThemeFile,
@@ -146,6 +149,38 @@ export function onMediaChanged(handler: (now: NowPlaying | null) => void): Promi
 /** Step 20: the beat, five levels (0–1) from the bass up, about 30 times a second. */
 export function onMediaBeat(handler: (levels: number[]) => void): Promise<Unlisten> {
   return listenTo(events.mediaBeat.listen, (levels) => handler(levels.map((l) => l ?? 0)));
+}
+
+/** A music frame with plain numbers (a number the core could not send reads 0). */
+export interface MusicSignal {
+  hits: { kind: HitKind; velocity: number }[];
+  sub: number;
+  melody: number;
+  pitch: number;
+  build: number;
+  gap: boolean;
+  section: Section;
+  seq: number;
+}
+
+/**
+ * Music mode (2026-11-03), from the sound played while the mode is on (not on its test track):
+ * the hits since the frame before (at most every 10 ms) and the levels (at least every 16 ms).
+ * Sent as soon as the sound is read: the page delays the image by « Décalage son/image ».
+ */
+export function onMusicFrame(handler: (frame: MusicSignal) => void): Promise<Unlisten> {
+  return listenTo(events.musicFrame.listen, (f: MusicFrame) =>
+    handler({
+      hits: f.hits.map((h) => ({ kind: h.kind, velocity: h.velocity ?? 0 })),
+      sub: f.sub ?? 0,
+      melody: f.melody ?? 0,
+      pitch: f.pitch ?? 0,
+      build: f.build ?? 0,
+      gap: f.gap,
+      section: f.section,
+      seq: f.seq,
+    }),
+  );
 }
 
 /** A shortcut asks to confirm a scene that closes apps. */

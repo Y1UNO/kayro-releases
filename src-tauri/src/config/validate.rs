@@ -251,6 +251,9 @@ pub fn validate_settings(s: &Settings) -> Check {
     if !(0.0..=PEEK_DELAY_MAX).contains(&s.island_peek_delay) {
         return err("islandPeekDelay", "must be between 0 and 1");
     }
+    if !s.music_in_bounds() {
+        return err("music", "a music mode setting is out of its bounds");
+    }
     let ignored = &s.ignored_detections;
     if ignored.len() > MAX_IGNORED || ignored.iter().any(|id| validate_id(id).is_err()) {
         return err("ignoredDetections", "too many or invalid ids");

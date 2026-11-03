@@ -135,3 +135,26 @@ export class RegionSender {
     }));
   }
 }
+
+/** All the parts as one box, inside the stage `W` × `H` (empty: x1 < x0). */
+export function boundsOf(parts: readonly Box[], W: number, H: number): Box {
+  let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const p of parts) {
+    [x0, y0] = [Math.min(x0, p.x0), Math.min(y0, p.y0)];
+    [x1, y1] = [Math.max(x1, p.x1), Math.max(y1, p.y1)];
+  }
+  return { x0: Math.max(0, x0), y0: Math.max(0, y0), x1: Math.min(W, x1), y1: Math.min(H, y1) };
+}
+
+/**
+ * How far light around (x, y) may reach and fade out before the edges of `box` (the drawn box:
+ * past it, nothing is drawn, so light must be gone by then); the stage's own edges cut it anyway.
+ */
+export function fadeInside(box: Box, x: number, y: number, W: number, H: number): number {
+  const gaps: number[] = [];
+  if (box.x0 > 0.5) gaps.push(x - box.x0);
+  if (box.x1 < W - 0.5) gaps.push(box.x1 - x);
+  if (box.y0 > 0.5) gaps.push(y - box.y0);
+  if (box.y1 < H - 0.5) gaps.push(box.y1 - y);
+  return gaps.length ? Math.max(20, Math.min(...gaps)) : 1e5;
+}

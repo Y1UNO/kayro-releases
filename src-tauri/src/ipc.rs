@@ -389,6 +389,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             crate::desktop::island::IslandStage,
             crate::media::MediaChanged,
             crate::media::MediaBeat,
+            crate::media::MusicFrame,
             crate::desktop::passage::ModePassage,
             crate::desktop::SceneHotkey,
             crate::desktop::hotkeys::HotkeysChanged,

@@ -3,11 +3,11 @@ import type { RefObject } from "react";
 import { useWindowVisible } from "../../../app/windowVisible";
 import type { IslandStage, NowPlaying } from "../../../ipc/bindings";
 import { desktopIpc } from "../../../ipc/commands";
-import { onIslandStage, onMediaBeat } from "../../../ipc/events";
+import { onIslandStage, onMusicFrame } from "../../../ipc/events";
 import { hubStore } from "../../../store";
 import { shapeOf } from "../islandShape";
 import { rgbOf, trackKey } from "../music";
-import { StageEngine, type EngineDeps, type StageMode, type StageTrack } from "./stageEngine";
+import { StageEngine, type StageLook, type StageTrack } from "./stageEngine";
 
 /** Paused (or nothing playing) this long, the island goes home (ms). */
 export const PAUSE_HOME_MS = 2000;
@@ -27,9 +27,8 @@ export interface StageOptions {
   open: boolean;
   tucked: boolean;
   calm: boolean;
-  effects: boolean;
-  /** « Disk » or « Dancing » (read when the show starts). */
-  mode: StageMode;
+  /** The mode's settings (Réglages › Visuel › Mode musique); with the test track, it plays alone. */
+  look: StageLook;
 }
 
 /**
@@ -80,35 +79,22 @@ export function homeSize(docked: boolean, music: boolean): { w: number; h: numbe
 /** Two frames from now (the page has drawn what it was told). */
 const afterPaint = (f: () => void) => requestAnimationFrame(() => requestAnimationFrame(f));
 
-/** What the engine needs of the page: canvases and fonts. */
-function pageDeps(): EngineDeps {
-  return {
-    canvas: (w, h) => {
-      const c = document.createElement("canvas");
-      c.width = w;
-      c.height = h;
-      return c;
-    },
-    font: (spec, text) => document.fonts.load(spec, text),
-  };
-}
-
-/** The island's colours now (its tone and glows, set by its engine on its element). */
-function paletteOf(el: HTMLElement | null): { tone: string; rimA: number; glowA: number } {
+/** The island's colours now (its tone and rim, set by its engine on its element). */
+function paletteOf(el: HTMLElement | null): { tone: string; rimA: number } {
   const css = el ? getComputedStyle(el) : null;
   const tone = css?.getPropertyValue("--tone").trim() || "214 236 255";
   const num = (name: string, fallback: number) => {
     const v = parseFloat(css?.getPropertyValue(name) ?? "");
     return Number.isFinite(v) ? v : fallback;
   };
-  return { tone, rimA: num("--rim-a", 0.55), glowA: num("--glow-a", 0.28) };
+  return { tone, rimA: num("--rim-a", 0.55) };
 }
 
 /**
- * Kysland's music mode (2026-11-03): while « Mode musique » is on and music plays, the island
- * leaves for the middle of its screen and plays there, as « Disk » or « Dancing »
- * (`stageEngine.ts`); paused or stopped for
- * 2 s, opened, turned off or hidden, it flies home. The window's switches are the core's
+ * Kysland's music mode (the lab's, 2026-11-03): while « Mode musique » is on and music plays (or
+ * the test track, in demo mode), the island lets a drop fall to the middle of its screen that
+ * becomes the player (`stageEngine.ts`); paused or stopped for 2 s, opened, turned off or
+ * hidden, it comes home. The window's switches are the core's
  * (`desktop/island/stage.rs`): it grows in place while the island still shows (`ready`), moves
  * to cover the screen once the drop is drawn where the island is (`on`), and goes back once the
  * island shows again at its place (`back`). Timers only on a change, no loop of its own.
@@ -141,7 +127,7 @@ export function useMusicStage(
     return () => window.clearTimeout(id);
   }, [playing]);
 
-  const want = o.on && held && visible && !o.open && !o.tucked;
+  const want = o.on && (held || o.look.demo) && visible && !o.open && !o.tucked;
   const leaving = useRef(false);
   // The phase now, for answers that come back after a change (the core ended the mode).
   const now = useRef<StagePhase>("off");
@@ -196,9 +182,9 @@ export function useMusicStage(
   useEffect(() => {
     const el = canvas.current;
     if (!stage?.on || !el) return;
-    const { calm, effects, np, mode } = opts.current;
+    const { calm, np, look } = opts.current;
     const size = homeSize(stage.docked, np !== null);
-    const e = new StageEngine(el, pageDeps());
+    const e = new StageEngine(el);
     engine.current = e;
     leaving.current = false;
     e.onArea = (rects) => void desktopIpc.islandStageArea(rects);
@@ -213,11 +199,10 @@ export function useMusicStage(
         docked: stage.docked,
         corner: stage.corner ?? 0,
         calm,
-        effects,
         ...paletteOf(island.current),
       },
       trackOf(np),
-      mode,
+      look,
     );
     let live = true;
     const id = window.setTimeout(
@@ -260,10 +245,16 @@ export function useMusicStage(
   useEffect(() => {
     engine.current?.setTrack(trackOf(opts.current.np));
   }, [key]);
+  // The settings changed while it shows.
+  const lookKey = JSON.stringify(o.look);
+  useEffect(() => {
+    engine.current?.configure(opts.current.look);
+  }, [lookKey]);
+  // The sound as analysed (hits and levels, about every 10 ms) while it shows.
   const on = stage?.on === true;
   useEffect(() => {
     if (!on) return;
-    const off = onMediaBeat((levels) => engine.current?.beat(levels));
+    const off = onMusicFrame((f) => engine.current?.feed(f));
     return () => void off.then((u) => u());
   }, [on]);
 

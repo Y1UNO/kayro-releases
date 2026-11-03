@@ -333,10 +333,7 @@
       "next": "Morceau suivant",
       "none": "Rien en lecture pour l’instant.",
       "stage": "Mode musique",
-      "stageLeave": "Quitter le mode musique",
-      "stageStyle": "Style du mode musique",
-      "disk": "Disk",
-      "dancing": "Dancing"
+      "stageLeave": "Quitter le mode musique"
     }
   },
   "widget": {

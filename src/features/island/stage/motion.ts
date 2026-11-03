@@ -1,42 +1,38 @@
 /**
- * Kysland's music mode: the small tools every scene moves with. A value on a spring (stepped
- * semi-implicitly: stable for the short steps the engine gives), easings, an angle constant.
+ * Kysland's music mode (the lab, 2026-11-03): the small tools every part moves with. A value on
+ * a damped spring stepped semi-implicitly (`v += ((target − x)·k − v·2z√k)·h; x += v·h`, always
+ * in steps of 1/480 s: the same motion at any screen rate), and a few helpers.
  */
 
 export const TAU = Math.PI * 2;
-
-/** A value and its speed. */
-export interface Sv {
-  x: number;
-  v: number;
-}
-
-export const sv = (x: number): Sv => ({ x, v: 0 });
-
-/** Moves `o` towards `to` on a spring of stiffness `k` and damping ratio `z`, for `dt` s. */
-export function spring(o: Sv, to: number, k: number, z: number, dt: number): void {
-  const c = 2 * z * Math.sqrt(k);
-  o.v += ((to - o.x) * k - o.v * c) * dt;
-  o.x += o.v * dt;
-}
-
-/** Near enough and slow enough. */
-export const still = (o: Sv, to: number, eps: number): boolean =>
-  Math.abs(o.x - to) < eps && Math.abs(o.v) < eps * 12;
+export const GOLD = Math.PI * (3 - Math.sqrt(5));
+/** The physics step (s). */
+export const STEP = 1 / 480;
 
 export const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
-/** Ease in and out (cubic). */
-export const eio = (u: number): number => {
-  const x = clamp(u, 0, 1);
-  return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
-};
+/** A number in [a, b) from `random` (Math.random by default). */
+export const rnd = (a = 0, b = 1, random: () => number = Math.random): number =>
+  a + random() * (b - a);
 
-/** 0 at `a`, 1 at `b` (either order), smooth. */
-export function smoothstep(a: number, b: number, x: number): number {
-  const t = clamp((x - a) / (b - a || 1), 0, 1);
-  return t * t * (3 - 2 * t);
+/** A value and its speed, pulled towards a target by a damped spring. */
+export class Sp {
+  v = 0;
+  constructor(public x = 0) {}
+
+  /** Moves towards `t` on a spring of stiffness `k` and damping ratio `z`, for `h` s. */
+  to(t: number, k: number, z: number, h: number): number {
+    const c = 2 * z * Math.sqrt(k);
+    this.v += ((t - this.x) * k - this.v * c) * h;
+    this.x += this.v * h;
+    return this.x;
+  }
+
+  set(x: number): void {
+    this.x = x;
+    this.v = 0;
+  }
 }
 
 /** A box (logical px). */

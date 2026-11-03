@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use specta::Type;
 
+use super::schema::Settings;
+
 /// « Mouvement »: `Lively` is the validated « Vivant intelligent » language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]
@@ -81,15 +83,57 @@ pub enum IslandPassage {
     Glitch,
 }
 
-/// Kysland's « Mode musique » (2026-11-03): « Disk », the island as a disc of black jelly with
-/// the cover turning in it and the instruments' colours inside, or « Dancing », black ink drops
-/// dancing together.
+/// Kysland's « Mode musique » › Avancé › « Qualité » (2026-11-03): the disc's resolution, « Auto »
+/// lowering it by itself when an image takes too long.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]
-pub enum IslandMusicMode {
+pub enum MusicQuality {
     #[default]
-    Disk,
-    Dancing,
+    Auto,
+    Low,
+    Medium,
+    High,
+}
+
+/// « Couleurs » of the music mode: the cover's two colours, or Kayro's theme.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum MusicColors {
+    #[default]
+    Cover,
+    Theme,
+}
+
+/// Bounds of the music mode's numbers: bass and crash strength ×0–2 (trails and gloss 0–1), the
+/// detection sensitivities 0.5–2, and the image's delay after the sound 0–250 ms (Bluetooth
+/// headphones play late; the image cannot come before the sound is heard, so never negative).
+pub const MUSIC_STRENGTH_MAX: f32 = 2.0;
+pub const MUSIC_SENSE_MIN: f32 = 0.5;
+pub const MUSIC_SENSE_MAX: f32 = 2.0;
+pub const MUSIC_DELAY_MAX_MS: f32 = 250.0;
+
+impl Settings {
+    /// The music mode's numbers brought back into their bounds (a patch never fails on them).
+    pub(super) fn clamp_music(&mut self) {
+        let strength = |v: f32| v.clamp(0.0, MUSIC_STRENGTH_MAX);
+        let sense = |v: f32| v.clamp(MUSIC_SENSE_MIN, MUSIC_SENSE_MAX);
+        self.music_bass = strength(self.music_bass);
+        self.music_crash = strength(self.music_crash);
+        self.music_trails = self.music_trails.clamp(0.0, 1.0);
+        self.music_gloss = self.music_gloss.clamp(0.0, 1.0);
+        self.music_sense_kick = sense(self.music_sense_kick);
+        self.music_sense_snare = sense(self.music_sense_snare);
+        self.music_sense_hat = sense(self.music_sense_hat);
+        self.music_sense_crash = sense(self.music_sense_crash);
+        self.music_delay_ms = self.music_delay_ms.clamp(0.0, MUSIC_DELAY_MAX_MS);
+    }
+
+    /// All of them within their bounds (a hand-edited file may say otherwise).
+    pub(super) fn music_in_bounds(&self) -> bool {
+        let mut clamped = self.clone();
+        clamped.clamp_music();
+        clamped == *self
+    }
 }
 
 /// « Au démarrage » (started with Windows): the intro (the still logo, a click or Enter plays the
