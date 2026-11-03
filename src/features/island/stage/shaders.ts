@@ -19,6 +19,7 @@ export const COMMON = `#version 300 es
 precision highp float;
 uniform vec2 uRes;uniform float uPx;uniform vec2 uSize;uniform float uTime;
 uniform vec4 uBalls[32];uniform int uN;uniform float uK;
+uniform vec4 uSegA[50];uniform vec4 uSegB[50];uniform int uNS;
 uniform vec4 uCore;uniform vec4 uModeA;uniform vec4 uModeP;uniform vec4 uRipple;uniform vec2 uShear;
 uniform vec4 uIsle;uniform vec4 uIsleR;uniform vec3 uC1;uniform vec3 uC2;uniform vec4 uHalo;
 uniform vec4 uRings[3];uniform vec4 uPk[16];uniform int uNPk;
@@ -43,11 +44,19 @@ float sdIsle(vec2 p){
     d=smin(d,w,uIsleR.y);}
   return d;
 }
+// A segment from a to b, its radius ra at a and rb at b (iq's uneven capsule).
+float sdSeg(vec2 p,vec2 a,vec2 b,float ra,float rb){
+  p-=a;b-=a;float h=max(dot(b,b),1e-4);vec2 q=vec2(dot(p,vec2(b.y,-b.x)),dot(p,b))/h;
+  q.x=abs(q.x);float dr=ra-rb;vec2 c=vec2(sqrt(max(h-dr*dr,0.)),dr);
+  float k=c.x*q.y-c.y*q.x,m=dot(c,q),n=dot(q,q);
+  if(k<0.)return sqrt(h*n)-ra;if(k>c.x)return sqrt(h*(n+1.-2.*q.y))-rb;return m-ra;
+}
 float sdScene(vec2 p){
   float d=1e4;
   if(uCore.w>.5&&uCore.z>.5)d=sdCore(p);
   if(uIsle.z>uIsle.x+.5)d=smin(d,sdIsle(p),uK);
   for(int i=0;i<32;i++){if(i>=uN)break;vec4 b=uBalls[i];if(b.z<.35)continue;d=smin(d,length(p-b.xy)-b.z,uK*b.w);}
+  for(int i=0;i<50;i++){if(i>=uNS)break;vec4 a=uSegA[i],b=uSegB[i];d=smin(d,sdSeg(p,a.xy,a.zw,b.x,b.y),uK*b.z);}
   return d;
 }
 vec3 ringCol(float w){return w<.5?uC1:(w<1.5?uC2:mix(uC1,vec3(1.),.55));}
@@ -140,6 +149,9 @@ export const UNIFORMS = [
   "uTime",
   "uBalls",
   "uN",
+  "uSegA",
+  "uSegB",
+  "uNS",
   "uK",
   "uCore",
   "uModeA",

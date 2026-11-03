@@ -2,11 +2,12 @@ import { clamp, rnd, Sp, TAU } from "./motion";
 import type { Uniforms } from "./uniforms";
 
 /**
- * Kysland's music mode: the two great swirls of the bubble (2026-11-03), drawn with up to 30 more
- * balls of ink (32 in all with the drops).
- * - « Voie lactée » (from one song to the next, the user's idea): the bubble spins fast and comes
- *   apart into 5 arms wound round it, each thinning to a point, out and back in on a slightly
- *   elastic spring (ink-like: the far ends trail a little), then melting into it again (≈ 1.8 s).
+ * Kysland's music mode: the two great swirls of the bubble (2026-11-03), drawn with more ink: up to
+ * 30 balls (32 in all with the drops) or 50 tapered segments.
+ * - « Voie lactée » (from one song to the next, the user's idea): the bubble spins fast, shrinks to
+ *   45 % and comes apart into 5 fine arms wound round it (tapered segments, thinning to a point),
+ *   out and back in on a slightly elastic spring (the far ends trail a little, like ink), then
+ *   melting into it again (≈ 1.8 s).
  * - « Supernova » (the drop, Thomas's idea): the bubble caves in, smaller and stretched, and bursts
  *   into 30 small beads that wander out at their own speeds; then each is drawn in on a tightening
  *   spiral, round the disc faster and faster, and swallowed (every one of them, staggered); the
@@ -15,7 +16,8 @@ import type { Uniforms } from "./uniforms";
  */
 
 const ARMS = 5;
-const PER_ARM = 6;
+/** Segments per arm (50 in all). */
+const SEGS = 10;
 const BEADS = 30;
 /** The Supernova's beads wander out this long (s, plus each one's delay) before being pulled. */
 const OUT_S = 0.6;
@@ -100,7 +102,7 @@ export class Swirl {
     // Out, held, back in: a spring just under critical damping (a hint of ink's give).
     this.spread.to(this.t < 0.75 ? 1 : 0, 70, 0.62, h);
     const e = clamp(this.spread.x, 0, 1.1);
-    this.core = 1 - 0.3 * e;
+    this.core = 1 - 0.55 * e;
     this.spin = 14 * e;
     this.turn += (4 + 10 * e) * h;
     const still = Math.abs(this.spread.x) < 0.01 && Math.abs(this.spread.v) < 0.05;
@@ -151,23 +153,30 @@ export class Swirl {
   /** Its balls after the `n` already in `U` (32 at most); the new count. */
   fill(U: Uniforms, n: number, cx: number, cy: number, R: number): number {
     if (this.kind === "galaxy") {
+      // Five fine arms, each a chain of tapered segments from inside the core to a point, wound
+      // round it like a galaxy's; the far ends trail as the arms come out or go in.
       const e = clamp(this.spread.x, 0, 1.1);
       const Rc = R * this.core;
-      // The far ends trail behind as the arms come out or go in (the spring's speed).
       const trail = 0.05 * this.spread.v;
-      for (let k = 0; k < ARMS && n < 32; k++) {
-        for (let j = 0; j < PER_ARM && n < 32; j++) {
-          const u = (j + 1) / PER_ARM;
-          // Wound round the bubble, thinning to a point.
-          // The last balls closer together: the arm stays whole to its point.
-          const rr = Rc * (0.85 + 1.5 * Math.pow(u, 0.85) * e);
-          const wind = (1.5 + 0.6 * (1 - e)) * u + trail * u;
-          const th = this.base + this.turn + (k / ARMS) * TAU - wind;
-          const br = R * (0.24 * Math.pow(1 - u, 0.8) + 0.05) * (0.4 + 0.6 * Math.min(1, e));
-          U.balls.set([cx + Math.cos(th) * rr, cy + Math.sin(th) * rr, br, 1.8], n * 4);
-          n++;
+      const at = (k: number, j: number): [number, number, number] => {
+        const u = j / SEGS;
+        const rr = Rc * (0.7 + 3 * Math.pow(u, 0.85) * e);
+        const wind = (2.4 + 0.6 * (1 - e)) * u + trail * u;
+        const th = this.base + this.turn + (k / ARMS) * TAU - wind;
+        const r = R * (0.075 * Math.pow(1 - u, 1.1) + 0.004) * (0.4 + 0.6 * Math.min(1, e));
+        return [cx + Math.cos(th) * rr, cy + Math.sin(th) * rr, r];
+      };
+      let m = 0;
+      for (let k = 0; k < ARMS; k++) {
+        let a = at(k, 0);
+        for (let j = 1; j <= SEGS && m < 50; j++) {
+          const b = at(k, j);
+          U.segA.set([a[0], a[1], b[0], b[1]], m * 4);
+          U.segB.set([a[2], b[2], j === 1 ? 1 : 0.12, 0], m * 4);
+          [a, m] = [b, m + 1];
         }
       }
+      U.ns = m;
     } else if (this.kind === "nova") {
       for (const b of this.beads) {
         if (b.in || n >= 32) continue;
@@ -180,7 +189,7 @@ export class Swirl {
 
   /** The farthest any ball is from (`cx`, `cy`), for the window's region; 0 when still. */
   reach(cx: number, cy: number, R: number): number {
-    if (this.kind === "galaxy") return R * 2;
+    if (this.kind === "galaxy") return R * 1.9;
     let far = 0;
     for (const b of this.beads) {
       if (!b.in) far = Math.max(far, Math.hypot(b.x - cx, b.y - cy) + b.r);

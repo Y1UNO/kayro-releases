@@ -1,14 +1,18 @@
 /**
  * Kysland's music mode (the lab): what a scene hands the shaders each frame. The ink is one
  * distance field: a core (a circle deformed by its modes, edge ripples and shear), the island (a
- * rounded box against the screen's edges, with shoulders), and up to 32 balls, all merged by a
- * smooth union. The light: a halo, rays, three strings with plucks running round them, shock
+ * rounded box against the screen's edges, with shoulders), up to 32 balls and up to 50 tapered
+ * segments (the Milky Way's arms, 2026-11-03), all merged by a smooth union. The light: a halo, rays, three strings with plucks running round them, shock
  * waves. Logical px of the stage.
  */
 export interface Uniforms {
   /** Balls: x, y, radius, merge factor. */
   balls: Float32Array;
   n: number;
+  /** Tapered segments: from (x, y) to (x, y); their radius at each end, merge factor. */
+  segA: Float32Array;
+  segB: Float32Array;
+  ns: number;
   /** The smooth union's width (px). */
   k: number;
   /** The core: x, y, radius (0: none), on. */
@@ -44,6 +48,9 @@ export function uniforms(): Uniforms {
   return {
     balls: new Float32Array(128),
     n: 0,
+    segA: new Float32Array(200),
+    segB: new Float32Array(200),
+    ns: 0,
     k: 30,
     core: new Float32Array(4),
     modeA: new Float32Array(4),
@@ -71,6 +78,7 @@ export function uniforms(): Uniforms {
 /** Back to nothing before a scene fills it. */
 export function clearUniforms(U: Uniforms, W: number, H: number): void {
   U.n = 0;
+  U.ns = 0;
   U.core.fill(0);
   U.modeA.fill(0);
   U.modeP.fill(0);

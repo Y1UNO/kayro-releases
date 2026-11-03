@@ -489,19 +489,28 @@ describe("Music mode: the Milky Way and the Supernova (2026-11-03)", () => {
     return d;
   };
 
-  it("opens into 5 arms wound round the bubble, then winds them back in", () => {
+  it("opens into 5 fine arms wound round a smaller bubble, then winds them back in", () => {
     const s = new Swirl(seeded());
     s.galaxy();
     for (let t = 0; t < 0.6; t += STEP) s.step(STEP, cx, cy, R);
     const U = uniforms();
-    const n = s.fill(U, 3, cx, cy, R);
-    expect(n).toBe(32);
-    expect(far(U, 3, n)).toBeGreaterThan(R * 1.5);
-    expect(s.core).toBeLessThan(0.75);
+    expect(s.fill(U, 3, cx, cy, R)).toBe(3);
+    expect(U.ns).toBe(50);
+    let reach = 0;
+    let thickest = 0;
+    for (let i = 0; i < U.ns; i++) {
+      const [x, y] = [U.segA[i * 4 + 2]!, U.segA[i * 4 + 3]!];
+      reach = Math.max(reach, Math.hypot(x - cx, y - cy));
+      thickest = Math.max(thickest, U.segB[i * 4]!);
+    }
+    expect(reach).toBeGreaterThan(R * 1.4);
+    expect(thickest).toBeLessThan(R * 0.1);
+    expect(s.core).toBeLessThan(0.5);
     expect(s.spin).toBeGreaterThan(10);
     for (let t = 0; t < 1.6; t += STEP) s.step(STEP, cx, cy, R);
     expect(s.active).toBe(false);
-    expect([s.core, s.spin, s.fill(U, 3, cx, cy, R)]).toEqual([1, 0, 3]);
+    U.ns = 0;
+    expect([s.core, s.spin, s.fill(U, 3, cx, cy, R), U.ns]).toEqual([1, 0, 3, 0]);
   });
 
   it("bursts into beads, then swallows them all in its black hole and grows back", () => {

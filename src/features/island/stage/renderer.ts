@@ -205,6 +205,9 @@ export class Renderer {
     gl.uniform1f(loc.uTime, F.time);
     gl.uniform4fv(loc.uBalls, U.balls);
     gl.uniform1i(loc.uN, U.n);
+    gl.uniform4fv(loc.uSegA, U.segA);
+    gl.uniform4fv(loc.uSegB, U.segB);
+    gl.uniform1i(loc.uNS, U.ns);
     gl.uniform1f(loc.uK, U.k);
     gl.uniform4fv(loc.uCore, U.core);
     gl.uniform4fv(loc.uModeA, U.modeA);
