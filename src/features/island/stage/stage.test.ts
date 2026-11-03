@@ -401,7 +401,7 @@ describe("Music mode: the big moments besides the crash (2026-11-03)", () => {
     expect(run(m, M, 1)).toEqual(["bloom"]);
     M.levels(lv);
     run(m, M, 3.5);
-    m.crashed(M.t);
+    expect(m.allow("crash", M.t, M)).toBe(true);
     M.levels({ ...lv, voice: 0.6 });
     expect(run(m, M, 1)).toEqual([]);
   });
@@ -489,17 +489,17 @@ describe("Music mode: the Milky Way and the Supernova (2026-11-03)", () => {
     return d;
   };
 
-  it("opens into arms wound around the bubble, then winds them back in (1.6 s)", () => {
+  it("opens into 5 arms wound round the bubble, then winds them back in", () => {
     const s = new Swirl(seeded());
     s.galaxy();
-    for (let t = 0; t < 0.6; t += STEP) s.step(STEP, cx, cy, R, H);
+    for (let t = 0; t < 0.6; t += STEP) s.step(STEP, cx, cy, R);
     const U = uniforms();
     const n = s.fill(U, 3, cx, cy, R);
-    expect(n).toBe(3 + 24);
+    expect(n).toBe(32);
     expect(far(U, 3, n)).toBeGreaterThan(R * 1.5);
     expect(s.core).toBeLessThan(0.75);
     expect(s.spin).toBeGreaterThan(10);
-    for (let t = 0; t < 1.1; t += STEP) s.step(STEP, cx, cy, R, H);
+    for (let t = 0; t < 1.6; t += STEP) s.step(STEP, cx, cy, R);
     expect(s.active).toBe(false);
     expect([s.core, s.spin, s.fill(U, 3, cx, cy, R)]).toEqual([1, 0, 3]);
   });
@@ -507,32 +507,53 @@ describe("Music mode: the Milky Way and the Supernova (2026-11-03)", () => {
   it("bursts into beads, then swallows them all in its black hole and grows back", () => {
     const s = new Swirl(seeded());
     s.nova(cx, cy, R * 0.9, H, 1);
-    for (let t = 0; t < 0.5; t += STEP) s.step(STEP, cx, cy, R, H);
+    for (let t = 0; t < 0.5; t += STEP) s.step(STEP, cx, cy, R);
     const U = uniforms();
     const out = far(U, 0, s.fill(U, 0, cx, cy, R));
     expect(out).toBeGreaterThan(R * 2);
     expect(s.core).toBeLessThan(0.7);
     let t = 0;
     while (s.active && t < 4) {
-      s.step(STEP, cx, cy, R, H);
+      s.step(STEP, cx, cy, R);
       t += STEP;
     }
     expect(s.active).toBe(false);
     expect(s.core).toBe(1);
   });
 
-  it("tells the drop (a crash right after a build) from a cymbal's crash", () => {
+  it("finds the drop: the drums back after a pause, or a crash ending a build", () => {
     const [m, M] = [new Moments(), new Music()];
     const lv = { sub: 0, build: 0, gap: false, section: "drop", melody: 0, pitch: 0.5 } as const;
+    // The very first kick is not a drop; one after 3 s without, strong, is.
+    expect(m.isDrop(1, "kick", 0.9, 0)).toBe(false);
+    expect(m.isDrop(1.5, "kick", 0.9, 0)).toBe(false);
+    expect(m.isDrop(4.5, "kick", 0.9, 0)).toBe(true);
+    // A weak kick after a pause, without bass: no.
+    expect(m.isDrop(13, "kick", 0.3, 0.1)).toBe(false);
+    // A crash right after a build is; a lone crash is not.
     M.levels({ ...lv, voice: 0, sharp: 0, heavy: 0, build: 0.8, section: "build" });
+    M.advance(20);
     m.step(0.01, M, false);
-    M.advance(0.5);
-    expect(m.isDrop(M.t)).toBe(true);
-    M.levels({ ...lv, voice: 0, sharp: 0, heavy: 0 });
-    for (let i = 0; i < 300; i++) {
-      M.advance(0.01);
-      m.step(0.01, M, false);
-    }
-    expect(m.isDrop(M.t)).toBe(false);
+    expect(m.isDrop(M.t + 0.5, "crash", 1, 0)).toBe(true);
+    expect(m.isDrop(M.t + 30, "crash", 1, 0)).toBe(false);
+  });
+});
+
+describe("Music mode: the big moments' spacing follows the music (2026-11-03)", () => {
+  it("lets a bigger moment come soon after a smaller, and spaces the same one by bars", () => {
+    const [m, M] = [new Moments(), new Music()];
+    // A grid at 120 BPM (a bar: 2 s).
+    for (let i = 0; i < 8; i++) M.grid.mark(i * 0.5, i % 4 === 0);
+    M.advance(4);
+    expect(m.allow("bloom", M.t, M)).toBe(true);
+    // A crash 0.6 s later (bigger): yes; another bloom 1 s later (smaller): no.
+    expect(m.allow("crash", M.t + 0.6, M)).toBe(true);
+    expect(m.allow("bloom", M.t + 1.6, M)).toBe(false);
+    // The drop 0.6 s after the crash: yes (bigger); a crash 1.5 s after the drop: no (2 bars).
+    expect(m.allow("nova", M.t + 1.2, M)).toBe(true);
+    expect(m.allow("crash", M.t + 2.7, M)).toBe(false);
+    expect(m.allow("crash", M.t + 5.3, M)).toBe(true);
+    // The same drop again within 4 bars: no.
+    expect(m.allow("nova", M.t + 7, M)).toBe(false);
   });
 });

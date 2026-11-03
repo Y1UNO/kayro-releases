@@ -28,6 +28,11 @@ export class Grid {
   private marks: { t: number; down: boolean }[] = [];
   private song: string | null = null;
 
+  /** A bar's length (s). */
+  barLength(): number {
+    return this.period * this.bar;
+  }
+
   /** It knows where the beats are now. */
   fresh(t: number): boolean {
     return this.period > 0 && t - this.updated < STALE_S;

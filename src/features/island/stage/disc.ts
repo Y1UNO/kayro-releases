@@ -145,6 +145,9 @@ export class Disc {
     const H = this.H();
     const { fx, body } = this;
     if (ty === "kick") {
+      const t = this.M.t;
+      const drop = this.moments.isDrop(t, "kick", v, this.M.subIn);
+      if (drop && this.moments.allow("nova", t, this.M)) this.supernova(crash);
       body.kick(g);
       fx.wave(cx, cy, R * 1.02, R * 1.9, 0.55, 0.55 * g, 0, H * 0.012, H * 0.003, 4 * g);
       this.title.kick(g);
@@ -154,24 +157,33 @@ export class Disc {
       if (this.M.build > 0) body.S.v += 2.4 * v * this.M.build;
     } else if (ty === "hat") {
       body.hat(v);
-    } else if (this.moments.isDrop(this.M.t)) {
-      // The drop (a crash ending a build or a silence): the « Supernova » (Thomas's idea).
-      body.S.v -= 3 * gc;
-      fx.crash(gc * 1.2);
-      fx.wave(cx, cy, R, R * 4.4, 1.4, 1.9 * gc, 0.25, H * 0.05, H * 0.006, 18 * gc);
-      fx.wave(cx, cy, R, R * 3.2, 1.2, 1.0 * gc, 0.8, H * 0.024, H * 0.004, 8 * gc, 0.12);
-      this.swirl.nova(cx, cy, R, H, gc);
-      this.title.crash(gc);
-      this.moments.crashed(this.M.t);
-    } else {
+    } else if (
+      this.moments.isDrop(this.M.t, "crash", v, this.M.subIn) &&
+      this.moments.allow("nova", this.M.t, this.M)
+    ) {
+      this.supernova(gc);
+    } else if (this.moments.allow("crash", this.M.t, this.M)) {
       body.crash(gc);
       fx.crash(gc);
       fx.wave(cx, cy, R, R * 3.9, 1.2, 1.6 * gc, 0.25, H * 0.045, H * 0.006, 16 * gc);
       fx.wave(cx, cy, R, R * 2.9, 1, 0.8 * gc, 0.8, H * 0.02, H * 0.004, 6 * gc, 0.09);
       this.burst(gc);
       this.title.crash(gc);
-      this.moments.crashed(this.M.t);
     }
+  }
+
+  /** The drop: the « Supernova » (Thomas's idea, swirl.ts), with a flash and waves past a crash's. */
+  private supernova(g: number): void {
+    if (g <= 0) return;
+    const [cx, cy] = this.centre();
+    const [R, H] = [this.radius() * this.body.S.x, this.H()];
+    this.body.S.v -= 3 * g;
+    for (const md of this.body.m) md.a.v += 0.05 * g * Math.sqrt(md.k);
+    this.fx.crash(g * 1.2);
+    this.fx.wave(cx, cy, R, R * 4.4, 1.4, 1.9 * g, 0.25, H * 0.05, H * 0.006, 18 * g);
+    this.fx.wave(cx, cy, R, R * 3.2, 1.2, 1.0 * g, 0.8, H * 0.024, H * 0.004, 8 * g, 0.12);
+    this.swirl.nova(cx, cy, R, H, g);
+    this.title.crash(g);
   }
 
   /**
@@ -276,8 +288,14 @@ export class Disc {
       d.x.to(cx + d.ax * R * 0.78, 24, 0.3, h);
       d.y.to(cy + d.ay * R * 0.78, 24, 0.3, h);
     }
-    this.swirl.step(h, cx, cy, R, this.H());
+    this.swirl.step(h, cx, cy, R);
     this.spin += this.swirl.spin * h;
+    if (this.swirl.tide > 0) {
+      // The black hole's pull: the bubble stretched into an oval turning with the vortex.
+      const oval = this.body.m[0]!;
+      oval.ph = this.swirl.vortex;
+      oval.a.x = Math.max(oval.a.x, this.swirl.tide);
+    }
     this.title.step(h);
   }
 
