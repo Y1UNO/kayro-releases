@@ -9,7 +9,11 @@ Changements demandés par rapport au labo :
 - les **cordes suivent la mélodie** (en douceur), la **basse cogne la bulle** ;
 - l'encre du lecteur a **le noir mat de l'île** (#000), sans les reflets du labo (« Brillance », à 0 par défaut, les
   remet) ;
-- la scène **Encre** du labo n'est pas faite, et l'ancienne encre « Dancing » est retirée avec son sélecteur.
+- la scène **Encre** du labo n'est pas faite, et l'ancienne encre « Dancing » est retirée avec son sélecteur ;
+- avec Thomas (projet RAYKA), après l'essai sur l'exe : basse moins dominante face à la mélodie, fils qui bougent à
+  chaque note (et sur la caisse claire et le charleston), lueur des fils fine, titre qui s'efface après 8 s, disque
+  plus petit (0,19 de la hauteur), pochette qui tourne au tempo (un tour pour 8 temps, `tempo.ts`), jamais poussée
+  par les coups.
 
 ## Ce qu'on voit
 - **Départ** : l'île se tasse ; au kick suivant (600 ms au plus), une goutte part, tenue par un col de cinq boules qui
@@ -100,6 +104,16 @@ Dans le code (constantes de `onset.rs`, `form.rs`, `continuous.rs`) :
 - **Décalage son/image de 0 à 250 ms** (au lieu de −100 à +100) : l'image ne peut pas précéder un son pas encore
   capté ; un casque Bluetooth retarde le son de 150 à 250 ms.
 - **Qualité** : la qualité Éco de Kayro met le lecteur en basse résolution (sauf choix explicite).
+
+## Pièges corrigés (2026-11-03, vus sur l'exe)
+- **Barre gris clair en haut de l'écran** : la fenêtre de l'île gardait les styles de barre de titre de Windows,
+  qui la peignait parfois sous la page (8–33 px du haut) ; visible là où la page est transparente et où la région
+  touche le haut. L'île est maintenant une fenêtre simple (`platform/island.rs`, `no_caption`).
+- **Halo le long de tout le bord haut** : les murs où l'île se fond s'arrêtent deux épaules après elle (`shaders.ts`).
+- **Départ brutal** : l'analyse repart à froid quand l'île réapparaît ; les coups montent en 2,5 s et aucun crash ne
+  compte avant (`music.ts`), la pochette reste cachée tant qu'elle charge (`stageView.ts`).
+- **Essais depuis Claude** : un Kayro lancé par Claude tourne avec une vieille copie des données (paquet MSIX) ;
+  le lancer par l'Explorateur.
 
 ## Limites connues
 - La détection est réglée sur des sons de synthèse (kicks 32/32, caisses claires 16/16, charlestons 63/64 sur un
