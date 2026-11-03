@@ -225,3 +225,26 @@ fn a_higher_rate_is_analysed_like_48_khz() {
     let b = Analyzer::new(44_100);
     assert_eq!((b.decimate, b.hop), (1, 235));
 }
+
+#[test]
+fn the_voice_is_what_sits_in_the_middle_and_the_melody_what_is_wide() {
+    // A "voice" at 440 Hz in the middle (left = right), an "instrument" at 1 kHz on the left.
+    let wave = |f: f32, i: usize| 0.2 * (TAU * f * i as f32 / 48_000.0).sin();
+    let levels = |voice: bool, instrument: bool| {
+        let (v, x) = (f32::from(u8::from(voice)), f32::from(u8::from(instrument)));
+        let mid: Vec<f32> = (0..96_000)
+            .map(|i| v * wave(440.0, i) + 0.5 * x * wave(1000.0, i))
+            .collect();
+        let side: Vec<f32> = (0..96_000).map(|i| 0.5 * x * wave(1000.0, i)).collect();
+        let mut a = Analyzer::new(48_000);
+        a.push_stereo(&mid, &side, &mut Vec::new());
+        a.levels()
+    };
+    let both = levels(true, true);
+    assert!(both.voice > 0.6 && both.melody > 0.6, "{both:?}");
+    let wide = levels(false, true);
+    assert!(wide.voice < 0.1 && wide.melody > 0.6, "{wide:?}");
+    // In mono, nothing tells a voice from an instrument: no voice, the melody as before.
+    let mono = levels(true, false);
+    assert!(mono.voice < 0.01 && mono.melody > 0.6, "{mono:?}");
+}

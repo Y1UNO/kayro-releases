@@ -61,6 +61,8 @@ pub struct MusicFrame {
     pub hits: Vec<MusicHit>,
     pub sub: f32,
     pub melody: f32,
+    /// A voice (what sits in the middle of the stereo, 300–3400 Hz), 0–1 (2026-11-03).
+    pub voice: f32,
     pub pitch: f32,
     pub build: f32,
     pub gap: bool,

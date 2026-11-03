@@ -55,7 +55,7 @@ vec3 rings(vec2 p,float glow){
       float a1=mod(th-P.y-tr+PI,2.*PI)-PI,a2=mod(th-P.y+tr+PI,2.*PI)-PI;
       disp+=P.w*exp(-P.z*2.8)*(exp(-a1*a1*14.)+exp(-a2*a2*14.))*cos(P.z*26.);}
     float dr=abs(L-R.x-disp);float line=exp(-dr*dr/(R.z*R.z));
-    float g=glow>.5?exp(-dr/(R.z*2.5))*.22+line*.35:line;
+    float g=glow>.5?exp(-dr/(R.z*1.8))*.12+line*.3:line;
     acc+=ringCol(R.w)*R.y*g;}
   return acc;
 }

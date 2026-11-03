@@ -19,9 +19,10 @@ export interface Levels {
   build: number;
   gap: boolean;
   section: Section;
-  /** The melody (0–1, smooth) and its register (0 low – 1 high). */
+  /** The melody (0–1, smooth) and its register (0 low – 1 high), a voice (0–1, smooth). */
   melody: number;
   pitch: number;
+  voice: number;
 }
 
 const KINDS: readonly HitKind[] = ["kick", "snare", "hat", "crash"];
@@ -56,6 +57,7 @@ export class Music {
   section: Section = "unknown";
   melody = 0;
   pitch = 0.5;
+  voice = 0;
   /** The song's tempo, from its kicks. */
   readonly tempo = new Tempo();
   /** The light's trails turn one way, then the other after each crash. */
@@ -98,6 +100,12 @@ export class Music {
     this.section = l.section;
     this.melody = l.melody;
     this.pitch = l.pitch;
+    this.voice = l.voice;
+  }
+
+  /** The sub before the kick's pump. */
+  get subIn(): number {
+    return this.subRaw;
   }
 
   /** Time moves on `dt` s. */
@@ -109,7 +117,15 @@ export class Music {
   /** Silence (paused, or the mode ends): everything falls back at once. */
   quiet(): void {
     for (const k of KINDS) this.vel[k] = 0;
-    this.levels({ sub: 0, build: 0, gap: false, section: "unknown", melody: 0, pitch: this.pitch });
+    this.levels({
+      sub: 0,
+      build: 0,
+      gap: false,
+      section: "unknown",
+      melody: 0,
+      pitch: this.pitch,
+      voice: 0,
+    });
     this.envelopes();
   }
 

@@ -27,7 +27,7 @@ const drive = () => ({ bass: 1, crash: 1 });
 describe("Music mode: the music's envelopes (SPEC §2)", () => {
   it("follow each hit from its age at once, and the kick pumps the sub down", () => {
     const M = new Music();
-    M.levels({ sub: 0.8, build: 0, gap: false, section: "drop", melody: 0, pitch: 0.5 });
+    M.levels({ sub: 0.8, build: 0, gap: false, section: "drop", melody: 0, pitch: 0.5, voice: 0 });
     M.advance(1);
     expect(M.sub).toBeCloseTo(0.8, 3);
     M.hit("kick", 1);
@@ -53,7 +53,15 @@ describe("Music mode: the music's envelopes (SPEC §2)", () => {
 
   it("plays the analysed sound's hits at the test track's strengths", () => {
     const M = new Music();
-    const lv = { sub: 0.4, build: 0, gap: false, section: "drop", melody: 0, pitch: 0.3 } as const;
+    const lv = {
+      sub: 0.4,
+      build: 0,
+      gap: false,
+      section: "drop",
+      melody: 0,
+      pitch: 0.3,
+      voice: 0,
+    } as const;
     const hits = (["kick", "snare", "hat", "crash"] as const).map((kind) => ({
       kind,
       velocity: 1,
@@ -129,7 +137,7 @@ describe("Music mode: the jelly (SPEC §2, measured on the disc)", () => {
   });
 });
 
-describe("Music mode: the strings follow the melody (2026-11-03)", () => {
+describe("Music mode: one string per source, showing only while it plays (2026-11-03)", () => {
   const disc = (M: Music) =>
     new Disc(
       () => W,
@@ -140,35 +148,48 @@ describe("Music mode: the strings follow the melody (2026-11-03)", () => {
       drive,
       seeded(),
     );
+  const quiet = {
+    sub: 0,
+    build: 0,
+    gap: false,
+    section: "drop",
+    melody: 0,
+    pitch: 0.5,
+    voice: 0,
+  } as const;
 
-  it("light the inner string for low notes and the outer one for high notes", () => {
-    for (const [pitch, more, less] of [
-      [0.15, 0, 2],
-      [0.85, 2, 0],
-    ] as const) {
-      const M = new Music();
-      M.levels({ sub: 0, build: 0, gap: false, section: "drop", melody: 0.8, pitch });
-      const d = disc(M);
-      for (let i = 0; i < 480; i++) d.step(STEP);
-      const U = uniforms();
-      d.fill(U);
-      expect(U.rings[more * 4 + 1]!).toBeGreaterThan(U.rings[less * 4 + 1]! * 3);
-    }
-  });
-
-  it("stay dim without melody, and each new note plucks its string", () => {
+  it("shows the voice's string with a voice, the sub's with the sub, and none in silence", () => {
     const M = new Music();
     const d = disc(M);
     const U = uniforms();
+    for (let i = 0; i < 480; i++) d.step(STEP);
     d.fill(U);
-    expect(U.rings[1]!).toBeLessThan(0.1);
-    M.levels({ sub: 0, build: 0, gap: false, section: "drop", melody: 0.7, pitch: 0.2 });
-    d.step(STEP);
-    M.levels({ sub: 0, build: 0, gap: false, section: "drop", melody: 0.7, pitch: 0.6 });
+    expect([U.rings[1], U.rings[5], U.rings[9]]).toEqual([0, 0, 0]);
+    M.levels({ ...quiet, voice: 0.8 });
+    for (let i = 0; i < 480; i++) d.step(STEP);
+    d.fill(U);
+    expect(U.rings[9]!).toBeGreaterThan(0.7);
+    expect(U.rings[1]! + U.rings[5]!).toBe(0);
+    M.levels({ ...quiet, sub: 0.6 });
+    for (let i = 0; i < 960; i++) d.step(STEP);
+    d.fill(U);
+    expect(U.rings[1]!).toBeGreaterThan(0.5);
+    expect(U.rings[9]!).toBeLessThan(0.05);
+  });
+
+  it("plucks a string on each of its notes", () => {
+    const M = new Music();
+    const d = disc(M);
+    M.levels({ ...quiet, melody: 0.7, pitch: 0.2 });
+    for (let i = 0; i < 200; i++) d.step(STEP);
+    const U = uniforms();
+    d.fill(U);
+    const before = U.npk;
+    M.levels({ ...quiet, melody: 0.7, pitch: 0.6 });
     for (let i = 0; i < 70; i++) d.step(STEP);
     d.fill(U);
-    expect(U.npk).toBe(2);
-    expect([U.pk[0], U.pk[4]]).toEqual([0, 1]);
+    expect(U.npk).toBeGreaterThan(before);
+    expect(U.pk[(U.npk - 1) * 4]).toBe(1);
   });
 });
 

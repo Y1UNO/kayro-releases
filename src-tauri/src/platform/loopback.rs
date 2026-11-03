@@ -51,8 +51,10 @@ impl Capture {
         }
     }
 
-    /// Appends what was played since the last call, as mono samples (-1…1).
-    pub fn read(&self, out: &mut Vec<f32>) {
+    /// Appends what was played since the last call, as mono samples (-1…1), and its sides
+    /// (half the left minus the right; 0 for a mono output): what is in the middle of the stereo
+    /// (a voice, mostly) cancels there (the music mode, 2026-11-03).
+    pub fn read(&self, out: &mut Vec<f32>, side: &mut Vec<f32>) {
         // SAFETY: each buffer is read within its GetBuffer/ReleaseBuffer pair, as many frames
         // as WASAPI gave, in the format it was opened with.
         unsafe {
@@ -68,19 +70,26 @@ impl Capture {
                 }
                 let n = frames as usize;
                 let silent = flags & AUDCLNT_BUFFERFLAGS_SILENT.0 as u32 != 0 || data.is_null();
+                let at = |k: usize| {
+                    if self.float {
+                        *(data as *const f32).add(k)
+                    } else {
+                        f32::from(*(data as *const i16).add(k)) / 32768.0
+                    }
+                };
                 for i in 0..n {
-                    let mut sum = 0.0f32;
+                    let (mut sum, mut diff) = (0.0f32, 0.0f32);
                     if !silent {
+                        let first = i * self.channels;
                         for c in 0..self.channels {
-                            let k = i * self.channels + c;
-                            sum += if self.float {
-                                *(data as *const f32).add(k)
-                            } else {
-                                f32::from(*(data as *const i16).add(k)) / 32768.0
-                            };
+                            sum += at(first + c);
+                        }
+                        if self.channels >= 2 {
+                            diff = 0.5 * (at(first) - at(first + 1));
                         }
                     }
                     out.push(sum / self.channels as f32);
+                    side.push(diff);
                 }
                 let _ = self.capture.ReleaseBuffer(frames);
             }

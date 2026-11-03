@@ -43,6 +43,7 @@ fn same(a: &Levels, b: &Levels) -> bool {
         && close(a.melody, b.melody)
         && close(a.pitch, b.pitch)
         && close(a.build, b.build)
+        && close(a.voice, b.voice)
         && (a.gap, a.section) == (b.gap, b.section)
 }
 
@@ -80,9 +81,9 @@ impl Music {
         analyzer.set_senses(senses);
     }
 
-    fn push(&mut self, samples: &[f32]) {
+    fn push(&mut self, samples: &[f32], side: &[f32]) {
         if let Some(analyzer) = &mut self.analyzer {
-            analyzer.push(samples, &mut self.hits);
+            analyzer.push_stereo(samples, side, &mut self.hits);
         }
     }
 
@@ -105,6 +106,7 @@ impl Music {
             hits: std::mem::take(&mut self.hits),
             sub: levels.sub,
             melody: levels.melody,
+            voice: levels.voice,
             pitch: levels.pitch,
             build: levels.build,
             gap: levels.gap,
@@ -129,6 +131,7 @@ pub fn run<R: Runtime>(app: &AppHandle<R>, capture: &Capture, on: impl Fn() -> b
         checked_at: None,
     };
     let mut fresh = Vec::with_capacity(capture.rate as usize / 10);
+    let mut side = Vec::with_capacity(capture.rate as usize / 10);
     let mut for_bars = Vec::with_capacity(beat::WINDOW * 4);
     let (mut bars_at, mut heard_at) = (Instant::now(), Instant::now());
     while on() {
@@ -139,17 +142,19 @@ pub fn run<R: Runtime>(app: &AppHandle<R>, capture: &Capture, on: impl Fn() -> b
             BARS_EVERY
         };
         std::thread::sleep(poll);
-        capture.read(&mut fresh);
+        capture.read(&mut fresh, &mut side);
         if !fresh.is_empty() {
             heard_at = Instant::now();
         } else if heard_at.elapsed() >= SILENT_AFTER {
             let samples = heard_at.elapsed().as_secs_f64() * f64::from(capture.rate);
             fresh.resize((samples as usize).min(capture.rate as usize / 5), 0.0);
+            side.resize(fresh.len(), 0.0);
             heard_at = Instant::now();
         }
-        music.push(&fresh);
+        music.push(&fresh, &side);
         for_bars.extend_from_slice(&fresh);
         fresh.clear();
+        side.clear();
         if bars_at.elapsed() >= BARS_EVERY {
             bars_at = Instant::now();
             let keep = for_bars.len().saturating_sub(beat::WINDOW);

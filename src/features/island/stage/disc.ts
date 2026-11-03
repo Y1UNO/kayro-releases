@@ -7,16 +7,16 @@ import type { Uniforms } from "./uniforms";
 
 /**
  * Kysland's « Disk » (the lab's Disque, 2026-11-03): the player. The cover turns in a disc of
- * black jelly, the island's matte black (glossy only if asked). The bass bumps the bubble: each kick punches its size and rings it, a
- * small shock wave leaves it; the sub makes it breathe. The snare twists it, the hi-hats ripple
- * its edge. A crash: flash, colour split, shake, two big shock waves, eight drops thrown out that
- * come back and melt into it, the title scattered. Its three strings follow the melody (the
- * user's change to the lab, 2026-11-03): smoothly lit by how much melody there is, the inner one
- * for low notes, the outer one for high ones, each new note plucking the string of its register
- * (a bump running round it both ways); the snare and the hi-hats pluck them lightly too. The
+ * black jelly, the island's matte black (glossy only if asked). The bass bumps the bubble: each
+ * kick punches its size and rings it, a small shock wave leaves it; the sub makes it breathe.
+ * The snare twists it, the hi-hats ripple its edge. A crash: flash, colour split, shake, two big
+ * shock waves, eight drops thrown out that come back and melt into it, the title scattered. The
  * title waves on each kick. The user and Thomas's changes (2026-11-03): a smaller disc (.19 of
  * the height), its cover turning with the tempo (a turn every 8 beats) and never pushed by the
- * hits, strings that move more. Logical px, s.
+ * hits; one string per source, showing only while it plays: the sub inside, the melody, the
+ * voice outside (music.rs tells them apart by the stereo). Each glows with its level, and each
+ * of its notes (its level swelling; for the melody, a new pitch too) plucks it, a bump running
+ * round it both ways; while its source plays it never rests. Logical px, s.
  */
 
 /** The scenes' settings: the bass's and the crash's intensities (×0–×2). */
@@ -34,8 +34,20 @@ interface Drop {
   ay: number;
 }
 
-/** The strings' registers (of the melody's pitch, 0–1). */
-const REGISTERS = [0.2, 0.5, 0.8];
+/** A string: how much it shows, its source's slow level (a swell above it is a note), the time
+ * since its last pluck. */
+interface Strand {
+  shown: number;
+  slow: number;
+  since: number;
+}
+
+/** The strings' radii (× the disc's) and widths (× the height): sub, melody, voice. */
+const STRANDS = [
+  [1.24, 0.0026],
+  [1.44, 0.0023],
+  [1.64, 0.002],
+] as const;
 
 export class Disc {
   spin = 0;
@@ -50,12 +62,8 @@ export class Disc {
     ax: 0,
     ay: 0,
   }));
-  private pitch = 0.5;
+  private strands: Strand[] = STRANDS.map(() => ({ shown: 0, slow: 0, since: 9 }));
   private note = 0.5;
-  /** The melody's slow level (a swell above it is a note), the time since the last pluck. */
-  private swell = 0;
-  private since = 9;
-  private hatAt = 9;
   /** Off its place a moment (coming back from a crouch), drawn back to it. */
   private oy = new Sp(0);
 
@@ -122,14 +130,9 @@ export class Disc {
     } else if (ty === "snare") {
       body.snare(v);
       this.title.snare(v);
-      this.pluck(1, 0.035 * v);
       if (this.M.build > 0) body.S.v += 2.4 * v * this.M.build;
     } else if (ty === "hat") {
       body.hat(v);
-      if (this.hatAt > 0.25) {
-        this.hatAt = 0;
-        this.pluck(2, 0.02 * v);
-      }
     } else {
       body.crash(gc);
       fx.crash(gc);
@@ -147,20 +150,22 @@ export class Disc {
     this.oy.to(0, 300, 0.6, h);
     this.spinV.to((TAU * M.tempo.bpm) / 480, 1.5, 1, h);
     this.spin += this.spinV.x * h;
-    // The melody: its register followed smoothly; each note (a new pitch, or the melody swelling)
-    // plucks its string, and while it plays the strings never rest.
-    this.pitch += (M.pitch - this.pitch) * (1 - Math.exp(-h / 0.15));
-    const mel = clamp(M.melody, 0, 1);
-    this.swell += (mel - this.swell) * (1 - Math.exp(-h / 0.25));
-    this.since += h;
-    this.hatAt += h;
-    const note = Math.abs(M.pitch - this.note) > 0.035 || mel - this.swell > 0.06;
-    const hum = this.since > 0.55 - 0.3 * mel;
-    if ((note || hum) && mel > 0.08 && this.since > 0.12) {
-      this.note = M.pitch;
-      this.since = 0;
-      this.pluck(this.register(M.pitch), (note ? 0.09 : 0.05) * mel);
-    }
+    const levels = this.sources();
+    this.strands.forEach((s, i) => {
+      const v = levels[i]!;
+      // It shows while its source plays (a little hysteresis), in 0.25 s, and goes in 0.8 s.
+      const want = v > (s.shown > 0.5 ? 0.08 : 0.14) ? 1 : 0;
+      s.shown += (want - s.shown) * (1 - Math.exp(-h / (want ? 0.25 : 0.8)));
+      s.slow += (v - s.slow) * (1 - Math.exp(-h / 0.25));
+      s.since += h;
+      if (s.shown < 0.3 || s.since < 0.12) return;
+      const note = v - s.slow > 0.06 || (i === 1 && Math.abs(M.pitch - this.note) > 0.035);
+      if (note || s.since > 0.55 - 0.3 * v) {
+        if (i === 1) this.note = M.pitch;
+        s.since = 0;
+        this.pluck(i, (note ? 0.09 : 0.05) * v);
+      }
+    });
     for (const p of this.pk) p.age += h;
     this.pk = this.pk.filter((p) => p.age < 1.4);
     const [cx, cy] = this.centre();
@@ -174,18 +179,10 @@ export class Disc {
     this.title.step(h);
   }
 
-  private register(p: number): number {
-    let best = 0;
-    REGISTERS.forEach((c, i) => {
-      if (Math.abs(p - c) < Math.abs(p - REGISTERS[best]!)) best = i;
-    });
-    return best;
-  }
-
-  /** How strongly the melody lights string `i` (0–1). */
-  private lit(i: number): number {
-    const w = Math.exp(-(((this.pitch - REGISTERS[i]!) / 0.28) ** 2));
-    return clamp(this.M.melody, 0, 1) * w;
+  /** The strings' sources now (0–1): the sub (before the kick's pump), the melody, the voice. */
+  private sources(): number[] {
+    const { M } = this;
+    return [M.subIn, M.melody, M.voice].map((v) => clamp(v, 0, 1));
   }
 
   fill(U: Uniforms, coverOn = 1): void {
@@ -210,20 +207,11 @@ export class Disc {
     U.n = n;
     const rs = Rs * (1 - 0.22 * M.build);
     const dim = M.gap ? 0.2 : 1;
-    U.rings.set([
-      rs * 1.24,
-      (0.07 + 1.1 * this.lit(0)) * dim,
-      H * 0.0026,
-      0,
-      rs * 1.44,
-      (0.06 + 1.1 * this.lit(1)) * dim,
-      H * 0.0023,
-      1,
-      rs * 1.64,
-      (0.05 + 0.95 * this.lit(2)) * dim,
-      H * 0.002,
-      2,
-    ]);
+    const levels = this.sources();
+    STRANDS.forEach(([r, w], i) => {
+      const [v, shown] = [levels[i]!, this.strands[i]!.shown];
+      U.rings.set([rs * r, shown * (0.12 + v) * dim, H * w * (0.8 + 0.5 * v), i], i * 4);
+    });
     let k = 0;
     for (const p of this.pk) {
       U.pk.set([p.r, p.th, p.age, p.amp], k * 4);

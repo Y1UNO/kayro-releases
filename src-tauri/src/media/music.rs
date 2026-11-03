@@ -49,6 +49,7 @@ pub enum Section {
 pub struct Levels {
     pub sub: f32,
     pub melody: f32,
+    pub voice: f32,
     pub pitch: f32,
     pub build: f32,
     pub gap: bool,
@@ -99,6 +100,11 @@ pub struct Analyzer {
     hop: usize,
     hop_s: f32,
     ring: Vec<f32>,
+    side_ring: Vec<f32>,
+    side_sum: f32,
+    /// The sides' spectrum, taken every other analysis (10.6 ms: enough for a voice).
+    side: Spectrum,
+    side_due: bool,
     head: usize,
     heard: usize,
     fresh: usize,
@@ -154,6 +160,10 @@ impl Analyzer {
             hop,
             hop_s,
             ring: vec![0.0; WINDOW],
+            side_ring: vec![0.0; WINDOW],
+            side_sum: 0.0,
+            side: Spectrum::new(),
+            side_due: true,
             head: 0,
             heard: 0,
             fresh: 0,
@@ -188,10 +198,11 @@ impl Analyzer {
     }
 
     pub fn levels(&self) -> Levels {
-        let (sub, melody, pitch) = self.continuous.levels();
+        let (sub, melody, voice, pitch) = self.continuous.levels();
         Levels {
             sub,
             melody,
+            voice,
             pitch,
             build: self.form.build(),
             gap: self.form.gap(),
@@ -201,21 +212,33 @@ impl Analyzer {
 
     /// Takes the next mono samples; each complete analysis appends its hits to `hits`.
     pub fn push(&mut self, samples: &[f32], hits: &mut Vec<MusicHit>) {
-        for &s in samples {
-            let mut s = if s.is_finite() {
+        self.push_stereo(samples, &[], hits);
+    }
+
+    /// Takes the next samples and their sides (loopback.rs; missing ones read 0, as mono).
+    pub fn push_stereo(&mut self, samples: &[f32], side: &[f32], hits: &mut Vec<MusicHit>) {
+        let clean = |s: f32| {
+            if s.is_finite() {
                 s.clamp(-4.0, 4.0)
             } else {
                 0.0
-            };
+            }
+        };
+        for (i, &s) in samples.iter().enumerate() {
+            let mut s = clean(s);
+            let mut d = clean(side.get(i).copied().unwrap_or(0.0));
             if self.decimate > 1 {
                 self.sum += s;
+                self.side_sum += d;
                 self.summed += 1;
                 if self.summed < self.decimate {
                     continue;
                 }
                 s = self.sum / self.decimate as f32;
-                (self.sum, self.summed) = (0.0, 0);
+                d = self.side_sum / self.decimate as f32;
+                (self.sum, self.side_sum, self.summed) = (0.0, 0.0, 0);
             }
+            self.side_ring[self.head] = d;
             self.ring[self.head] = s;
             self.head = (self.head + 1) % WINDOW;
             self.heard = (self.heard + 1).min(WINDOW);
@@ -288,7 +311,12 @@ impl Analyzer {
                 velocity,
             });
         }
-        self.continuous.update(&self.spectrum.mags, self.all_level);
+        if self.side_due {
+            self.side.take(&self.side_ring, self.head);
+        }
+        self.side_due = !self.side_due;
+        self.continuous
+            .update(&self.spectrum.mags, &self.side.mags, self.all_level);
         let (a, b) = self.drums[3].bins[0];
         let hi = self.spectrum.mags[a..=b].iter().map(|m| m * m).sum::<f32>() / (b + 1 - a) as f32;
         let dropped = self.form.push(energy, hi, peaks[0].is_some());

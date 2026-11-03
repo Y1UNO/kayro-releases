@@ -858,6 +858,8 @@ export type MusicFrame = {
 	hits: MusicHit[],
 	sub: number | null,
 	melody: number | null,
+	/**  A voice (what sits in the middle of the stereo, 300–3400 Hz), 0–1 (2026-11-03). */
+	voice: number | null,
 	pitch: number | null,
 	build: number | null,
 	gap: boolean,
