@@ -5,7 +5,8 @@ import { clamp, rnd, Sp } from "./motion";
  * Kysland's « Disk » (the lab's title): the song's title under the disc, in Fredoka, light with a
  * glow of the first colour; the artist under it, small. Each kick runs a stadium wave through it
  * (left to right, 26 ms from one letter to the next: each jumps and swells); the snare tilts it;
- * a crash throws the letters up, turning. Each letter stretches along its speed. Drawn on the
+ * a crash throws the letters up, turning. Each letter stretches along its speed. Shown 8 s after
+ * each new song, then fading out in 1.5 s (2026-11-03, the user's wish). Drawn on the
  * page's 2D canvas over the WebGL one. Logical px, s.
  */
 
@@ -27,6 +28,8 @@ export class Title {
   private artist = "";
   private widths: number[] = [];
   private wFor = "";
+  /** How long since the song came (s). */
+  private age = 0;
 
   constructor(
     private H: () => number,
@@ -39,6 +42,17 @@ export class Title {
     this.artist = artist.trim();
     this.pend = [];
     this.wFor = "";
+    this.age = 0;
+  }
+
+  /** How much of it shows (1, then fading to 0 after 8 s). */
+  private seen(): number {
+    return clamp(1 - (this.age - 8) / 1.5, 0, 1);
+  }
+
+  /** Still showing (for the window's region). */
+  shown(): boolean {
+    return this.L.length > 0 && this.seen() > 0;
   }
 
   kick(g: number): void {
@@ -69,6 +83,7 @@ export class Title {
   }
 
   step(h: number): void {
+    this.age += h;
     this.pend = this.pend.filter((p) => {
       p.t -= h;
       if (p.t > 0) return true;
@@ -100,6 +115,7 @@ export class Title {
     c1: Rgb,
     alpha: number,
   ): void {
+    alpha *= this.seen();
     if (!this.L.length || alpha <= 0.01) return;
     const H = this.H();
     const fs = Math.round(H * 0.072);

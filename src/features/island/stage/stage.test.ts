@@ -8,6 +8,7 @@ import { STEP } from "./motion";
 import { Music } from "./music";
 import { paletteOf, paletteOfRgb } from "./palette";
 import { boundsOf } from "./region";
+import { Tempo } from "./tempo";
 import { uniforms } from "./uniforms";
 
 /** A repeatable random. */
@@ -52,9 +53,20 @@ describe("Music mode: the music's envelopes (SPEC §2)", () => {
 
   it("plays the analysed sound's hits at the test track's strengths", () => {
     const M = new Music();
-    const hits = (["kick", "snare", "hat"] as const).map((kind) => ({ kind, velocity: 1 }));
-    M.heard({ hits, sub: 0.4, build: 0, gap: false, section: "drop", melody: 0.5, pitch: 0.3 });
-    expect([M.vel.kick, M.vel.snare, M.vel.hat]).toEqual([1, 0.9, 0.6]);
+    const lv = { sub: 0.4, build: 0, gap: false, section: "drop", melody: 0, pitch: 0.3 } as const;
+    const hits = (["kick", "snare", "hat", "crash"] as const).map((kind) => ({
+      kind,
+      velocity: 1,
+    }));
+    // Cold: a quarter of their strength, no crash.
+    M.heard({ ...lv, hits });
+    expect([M.vel.kick, M.vel.crash]).toEqual([0.25, 0]);
+    for (let i = 0; i < 30; i++) {
+      M.advance(0.1);
+      M.heard({ ...lv, hits: [] });
+    }
+    M.heard({ ...lv, melody: 0.5, hits });
+    expect([M.vel.kick, M.vel.snare, M.vel.hat, M.vel.crash]).toEqual([1, 0.9, 0.6, 1]);
     expect(M.melody).toBe(0.5);
   });
 });
@@ -153,9 +165,22 @@ describe("Music mode: the strings follow the melody (2026-11-03)", () => {
     M.levels({ sub: 0, build: 0, gap: false, section: "drop", melody: 0.7, pitch: 0.2 });
     d.step(STEP);
     M.levels({ sub: 0, build: 0, gap: false, section: "drop", melody: 0.7, pitch: 0.6 });
-    d.step(STEP);
+    for (let i = 0; i < 70; i++) d.step(STEP);
     d.fill(U);
     expect(U.npk).toBe(2);
+    expect([U.pk[0], U.pk[4]]).toEqual([0, 1]);
+  });
+});
+
+describe("Music mode: the cover turns with the tempo (2026-11-03)", () => {
+  it("finds the beat from kicks on and off it, and keeps it in a break", () => {
+    const tempo = new Tempo();
+    const beat = 60 / 116;
+    for (let bar = 0; bar < 4; bar++)
+      for (const at of [0, 2, 3.5]) tempo.beat(bar * 4 * beat + at * beat);
+    for (let i = 0; i < 20; i++) tempo.beat(16 * beat + i * beat);
+    expect(tempo.bpm).toBeGreaterThan(110);
+    expect(tempo.bpm).toBeLessThan(122);
   });
 });
 

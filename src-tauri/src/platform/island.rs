@@ -18,9 +18,11 @@ use windows::Win32::Graphics::Gdi::{
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_RBUTTON};
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetClassNameW, GetCursorPos, GetForegroundWindow, GetSystemMetrics, GetWindowRect,
-    GetWindowThreadProcessId, IsWindow, SetWindowPos, ShowWindowAsync, SM_SWAPBUTTON,
-    SWP_ASYNCWINDOWPOS, SWP_NOACTIVATE, SWP_NOSIZE, SWP_NOZORDER, SW_HIDE, SW_SHOWNOACTIVATE,
+    GetClassNameW, GetCursorPos, GetForegroundWindow, GetSystemMetrics, GetWindowLongPtrW,
+    GetWindowRect, GetWindowThreadProcessId, IsWindow, SetWindowLongPtrW, SetWindowPos,
+    ShowWindowAsync, GWL_STYLE, SM_SWAPBUTTON, SWP_ASYNCWINDOWPOS, SWP_FRAMECHANGED,
+    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SW_HIDE, SW_SHOWNOACTIVATE, WS_CAPTION,
+    WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_POPUP, WS_SYSMENU, WS_THICKFRAME,
 };
 
 fn hwnd(raw: isize) -> HWND {
@@ -68,9 +70,28 @@ pub fn move_to(raw: isize, x: i32, y: i32) {
 
 /// Moves and sizes the window at once (Kysland's music mode covers its screen, then goes back).
 pub fn place(raw: isize, x: i32, y: i32, width: i32, height: i32) {
+    no_caption(raw);
     let flags = SWP_NOZORDER | SWP_NOACTIVATE;
     // SAFETY: a stale handle only makes the call fail.
     let _ = unsafe { SetWindowPos(hwnd(raw), None, x, y, width, height, flags) };
+}
+
+/// A plain popup, without the caption's styles the window was made with (2026-11-03): Windows
+/// sometimes painted that caption, a light grey band 8–33 px from the top, under the page; it
+/// showed wherever the page is transparent and the region reached the top (the music mode).
+fn no_caption(raw: isize) {
+    let caption = (WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX).0;
+    // SAFETY: plain queries and changes of a window's style; a stale handle makes them fail.
+    unsafe {
+        let style = GetWindowLongPtrW(hwnd(raw), GWL_STYLE) as u32;
+        if style & caption == 0 {
+            return;
+        }
+        let plain = (style & !caption) | WS_POPUP.0;
+        SetWindowLongPtrW(hwnd(raw), GWL_STYLE, plain as isize);
+        let flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
+        let _ = SetWindowPos(hwnd(raw), None, 0, 0, 0, 0, flags);
+    }
 }
 
 /// Where clicks land and what shows: a (rounded) rectangle of the window, or the outline of a
@@ -121,9 +142,10 @@ pub fn set_region_rects(raw: isize, rects: &[(i32, i32, i32, i32)]) {
     }
 }
 
-/// No border and no rounded corners of Windows 11 around the window, whatever its region (the
-/// island draws its own edges). Earlier versions of Windows ignore both.
+/// No caption, no border and no rounded corners of Windows 11 around the window, whatever its
+/// region (the island draws its own edges). Earlier versions of Windows ignore the last two.
 pub fn plain_frame(raw: isize) {
+    no_caption(raw);
     let none = DWMWA_COLOR_NONE;
     let square = DWMWCP_DONOTROUND;
     // SAFETY: each value outlives its call, and its size is the one passed.

@@ -327,6 +327,7 @@ export class StageEngine {
   /** The cover, drawn square for its texture and its colours. */
   private loadCover(src: string | null): void {
     this.cover = src;
+    this.view?.setCover(null);
     const id = ++this.loads;
     if (!src) {
       this.pal = DEFAULT_PALETTE;
@@ -375,7 +376,8 @@ export class StageEngine {
       const [cx, cy] = disc.centre();
       const r = Math.max(disc.radius() * this.body.S.x * 2.15, disc.reach());
       out.push({ x0: cx - r, y0: cy - r, x1: cx + r, y1: cy + r });
-      if (this.playing) out.push(disc.titleBox());
+      const title = this.playing ? disc.titleBox() : null;
+      if (title) out.push(title);
     }
     if (this.phase === "leaving" || this.phase === "returning") {
       const r = isle.reach();

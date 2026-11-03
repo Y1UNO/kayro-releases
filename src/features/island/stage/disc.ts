@@ -13,7 +13,10 @@ import type { Uniforms } from "./uniforms";
  * come back and melt into it, the title scattered. Its three strings follow the melody (the
  * user's change to the lab, 2026-11-03): smoothly lit by how much melody there is, the inner one
  * for low notes, the outer one for high ones, each new note plucking the string of its register
- * (a bump running round it both ways). The title waves on each kick. Logical px, s.
+ * (a bump running round it both ways); the snare and the hi-hats pluck them lightly too. The
+ * title waves on each kick. The user and Thomas's changes (2026-11-03): a smaller disc (.19 of
+ * the height), its cover turning with the tempo (a turn every 8 beats) and never pushed by the
+ * hits, strings that move more. Logical px, s.
  */
 
 /** The scenes' settings: the bass's and the crash's intensities (×0–×2). */
@@ -36,7 +39,7 @@ const REGISTERS = [0.2, 0.5, 0.8];
 
 export class Disc {
   spin = 0;
-  readonly spinV = new Sp(3.4);
+  readonly spinV = new Sp(1.5);
   readonly title: Title;
   private pk: { r: number; th: number; age: number; amp: number }[] = [];
   private drops: Drop[] = Array.from({ length: 8 }, () => ({
@@ -49,6 +52,10 @@ export class Disc {
   }));
   private pitch = 0.5;
   private note = 0.5;
+  /** The melody's slow level (a swell above it is a note), the time since the last pluck. */
+  private swell = 0;
+  private since = 9;
+  private hatAt = 9;
   /** Off its place a moment (coming back from a crouch), drawn back to it. */
   private oy = new Sp(0);
 
@@ -75,7 +82,7 @@ export class Disc {
   }
 
   radius(): number {
-    return this.H() * 0.22;
+    return this.H() * 0.19;
   }
 
   private pluck(ring: number, amp: number): void {
@@ -110,19 +117,21 @@ export class Disc {
     const { fx, body } = this;
     if (ty === "kick") {
       body.kick(g);
-      this.spinV.v += 10 * g;
       fx.wave(cx, cy, R * 1.02, R * 1.9, 0.55, 0.55 * g, 0, H * 0.012, H * 0.003, 4 * g);
       this.title.kick(g);
     } else if (ty === "snare") {
       body.snare(v);
       this.title.snare(v);
+      this.pluck(1, 0.035 * v);
       if (this.M.build > 0) body.S.v += 2.4 * v * this.M.build;
     } else if (ty === "hat") {
       body.hat(v);
-      this.spinV.v += 1.5 * v;
+      if (this.hatAt > 0.25) {
+        this.hatAt = 0;
+        this.pluck(2, 0.02 * v);
+      }
     } else {
       body.crash(gc);
-      this.spinV.v += 50 * gc;
       fx.crash(gc);
       fx.wave(cx, cy, R, R * 3.9, 1.2, 1.6 * gc, 0.25, H * 0.045, H * 0.006, 16 * gc);
       fx.wave(cx, cy, R, R * 2.9, 1, 0.8 * gc, 0.8, H * 0.02, H * 0.004, 6 * gc, 0.09);
@@ -136,13 +145,21 @@ export class Disc {
     const { bass } = this.drive();
     this.body.step(h, 1 + 0.035 * M.sub * bass - 0.15 * M.build - (M.gap ? 0.04 : 0));
     this.oy.to(0, 300, 0.6, h);
-    this.spinV.to(M.section === "break" ? 1.8 : 3.4, 4, 1, h);
+    this.spinV.to((TAU * M.tempo.bpm) / 480, 1.5, 1, h);
     this.spin += this.spinV.x * h;
-    // The melody: its register followed smoothly; a new note plucks its string.
+    // The melody: its register followed smoothly; each note (a new pitch, or the melody swelling)
+    // plucks its string, and while it plays the strings never rest.
     this.pitch += (M.pitch - this.pitch) * (1 - Math.exp(-h / 0.15));
-    if (Math.abs(M.pitch - this.note) > 0.07 && M.melody > 0.12) {
+    const mel = clamp(M.melody, 0, 1);
+    this.swell += (mel - this.swell) * (1 - Math.exp(-h / 0.25));
+    this.since += h;
+    this.hatAt += h;
+    const note = Math.abs(M.pitch - this.note) > 0.035 || mel - this.swell > 0.06;
+    const hum = this.since > 0.55 - 0.3 * mel;
+    if ((note || hum) && mel > 0.08 && this.since > 0.12) {
       this.note = M.pitch;
-      this.pluck(this.register(M.pitch), 0.05 * clamp(M.melody, 0, 1));
+      this.since = 0;
+      this.pluck(this.register(M.pitch), (note ? 0.09 : 0.05) * mel);
     }
     for (const p of this.pk) p.age += h;
     this.pk = this.pk.filter((p) => p.age < 1.4);
@@ -195,16 +212,16 @@ export class Disc {
     const dim = M.gap ? 0.2 : 1;
     U.rings.set([
       rs * 1.24,
-      (0.06 + 1.1 * this.lit(0)) * dim,
-      H * 0.0024,
+      (0.07 + 1.1 * this.lit(0)) * dim,
+      H * 0.0026,
       0,
       rs * 1.44,
-      (0.05 + 1.1 * this.lit(1)) * dim,
-      H * 0.0021,
+      (0.06 + 1.1 * this.lit(1)) * dim,
+      H * 0.0023,
       1,
       rs * 1.64,
-      (0.04 + 0.9 * this.lit(2)) * dim,
-      H * 0.0018,
+      (0.05 + 0.95 * this.lit(2)) * dim,
+      H * 0.002,
       2,
     ]);
     let k = 0;
@@ -226,7 +243,8 @@ export class Disc {
   }
 
   /** The title's box (under the disc). */
-  titleBox(): { x0: number; y0: number; x1: number; y1: number } {
+  titleBox(): { x0: number; y0: number; x1: number; y1: number } | null {
+    if (!this.title.shown()) return null;
     const e = this.title.extent();
     const [W, y] = [this.W(), this.H() * 0.875];
     return { x0: W / 2 - e.half, y0: y - e.up, x1: W / 2 + e.half, y1: y + e.down };

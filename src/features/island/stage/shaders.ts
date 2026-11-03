@@ -4,9 +4,11 @@
  * output is premultiplied, its alpha the ink's coverage plus the light's luminance. Changed for
  * the app: the island is the real one (a rounded box against the screen's edges, melting into
  * them by its shoulders), `uLit` fades the light and the gloss in and out at the swaps, and the
- * light fades out before the window's region ends (`uFade`). The ink is the island's black,
+ * light fades out before the window's region ends (`uFade`). The walls the island melts into
+ * end two shoulders past it (whole, they lit the screen's top edge: grey bars). The ink is the island's black,
  * matte (2026-11-03, the user's choice): the lab's gloss (reflections, rim, highlights) only
- * with « Brillance » above 0, and the crash's flash spares the ink. No spikes anywhere.
+ * with « Brillance » above 0, and the crash's flash spares the ink. The strings' glow in the
+ * light is tight (the trails add it up: a wide one hid them, 2026-11-03). No spikes anywhere.
  */
 
 export const COMMON = `#version 300 es
@@ -32,7 +34,9 @@ float sdCore(vec2 p){vec2 q=coreQ(p);float th=atan(q.y,q.x);return length(q)-uCo
 float sdIsle(vec2 p){
   vec2 c=(uIsle.xy+uIsle.zw)*.5;vec2 b=(uIsle.zw-uIsle.xy)*.5;float rr=min(uIsleR.x,min(b.x,b.y));
   vec2 q=abs(p-c)-b+rr;float d=length(max(q,0.))+min(max(q.x,q.y),0.)-rr;
-  if(uIsleR.y>.5){float w=p.y-uIsleR.z;if(uIsleR.w<-.5)w=min(w,p.x);if(uIsleR.w>.5)w=min(w,uSize.x-p.x);d=smin(d,w,uIsleR.y);}
+  if(uIsleR.y>.5){float rc=uIsleR.y*2.;float w=max(p.y-uIsleR.z,abs(p.x-c.x)-b.x-rc);
+    if(uIsleR.w<-.5)w=min(w,max(p.x,p.y-uIsle.w-rc));if(uIsleR.w>.5)w=min(w,max(uSize.x-p.x,p.y-uIsle.w-rc));
+    d=smin(d,w,uIsleR.y);}
   return d;
 }
 float sdScene(vec2 p){
@@ -51,7 +55,7 @@ vec3 rings(vec2 p,float glow){
       float a1=mod(th-P.y-tr+PI,2.*PI)-PI,a2=mod(th-P.y+tr+PI,2.*PI)-PI;
       disp+=P.w*exp(-P.z*2.8)*(exp(-a1*a1*14.)+exp(-a2*a2*14.))*cos(P.z*26.);}
     float dr=abs(L-R.x-disp);float line=exp(-dr*dr/(R.z*R.z));
-    float g=glow>.5?exp(-dr/(R.z*6.))*.5+line*.6:line;
+    float g=glow>.5?exp(-dr/(R.z*2.5))*.22+line*.35:line;
     acc+=ringCol(R.w)*R.y*g;}
   return acc;
 }

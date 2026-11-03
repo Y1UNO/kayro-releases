@@ -28,6 +28,7 @@ export class StageView {
   private wiped = -Infinity;
   /** The cover drawn square (for the fallback). */
   cover: HTMLCanvasElement | null = null;
+  private coverAt = -1;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -69,9 +70,16 @@ export class StageView {
     this.gl?.resize(this.W, this.H, this.dpr * this.rs);
   }
 
-  setCover(c: HTMLCanvasElement): void {
+  /** The new cover (none: hidden while it loads, the last one never shows for the next song). */
+  setCover(c: HTMLCanvasElement | null): void {
     this.cover = c;
-    this.gl?.cover(c);
+    this.coverAt = c ? performance.now() : -1;
+    if (c) this.gl?.cover(c);
+  }
+
+  /** How much of the cover shows: none while it loads, then fading in (0.4 s). */
+  private coverShown(): number {
+    return this.coverAt < 0 ? 0 : clamp((performance.now() - this.coverAt) / 400, 0, 1);
   }
 
   /** The passes' frame from the scene's uniforms, the settings and the music now. */
@@ -117,6 +125,7 @@ export class StageView {
     box2d: Box | null,
     over: (ctx: CanvasRenderingContext2D) => void,
   ): void {
+    F.U.cover[2] = F.U.cover[2]! * this.coverShown();
     if (this.rich) this.gl!.render(F);
     const ctx = this.ctx;
     if (!ctx) return;

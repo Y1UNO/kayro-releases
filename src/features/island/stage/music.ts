@@ -8,6 +8,8 @@
  * (`demo.ts`). Times in s.
  */
 
+import { Tempo } from "./tempo";
+
 export type HitKind = "kick" | "snare" | "hat" | "crash";
 export type Section = "drop" | "break" | "build" | "unknown";
 
@@ -27,8 +29,17 @@ const KINDS: readonly HitKind[] = ["kick", "snare", "hat", "crash"];
 /**
  * The analysed sound measures each hit against its band's recent hits (a steady beat reads about
  * 1); the test track plays its hi-hats at .45–.75 and its snares at .9: the same strengths here.
+ * The kick is also weighed against the melody (2026-11-03, the user and Thomas: the bass stood
+ * out too much over the rest): curved down (`v^1.4`), a third weaker under a full melody.
  */
 const HEARD: Record<HitKind, number> = { kick: 1, snare: 0.9, hat: 0.6, crash: 1 };
+
+/**
+ * The analysis starts cold each time the island shows (its gains at their floor: its first hits
+ * read full, a first crash is often false): its hits grow from a quarter to their strength over
+ * this long (s), and no crash counts before (2026-11-03: the light burst at the start).
+ */
+const WARM_S = 2.5;
 
 export class Music {
   t = 0;
@@ -45,11 +56,15 @@ export class Music {
   section: Section = "unknown";
   melody = 0;
   pitch = 0.5;
+  /** The song's tempo, from its kicks. */
+  readonly tempo = new Tempo();
   /** The light's trails turn one way, then the other after each crash. */
   turn = 1;
   /** Told of each hit as it happens (the scenes move at once). */
   listen: (kind: HitKind, v: number) => void = () => {};
   private subRaw = 0;
+  private heardAt = -99;
+  private warmFrom = 0;
 
   /** A hit now, of strength `v` (0–1). */
   hit(kind: HitKind, v: number): void {
@@ -57,13 +72,22 @@ export class Music {
     this.last[kind] = this.t;
     this.vel[kind] = Math.min(1, v);
     if (kind === "crash") this.turn = -this.turn;
+    if (kind === "kick") this.tempo.beat(this.t);
     this.listen(kind, this.vel[kind]);
     this.envelopes();
   }
 
   /** A frame of the analysed sound: its hits (at the test track's strengths), then its levels. */
   heard(f: Levels & { hits: { kind: HitKind; velocity: number }[] }): void {
-    for (const h of f.hits) this.hit(h.kind, h.velocity * HEARD[h.kind]);
+    if (this.t - this.heardAt > 1) this.warmFrom = this.t;
+    this.heardAt = this.t;
+    const warm = Math.min(1, (this.t - this.warmFrom) / WARM_S);
+    for (const h of f.hits) {
+      if (warm < 1 && h.kind === "crash") continue;
+      const v =
+        h.kind === "kick" ? h.velocity ** 1.4 * (1 - 0.33 * Math.min(1, this.melody)) : h.velocity;
+      this.hit(h.kind, v * HEARD[h.kind] * (0.25 + 0.75 * warm));
+    }
     this.levels(f);
   }
 

@@ -4,8 +4,8 @@
 //! while the band's level rises, out of the band's refractory time. The kick also needs its band
 //! louder than its last second: a bass note or the beat of the kick's tail with the bass is not
 //! a kick. The velocity (0–1) is the flux over an automatic gain (the recent hits, forgotten in
-//! a few seconds), so that a quiet song and a loud one react alike. Pure; a peak is confirmed one
-//! analysis later (about 5 ms).
+//! about twenty seconds), so that a quiet song and a loud one react alike. Pure; a peak is
+//! confirmed one analysis later (about 5 ms).
 
 /// The threshold's k, before the sensitivity (higher sensitivity: lower threshold).
 const K: f32 = 2.5;
@@ -13,8 +13,9 @@ const K: f32 = 2.5;
 pub const SHARE: f32 = 0.2;
 /// How long the threshold's memory is (s).
 const MEMORY_S: f32 = 1.0;
-/// The automatic gain forgets a loud passage with this time constant (s): a tenth after 8 s.
-const GAIN_TAU_S: f32 = 3.5;
+/// The automatic gain forgets a loud passage with this time constant (s): a tenth after 23 s (a
+/// soft passage's hits stay soft, 2026-11-03: the bass stood out over the melody at 8 s).
+const GAIN_TAU_S: f32 = 10.0;
 /// A hit raises the gain to its flux, but by this factor at most: the first kick after a silence
 /// (its band was empty, its flux is huge) does not leave the next ones weak for seconds.
 const GAIN_GROWTH: f32 = 1.25;
