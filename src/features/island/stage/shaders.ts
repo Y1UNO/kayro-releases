@@ -7,8 +7,9 @@
  * light fades out before the window's region ends (`uFade`). The walls the island melts into
  * end two shoulders past it (whole, they lit the screen's top edge: grey bars). The ink is the island's black,
  * matte (2026-11-03, the user's choice): the lab's gloss (reflections, rim, highlights) only
- * with « Brillance » above 0, and the crash's flash spares the ink. The strings' glow in the
- * light is tight (the trails add it up: a wide one hid them, 2026-11-03). No spikes anywhere.
+ * with « Brillance » above 0, and the crash's flash spares the ink. The strings are drawn in the
+ * final image only, sharp: in the light, its trails copied them into blurred ghosts (2026-11-03).
+ * No spikes anywhere.
  */
 
 export const COMMON = `#version 300 es
@@ -85,7 +86,7 @@ void main(){
   float th=atan(p.y-uFC.y,p.x-uFC.x);
   float g=exp(-dd/uHalo.y)*uHalo.x;
   float ray=pow(.5+.5*sin(9.*th+uTime*.5+2.*sin(4.*th-uTime*.37)),6.)*exp(-dd/(uHalo.y*3.))*uHalo.z;
-  vec2 wd;vec3 e=(haloCol(p)*(g+ray*.8)+waves(p,wd)*.8+rings(p,1.))*uLit;
+  vec2 wd;vec3 e=(haloCol(p)*(g+ray*.8)+waves(p,wd)*.8)*uLit;
   o=vec4(max(prev,e)*fadeOut(ps),1.);
 }`;
 
@@ -98,7 +99,7 @@ void main(){
   vec2 uv=vec2((ps.x+wd.x)/uSize.x,1.-(ps.y+wd.y)/uSize.y);vec2 dc=(uv-.5)*uCA;
   vec3 L=vec3(texture(uLight,uv+dc).r,texture(uLight,uv).g,texture(uLight,uv-dc).b);
   float m=fadeOut(ps)*uLit;
-  vec3 col=(L*.9+wv*.35+rings(p,0.)*.9)*m;
+  vec3 col=(L*.9+wv*.35+rings(p,0.)*1.25)*m;
   float d=sdScene(p);
   float aa=max(fwidth(d)*.75,.35/uPx);float a=smoothstep(aa,-aa,d);
   if(a>.001){
