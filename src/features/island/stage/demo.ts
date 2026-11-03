@@ -130,7 +130,10 @@ export class Demo {
     }
     // The melody as the analyser gives it: quick to rise, slow to fall.
     this.mel += (mel - this.mel) * (1 - Math.exp(-dt / (mel > this.mel ? 0.04 : 0.3)));
-    this.music.levels({ sub, build, gap, section: sec, melody: this.mel, pitch, voice: 0 });
+    const sharp = sec === "drop" ? 0.7 : sec === "break" ? 0.15 : 0.45;
+    const heavy = sec === "drop" && bar < 2 ? 0.8 : 0;
+    const melody = this.mel;
+    this.music.levels({ sub, build, gap, section: sec, melody, pitch, voice: 0, sharp, heavy });
   }
 
   stop(): void {

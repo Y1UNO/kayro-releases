@@ -157,6 +157,8 @@ export interface MusicSignal {
   hits: { kind: HitKind; velocity: number }[];
   sub: number;
   melody: number;
+  sharp: number;
+  heavy: number;
   voice: number;
   pitch: number;
   build: number;
@@ -189,6 +191,8 @@ export function onMusicFrame(handler: (frame: MusicSignal) => void): Promise<Unl
       hits: f.hits.map((h) => ({ kind: h.kind, velocity: h.velocity ?? 0 })),
       sub: f.sub ?? 0,
       melody: f.melody ?? 0,
+      sharp: f.sharp ?? 0,
+      heavy: f.heavy ?? 0,
       voice: f.voice ?? 0,
       pitch: f.pitch ?? 0,
       build: f.build ?? 0,

@@ -65,6 +65,10 @@ pub struct MusicFrame {
     /// A voice (what sits in the middle of the stereo, 300–3400 Hz), 0–1 (2026-11-03).
     pub voice: f32,
     pub pitch: f32,
+    /// How sharp the notes are: 0 held and soft – 1 plucked, stuttered, chopped (2026-11-03).
+    pub sharp: f32,
+    /// A heavy bass: the sub's share of the sound over its usual one in the song (2026-11-03).
+    pub heavy: f32,
     pub build: f32,
     pub gap: bool,
     pub section: Section,

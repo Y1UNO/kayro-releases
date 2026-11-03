@@ -9,6 +9,8 @@
  * matte (2026-11-03, the user's choice): the lab's gloss (reflections, rim, highlights) only
  * with « Brillance » above 0, and the crash's flash spares the ink. The strings are drawn in the
  * final image only, sharp: in the light, its trails copied them into blurred ghosts (2026-11-03).
+ * A pluck's ring index carries how sharp its note was (+0–0.09): a soft note's bump is wide, slow
+ * and long, a chopped one's narrow, quick, short and fast-ringing.
  * No spikes anywhere.
  */
 
@@ -52,9 +54,10 @@ vec3 rings(vec2 p,float glow){
   vec3 acc=vec3(0.);if(uCore.w<.5)return acc;
   vec2 q=p-uCore.xy;float L=length(q),th=atan(q.y,q.x);
   for(int i=0;i<3;i++){vec4 R=uRings[i];if(R.y<.003)continue;float disp=0.;
-    for(int k=0;k<16;k++){if(k>=uNPk)break;vec4 P=uPk[k];if(abs(P.x-float(i))>.1)continue;float tr=P.z*2.4;
+    for(int k=0;k<16;k++){if(k>=uNPk)break;vec4 P=uPk[k];if(abs(P.x-float(i))>.1)continue;
+      float sh=clamp((P.x-float(i))/.09,0.,1.);float tr=P.z*(1.8+1.8*sh),wd=9.+55.*sh;
       float a1=mod(th-P.y-tr+PI,2.*PI)-PI,a2=mod(th-P.y+tr+PI,2.*PI)-PI;
-      disp+=P.w*exp(-P.z*2.8)*(exp(-a1*a1*14.)+exp(-a2*a2*14.))*cos(P.z*26.);}
+      disp+=P.w*exp(-P.z*(2.+3.5*sh))*(exp(-a1*a1*wd)+exp(-a2*a2*wd))*cos(P.z*(18.+20.*sh));}
     float dr=abs(L-R.x-disp);float line=exp(-dr*dr/(R.z*R.z));
     float g=glow>.5?exp(-dr/(R.z*1.8))*.12+line*.3:line;
     acc+=ringCol(R.w)*R.y*g;}

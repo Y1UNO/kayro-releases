@@ -63,6 +63,8 @@ fn same(a: &Levels, b: &Levels) -> bool {
         && close(a.pitch, b.pitch)
         && close(a.build, b.build)
         && close(a.voice, b.voice)
+        && close(a.sharp, b.sharp)
+        && close(a.heavy, b.heavy)
         && (a.gap, a.section) == (b.gap, b.section)
 }
 
@@ -139,6 +141,8 @@ impl Music {
             melody: levels.melody,
             voice: levels.voice,
             pitch: levels.pitch,
+            sharp: levels.sharp,
+            heavy: levels.heavy,
             build: levels.build,
             gap: levels.gap,
             section: levels.section,

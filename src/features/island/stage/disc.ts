@@ -76,6 +76,10 @@ export class Disc {
   readonly moments = new Moments();
   private breathT = 9;
   private breathG = 0;
+  /** A big saturated bass: the sub's slow level, the rumble (0–2, with the bass setting), its clock. */
+  private subSlow = 0;
+  private rumble = 0;
+  private rumbleT = 0;
 
   constructor(
     private W: () => number,
@@ -103,8 +107,11 @@ export class Disc {
     return this.H() * 0.19;
   }
 
+  /** A bump running round string `ring`: shaped by how sharp the notes are now (shaders.ts). */
   private pluck(ring: number, amp: number): void {
-    this.pk.push({ r: ring, th: rnd(0, TAU, this.random), age: 0, amp: amp * this.radius() });
+    const sh = clamp(this.M.sharp, 0, 1);
+    const a = amp * (0.75 + 0.5 * sh) * this.radius();
+    this.pk.push({ r: ring + 0.09 * sh, th: rnd(0, TAU, this.random), age: 0, amp: a });
     if (this.pk.length > 16) this.pk.shift();
   }
 
@@ -217,7 +224,18 @@ export class Disc {
     this.breathT += h;
     const t = this.breathT;
     const breath = this.breathG * 0.14 * (t < 0.6 ? t / 0.6 : Math.exp(-(t - 0.6) / 1.2));
-    this.body.step(h, 1 + 0.035 * M.sub * bass - 0.15 * M.build - (M.gap ? 0.04 : 0) + breath);
+    // A big saturated bass: the bubble rumbles, round (its modes 2 and 3 shaken around 9 Hz, off
+    // their resonance), breathes deeper; its halo and string thicken. In full when the bass crushes
+    // the mix more than usual (`heavy`), a third of it under a sub merely strong and held.
+    this.subSlow += (M.subIn - this.subSlow) * (1 - Math.exp(-h / 0.25));
+    const x = clamp((this.subSlow - 0.55) / 0.35, 0, 1);
+    this.rumble = Math.max(clamp(M.heavy, 0, 1), 0.35 * x * x * (3 - 2 * x)) * bass;
+    this.rumbleT += h;
+    const w = this.rumbleT * TAU * 9;
+    this.body.m[0]!.a.v += 28 * this.rumble * Math.cos(w) * h;
+    this.body.m[1]!.a.v += 18 * this.rumble * Math.cos(w * 1.3 + 1) * h;
+    const swell = 0.035 * M.sub * bass + 0.05 * this.rumble;
+    this.body.step(h, 1 + swell - 0.15 * M.build - (M.gap ? 0.04 : 0) + breath);
     this.oy.to(0, 300, 0.6, h);
     // A turn every 8 beats: the grid's tempo once known (the AI's), else the kicks'.
     this.spinV.to(M.grid.spin() ?? (TAU * M.tempo.bpm) / 480, 1.5, 1, h);
@@ -298,7 +316,8 @@ export class Disc {
     STRANDS.forEach(([r, w], i) => {
       const [v, shown] = [levels[i]!, this.strands[i]!.shown];
       const lift = 1 + 0.6 * this.beat;
-      U.rings.set([rs * r, shown * (0.12 + v) * dim * lift, H * w * (0.8 + 0.5 * v), i], i * 4);
+      const thick = 0.8 + 0.5 * v + (i === 0 ? 0.6 * this.rumble : 0);
+      U.rings.set([rs * r, shown * (0.12 + v) * dim * lift, H * w * thick, i], i * 4);
     });
     let k = 0;
     for (const p of this.pk) {
@@ -306,7 +325,7 @@ export class Disc {
       k++;
     }
     U.npk = k;
-    halo(U, M, this.drive(), H);
+    halo(U, M, this.drive(), H, 1, this.rumble);
     U.fc[0] = cx;
     U.fc[1] = cy;
   }
@@ -339,12 +358,13 @@ export class Disc {
 }
 
 /** The halo, rays and rim for any scene (the lab's `haloStd`). */
-export function halo(U: Uniforms, M: Music, d: Drive, H: number, base = 1): void {
+export function halo(U: Uniforms, M: Music, d: Drive, H: number, base = 1, rumble = 0): void {
   const dim = (1 - 0.72 * M.build) * (M.gap ? 0.12 : 1);
   const [b, c] = [d.bass, d.crash];
   U.halo[0] =
     ((0.1 +
       0.22 * M.sub * b +
+      0.35 * rumble +
       1.0 * M.kick * b +
       0.25 * M.snare +
       1.1 * M.crash * c +

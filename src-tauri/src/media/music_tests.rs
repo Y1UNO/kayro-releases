@@ -248,3 +248,50 @@ fn the_voice_is_what_sits_in_the_middle_and_the_melody_what_is_wide() {
     let mono = levels(true, false);
     assert!(mono.voice < 0.01 && mono.melody > 0.6, "{mono:?}");
 }
+
+#[test]
+fn chopped_notes_are_sharp_and_held_ones_soft() {
+    // The same 600 Hz note: held for 3 s, then cut into 60 ms bursts eight times a second.
+    let held: Vec<f32> = (0..144_000)
+        .map(|i| 0.2 * (TAU * 600.0 * i as f32 / 48_000.0).sin())
+        .collect();
+    let chopped: Vec<f32> = (0..144_000)
+        .map(|i| {
+            let on = (i % 6000) < 2880;
+            if on {
+                0.2 * (TAU * 600.0 * i as f32 / 48_000.0).sin()
+            } else {
+                0.0
+            }
+        })
+        .collect();
+    let sharp = |x: &[f32]| {
+        let mut a = Analyzer::new(48_000);
+        a.push(x, &mut Vec::new());
+        a.levels().sharp
+    };
+    let (soft, hard) = (sharp(&held), sharp(&chopped));
+    assert!(soft < 0.2 && hard > 0.5, "held {soft}, chopped {hard}");
+}
+
+#[test]
+fn a_bass_crushing_the_mix_more_than_usual_is_heavy() {
+    // 10 s of a melody with a light sub, then 2 s where the sub swells to crush it.
+    let n = 48_000 * 12;
+    let x: Vec<f32> = (0..n)
+        .map(|i| {
+            let t = i as f32 / 48_000.0;
+            let sub = if t < 10.0 { 0.05 } else { 0.5 };
+            0.15 * (TAU * 700.0 * t).sin() + sub * (TAU * 45.0 * t).sin()
+        })
+        .collect();
+    let mut a = Analyzer::new(48_000);
+    a.push(&x[..48_000 * 10], &mut Vec::new());
+    let before = a.levels().heavy;
+    a.push(&x[48_000 * 10..], &mut Vec::new());
+    let during = a.levels().heavy;
+    assert!(
+        before < 0.1 && during > 0.6,
+        "before {before}, during {during}"
+    );
+}

@@ -872,6 +872,10 @@ export type MusicFrame = {
 	/**  A voice (what sits in the middle of the stereo, 300–3400 Hz), 0–1 (2026-11-03). */
 	voice: number | null,
 	pitch: number | null,
+	/**  How sharp the notes are: 0 held and soft – 1 plucked, stuttered, chopped (2026-11-03). */
+	sharp: number | null,
+	/**  A heavy bass: the sub's share of the sound over its usual one in the song (2026-11-03). */
+	heavy: number | null,
 	build: number | null,
 	gap: boolean,
 	section: Section,

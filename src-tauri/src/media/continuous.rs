@@ -9,10 +9,19 @@
 //! the sides do not explain (`mid² − 2·side²`), drum hits taken out by the same median; the
 //! melody then is the rest of 250–5000 Hz, middle and sides. A mono song (sides under 2 % of the
 //! middle) cannot tell them apart: no voice, the melody as before.
+//!
+//! How sharp the notes are (`sharp`, 0 smooth – 1 chopped, 2026-11-03): the log rise of 250–5000 Hz
+//! from one analysis to the next (the hits' flux), against its automatic gain, held from its peaks
+//! (up in 30 ms, down in 0.5 s): plucked, stuttered or chopped notes keep it high, held and soft
+//! ones low. The page shapes its gestures with it (sharp and quick, or round and calm).
+//!
+//! A heavy bass (`heavy`, 0–1, 2026-11-03): the sub-bass's share of the whole sound against its
+//! usual share in the song (its 4 s mean): the moments the bass crushes the rest more than it
+//! does, from 1.25 to 2 times its usual share.
 
 use super::beat::WINDOW;
 use super::onset::median;
-use super::spectrum::{bins, rms, QUIET};
+use super::spectrum::{bins, flux, mean, rms, QUIET};
 
 const SUB: (f32, f32) = (30.0, 60.0);
 const MELODY: (f32, f32) = (250.0, 2000.0);
@@ -82,6 +91,16 @@ pub struct Continuous {
     voice_follow: Follow,
     width: f32,
     width_share: f32,
+    wide_level: f32,
+    wide_follow: Follow,
+    sharp_gain: f32,
+    sharp: f32,
+    sharp_follow: Follow,
+    share: f32,
+    share_usual: f32,
+    usual_follow: Follow,
+    heavy: f32,
+    heavy_follow: Follow,
 }
 
 impl Continuous {
@@ -110,12 +129,59 @@ impl Continuous {
             voice_follow: Follow::new(hop_s, 0.06, 0.35),
             width: 0.0,
             width_share: 1.0 - (-hop_s / 0.5).exp(),
+            wide_level: 0.0,
+            wide_follow: Follow::new(hop_s, 0.3, 3.0),
+            sharp_gain: 0.05,
+            sharp: 0.0,
+            sharp_follow: Follow::new(hop_s, 0.03, 0.5),
+            share: 0.0,
+            share_usual: 0.0,
+            usual_follow: Follow::new(hop_s, 4.0, 4.0),
+            heavy: 0.0,
+            heavy_follow: Follow::new(hop_s, 0.1, 0.5),
         }
     }
 
-    /// The sub-bass, the melody, the voice and the melody's pitch.
-    pub fn levels(&self) -> (f32, f32, f32, f32) {
-        (self.sub, self.melody, self.voice, self.pitch)
+    /// The sub-bass, the melody, the voice, the melody's pitch, how sharp the notes are and how
+    /// heavy the bass is.
+    pub fn levels(&self) -> (f32, f32, f32, f32, f32, f32) {
+        (
+            self.sub,
+            self.melody,
+            self.voice,
+            self.pitch,
+            self.sharp,
+            self.heavy,
+        )
+    }
+
+    /// The sub-bass's share of the whole sound now (`sub_now`: its RMS), against its usual one.
+    fn heaviness(&mut self, sub_now: f32, all_level: f32) {
+        let share = if all_level > QUIET {
+            sub_now / all_level
+        } else {
+            0.0
+        };
+        self.share += (share - self.share) * 0.2;
+        if self.share_usual <= QUIET {
+            self.share_usual = self.share; // the song's first sound sets its usual share
+        }
+        self.usual_follow.step(&mut self.share_usual, self.share);
+        let over = self.share / self.share_usual.max(QUIET);
+        let target = ((over - 1.25) / 0.75).clamp(0.0, 1.0);
+        self.heavy_follow.step(&mut self.heavy, target);
+    }
+
+    /// How sharp the notes are now, from this analysis's rise over `reference` (spectrum.rs).
+    fn sharpness(&mut self, mags: &[f32], reference: &[f32], all_level: f32) {
+        let band = [self.wide_bins];
+        self.wide_follow
+            .step(&mut self.wide_level, mean(mags, &band));
+        let gate = (0.1 * self.wide_level).max(0.02 * all_level).max(QUIET);
+        let rise = flux(mags, reference, &band, gate);
+        self.sharp_gain = (self.sharp_gain * self.gain_decay).max(rise).max(0.05);
+        let target = (rise / self.sharp_gain).clamp(0.0, 1.0).sqrt();
+        self.sharp_follow.step(&mut self.sharp, target);
     }
 
     /// The voice's and the instruments' levels now (RMS), from the middle and the sides.
@@ -140,10 +206,12 @@ impl Continuous {
         (voice, (rest / (b + 1 - a) as f32).sqrt())
     }
 
-    /// One analysis: its magnitudes and its sides' (the same length), and the whole sound's
-    /// level (their slow RMS).
-    pub fn update(&mut self, mags: &[f32], side: &[f32], all_level: f32) {
+    /// One analysis: its magnitudes, its sides' (the same length) and the magnitudes its rises
+    /// count from, and the whole sound's level (their slow RMS).
+    pub fn update(&mut self, mags: &[f32], side: &[f32], reference: &[f32], all_level: f32) {
+        self.sharpness(mags, reference, all_level);
         let sub_now = rms(mags, self.sub_bins);
+        self.heaviness(sub_now, all_level);
         self.sub_gain = (self.sub_gain * self.gain_decay)
             .max(sub_now)
             .max(SUB_ALL * all_level)

@@ -23,7 +23,13 @@ Changements demandés par rapport au labo :
   3 s sans voix (huit gouttes nées sur le fil de la voix tournent en spirale et se fondent dans la bulle, flash doux,
   onde pâle), le **Souffle** quand la musique se pose après un drop ou une montée (au début de mesure suivant : la bulle
   gonfle lentement et se relâche, grande onde lente, gouttes qui flottent, traînées qui changent de sens). Un grand
-  moment toutes les 6 s au plus, crash compris ; tous suivent « Intensité des grands moments ».
+  moment toutes les 6 s au plus, crash compris ; tous suivent « Intensité des grands moments » ;
+- **notes piquantes ou rondes** : l'analyse mesure à quel point les notes sont attaquées sèchement (`sharp`, 0 tenu et
+  doux, 1 haché) ; un pincement de fil de note hachée est étroit, rapide, court et vibre vite, celui d'une note douce
+  large, lent et long ;
+- **grosse basse saturée** : quand la sub écrase le son plus que d'habitude dans le morceau (`heavy`, sa part du son
+  1,25 à 2 fois sa part habituelle), la bulle gronde (elle tremble ronde vers 9 Hz, respire plus fort), son halo et le
+  fil de la sub s'épaississent ; un tiers de ce grondement sous une sub seulement forte et tenue.
 
 ## Ce qu'on voit
 - **Départ** : l'île se tasse ; au kick suivant (600 ms au plus), une goutte part, tenue par un col de cinq boules qui

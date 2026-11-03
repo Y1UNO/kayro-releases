@@ -29,7 +29,17 @@ const drive = () => ({ bass: 1, crash: 1 });
 describe("Music mode: the music's envelopes (SPEC §2)", () => {
   it("follow each hit from its age at once, and the kick pumps the sub down", () => {
     const M = new Music();
-    M.levels({ sub: 0.8, build: 0, gap: false, section: "drop", melody: 0, pitch: 0.5, voice: 0 });
+    M.levels({
+      sub: 0.8,
+      build: 0,
+      gap: false,
+      section: "drop",
+      melody: 0,
+      pitch: 0.5,
+      voice: 0,
+      sharp: 0,
+      heavy: 0,
+    });
     M.advance(1);
     expect(M.sub).toBeCloseTo(0.8, 3);
     M.hit("kick", 1);
@@ -63,6 +73,8 @@ describe("Music mode: the music's envelopes (SPEC §2)", () => {
       melody: 0,
       pitch: 0.3,
       voice: 0,
+      sharp: 0,
+      heavy: 0,
     } as const;
     const hits = (["kick", "snare", "hat", "crash"] as const).map((kind) => ({
       kind,
@@ -158,6 +170,8 @@ describe("Music mode: one string per source, showing only while it plays (2026-1
     melody: 0,
     pitch: 0.5,
     voice: 0,
+    sharp: 0,
+    heavy: 0,
   } as const;
 
   it("shows the voice's string with a voice, the sub's with the sub, and none in silence", () => {
@@ -359,6 +373,8 @@ describe("Music mode: the big moments besides the crash (2026-11-03)", () => {
     melody: 0.5,
     pitch: 0.5,
     voice: 0,
+    sharp: 0,
+    heavy: 0,
   } as const;
   const run = (m: Moments, M: Music, secs: number, down = () => false) => {
     const out: string[] = [];
@@ -397,5 +413,60 @@ describe("Music mode: the big moments besides the crash (2026-11-03)", () => {
     M.levels({ ...lv, section: "break" });
     const out = run(m, M, 2, () => ++n === 120);
     expect(out).toEqual(["breath"]);
+  });
+});
+
+describe("Music mode: sharp or soft notes, and a big bass (2026-11-03)", () => {
+  const lv = {
+    sub: 0,
+    build: 0,
+    gap: false,
+    section: "drop",
+    melody: 0.7,
+    pitch: 0.4,
+    voice: 0,
+  } as const;
+  const disc = (M: Music) =>
+    new Disc(
+      () => W,
+      () => H,
+      new Body(seeded()),
+      M,
+      new Effects(() => H),
+      drive,
+      seeded(),
+    );
+
+  it("marks a chopped note's pluck as sharp and a soft one's as round", () => {
+    for (const sharp of [0, 1]) {
+      const M = new Music();
+      M.levels({ ...lv, sharp, heavy: 0 });
+      const d = disc(M);
+      for (let i = 0; i < 300; i++) d.step(STEP);
+      const U = uniforms();
+      d.fill(U);
+      expect(U.npk).toBeGreaterThan(0);
+      const mark = U.pk[0]! - Math.floor(U.pk[0]!);
+      expect(mark).toBeCloseTo(0.09 * sharp, 3);
+    }
+  });
+
+  it("rumbles when the bass crushes the mix, less under a sub merely strong, not under a light one", () => {
+    const wobble = (sub: number, heavy: number) => {
+      const M = new Music();
+      M.levels({ ...lv, melody: 0, sub, sharp: 0, heavy });
+      M.advance(1);
+      const d = disc(M);
+      let most = 0;
+      for (let i = 0; i < 960; i++) {
+        d.step(STEP);
+        if (i > 480) most = Math.max(most, Math.abs(d.body.m[0]!.a.x));
+      }
+      return most;
+    };
+    expect(wobble(0.95, 1)).toBeGreaterThan(0.008);
+    expect(wobble(0.95, 1)).toBeLessThan(0.05);
+    expect(wobble(0.95, 0)).toBeLessThan(wobble(0.95, 1) * 0.5);
+    expect(wobble(0.3, 0)).toBeLessThan(0.002);
   });
 });

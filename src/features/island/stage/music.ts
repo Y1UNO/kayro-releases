@@ -24,6 +24,10 @@ export interface Levels {
   melody: number;
   pitch: number;
   voice: number;
+  /** How sharp the notes are: 0 held and soft – 1 plucked, stuttered, chopped. */
+  sharp: number;
+  /** A heavy bass: the sub crushing the rest more than usual in the song (0–1). */
+  heavy: number;
 }
 
 const KINDS: readonly HitKind[] = ["kick", "snare", "hat", "crash"];
@@ -60,6 +64,8 @@ export class Music {
   melody = 0;
   pitch = 0.5;
   voice = 0;
+  sharp = 0;
+  heavy = 0;
   /** The song's tempo, from its kicks; its beat grid, from the AI (or the test track). */
   readonly tempo = new Tempo();
   readonly grid = new Grid();
@@ -105,6 +111,8 @@ export class Music {
     this.melody = l.melody;
     this.pitch = l.pitch;
     this.voice = l.voice;
+    this.sharp = l.sharp;
+    this.heavy = l.heavy;
   }
 
   /** The sub before the kick's pump. */
@@ -129,6 +137,8 @@ export class Music {
       melody: 0,
       pitch: this.pitch,
       voice: 0,
+      sharp: 0,
+      heavy: 0,
     });
     this.envelopes();
   }

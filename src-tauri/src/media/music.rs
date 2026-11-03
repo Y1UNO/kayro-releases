@@ -51,6 +51,8 @@ pub struct Levels {
     pub melody: f32,
     pub voice: f32,
     pub pitch: f32,
+    pub sharp: f32,
+    pub heavy: f32,
     pub build: f32,
     pub gap: bool,
     pub section: Section,
@@ -198,12 +200,14 @@ impl Analyzer {
     }
 
     pub fn levels(&self) -> Levels {
-        let (sub, melody, voice, pitch) = self.continuous.levels();
+        let (sub, melody, voice, pitch, sharp, heavy) = self.continuous.levels();
         Levels {
             sub,
             melody,
             voice,
             pitch,
+            sharp,
+            heavy,
             build: self.form.build(),
             gap: self.form.gap(),
             section: self.form.section(),
@@ -315,8 +319,9 @@ impl Analyzer {
             self.side.take(&self.side_ring, self.head);
         }
         self.side_due = !self.side_due;
+        let s = &self.spectrum;
         self.continuous
-            .update(&self.spectrum.mags, &self.side.mags, self.all_level);
+            .update(&s.mags, &self.side.mags, &s.reference, self.all_level);
         let (a, b) = self.drums[3].bins[0];
         let hi = self.spectrum.mags[a..=b].iter().map(|m| m * m).sum::<f32>() / (b + 1 - a) as f32;
         let dropped = self.form.push(energy, hi, peaks[0].is_some());

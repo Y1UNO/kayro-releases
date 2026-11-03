@@ -50,6 +50,8 @@ export interface SoundFrame {
   hits: { kind: HitKind; velocity: number }[];
   sub: number;
   melody: number;
+  sharp: number;
+  heavy: number;
   voice: number;
   pitch: number;
   build: number;
