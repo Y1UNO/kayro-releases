@@ -81,6 +81,17 @@ pub enum IslandPassage {
     Glitch,
 }
 
+/// Kysland's « Mode musique » (2026-11-03): « Disk », the island as a disc of black jelly with
+/// the cover turning in it and the instruments' colours inside, or « Dancing », black ink drops
+/// dancing together.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum IslandMusicMode {
+    #[default]
+    Disk,
+    Dancing,
+}
+
 /// « Au démarrage » (started with Windows): the intro (the still logo, a click or Enter plays the
 /// opening), the hub in immersive mode, the island (Kysland), or nothing on screen (the
 /// notification area).

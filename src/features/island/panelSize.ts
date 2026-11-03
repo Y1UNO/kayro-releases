@@ -14,8 +14,9 @@ export const PANEL = {
   /** One result, and the space between two. */
   result: 30,
   resultGap: 2,
-  /** The music's row (its cover). */
+  /** The music's row (its cover), then « Mode musique » under it. */
   music: 64,
+  stage: 28,
   /** « Rien trouvé ». */
   none: 30,
 } as const;
@@ -35,7 +36,7 @@ export function panelSize(c: PanelContent): { width: number; height: number } {
   if (c.searching) {
     below = c.hits > 0 ? c.hits * PANEL.result + (c.hits - 1) * PANEL.resultGap : PANEL.none;
   } else if (c.music) {
-    below = PANEL.music;
+    below = PANEL.music + PANEL.gap + PANEL.stage;
   }
   return { width: PANEL.width, height: base + (below > 0 ? PANEL.gap + below : 0) };
 }

@@ -19,6 +19,7 @@ import { DOCKED } from "./islandShape";
 import { DEFAULT_DELAY_MS } from "./islandTuck";
 import { rgbOf, trackKey } from "./music";
 import { panelSize } from "./panelSize";
+import { useMusicStage } from "./stage/useMusicStage";
 import { useIsland } from "./useIsland";
 import { useBeat, useLaunchStretch, useNowPlaying } from "./useIslandData";
 import styles from "./Island.module.css";
@@ -58,13 +59,18 @@ export function IslandApp() {
   const tuckOn = useHub((s) => Boolean(s.settings?.islandAlways && s.settings.islandTuck));
   const tuckDelay = useHub((s) => s.settings?.islandTuckDelay);
   const sentRoom = useRef<Room | null>(null);
+  // « Mode musique »: while music plays, the island dances in the middle of its screen.
+  const musicOn = useHub((s) => Boolean(s.settings?.islandMusic));
+  const musicMode = useHub((s) => s.settings?.islandMusicMode ?? "disk");
+  const [staged, setStaged] = useState(false);
   const controls = useIsland(
     { island, layer, canvas },
     { calm, effects: !isEco(quality), passage },
     {
       enabled: tuckOn,
       delayMs: tuckDelay != null ? tuckDelay * 1000 : DEFAULT_DELAY_MS,
-      stretched: launching !== null,
+      // Music mode wanted (or on): the island stays out of the top edge.
+      stretched: launching !== null || staged || (musicOn && Boolean(np?.playing)),
       width: () => sentRoom.current?.[0] ?? DOCKED.width,
     },
   );
@@ -74,6 +80,22 @@ export function IslandApp() {
     if (update) say(t("island.update", { version: update.version }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [update]);
+  const stageCanvas = useRef<HTMLCanvasElement>(null);
+  const stage = useMusicStage(
+    {
+      on: musicOn,
+      np,
+      open: controls.open,
+      tucked: controls.tucked,
+      calm,
+      effects: !isEco(quality),
+      mode: musicMode,
+    },
+    stageCanvas,
+    island,
+  );
+  const inStage = stage.phase !== "off";
+  if (inStage !== staged) setStaged(inStage);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   // Leaving or entering the widget mode fades the page out or in (round 4b).
@@ -98,15 +120,21 @@ export function IslandApp() {
   // What it shows at rest.
   const shown = { media: np !== null, stretch: launching !== null, dots: live.length > 0 };
   const { activity } = controls;
+  const playing = Boolean(np?.playing);
   useEffect(() => {
-    activity(shown);
+    activity({ ...shown, playing });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shown.media, shown.stretch, shown.dots, activity]);
+  }, [shown.media, shown.stretch, shown.dots, playing, activity]);
 
   // The room it takes at rest, for the core's click region: it grows at once, shrinks once the
   // island has (no cut while it shrinks). Sent on a change only, no loop.
   const [hovered, setHovered] = useState(false);
-  const room = islandRoom({ ...shown, hover: hovered, breath: Boolean(np?.playing) });
+  const room = islandRoom({
+    ...shown,
+    hover: hovered,
+    breath: Boolean(np?.playing),
+    idle: controls.idling,
+  });
   useEffect(() => {
     const send = (r: Room) => {
       sentRoom.current = r;
@@ -198,13 +226,23 @@ export function IslandApp() {
   };
 
   return (
-    <div className={styles.stage}>
+    <div className={styles.stage} data-music={inStage ? stage.phase : undefined}>
       <canvas ref={canvas} className={styles.bubbles} aria-hidden />
+      <canvas
+        ref={stageCanvas}
+        className={styles.music}
+        role="img"
+        aria-label={t("island.music.stageLeave")}
+        onPointerDown={(e) => {
+          if (e.button === 0 && stage.click(e.clientX, e.clientY)) e.preventDefault();
+        }}
+      />
       <div ref={layer} className={styles.layer}>
         <div
           ref={island}
           className={styles.island}
           data-open={controls.open || undefined}
+          data-stage={inStage || undefined}
           role={controls.open ? "dialog" : "img"}
           aria-label={t(controls.open ? "island.openLabel" : "island.label")}
           onPointerDown={onPointerDown}
@@ -221,6 +259,7 @@ export function IslandApp() {
           <span className={styles.shoulder} data-at="top-right" />
           <span className={styles.shoulder} data-at="side-left" />
           <span className={styles.shoulder} data-at="side-right" />
+          <span className={styles.glint} aria-hidden="true" />
           <IslandRest np={np} launch={launching} running={live} onFront={front} />
           <IslandPanel
             open={controls.open}
@@ -237,6 +276,13 @@ export function IslandApp() {
             onMedia={(action) => void mediaIpc.control(action)}
             onImmersive={() => void openImmersive()}
             onClose={close}
+            stage={musicOn}
+            onStage={(on) => {
+              void hubStore.getState().setSettings({ islandMusic: on });
+              if (on && np?.playing) close();
+            }}
+            stageMode={musicMode}
+            onStageMode={(mode) => void hubStore.getState().setSettings({ islandMusicMode: mode })}
           />
         </div>
       </div>

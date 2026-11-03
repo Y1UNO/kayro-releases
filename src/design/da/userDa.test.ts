@@ -21,6 +21,8 @@ const S: Settings = {
   islandTuck: false,
   islandTuckDelay: 1.5,
   islandPeekDelay: 0.1,
+  islandMusic: false,
+  islandMusicMode: "disk",
   hideOnEscape: true,
   hideOnBlur: false,
   economyMode: false,

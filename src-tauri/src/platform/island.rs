@@ -10,11 +10,11 @@ use windows::Win32::Graphics::Dwm::{
     DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_DONOTROUND,
 };
 use windows::Win32::Graphics::Gdi::{
-    CreateCompatibleDC, CreateDIBSection, CreatePolygonRgn, CreateRectRgn, CreateRoundRectRgn,
-    DeleteDC, DeleteObject, GetDC, GetMonitorInfoW, MonitorFromWindow, ReleaseDC, SelectObject,
-    SetBrushOrgEx, SetStretchBltMode, SetWindowRgn, StretchBlt, BITMAPINFO, BITMAPINFOHEADER,
-    BI_RGB, DIB_RGB_COLORS, HALFTONE, HGDIOBJ, MONITORINFO, MONITOR_DEFAULTTONEAREST, SRCCOPY,
-    WINDING,
+    CombineRgn, CreateCompatibleDC, CreateDIBSection, CreatePolygonRgn, CreateRectRgn,
+    CreateRoundRectRgn, DeleteDC, DeleteObject, GetDC, GetMonitorInfoW, MonitorFromWindow,
+    ReleaseDC, SelectObject, SetBrushOrgEx, SetStretchBltMode, SetWindowRgn, StretchBlt,
+    BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HALFTONE, HGDIOBJ, MONITORINFO,
+    MONITOR_DEFAULTTONEAREST, RGN_OR, SRCCOPY, WINDING,
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_RBUTTON};
 use windows::Win32::UI::WindowsAndMessaging::{
@@ -66,6 +66,13 @@ pub fn move_to(raw: isize, x: i32, y: i32) {
     let _ = unsafe { SetWindowPos(hwnd(raw), None, x, y, 0, 0, flags) };
 }
 
+/// Moves and sizes the window at once (Kysland's music mode covers its screen, then goes back).
+pub fn place(raw: isize, x: i32, y: i32, width: i32, height: i32) {
+    let flags = SWP_NOZORDER | SWP_NOACTIVATE;
+    // SAFETY: a stale handle only makes the call fail.
+    let _ = unsafe { SetWindowPos(hwnd(raw), None, x, y, width, height, flags) };
+}
+
 /// Where clicks land and what shows: a (rounded) rectangle of the window, or the outline of a
 /// shape (its bounds then in `x`… `height`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -95,6 +102,22 @@ pub fn set_region(raw: isize, region: Option<Region>) {
             }
         });
         SetWindowRgn(hwnd(raw), made, true);
+    }
+}
+
+/// The region as several rectangles (x, y, width, height; physical pixels of the window):
+/// Kysland's music mode, around each thing it draws. None: nothing shows, no click is taken.
+pub fn set_region_rects(raw: isize, rects: &[(i32, i32, i32, i32)]) {
+    // SAFETY: each rectangle's region is merged into `all` then deleted; `all` is handed to the
+    // window, which owns it from then on.
+    unsafe {
+        let all = CreateRectRgn(0, 0, 0, 0);
+        for &(x, y, w, h) in rects {
+            let one = CreateRectRgn(x, y, x + w, y + h);
+            CombineRgn(Some(all), Some(all), Some(one), RGN_OR);
+            let _ = DeleteObject(HGDIOBJ::from(one));
+        }
+        SetWindowRgn(hwnd(raw), Some(all), true);
     }
 }
 

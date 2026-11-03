@@ -225,5 +225,16 @@
       "Nouvelle option « Cacher l'île » : Kysland rentre dans le bord haut comme une goutte, et ressort quand la souris touche tout en haut de l'écran, à sa place. Deux curseurs à crans règlent les délais.",
       "Réglages mieux rangés : une catégorie « Île dynamique » pour tout Kysland (Capri compris) et une catégorie « Raccourcis clavier »."
     ]
+  },
+  {
+    "version": "0.20.5",
+    "date": "02/11/2026",
+    "title": "L'île vivante",
+    "points": [
+      "Nouveau « Mode musique » (interrupteur sous la musique, dans l'île ouverte), en deux styles : « Disk », un disque de gelée noire qui tourne avec la pochette, saute sur la basse, s'illumine sur les cymbales, brille aux couleurs de l'album et lance le titre avant de le rattraper ; « Dancing », des gouttes d'encre noire qui dansent en rythme (fontaine, serpent, floraison…). L'île tombe au milieu de l'écran et revient seule après 2 s de pause ; un clic sur la scène la renvoie à sa place.",
+      "Seule et sans musique, l'île respire : de temps en temps un petit geste (elle respire, penche, un reflet passe), puis elle s'assoupit.",
+      "Les barres de la musique réagissent mieux aux coups du son, celles de droite comprises.",
+      "Interrupteurs et curseurs des Réglages en rectangles arrondis, avec les mêmes animations."
+    ]
   }
 ]

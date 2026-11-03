@@ -109,6 +109,29 @@ export const commands = {
 	 */
 	islandTuck: (tucked: boolean, width: number | null) => __TAURI_INVOKE<boolean>("island_tuck", { tucked, width }),
 	/**
+	 *  Kysland's music mode (2026-11-02): the page wants it (`enter`: the window grows in place,
+	 *  answered with the stage when the island may go), has drawn its drop (`go`: the window covers
+	 *  the screen), or the island is back home (`done`).
+	 */
+	islandStage: (step: IslandStageStep) => __TAURI_INVOKE<{
+	/**  On (the window covers the screen) or back to the island. */
+	on: boolean,
+	width: number | null,
+	height: number | null,
+	/**  Where the island's anchor (the middle of its top edge) is, and goes back to. */
+	homeX: number | null,
+	homeY: number | null,
+	/**  At home on the top edge (its top square against the bezel), or floating. */
+	docked: boolean,
+	/**  Docked in a corner: -1 left, 1 right (flush with that side), 0 the middle. */
+	corner: number | null,
+} | null>("island_stage", { step }),
+	/**
+	 *  Music mode: where the page draws, as rectangles (x, y, width, height; logical pixels of the
+	 *  stage): the window's region follows them.
+	 */
+	islandStageArea: (rects: ([(number | null), (number | null), (number | null), (number | null)])[]) => __TAURI_INVOKE<void>("island_stage_area", { rects }),
+	/**
 	 *  Step 20: a held frame of the island's effects that its window must not cut (the glitch's
 	 *  spikes on an edge), shown by a click-through layer. Async: rasterised off the interface's
 	 *  thread.
@@ -249,6 +272,7 @@ export const events = {
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
 	islandFrame: makeEvent<IslandFrame>("island-frame"),
 	islandMoment: makeEvent<IslandMoment>("island-moment"),
+	islandStage: makeEvent<IslandStage>("island-stage"),
 	islandTucked: makeEvent<IslandTucked>("island-tucked"),
 	launchLanded: makeEvent<LaunchLanded>("launch-landed"),
 	mediaBeat: makeEvent<MediaBeat>("media-beat"),
@@ -642,11 +666,39 @@ export type IslandMoment = {
 export type IslandMomentKind = "detached" | "crossed" | "docking" | "touched" | "snapped" | "dropped" | "tap" | "settled";
 
 /**
+ *  Kysland's « Mode musique » (2026-11-03): « Disk », the island as a disc of black jelly with
+ *  the cover turning in it and the instruments' colours inside, or « Dancing », black ink drops
+ *  dancing together.
+ */
+export type IslandMusicMode = "disk" | "dancing";
+
+/**
  *  Step 20 (Kysland): how the floating island goes from one screen to another. « Forcer »: the
  *  edge holds it until it is pushed through (bubbles); « Glitch »: no resistance, it may sit
  *  across two screens, and the edge between them glitches around it (spikes).
  */
 export type IslandPassage = "force" | "glitch";
+
+/**  The music mode's window, for the page (logical pixels of the stage: the screen). */
+export type IslandStage = {
+	/**  On (the window covers the screen) or back to the island. */
+	on: boolean,
+	width: number | null,
+	height: number | null,
+	/**  Where the island's anchor (the middle of its top edge) is, and goes back to. */
+	homeX: number | null,
+	homeY: number | null,
+	/**  At home on the top edge (its top square against the bezel), or floating. */
+	docked: boolean,
+	/**  Docked in a corner: -1 left, 1 right (flush with that side), 0 the middle. */
+	corner: number | null,
+};
+
+/**
+ *  What the page tells: it wants the mode (the window grows in place), the drop is drawn where
+ *  the island will be (the window moves), or the island is back home.
+ */
+export type IslandStageStep = "enter" | "go" | "done";
 
 /**  Where the island is, for the page's first frame. */
 export type IslandState = {
@@ -1021,6 +1073,8 @@ export type SettingsPatch_Deserialize = {
 	islandTuck?: boolean | null,
 	islandTuckDelay?: number | null,
 	islandPeekDelay?: number | null,
+	islandMusic?: boolean | null,
+	islandMusicMode?: IslandMusicMode | null,
 	hideOnEscape?: boolean | null,
 	hideOnBlur?: boolean | null,
 	economyMode?: boolean | null,
@@ -1069,6 +1123,8 @@ export type SettingsPatch_Serialize = {
 	islandTuck: boolean | null,
 	islandTuckDelay: number | null,
 	islandPeekDelay: number | null,
+	islandMusic: boolean | null,
+	islandMusicMode: IslandMusicMode | null,
 	hideOnEscape: boolean | null,
 	hideOnBlur: boolean | null,
 	economyMode: boolean | null,
@@ -1124,6 +1180,13 @@ export type Settings_Deserialize = {
 	islandTuck: boolean,
 	islandTuckDelay: number | null,
 	islandPeekDelay: number | null,
+	/**
+	 *  « Mode musique » (the opened island's switch, 2026-11-02): while music plays, the island
+	 *  dances in the middle of its screen.
+	 */
+	islandMusic: boolean,
+	/**  Which of the two: « Disk » or « Dancing » (the opened island's choice). */
+	islandMusicMode: IslandMusicMode,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */
@@ -1194,6 +1257,13 @@ export type Settings_Serialize = {
 	islandTuck: boolean,
 	islandTuckDelay: number | null,
 	islandPeekDelay: number | null,
+	/**
+	 *  « Mode musique » (the opened island's switch, 2026-11-02): while music plays, the island
+	 *  dances in the middle of its screen.
+	 */
+	islandMusic: boolean,
+	/**  Which of the two: « Disk » or « Dancing » (the opened island's choice). */
+	islandMusicMode: IslandMusicMode,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */

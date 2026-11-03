@@ -13,7 +13,8 @@ describe("the opened island's size", () => {
     const music = panelSize({ searching: false, hits: 0, music: true }).height;
     const one = panelSize({ searching: true, hits: 1, music: true }).height;
     const three = panelSize({ searching: true, hits: 3, music: true }).height;
-    expect(music).toBe(140);
+    // The music, and « Mode musique » under it.
+    expect(music).toBe(178);
     expect(one).toBe(106);
     expect(three).toBe(170);
     // Nothing found: one line, like one result.

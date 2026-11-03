@@ -11,3 +11,23 @@ use tauri::{AppHandle, Runtime};
 pub fn island_tuck<R: Runtime>(app: AppHandle<R>, tucked: bool, width: f64) -> bool {
     crate::desktop::island::set_tucked(&app, tucked, width)
 }
+
+/// Kysland's music mode (2026-11-02): the page wants it (`enter`: the window grows in place,
+/// answered with the stage when the island may go), has drawn its drop (`go`: the window covers
+/// the screen), or the island is back home (`done`).
+#[tauri::command]
+#[specta::specta]
+pub fn island_stage<R: Runtime>(
+    app: AppHandle<R>,
+    step: crate::desktop::island::IslandStageStep,
+) -> Option<crate::desktop::island::IslandStage> {
+    crate::desktop::island::stage::step(&app, step)
+}
+
+/// Music mode: where the page draws, as rectangles (x, y, width, height; logical pixels of the
+/// stage): the window's region follows them.
+#[tauri::command]
+#[specta::specta]
+pub fn island_stage_area<R: Runtime>(app: AppHandle<R>, rects: Vec<[f64; 4]>) {
+    crate::desktop::island::stage::area(&app, rects);
+}

@@ -19,6 +19,7 @@ mod raster;
 mod regions;
 pub mod slots;
 mod springs;
+pub mod stage;
 mod tuck;
 
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -39,6 +40,7 @@ pub use presence::{on_foreground, page_ready, quiet, sync};
 use regions::physical;
 pub use regions::{moving_region, open_region, rest_region};
 use slots::Slot;
+pub use stage::{IslandStage, IslandStageStep};
 pub use tuck::{set as set_tucked, IslandTucked};
 
 /// The window, in logical pixels: the island plus room for its stretches and bubbles.
@@ -248,7 +250,7 @@ pub fn grab<R: Runtime>(app: &AppHandle<R>, calm: bool) {
     else {
         return;
     };
-    if OPEN.load(Ordering::SeqCst) {
+    if OPEN.load(Ordering::SeqCst) || stage::active() {
         return;
     }
     let cursor = V2::new(f64::from(cursor.0), f64::from(cursor.1));
@@ -258,10 +260,12 @@ pub fn grab<R: Runtime>(app: &AppHandle<R>, calm: bool) {
     drive::start(app.clone(), h.0 as isize, screens, gesture, scale);
 }
 
-/// The region the window has at rest now: nothing (in the top edge), the opened island's
-/// panel, or the island.
+/// The region the window has at rest now: all of it (music mode), nothing (in the top edge),
+/// the opened island's panel, or the island.
 fn region_now(scale: f64) -> Region {
-    if tuck::tucked() {
+    if stage::covering() {
+        stage::area_region(scale)
+    } else if tuck::tucked() {
         tuck::nothing()
     } else if OPEN.load(Ordering::SeqCst) {
         open_region(is_docked(), slot_now(), scale)
@@ -318,7 +322,7 @@ pub fn set_open<R: Runtime>(app: &AppHandle<R>, open: bool, calm: bool) {
 /// sizes, docked and floating (the page does not know where the island is).
 pub fn set_footprint<R: Runtime>(app: &AppHandle<R>, docked: (f64, f64), floating: (f64, f64)) {
     regions::set_footprint(docked, floating);
-    if drive::running() || OPEN.load(Ordering::SeqCst) {
+    if drive::running() || OPEN.load(Ordering::SeqCst) || stage::active() {
         return;
     }
     if let Some(window) = windows::get(app, WIDGET) {
@@ -333,7 +337,7 @@ pub fn set_footprint<R: Runtime>(app: &AppHandle<R>, docked: (f64, f64), floatin
 /// still running applies it at its end).
 pub fn set_panel_size<R: Runtime>(app: &AppHandle<R>, width: f64, height: f64) {
     regions::set_open_size(width, height);
-    if drive::running() || !OPEN.load(Ordering::SeqCst) {
+    if drive::running() || !OPEN.load(Ordering::SeqCst) || stage::active() {
         return;
     }
     if let Some(window) = windows::get(app, WIDGET) {

@@ -385,9 +385,39 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   l'écran, Cacher l'île et ses délais, passage Forcer / Capri, renvoi vers Démarrage) et **Raccourcis clavier** (raccourci
   de Kayro sorti de Général, comment refaire sortir l'île, raccourcis des scènes en lecture seule). « Dépliage » et
   « Élasticité du widget » (ancien widget, sans effet) restent dans Visuel › Personnalisation avancée : à trancher.
-- [ ] **Animation de repos** de l'île (idle), vivante mais légère (veille douce, CPU au repos).
-- [ ] **Mode musique** : l'île se place au milieu de l'écran et suit la musique, animations très fluides dans la même
-  veine « élastique / liquide » que Kysland.
+- [x] **Animation de repos** de l'île (idle), vivante mais légère (2026-11-02, `islandIdle.ts`) : seule (fermée, sans
+  musique ni lancement, ni survol, ni rentrée) depuis 4 s, un geste toutes les 8–15 s au hasard : respiration (+6 × 2 px),
+  regard (penche ±3°, retour en gelée), reflet le long du bas (CSS, 0,9 s), rarement étirement (+13 px). Somnolente après
+  2 min seule (30–60 s), endormie après 10 min jusqu'au survol (petit sursaut). Un minuteur à la fois, boucle seulement
+  pendant le geste (≈ 1,5 s) ; rien en Éco ni avec « Réduire ». Zone de clic +16 × 5 px tant qu'elle peut bouger.
+  « 2 min » se compte depuis la dernière fois qu'on l'a touchée (pas de suivi de la souris ailleurs). CPU non mesuré.
+  **Barres plus vives** (même jour, `media/beat.rs`) : chaque bande saute avec ce qui est nouveau (attaque au-dessus de
+  sa moyenne récente), un son tenu reste vers 45 % : les barres de droite (aigus) bougent autant que celles de gauche ;
+  retombée plus rapide (0,72), même cadence (30/s).
+- [x] **Mode musique** (2026-11-02, v3 le 2026-11-03, retouché le même jour après essai dans l'exe, `stage/`) :
+  interrupteur sous la musique dans l'île ouverte (`islandMusic`) et choix **Disk / Dancing** à côté
+  (`islandMusicMode`, Disk par défaut). Fenêtre : grandit **sur place**, l'île est redessinée exactement, puis couvre
+  l'écran (`stage.rs` : Enter / Go / Done) ; région = rectangles autour de ce qui est dessiné. **Départ** (≈ 1,4 s) :
+  l'île entière se tasse (0,18 s), s'affaisse comme une goutte (0,16 s), se lâche d'un coup et tombe en se balançant,
+  ronde après ≈ 0,4 s, dépasse le milieu et revient. **Retour** (≈ 2–2,5 s) : la scène se referme en boule, s'accroupit
+  (0,16 s), bondit vers le milieu de sa place en rétrécissant, haut collé dès le contact, s'étale en rebondissant par
+  le bas, fin exacte sur l'île ; demi-tour si la musique reprend avant le contact. **Disk** : gelée noire (19 % du petit
+  côté), pochette qui démarre comme une platine et s'arrête en pause, ondulations lentes permanentes du bord ; basse :
+  écrasement, petit saut, gonflement ; caisse claire : ondulation ; **crash** (aigus bien au-dessus de leurs pics
+  habituels, après 2,5 s d'écoute) : frisson, éclair du bord, anneau de lumière ; fils aux **couleurs de l'album**
+  (4 tirées de la dominante et de l'accent, éclaircies pour briller sur le noir ; pochette grise : blancs ; sans
+  pochette : Capri), plus épais avec halo, visibles seulement quand leur instrument pulse (seuil adaptatif) ; titre
+  Fredoka plus noir (plus de contour : il montrait les tracés superposés de la police variable), lancé lettre par
+  lettre (0,09 s d'écart, vol ≈ 1 s), posé 6–9 s, aspiré avec retenue (1 s penché, 1,15 s en spirale). **Dancing**
+  (24 gouttes d'encre fusionnées en WebGL2, repli en cercles) : cœur qui tourbillonne lentement, satellites, fusion,
+  miroir, floraison, **Fontaine** et **Serpent** (nouveaux), « Sauts » retiré ; figures ≈ 30 % plus longues ; à chaque
+  temps l'encre respire vers l'extérieur (plus au premier temps), basse : gonfle et bouscule, caisse claire : clap,
+  charlestons : scintillement, crash : éclatement puis nouvelle figure à la mesure ; vitesse selon le tempo et
+  l'énergie. Anti-bugs : canevas effacé là où l'on dessinait et entièrement deux fois par seconde, canevas WebGL neuf
+  à chaque spectacle, horloge jamais à rebours. Tests : 699 (vitest). Limites : CPU/GPU non mesurés (écran à 279 Hz) ;
+  DPI différents : une image vide possible ; île flottante près du coin haut gauche : double image 1–2 images.
+- [x] **Interrupteurs et curseurs en rectangle arrondi** (2026-11-02, Réglages) : même animation, forme changée
+  (piste 9 px / 3 px, pouce carré arrondi 6 px).
 
 ### Écosystème Kayro (très long terme, Notion 2026-11-02)
 - [ ] **Reconnaissance vocale premium** qui comprend très bien le français (rejoint « Voix » ci-dessous).

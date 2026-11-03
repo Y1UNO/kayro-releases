@@ -9,7 +9,7 @@ use tauri::{AppHandle, Runtime, WebviewWindow};
 use tauri_specta::Event;
 
 use super::super::windows::{self, WIDGET};
-use super::{effects, tuck, win, DUCKED};
+use super::{effects, stage, tuck, win, DUCKED};
 
 /// « Au démarrage : Caché » (or « Après l'intro : Caché »): nothing on screen, the island
 /// neither, until Kayro is first shown.
@@ -102,6 +102,7 @@ fn appear<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
 fn leave<R: Runtime>(app: &AppHandle<R>) {
     WANT.store(false, Ordering::SeqCst);
     DUCKED.store(false, Ordering::SeqCst);
+    stage::abort(app);
     tuck::reset();
     let Some(window) = windows::get(app, WIDGET) else {
         return;
@@ -129,6 +130,7 @@ pub fn on_foreground<R: Runtime>(app: &AppHandle<R>) {
     let ducked = DUCKED.load(Ordering::SeqCst);
     if cover && !ducked && window.is_visible().unwrap_or(false) {
         DUCKED.store(true, Ordering::SeqCst);
+        stage::abort(app);
         tuck::reset();
         win::show_quietly(raw, false);
         effects::hide();

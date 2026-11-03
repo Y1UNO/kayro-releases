@@ -1,6 +1,8 @@
 // Art direction fonts (docs/DESIGN.md): Cormorant Garamond (titles) + Manrope (interface).
 import "@fontsource-variable/cormorant-garamond";
 import "@fontsource-variable/manrope";
+// Kysland's « Disk » title: round, soft letters of black jelly.
+import "@fontsource-variable/fredoka";
 import { StrictMode, Suspense, lazy } from "react";
 import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
@@ -48,7 +50,6 @@ const MotionDev: ComponentType | null =
   import.meta.env.DEV && location.pathname === "/dev/motion"
     ? lazy(() => import("./dev/MotionLab"))
     : null;
-
 
 const appRoot = createRoot(root);
 

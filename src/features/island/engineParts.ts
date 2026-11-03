@@ -1,6 +1,7 @@
 import type { IslandPassage } from "../../ipc/bindings";
+import { desktopIpc } from "../../ipc/commands";
 import type { Point } from "./bubbles";
-import type { Box, Edge } from "./glitch";
+import type { Box, Edge, Glitch } from "./glitch";
 import {
   ANCHOR,
   OPEN,
@@ -8,6 +9,7 @@ import {
   SQUISH_LIMIT,
   type Animated,
   type Shape,
+  type Spring,
   type Values,
 } from "./islandShape";
 
@@ -31,7 +33,7 @@ export interface Parts {
 export type Key = keyof Values | "light";
 
 /** Each animated value's spring. */
-export const SPRING_OF: Record<Key, (typeof SPRINGS)[keyof typeof SPRINGS]> = {
+export const SPRING_OF: Record<Key, Spring> = {
   morph: SPRINGS.morph,
   corner: SPRINGS.corner,
   hover: SPRINGS.hover,
@@ -48,6 +50,8 @@ export const SPRING_OF: Record<Key, (typeof SPRINGS)[keyof typeof SPRINGS]> = {
   media: SPRINGS.rest,
   stretch: SPRINGS.rest,
   dots: SPRINGS.rest,
+  idle: SPRINGS.idle,
+  look: SPRINGS.look,
   light: SPRINGS.backdrop,
 };
 
@@ -83,3 +87,11 @@ export const kickSquish = (a: Animated, by: number): void => {
   a.v = Math.min(Math.max(a.v + by, -14), 14);
   a.x = Math.min(Math.max(a.x, -SQUISH_LIMIT), SQUISH_LIMIT);
 };
+
+/** Sends the glitch's new held frame (its spikes) to the core's effects layer. */
+export function sendEffects(glitch: Glitch, scale: number): void {
+  const shapes = glitch.take();
+  if (!shapes) return;
+  const alpha = Math.min(1, glitch.level * 1.4);
+  void desktopIpc.islandEffects({ shapes, alpha, scale });
+}

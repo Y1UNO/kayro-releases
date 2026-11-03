@@ -17,10 +17,14 @@ export interface RestState {
   hover: boolean;
   /** The music plays: its bass makes the island breathe (`useBeat`). */
   breath: boolean;
+  /** The idle may play its gestures (`islandIdle.ts`): room for a stretch. */
+  idle?: boolean;
 }
 
 /** The breath makes it up to 3 % bigger (Island.module.css `--breath`). */
 const BREATH = 1.03;
+/** The idle's widest gesture (a stretch: about +13 px wide, +4 px high, and its jelly). */
+const IDLE_ROOM = [16, 5] as const;
 /** Growing, the springs overshoot by under 5 % of the change (`SPRINGS.rest`, ζ 0.7). */
 const OVERSHOOT = 0.06;
 /** Shrinking waits for the island to have shrunk (its springs settle sooner). */
@@ -46,7 +50,13 @@ export function islandRoom(s: RestState): Room {
     });
   const k = s.breath ? BREATH : 1;
   const [docked, floating] = [at(0), at(1)];
-  return [docked.width * k, docked.height * k, floating.width * k, floating.height * k];
+  const [w, h] = s.idle ? IDLE_ROOM : [0, 0];
+  return [
+    docked.width * k + w,
+    docked.height * k + h,
+    floating.width * k + w,
+    floating.height * k + h,
+  ];
 }
 
 /** A room made value by value (docked width, docked height, floating width, floating height). */

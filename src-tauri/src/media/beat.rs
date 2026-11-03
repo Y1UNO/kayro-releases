@@ -1,7 +1,9 @@
 //! Step 20 (Kysland): the beat of the music, as five levels (0–1) from the bass to the treble,
 //! for the island's bars. A 1024-point FFT of the last samples played, summed in bands, each band
 //! with its own automatic gain (loud or quiet music fills the bars alike), quick to rise and slow
-//! to fall. Pure: tested on synthetic tones.
+//! to fall. A band also jumps with what is *new* in it (its rise above its recent average): a
+//! steady sound (the treble's hiss, a held note) sits lower and every hit kicks, so the treble
+//! bars move as much as the bass ones (2026-11-02). Pure: tested on synthetic tones.
 
 /// The bars, from the bass up.
 pub const BARS: usize = 5;
@@ -14,11 +16,18 @@ const GAIN_DECAY: f32 = 0.985;
 /// Below this a band is silence (its gain does not go lower).
 const FLOOR: f32 = 1e-3;
 /// A falling bar keeps this much of itself per analysis.
-const FALL: f32 = 0.8;
+const FALL: f32 = 0.72;
+/// How much of a band's recent average each analysis takes (about 0.2 s of memory).
+const AVERAGE: f32 = 0.15;
+/// The level's share of the band's loudness (the rest: what is new in it).
+const STEADY: f32 = 0.45;
+/// What is new in a band, as a share of its peak, is worth this much.
+const ONSET: f32 = 2.2;
 
 pub struct Analyzer {
     rate: f32,
     peaks: [f32; BARS],
+    averages: [f32; BARS],
     levels: [f32; BARS],
 }
 
@@ -61,6 +70,7 @@ impl Analyzer {
         Self {
             rate: rate.max(8000) as f32,
             peaks: [FLOOR; BARS],
+            averages: [0.0; BARS],
             levels: [0.0; BARS],
         }
     }
@@ -84,10 +94,13 @@ impl Analyzer {
                 .sum::<f32>();
             let value = (energy / (to - from) as f32).sqrt();
             self.peaks[b] = (self.peaks[b] * GAIN_DECAY).max(value).max(FLOOR);
+            let peak = self.peaks[b];
+            let new = ((value - self.averages[b]).max(0.0) / peak * ONSET).min(1.0);
+            self.averages[b] += (value - self.averages[b]) * AVERAGE;
             let level = if value < FLOOR {
                 0.0
             } else {
-                (value / self.peaks[b]).sqrt()
+                STEADY * (value / peak).sqrt() + new.sqrt()
             };
             self.levels[b] = level.max(self.levels[b] * FALL).clamp(0.0, 1.0);
         }
@@ -127,5 +140,21 @@ mod tests {
         let mut quiet = Analyzer::new(48_000);
         let q = quiet.levels(&tone(300.0, 48_000.0, WINDOW, 0.02));
         assert!(q[1] > 0.9, "{q:?}");
+    }
+
+    #[test]
+    fn a_steady_sound_sits_lower_and_a_new_hit_kicks_again() {
+        let mut a = Analyzer::new(48_000);
+        let hiss = tone(6000.0, 48_000.0, WINDOW, 0.1);
+        let mut held = [0.0; BARS];
+        for _ in 0..40 {
+            held = a.levels(&hiss);
+        }
+        assert!(held[4] > 0.3 && held[4] < 0.6, "{held:?}");
+        for _ in 0..10 {
+            a.levels(&vec![0.0; WINDOW]);
+        }
+        let hit = a.levels(&hiss);
+        assert!(hit[4] > 0.9, "{hit:?}");
     }
 }

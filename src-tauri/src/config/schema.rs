@@ -19,8 +19,8 @@ pub use super::theme_file::{is_theme_colour, ThemeFile};
 use super::validate::validate_settings;
 use super::visual::{settings_v1_to_v2, settings_v2_to_v3, DEFAULT_THEME};
 pub use super::visual::{
-    CardFloat, CardHoverStyle, Elasticity, IslandPassage, MotionStyle, OpeningScreen, OpeningStyle,
-    StartupAfter, StartupOpen, ThemeTransition, WidgetUnroll,
+    CardFloat, CardHoverStyle, Elasticity, IslandMusicMode, IslandPassage, MotionStyle,
+    OpeningScreen, OpeningStyle, StartupAfter, StartupOpen, ThemeTransition, WidgetUnroll,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
@@ -79,6 +79,11 @@ pub struct Settings {
     pub island_tuck: bool,
     pub island_tuck_delay: f32,
     pub island_peek_delay: f32,
+    /// « Mode musique » (the opened island's switch, 2026-11-02): while music plays, the island
+    /// dances in the middle of its screen.
+    pub island_music: bool,
+    /// Which of the two: « Disk » or « Dancing » (the opened island's choice).
+    pub island_music_mode: IslandMusicMode,
     /// Escape hides the hub once there is nothing left to close.
     pub hide_on_escape: bool,
     /// Losing the focus hides the hub (the widget only folds its panel).
@@ -153,6 +158,8 @@ impl Default for Settings {
             island_tuck: false,
             island_tuck_delay: TUCK_DELAY_DEFAULT,
             island_peek_delay: PEEK_DELAY_DEFAULT,
+            island_music: false,
+            island_music_mode: IslandMusicMode::default(),
             hide_on_escape: true,
             hide_on_blur: false,
             economy_mode: false,
@@ -205,6 +212,8 @@ pub struct SettingsPatch {
     pub island_tuck: Option<bool>,
     pub island_tuck_delay: Option<f32>,
     pub island_peek_delay: Option<f32>,
+    pub island_music: Option<bool>,
+    pub island_music_mode: Option<IslandMusicMode>,
     pub hide_on_escape: Option<bool>,
     pub hide_on_blur: Option<bool>,
     pub economy_mode: Option<bool>,
@@ -261,6 +270,8 @@ impl Settings {
             island_tuck,
             island_tuck_delay,
             island_peek_delay,
+            island_music,
+            island_music_mode,
             hide_on_escape,
             hide_on_blur,
             economy_mode,

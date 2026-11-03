@@ -20,6 +20,8 @@ export const HOVER_GROW = { docked: [20, 4], floating: [14, 4] } as const;
 export interface Spring {
   k: number;
   zeta: number;
+  /** At rest within this (`atRest`'s default when not given): a gesture's tail is cut sooner. */
+  eps?: number;
 }
 
 /** One animated value: where it is, how fast, and where it goes. */
@@ -65,6 +67,9 @@ export const SPRINGS = {
   /** Music shown at rest, a launch's stretch, the dots on hover: lively, one small overshoot. */
   rest: { k: 360, zeta: 0.7 },
   backdrop: { k: 40, zeta: 1 },
+  /** The idle's gestures (`islandIdle.ts`), kicked: a slow swell, a look aside that wobbles. */
+  idle: { k: 10, zeta: 0.8, eps: 0.02 },
+  look: { k: 30, zeta: 0.4, eps: 0.02 },
 } as const satisfies Record<string, Spring>;
 
 /** « Reduce motion »: every value settles without overshoot. */
@@ -100,6 +105,9 @@ export interface Values {
   media: number;
   stretch: number;
   dots: number;
+  /** The idle (`islandIdle.ts`): a swell (1 ≈ +6 px wide, +2 px high), a look aside (±1). */
+  idle?: number;
+  look?: number;
 }
 
 export interface Shape {
@@ -150,6 +158,10 @@ export function shapeOf(v: Values): Shape {
   const [openW, openH] = [v.openW ?? OPEN.width, v.openH ?? OPEN.height];
   let width = lerp(lerp(DOCKED.width, FLOATING.width, m) + growW * hover + grown, openW, o);
   let height = lerp(band + dots, openH, o);
+  const swell = clamp(v.idle ?? 0, -1, 3) * closed;
+  const look = clamp(v.look ?? 0, -1.5, 1.5) * closed;
+  width += swell * 6;
+  height += swell * 2;
   let x = 0;
   let y = 0;
   // Docked and pulled down: it stretches like a drop, and narrows.
@@ -173,8 +185,8 @@ export function shapeOf(v: Values): Shape {
   height += side * 0.35;
   x += Math.sign(v.pullX) * (flat / 2);
   // Moving: floating, it leans into the motion; docked, it trails behind like jelly.
-  const rotate = clamp(v.vx * 0.005, -7, 7) * mm;
-  const skew = clamp(-v.vx * 0.004, -12, 12) * docked;
+  const rotate = clamp(v.vx * 0.005, -7, 7) * mm + look * 2 * mm;
+  const skew = clamp(-v.vx * 0.004, -12, 12) * docked + look * 3 * docked;
   const speed = Math.hypot(v.vx, v.vy);
   const stretch = Math.min(speed / 6000, 0.07);
   const along = speed > 1 ? Math.abs(v.vx) / speed : 0;

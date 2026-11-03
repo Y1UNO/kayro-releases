@@ -7,6 +7,7 @@ import {
   boxOf,
   kickSquish,
   num,
+  sendEffects,
   topEdgeAt,
   type EngineOptions,
   type Key,
@@ -27,6 +28,7 @@ import {
   type Shape,
   type Values,
 } from "./islandShape";
+import { idleSprings, type IdleKick } from "./islandIdle";
 import { humIsland, playIsland } from "./islandSounds";
 import { tuckSprings, tuckedAway } from "./islandTuck";
 
@@ -108,7 +110,7 @@ export class IslandEngine {
   vanish(): void {
     this.bubbles.clear();
     this.glitch.clear();
-    this.sendEffects();
+    sendEffects(this.glitch, this.scale);
     humIsland(false);
     this.stop();
   }
@@ -172,11 +174,14 @@ export class IslandEngine {
   /** What the island shows at rest: music, a launch stretching it, the running apps' dots. */
   activity(a: { media: boolean; stretch: boolean; dots: boolean }): void {
     const v = this.v;
-    const to = (x: Animated, on: boolean) => void (x.to = on ? 1 : 0);
-    to(v.media, a.media);
-    to(v.stretch, a.stretch);
-    to(v.dots, a.dots);
+    for (const k of ["media", "stretch", "dots"] as const) v[k].to = a[k] ? 1 : 0;
     if (a.stretch) kickSquish(v.squish, -4);
+    this.kick();
+  }
+
+  /** One of the idle's small gestures (`islandIdle.ts`; the glint is the page's). */
+  idle(g: IdleKick): void {
+    idleSprings(this.v, g);
     this.kick();
   }
 
@@ -281,8 +286,7 @@ export class IslandEngine {
   stop(): void {
     cancelAnimationFrame(this.raf);
     window.clearTimeout(this.restTimer);
-    this.raf = 0;
-    this.restTimer = 0;
+    this.raf = this.restTimer = 0;
   }
 
   /** Untouched across two screens, in « Glitch »: the edge keeps glitching. */
@@ -303,14 +307,6 @@ export class IslandEngine {
     // Across two screens, the edge hums under it (« Glitch » only).
     humIsland(shown && this.glitch.across > 0, this.glitch.level);
     return shown;
-  }
-
-  /** Sends the glitch's new held frame (its spikes) to the core's effects layer. */
-  private sendEffects(): void {
-    const shapes = this.glitch.take();
-    if (!shapes) return;
-    const alpha = Math.min(1, this.glitch.level * 1.4);
-    void desktopIpc.islandEffects({ shapes, alpha, scale: this.scale });
   }
 
   private askBackdrop(always: boolean): void {
@@ -341,7 +337,7 @@ export class IslandEngine {
     let moving = false;
     for (const k of KEYS) {
       const a = this.v[k];
-      if (atRest(a)) {
+      if (atRest(a, SPRING_OF[k].eps)) {
         settle(a);
         continue;
       }
@@ -386,7 +382,7 @@ export class IslandEngine {
     const { island: el, layer } = this.parts;
     if (layer) layer.style.clipPath = this.clip;
     if (el) paintIsland(el, shape, colours, this.v.hover.x, glitch ? this.glitch.level : 0);
-    this.sendEffects();
+    sendEffects(this.glitch, this.scale);
     const ctx = this.ctx;
     if (!ctx) return;
     ctx.clearRect(0, 0, STAGE.width, STAGE.height);

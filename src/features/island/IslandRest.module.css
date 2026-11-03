@@ -8,6 +8,12 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+/* Music mode: the island's content fades before the drop takes its place, and back after. */
+[data-stage] .rest {
+  opacity: 0;
 }
 
 .music,

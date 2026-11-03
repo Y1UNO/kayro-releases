@@ -1,8 +1,10 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 import { SearchIcon } from "../../design";
+import { SegmentedControl } from "../../design/components/SegmentedControl";
+import { Toggle } from "../../design/components/Toggle";
 import { t } from "../../i18n";
-import type { MediaAction, NowPlaying } from "../../ipc/bindings";
+import type { IslandMusicMode, MediaAction, NowPlaying } from "../../ipc/bindings";
 import type { WidgetHit } from "../widget/widgetModel";
 import { AppMark } from "./AppMark";
 import { progressAt, trackKey } from "./music";
@@ -21,7 +23,15 @@ interface Props {
   onMedia: (action: MediaAction) => void;
   onImmersive: () => void;
   onClose: () => void;
+  /** « Mode musique » (the island plays in the middle of the screen while music plays). */
+  stage: boolean;
+  onStage: (on: boolean) => void;
+  /** As « Disk » (a record of jelly) or « Dancing » (drops of ink). */
+  stageMode: IslandMusicMode;
+  onStageMode: (mode: IslandMusicMode) => void;
 }
+
+const STAGE_MODES = ["disk", "dancing"] as const satisfies readonly IslandMusicMode[];
 
 /** A soft triangle (rounded corners) pointing left or right: a track back or ahead, play. */
 function Triangle({ left, size = 16 }: { left?: boolean; size?: number }) {
@@ -175,44 +185,66 @@ export function IslandPanel(p: Props) {
             })}
           </div>
         ) : np ? (
-          <div className={styles.music}>
-            <button
-              type="button"
-              className={styles.cover}
-              tabIndex={tab}
-              data-playing={np.playing || undefined}
-              aria-label={np.playing ? t("island.music.pause") : t("island.music.play")}
-              onClick={() => p.onMedia("toggle")}
-            >
-              {np.cover && <img key={trackKey(np)} src={np.cover} alt={""} draggable={false} />}
-              <span className={styles.coverIcon} aria-hidden="true">
-                {np.playing ? <Pause /> : <Triangle />}
-              </span>
-            </button>
-            <div className={styles.meta}>
-              <strong className={styles.title}>{np.title}</strong>
-              <span className={styles.artist}>{np.artist}</span>
-              <Progress np={np} />
-            </div>
-            <div className={styles.controls}>
+          <>
+            <div className={styles.music}>
               <button
                 type="button"
+                className={styles.cover}
                 tabIndex={tab}
-                aria-label={t("island.music.previous")}
-                onClick={() => p.onMedia("previous")}
+                data-playing={np.playing || undefined}
+                aria-label={np.playing ? t("island.music.pause") : t("island.music.play")}
+                onClick={() => p.onMedia("toggle")}
               >
-                <Triangle left />
+                {np.cover && <img key={trackKey(np)} src={np.cover} alt={""} draggable={false} />}
+                <span className={styles.coverIcon} aria-hidden="true">
+                  {np.playing ? <Pause /> : <Triangle />}
+                </span>
               </button>
-              <button
-                type="button"
-                tabIndex={tab}
-                aria-label={t("island.music.next")}
-                onClick={() => p.onMedia("next")}
-              >
-                <Triangle />
-              </button>
+              <div className={styles.meta}>
+                <strong className={styles.title}>{np.title}</strong>
+                <span className={styles.artist}>{np.artist}</span>
+                <Progress np={np} />
+              </div>
+              <div className={styles.controls}>
+                <button
+                  type="button"
+                  tabIndex={tab}
+                  aria-label={t("island.music.previous")}
+                  onClick={() => p.onMedia("previous")}
+                >
+                  <Triangle left />
+                </button>
+                <button
+                  type="button"
+                  tabIndex={tab}
+                  aria-label={t("island.music.next")}
+                  onClick={() => p.onMedia("next")}
+                >
+                  <Triangle />
+                </button>
+              </div>
             </div>
-          </div>
+            <div className={styles.stageRow}>
+              <span id="island-stage">{t("island.music.stage")}</span>
+              <div className={styles.stageControls}>
+                <SegmentedControl
+                  className={styles.stageModes}
+                  size="sm"
+                  label={t("island.music.stageStyle")}
+                  value={p.stageMode}
+                  options={STAGE_MODES.map((v) => ({ value: v, label: t(`island.music.${v}`) }))}
+                  onChange={p.onStageMode}
+                />
+                <Toggle
+                  className={styles.stageToggle}
+                  checked={p.stage}
+                  tabIndex={tab}
+                  aria-labelledby="island-stage"
+                  onChange={p.onStage}
+                />
+              </div>
+            </div>
+          </>
         ) : null}
       </div>
     </div>

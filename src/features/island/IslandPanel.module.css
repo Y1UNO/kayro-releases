@@ -232,6 +232,50 @@
   transform-origin: left;
 }
 
+/* « Mode musique »: its switch under the music (2026-11-02). */
+.stageRow {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgb(243 247 251 / 0.82);
+  font: 600 12.5px var(--font-ui);
+}
+
+.stageControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* « Disk » / « Dancing »: rounded rectangles like the switch (the panel's, 2026-11-02), the
+   chosen one filled with the album's accent. */
+.stageRow .stageModes {
+  --_track: rgb(255 255 255 / 0.14);
+  border-radius: 9px;
+  font: 700 11px var(--font-ui);
+}
+
+.stageRow .stageModes [role="radio"] {
+  padding: 3px 9px;
+  border-radius: 6px;
+  color: rgb(243 247 251 / 0.7);
+}
+
+.stageRow .stageModes [aria-checked="true"] {
+  background: rgb(var(--album-a, 61 140 255));
+  color: #fff;
+}
+
+.stageToggle {
+  background: rgb(255 255 255 / 0.14);
+}
+
+/* On: filled with the album's accent (the island has no theme of its own). */
+.stageToggle[aria-checked="true"] {
+  background: rgb(var(--album-a, 61 140 255));
+}
+
 .controls {
   display: flex;
   gap: 4px;

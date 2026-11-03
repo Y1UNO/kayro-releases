@@ -130,7 +130,8 @@ pub fn set<R: Runtime>(app: &AppHandle<R>, tucked: bool, width: f64) -> bool {
         }
         return true;
     }
-    let free = is_docked() && !OPEN.load(Ordering::SeqCst) && !drive::running();
+    let free =
+        is_docked() && !OPEN.load(Ordering::SeqCst) && !drive::running() && !super::stage::active();
     if !free || !window.is_visible().unwrap_or(false) {
         return false;
     }

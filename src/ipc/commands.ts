@@ -17,6 +17,8 @@ import {
 } from "./bindings";
 import type {
   AddReport,
+  IslandStage,
+  IslandStageStep,
   OpeningDue,
   ImportPreview,
   SceneFile,
@@ -151,6 +153,15 @@ export const desktopIpc = {
   /** « Cacher l'île »: in the top edge (`width`: at rest, logical) or out; false: it stays out. */
   islandTuck: (tucked: boolean, width: number): Promise<Outcome<boolean>> =>
     plain(commands.islandTuck(tucked, width)),
+  /** Music mode: the page wants it (answered with the stage, or null: not now), or the island is
+   *  back home. */
+  islandStage: (step: IslandStageStep): Promise<Outcome<IslandStage | null>> =>
+    plain(commands.islandStage(step)),
+  /** Music mode: where the page draws, as boxes (logical, in the stage): the region follows. */
+  islandStageArea: (
+    boxes: readonly { x0: number; y0: number; x1: number; y1: number }[],
+  ): Promise<Outcome<void>> =>
+    plain(commands.islandStageArea(boxes.map((b) => [b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0]))),
   /** The opened island's size, which follows its content (logical pixels). */
   islandPanel: (width: number, height: number): Promise<Outcome<void>> =>
     plain(commands.islandPanel(width, height)),

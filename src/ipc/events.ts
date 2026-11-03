@@ -9,6 +9,7 @@ import {
   type HotkeysReport,
   type IslandFrame,
   type IslandMoment,
+  type IslandStage,
   type IslandTucked,
   type NowPlaying,
   type ModePassage,
@@ -130,6 +131,11 @@ export function onIslandMoment(handler: (m: IslandMoment) => void): Promise<Unli
 /** « Cacher l'île »: the core brought the island out of the top edge (the cursor touched it). */
 export function onIslandTucked(handler: (e: IslandTucked) => void): Promise<Unlisten> {
   return listenTo(events.islandTucked.listen, handler);
+}
+
+/** Music mode: the island is back (`on` false: the window has its size again). */
+export function onIslandStage(handler: (e: IslandStage) => void): Promise<Unlisten> {
+  return listenTo(events.islandStage.listen, handler);
 }
 
 /** Step 20: the music playing changed (null: nothing plays any more). */

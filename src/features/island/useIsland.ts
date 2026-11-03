@@ -9,6 +9,7 @@ import {
   onWindowVisibility,
 } from "../../ipc/events";
 import { IslandEngine, type EngineOptions } from "./islandEngine";
+import { Idler, glint } from "./islandIdle";
 import { Tucker } from "./islandTuck";
 
 export interface IslandControls {
@@ -16,11 +17,14 @@ export interface IslandControls {
   open: boolean;
   /** « Cacher l'île »: in the top edge, nothing of it shows. */
   tucked: boolean;
+  /** The idle may play its gestures (the click region leaves them room). */
+  idling: boolean;
   press: () => void;
   /** `keep`: leaving it does not close the opened island (a search is being typed). */
   hover: (on: boolean, keep?: boolean) => void;
   close: () => void;
-  activity: (a: { media: boolean; stretch: boolean; dots: boolean }) => void;
+  /** `playing`: the music plays (paused, the idle may play its gestures). */
+  activity: (a: { media: boolean; stretch: boolean; dots: boolean; playing: boolean }) => void;
   trackChanged: () => void;
   /** The opened island's size, which follows its content. */
   panelSize: (width: number, height: number) => void;
@@ -47,10 +51,11 @@ interface Refs {
 /** Leaving the opened island, it closes after this long (unless the pointer comes back). */
 const CLOSE_AFTER_MS = 700;
 
-/** What a gesture's moment tells « Cacher l'île »: docked or not, at rest again. */
-function followMoment(t: Tucker, m: IslandMoment): void {
+/** What a gesture's moment tells « Cacher l'île » and the idle: docked or not, at rest again. */
+function followMoment(t: Tucker, i: Idler, m: IslandMoment): void {
   if (m.kind === "settled") t.update({ docked: m.docked, moving: false });
   else if (m.kind === "tap") t.update({ moving: false });
+  if (m.kind === "settled" || m.kind === "tap") i.update({ moving: false });
 }
 
 /**
@@ -69,6 +74,13 @@ export function useIsland(refs: Refs, options: EngineOptions, tuck: TuckOptions)
   engine.current ??= new IslandEngine(() => opts.current);
   const [open, setOpen] = useState(false);
   const [tucked, setTucked] = useState(false);
+  const [idling, setIdling] = useState(false);
+  const idler = useRef<Idler | null>(null);
+  idler.current ??= new Idler({
+    play: (g) => (g === "glint" ? glint(refs.island.current) : engine.current?.idle(g)),
+    wake: () => engine.current?.idle("wake"),
+    onArmed: setIdling,
+  });
   const tucker = useRef<Tucker | null>(null);
   tucker.current ??= new Tucker({
     draw: (into) => engine.current?.tuck(into),
@@ -76,7 +88,10 @@ export function useIsland(refs: Refs, options: EngineOptions, tuck: TuckOptions)
       const r = await desktopIpc.islandTuck(into, tuckOpts.current.width());
       return r.ok && r.value;
     },
-    onPhase: (phase) => setTucked(phase === "in"),
+    onPhase: (phase) => {
+      setTucked(phase === "in");
+      idler.current?.update({ tucked: phase !== "out" });
+    },
   });
   const leaving = useRef(0);
   const { island, layer, canvas } = refs;
@@ -84,10 +99,12 @@ export function useIsland(refs: Refs, options: EngineOptions, tuck: TuckOptions)
   useEffect(() => {
     const e = engine.current;
     const t = tucker.current;
-    if (!e || !t) return;
+    const i = idler.current;
+    if (!e || !t || !i) return;
     e.onOpenChange = (o) => {
       setOpen(o);
       t.update({ open: o });
+      i.update({ open: o });
     };
     e.onSettle = () => t.settled(e.tuckedAway);
     e.attach({ island: island.current, layer: layer.current, canvas: canvas.current });
@@ -102,10 +119,11 @@ export function useIsland(refs: Refs, options: EngineOptions, tuck: TuckOptions)
       onIslandFrame((f) => {
         e.frame(f);
         t.update({ moving: true });
+        i.update({ moving: true });
       }),
       onIslandMoment((m) => {
         e.moment(m);
-        followMoment(t, m);
+        followMoment(t, i, m);
       }),
       onIslandTucked(({ tucked: into }) => {
         if (!into) t.peeked();
@@ -114,12 +132,14 @@ export function useIsland(refs: Refs, options: EngineOptions, tuck: TuckOptions)
         if (visible) e.appear();
         else e.vanish();
         t.update({ visible });
+        i.update({ visible });
       }),
     ];
     return () => {
       live = false;
       e.stop();
       t.dispose();
+      i.dispose();
       window.clearTimeout(leaving.current);
       for (const off of offs) void off.then((u) => u());
     };
@@ -132,20 +152,29 @@ export function useIsland(refs: Refs, options: EngineOptions, tuck: TuckOptions)
     t.update({ enabled: tuck.enabled, stretched: tuck.stretched });
   }, [tuck.enabled, tuck.delayMs, tuck.stretched]);
 
+  // The idle: only with its effects, never with « reduce motion ».
+  const idleOn = options.effects && !options.calm;
+  useEffect(() => idler.current?.update({ enabled: idleOn }), [idleOn]);
+
   return {
     open,
     tucked,
+    idling,
     press: () => engine.current?.press(),
     hover: (on, keep = false) => {
       window.clearTimeout(leaving.current);
       engine.current?.hover(on);
       tucker.current?.update({ hovered: on });
+      idler.current?.update({ hovered: on });
       if (!on && !keep && engine.current?.isOpen) {
         leaving.current = window.setTimeout(() => engine.current?.closePanel(), CLOSE_AFTER_MS);
       }
     },
     close: () => engine.current?.closePanel(),
-    activity: (a) => engine.current?.activity(a),
+    activity: (a) => {
+      engine.current?.activity(a);
+      idler.current?.update({ busy: (a.media && a.playing) || a.stretch });
+    },
     // In the top edge, nothing shows: no jolt (it would run frames for nothing).
     trackChanged: () => {
       if (tucker.current?.phase !== "in") engine.current?.trackChanged();

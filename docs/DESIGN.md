@@ -45,12 +45,12 @@ Scènes et l'éditeur (`ScreenTitle.tsx`), l'eyebrow est à la même hauteur.
 
 | Jeton | Valeur | Pour |
 |---|---|---|
-| `--radius-pill` | 999 px | tout ce qui fait ≤ 46 px de haut : boutons, segments, interrupteurs, recherche, onglets, badges |
+| `--radius-pill` | 999 px | tout ce qui fait ≤ 46 px de haut : boutons, segments, recherche, onglets, badges |
 | `--radius-row` | 16 px | lignes, champs, tuiles, plaque de nom |
 | `--radius-panel` | 26 px | dialogues, palette, menus, notifications, panneaux, étapes de l'éditeur, panneau du widget |
 | `--radius-card` | 30 px (`cards.radius`) | cartes d'apps ; `--radius-fan` 24 px pour l'éventail et la carte vide |
 
-Hors familles : traits de 1–2 px, case à cocher, piste du curseur, logo de la marque, mini-cartes des cartes de thème.
+Hors familles : traits de 1–2 px, case à cocher, interrupteurs et curseurs (rectangles arrondis : piste ≈ 1/3 de la hauteur — 9 px l'interrupteur, 3 px la piste du curseur — pouce carré arrondi 6 px, concentrique), logo de la marque, mini-cartes des cartes de thème.
 
 **Verre** :
 - **moteur** (WebGL2, `src/fx/gpu/`) : seules les **cartes** (`glassCards`) et les **pastilles de sélection**
@@ -313,7 +313,7 @@ changent pas, seuls « Sons » et le volume s'appliquent. **Raccrocher** : lâch
 un dépassement dans le bord, son « clac » et gouttes au contact. **Au repos** (`IslandRest.tsx`) : avec une musique, l'île s'élargit de 44 px — à gauche la pochette en petit disque
 qui tourne (7 s par tour, à l'arrêt en pause, trou central), à droite 5 barres de la couleur d'accent de l'album qui
 suivent le rythme (son de sortie écouté en direct, 5 bandes, ~30 i/s ; animation de secours si l'écoute est impossible) ;
-l'île « respire » sur les basses (± 3 %) ; au survol, une lueur intérieure aux couleurs de l'album (rien hors de l'île). Une app qui démarre l'élargit de
+l'île « respire » sur les basses (± 3 %) ; au survol, une lueur intérieure aux couleurs de l'album (rien hors de l'île). **Seule** (sans musique, fermée, ni survol) : un petit geste toutes les 8–15 s (respiration, regard, reflet le long du bas, rarement étirement), plus rare après 2 min, plus rien après 10 min jusqu'au survol (`islandIdle.ts`). Une app qui démarre l'élargit de
 130 px 2,4 s (logo et nom). Au survol, accrochée seulement, s'il y a des apps ouvertes, elle grandit de 26 px vers le bas : leurs logos
 apparaissent un à un (un clic met l'app au premier plan). Nouveau morceau : la pochette arrive en glissant, petit sursaut
 (un glitch en « Glitch »). **Ouverture** : un clic l'ouvre en panneau noir 420 × 180 (coins 28 px, à ras du bord et du
@@ -323,7 +323,7 @@ musique (pochette 84 px — clic : lecture/pause —, titre, artiste, ligne de p
 bouton rond « Passer en immersif » (4 flèches vers les coins) ; champ de recherche sans contour (il s'éclaircit). Ouverte, elle prend le clavier ; elle se referme sur Échap, en perdant le
 focus, ou 0,7 s après que la souris l'a quittée (sauf recherche en cours). Fenêtre fixe 720 × 420, région de clic découpée à
 l'île au repos, jamais de cadre de Windows. Aucune boucle au repos ; masquée devant un programme en plein écran sur son
-écran. **Cacher l'île** (option, désactivée par défaut) : ancrée et laissée seule, elle rentre dans le bord haut comme une goutte après « Se cache après » (0–3 s, crans de 0,25) et ressort de même quand la souris reste collée tout en haut à sa place, marge de 24 px, « Ressort après » (0–1 s, crans de 0,1) ; « Réduire » : fondu. **Éco** : sans bulles, gouttes ni glitch. **Réduire** : ressorts sans dépassement, sans bulles ni glitch (aucun
+écran. **Mode musique** (interrupteur sous la musique, dans l'île ouverte seulement ; désactivé par défaut ; style **Disk** ou **Dancing** à côté, Disk par défaut) : tant qu'une musique joue, la fenêtre couvre l'écran (ne montrant et ne prenant les clics que là où l'on dessine) et l'île y joue (`stage/`). **Départ** (≈ 1,4 s) : l'île entière se tasse contre le bord, s'affaisse comme une goutte, se lâche d'un coup et tombe au milieu en se balançant, jusqu'à s'arrondir en boule (pas de goutte pendue). **Disk** : la boule s'épanouit en disque de gelée noire (19 % du petit côté), sans texture de vinyle ; la pochette tourne au centre comme un disque (démarre comme une platine, ralentit jusqu'à l'arrêt en pause) ; le bord ondule doucement en permanence ; la basse l'écrase, le fait sauter et gonfler, la caisse claire le fait onduler, un crash le fait frissonner et illumine son bord ; à l'intérieur, une corde par instrument aux couleurs de l'album (tirées de sa dominante et de son accent, éclaircies ; sans pochette : Capri), invisible au repos, qui brille quand son instrument pulse ; sur les gros coups, un anneau de couleur ondulé et brisé s'échappe ; reflet doux et bord éclairé en haut à gauche (gelée), sans aucun trait. Le titre (Fredoka gras, majuscules, gelée noire, bords hauts éclairés) est jeté lettre par lettre par le disque qui tourne vite, puis aspiré avec retenue (chaque lettre se penche, s'étire en ondulant, puis glisse en spirale et fond dans le disque). **Dancing** : noir pur, des gouttes d'encre qui fusionnent là où elles se touchent : cœur qui tourbillonne lentement, satellites aux orbites libres, fusion de deux moitiés qui tournent, miroir baladeur, floraison longue, fontaine (des gouttes jaillissent en arcs sur les demi-temps), serpent (une chaîne qui glisse en huit) ; à chaque temps l'encre respire, la caisse claire la pince, un crash la fait éclater et change de figure à la mesure ; tout tourne plus vite avec le tempo et l'énergie. **Retour** (≈ 2–2,5 s) après 2 s de pause ou sans musique, interrupteur coupé ou clic sur la scène : elle se referme en boule, s'accroupit, bondit vers le milieu de sa place en rétrécissant, touche le bord (son haut y reste collé), s'étale en rebondissant par le bas et redevient l'île exactement. Musique qui reprend avant le contact : demi-tour. « Réduire » : fondus seulement. **Cacher l'île** (option, désactivée par défaut) : ancrée et laissée seule, elle rentre dans le bord haut comme une goutte après « Se cache après » (0–3 s, crans de 0,25) et ressort de même quand la souris reste collée tout en haut à sa place, marge de 24 px, « Ressort après » (0–1 s, crans de 0,1) ; « Réduire » : fondu. **Éco** : sans bulles, gouttes ni glitch. **Réduire** : ressorts sans dépassement, sans bulles ni glitch (aucun
 clignotement).
 
 ### 4.5 c Capri hors de l'île (étape 20 : `src/features/capri/capri.ts`)
