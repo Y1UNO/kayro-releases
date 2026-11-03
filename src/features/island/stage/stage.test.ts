@@ -3,6 +3,7 @@ import { BAR, Demo, hitsAt } from "./demo";
 import { Disc } from "./disc";
 import { Grid } from "./grid";
 import { Moments } from "./moments";
+import { Swirl } from "./swirl";
 import type { Home } from "./home";
 import { Isle } from "./isle";
 import { Body, Effects } from "./jelly";
@@ -474,5 +475,64 @@ describe("Music mode: sharp or soft notes, and a big bass (2026-11-03)", () => {
     expect(wobble(0.95, 1)).toBeLessThan(0.05);
     expect(wobble(0.95, 0)).toBeLessThan(wobble(0.95, 1) * 0.5);
     expect(wobble(0.3, 0)).toBeLessThan(0.002);
+  });
+});
+
+describe("Music mode: the Milky Way and the Supernova (2026-11-03)", () => {
+  const [cx, cy, R] = [960, 460, 200];
+  const far = (U: ReturnType<typeof uniforms>, from: number, n: number) => {
+    let d = 0;
+    for (let i = from; i < n; i++) {
+      const [x, y, r] = [U.balls[i * 4]!, U.balls[i * 4 + 1]!, U.balls[i * 4 + 2]!];
+      d = Math.max(d, Math.hypot(x - cx, y - cy) + r);
+    }
+    return d;
+  };
+
+  it("opens into arms wound around the bubble, then winds them back in (1.6 s)", () => {
+    const s = new Swirl(seeded());
+    s.galaxy();
+    for (let t = 0; t < 0.6; t += STEP) s.step(STEP, cx, cy, R, H);
+    const U = uniforms();
+    const n = s.fill(U, 3, cx, cy, R);
+    expect(n).toBe(3 + 24);
+    expect(far(U, 3, n)).toBeGreaterThan(R * 1.5);
+    expect(s.core).toBeLessThan(0.75);
+    expect(s.spin).toBeGreaterThan(10);
+    for (let t = 0; t < 1.1; t += STEP) s.step(STEP, cx, cy, R, H);
+    expect(s.active).toBe(false);
+    expect([s.core, s.spin, s.fill(U, 3, cx, cy, R)]).toEqual([1, 0, 3]);
+  });
+
+  it("bursts into beads, then swallows them all in its black hole and grows back", () => {
+    const s = new Swirl(seeded());
+    s.nova(cx, cy, R * 0.9, H, 1);
+    for (let t = 0; t < 0.5; t += STEP) s.step(STEP, cx, cy, R, H);
+    const U = uniforms();
+    const out = far(U, 0, s.fill(U, 0, cx, cy, R));
+    expect(out).toBeGreaterThan(R * 2);
+    expect(s.core).toBeLessThan(0.7);
+    let t = 0;
+    while (s.active && t < 4) {
+      s.step(STEP, cx, cy, R, H);
+      t += STEP;
+    }
+    expect(s.active).toBe(false);
+    expect(s.core).toBe(1);
+  });
+
+  it("tells the drop (a crash right after a build) from a cymbal's crash", () => {
+    const [m, M] = [new Moments(), new Music()];
+    const lv = { sub: 0, build: 0, gap: false, section: "drop", melody: 0, pitch: 0.5 } as const;
+    M.levels({ ...lv, voice: 0, sharp: 0, heavy: 0, build: 0.8, section: "build" });
+    m.step(0.01, M, false);
+    M.advance(0.5);
+    expect(m.isDrop(M.t)).toBe(true);
+    M.levels({ ...lv, voice: 0, sharp: 0, heavy: 0 });
+    for (let i = 0; i < 300; i++) {
+      M.advance(0.01);
+      m.step(0.01, M, false);
+    }
+    expect(m.isDrop(M.t)).toBe(false);
   });
 });

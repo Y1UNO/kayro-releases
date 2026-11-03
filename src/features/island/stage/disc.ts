@@ -5,6 +5,7 @@ import type { HitKind, Music } from "./music";
 import type { Rgb } from "./palette";
 import { halo } from "./halo";
 import { Rumble } from "./rumble";
+import { Swirl } from "./swirl";
 import { Title } from "./title";
 import type { Uniforms } from "./uniforms";
 
@@ -58,6 +59,8 @@ export class Disc {
   spin = 0;
   readonly spinV = new Sp(1.5);
   readonly title: Title;
+  /** The « Voie lactée » (a new song) and the « Supernova » (the drop): swirl.ts. */
+  readonly swirl: Swirl;
   private pk: { r: number; th: number; age: number; amp: number }[] = [];
   private drops: Drop[] = Array.from({ length: 8 }, () => ({
     x: new Sp(),
@@ -91,6 +94,7 @@ export class Disc {
     private random: () => number = Math.random,
   ) {
     this.title = new Title(H, random);
+    this.swirl = new Swirl(random);
   }
 
   /** Its middle and its radius at rest. */
@@ -150,6 +154,15 @@ export class Disc {
       if (this.M.build > 0) body.S.v += 2.4 * v * this.M.build;
     } else if (ty === "hat") {
       body.hat(v);
+    } else if (this.moments.isDrop(this.M.t)) {
+      // The drop (a crash ending a build or a silence): the « Supernova » (Thomas's idea).
+      body.S.v -= 3 * gc;
+      fx.crash(gc * 1.2);
+      fx.wave(cx, cy, R, R * 4.4, 1.4, 1.9 * gc, 0.25, H * 0.05, H * 0.006, 18 * gc);
+      fx.wave(cx, cy, R, R * 3.2, 1.2, 1.0 * gc, 0.8, H * 0.024, H * 0.004, 8 * gc, 0.12);
+      this.swirl.nova(cx, cy, R, H, gc);
+      this.title.crash(gc);
+      this.moments.crashed(this.M.t);
     } else {
       body.crash(gc);
       fx.crash(gc);
@@ -263,13 +276,16 @@ export class Disc {
       d.x.to(cx + d.ax * R * 0.78, 24, 0.3, h);
       d.y.to(cy + d.ay * R * 0.78, 24, 0.3, h);
     }
+    this.swirl.step(h, cx, cy, R, this.H());
+    this.spin += this.swirl.spin * h;
     this.title.step(h);
   }
 
   /**
    * A new song: its title. From one song to the next while it plays (2026-11-03, « un petit effet
-   * de transition »): the bubble pinches, the cover turns once quickly (the new one fades in as it
-   * loads), a soft wave leaves it and the strings ring.
+   * de transition »): the « Voie lactée » (swirl.ts: the bubble spins and comes apart into a
+   * spiral of arms that wind back in), the new cover fading in as it loads, a soft wave, the
+   * strings ringing.
    */
   song(title: string, artist: string): void {
     const next = this.title.has();
@@ -277,8 +293,7 @@ export class Disc {
     if (!next) return;
     const [cx, cy] = this.centre();
     const [R, H, g] = [this.radius() * this.body.S.x, this.H(), Math.min(1.5, this.drive().crash)];
-    this.body.S.v -= 5 * g;
-    this.spinV.x += 8;
+    this.swirl.galaxy();
     this.fx.wave(cx, cy, R, R * 2.4, 1.0, 0.7 * g, 0.5, H * 0.02, H * 0.004, 3 * g);
     this.strands.forEach((_, i) => this.pluck(i, 0.07));
   }
@@ -304,8 +319,9 @@ export class Disc {
     const Rs = R * this.body.S.x;
     const H = this.H();
     const { M } = this;
-    this.body.fill(U, cx, cy, R);
-    U.cover.set([Rs * 0.44, this.spin, coverOn, Rs * 0.035]);
+    const core = this.swirl.core;
+    this.body.fill(U, cx, cy, R * core);
+    U.cover.set([Rs * core * 0.44, this.spin, coverOn, Rs * core * 0.035]);
     U.k = H * 0.05;
     let n = 0;
     for (const d of this.drops) {
@@ -317,7 +333,7 @@ export class Disc {
       U.balls.set([d.x.x, d.y.x, r, 1.6], n * 4);
       n++;
     }
-    U.n = n;
+    U.n = this.swirl.fill(U, n, cx, cy, Rs);
     const rs = Rs * (1 - 0.22 * M.build);
     const dim = M.gap ? 0.2 : 1;
     const levels = this.sources();
@@ -367,6 +383,6 @@ export class Disc {
       if (d.t > 3) continue;
       r = Math.max(r, Math.hypot(d.x.x - cx, d.y.x - cy) + d.r0 * 1.2);
     }
-    return r;
+    return Math.max(r, this.swirl.reach(cx, cy, this.radius() * this.body.S.x));
   }
 }

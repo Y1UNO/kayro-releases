@@ -55,6 +55,7 @@ Changements demandés par rapport au labo :
 | Caisse claire | la bulle se tord (cisaillement), le titre penche ; pendant une montée, elle pousse la taille | une caisse claire détectée |
 | Charleston | une ondulation fine (16 lobes) passe sur le bord | un charleston détecté |
 | Crash | flash, séparation des couleurs, secousse, deux grandes ondes, 8 gouttes lancées qui reviennent, titre éparpillé, traînées qui changent de sens | une cymbale crash (aigus qui montent avec la caisse claire et le charleston, nettement au-dessus de l'habitude) ou un drop (300 ms 1,8 fois plus forts que les 4 s) ; 0,9 s entre deux ; aucun dans les 2,5 premières s |
+| Supernova (idée de Thomas) | la bulle s'effondre (0,12 s) puis explose en 24 petites billes lancées loin ; son cœur devient un trou noir (55 %) qui les attire en spirale et les avale une à une, et regrossit à chaque bille ; flash et ondes plus forts que le crash | un crash juste après une montée ou un silence (1,5 s au plus) : le drop |
 | Éclosion | 8 gouttes nées sur le fil de la voix tournent en spirale et se fondent (fleur à lobes ronds), flash doux, onde pâle, fil de la voix pincé fort | une voix (> 0,35) après au moins 3 s sans voix (< 0,12) |
 | Souffle | la bulle gonfle lentement (≈ +14 % × intensité) et se relâche, grande onde lente, gouttes qui flottent, traînées qui changent de sens | la musique se pose (plus de kick depuis 2 s) juste après un drop ou une montée, au début de mesure suivant (2,5 s au plus) |
 | Grondement et grésillement | la bulle tremble ronde (~9 Hz), respire plus fort, halo et fil de la sub plus épais ; ~30 fois/s : couleurs qui se séparent par éclairs, secousse de 1–3 px, bord qui frémit, fil de la sub qui crépite | la sub écrase le son plus que d'habitude (`heavy` : 1,25 à 2 fois sa part habituelle) ; un tiers sous une sub seulement forte et tenue |
@@ -62,7 +63,7 @@ Changements demandés par rapport au labo :
 | Silence avant le drop | halo presque éteint, fils à 20 % | un silence juste après une montée (150 ms au moins) |
 | Fils | chaque fil monte à sa place quand sa source joue (0,25 s) et redescend se poser sur la bulle en contour quand elle se tait (0,8 s) ; pincé à chaque note (bosse étroite et vive si les notes sont hachées, large et lente si elles sont douces) ; s'éclaire à chaque temps, se pince doucement à chaque début de mesure | sub, mélodie, voix ; le tranchant des notes (`sharp`) ; la grille du rythme |
 | Titre | ola sur les kicks, penche sur la caisse claire, éparpillé sur le crash ; s'efface après 8 s | chaque nouveau morceau le remontre |
-| Changement de morceau | la bulle se pince, la pochette fait un tour rapide, la nouvelle apparaît en fondu (0,4 s), onde douce, fils pincés, couleurs qui glissent (0,6 s) | un autre morceau pendant que le lecteur joue |
+| Changement de morceau : la Voie lactée | la bulle tourne vite et se décroche en 3 bras liquides enroulés en spirale (jusqu'à 1,8 fois son rayon), qui s'enroulent et se refondent en elle (1,6 s) ; la nouvelle pochette en fondu (0,4 s), onde douce, fils pincés, couleurs qui glissent (0,6 s) | un autre morceau pendant que le lecteur joue |
 
 Un grand moment (crash, Éclosion, Souffle) toutes les 6 s au plus ; tous suivent « Intensité des grands moments ». Le
 grondement suit « Intensité de la basse ».

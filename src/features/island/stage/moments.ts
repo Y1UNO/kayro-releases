@@ -4,7 +4,8 @@ import type { Music, Section } from "./music";
  * Kysland's music mode: the big moments besides the crash (2026-11-03, the user's wish: « two more
  * reactions like the crash »). « Éclosion »: a voice comes in after 3 s or more without one.
  * « Souffle »: the music settles (a break, no kick, after a drop or a build), on the next downbeat
- * of the beat grid (2.5 s at most). At most one big moment every 6 s, the crash's included.
+ * of the beat grid (2.5 s at most). At most one big moment every 6 s, the crash's included. And
+ * it tells a drop from a cymbal's crash: a crash right after a build or a silence.
  * Times on the music's clock (s).
  */
 
@@ -21,6 +22,13 @@ export class Moments {
   private last = -Infinity;
   private section: Section = "unknown";
   private settling = -1;
+  /** The last time the music was tense (a build, or the silence before a drop). */
+  private tense = -Infinity;
+
+  /** A crash now is the drop: it ends a build or a silence (1.5 s at most before). */
+  isDrop(t: number): boolean {
+    return t - this.tense < 1.5;
+  }
 
   /** A crash just went: the next big moment waits. */
   crashed(t: number): void {
@@ -30,6 +38,7 @@ export class Moments {
   /** `h` s more; `downbeat`: a downbeat of the grid now. The moment to play, if any. */
   step(h: number, M: Music, downbeat: boolean): Moment | null {
     const t = M.t;
+    if (M.build > 0.3 || M.gap) this.tense = t;
     let out: Moment | null = null;
     if (M.voice < VOICE_OFF) this.quiet += h;
     else if (M.voice > VOICE_IN && this.quiet >= VOICE_QUIET_S && t - this.last >= APART_S) {
