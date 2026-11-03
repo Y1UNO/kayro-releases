@@ -62,6 +62,8 @@ if ($running.Count -gt 0) {
 if (-not $NoBuild) {
     Push-Location $root
     try {
+        # The music mode's AI rhythm (src-tauri\resources\ai, out of git): fetched once if missing.
+        & (Join-Path $PSScriptRoot 'fetch-ai.ps1')
         Write-Host 'Compilation release (npm run tauri build -- --no-bundle)...'
         # Step 18b: the updater's key, when there is one (only the bundles are signed).
         $key = Join-Path $env:USERPROFILE '.kayro\kayro-updater.key'

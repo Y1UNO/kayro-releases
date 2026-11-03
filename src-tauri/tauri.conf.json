@@ -29,6 +29,9 @@
       "icons/icon.ico"
     ],
     "publisher": "YIUNO",
+    "resources": {
+      "resources/ai/*": "ai/"
+    },
     "windows": {
       "webviewInstallMode": {
         "type": "embedBootstrapper"

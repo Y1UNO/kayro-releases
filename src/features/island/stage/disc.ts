@@ -16,7 +16,9 @@ import type { Uniforms } from "./uniforms";
  * hits; one string per source, showing only while it plays: the sub inside, the melody, the
  * voice outside (music.rs tells them apart by the stereo). Each glows with its level, and each
  * of its notes (its level swelling; for the melody, a new pitch too) plucks it, a bump running
- * round it both ways; while its source plays it never rests. Logical px, s.
+ * round it both ways; while its source plays it never rests. On the beat grid (the AI's,
+ * grid.ts): the cover turns at its tempo, the strings brighten on each beat and ring softly on
+ * each downbeat. Logical px, s.
  */
 
 /** The scenes' settings: the bass's and the crash's intensities (×0–×2). */
@@ -66,6 +68,9 @@ export class Disc {
   private note = 0.5;
   /** Off its place a moment (coming back from a crouch), drawn back to it. */
   private oy = new Sp(0);
+  /** A pulse on each beat of the grid (0–1), stronger on the downbeats; the clock's last step. */
+  private beat = 0;
+  private gridT = 0;
 
   constructor(
     private W: () => number,
@@ -148,7 +153,12 @@ export class Disc {
     const { bass } = this.drive();
     this.body.step(h, 1 + 0.035 * M.sub * bass - 0.15 * M.build - (M.gap ? 0.04 : 0));
     this.oy.to(0, 300, 0.6, h);
-    this.spinV.to((TAU * M.tempo.bpm) / 480, 1.5, 1, h);
+    // A turn every 8 beats: the grid's tempo once known (the AI's), else the kicks'.
+    this.spinV.to(M.grid.spin() ?? (TAU * M.tempo.bpm) / 480, 1.5, 1, h);
+    const on = M.grid.crossed(this.gridT, M.t);
+    this.gridT = M.t;
+    if (on) this.onBeat(on.down);
+    this.beat *= Math.exp(-h / 0.14);
     this.spin += this.spinV.x * h;
     const levels = this.sources();
     this.strands.forEach((s, i) => {
@@ -177,6 +187,15 @@ export class Disc {
       d.y.to(cy + d.ay * R * 0.78, 24, 0.3, h);
     }
     this.title.step(h);
+  }
+
+  /** A beat of the grid: the strings brighten; on a downbeat, the strings showing ring softly. */
+  private onBeat(down: boolean): void {
+    this.beat = Math.max(this.beat, down ? 1 : 0.45);
+    if (!down) return;
+    this.strands.forEach((s, i) => {
+      if (s.shown > 0.5) this.pluck(i, 0.035);
+    });
   }
 
   /** The strings' sources now (0–1): the sub (before the kick's pump), the melody, the voice. */
@@ -210,7 +229,8 @@ export class Disc {
     const levels = this.sources();
     STRANDS.forEach(([r, w], i) => {
       const [v, shown] = [levels[i]!, this.strands[i]!.shown];
-      U.rings.set([rs * r, shown * (0.12 + v) * dim, H * w * (0.8 + 0.5 * v), i], i * 4);
+      const lift = 1 + 0.6 * this.beat;
+      U.rings.set([rs * r, shown * (0.12 + v) * dim * lift, H * w * (0.8 + 0.5 * v), i], i * 4);
     });
     let k = 0;
     for (const p of this.pk) {

@@ -36,7 +36,7 @@ export class StageEngine {
   /** Where it draws changed: the window's region follows (it shows and takes clicks there). */
   onArea: (rects: Box[]) => void = () => {};
   private view: StageView | null = null;
-  private music = new Music();
+  readonly music = new Music();
   private fx: Effects;
   private body = new Body();
   private disc: Disc | null = null;
@@ -146,6 +146,7 @@ export class StageEngine {
     const was = this.track;
     this.track = track;
     if (!track?.playing) this.music.quiet();
+    this.music.grid.songIs(track?.key ?? null);
     if (track && (track.title !== was?.title || track.artist !== was?.artist))
       this.disc?.title.set(track.title, track.artist);
     if ((track?.cover ?? null) !== this.cover) this.loadCover(track?.cover ?? null);

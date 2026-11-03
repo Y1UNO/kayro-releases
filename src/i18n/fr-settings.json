@@ -216,7 +216,7 @@
         },
         "quality": {
           "label": "Qualité",
-          "help": "Auto baisse la résolution si les images tardent.",
+          "help": "Auto baisse la résolution si les images tardent. En Basse, l’IA du rythme est coupée (moins de calcul).",
           "auto": "Auto",
           "low": "Basse",
           "medium": "Moyenne",

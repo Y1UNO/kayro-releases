@@ -50,3 +50,7 @@ reference/**/vendor/
 reference/sons/
 reference/inspirations/
 reference/ambiances/**/*.png
+
+# IA du rythme (mode musique) : recuperee par scripts/fetch-ai.ps1
+src-tauri/resources/ai/*
+!src-tauri/resources/ai/README.md

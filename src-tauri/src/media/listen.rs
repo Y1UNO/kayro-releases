@@ -10,7 +10,10 @@ use tauri::{AppHandle, Manager, Runtime};
 use tauri_specta::Event;
 
 use super::music::{Analyzer, Levels, MusicHit};
+use super::rhythm::Rhythm;
 use super::{beat, MediaBeat, MusicFrame};
+use crate::config::schema::Quality;
+use crate::config::visual::MusicQuality;
 use crate::config::ConfigState;
 use crate::platform::loopback::Capture;
 
@@ -29,11 +32,27 @@ const SILENT_AFTER: Duration = Duration::from_millis(40);
 struct Music {
     rate: u32,
     analyzer: Option<Analyzer>,
+    /// The AI's beat grid, while the analyzer runs (none at the « Basse » quality).
+    rhythm: Option<Rhythm>,
     hits: Vec<MusicHit>,
     seq: u32,
     sent: Levels,
     sent_at: Instant,
     checked_at: Option<Instant>,
+    /// The grid was started once for this listening (its files missing: not again).
+    rhythm_tried: bool,
+}
+
+/// Where the AI's files are: `ai/` among Kayro's resources (next to the exe in a local build).
+fn models_dir<R: Runtime>(app: &AppHandle<R>) -> std::path::PathBuf {
+    let bundled = app.path().resource_dir().map(|d| d.join("ai"));
+    match bundled {
+        Ok(d) if d.is_dir() => d,
+        _ => std::env::current_exe()
+            .ok()
+            .and_then(|e| e.parent().map(|p| p.join("ai")))
+            .unwrap_or_default(),
+    }
 }
 
 /// Two states the eye cannot tell apart.
@@ -65,7 +84,16 @@ impl Music {
             if self.analyzer.take().is_some() {
                 tracing::info!("island: the music mode stops listening");
             }
+            (self.rhythm, self.rhythm_tried) = (None, false);
             return;
+        }
+        let light = s.music_quality == MusicQuality::Low
+            || (s.music_quality == MusicQuality::Auto && s.quality == Quality::Eco);
+        if light {
+            (self.rhythm, self.rhythm_tried) = (None, false);
+        } else if self.rhythm.is_none() && !self.rhythm_tried {
+            self.rhythm_tried = true;
+            self.rhythm = Rhythm::start(app, models_dir(app), self.rate);
         }
         let rate = self.rate;
         let analyzer = self.analyzer.get_or_insert_with(|| {
@@ -84,6 +112,9 @@ impl Music {
     fn push(&mut self, samples: &[f32], side: &[f32]) {
         if let Some(analyzer) = &mut self.analyzer {
             analyzer.push_stereo(samples, side, &mut self.hits);
+        }
+        if let Some(rhythm) = &self.rhythm {
+            rhythm.push(samples);
         }
     }
 
@@ -124,6 +155,8 @@ pub fn run<R: Runtime>(app: &AppHandle<R>, capture: &Capture, on: impl Fn() -> b
     let mut music = Music {
         rate: capture.rate,
         analyzer: None,
+        rhythm: None,
+        rhythm_tried: false,
         hits: Vec::new(),
         seq: 0,
         sent: Levels::default(),

@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { BAR, Demo, hitsAt } from "./demo";
 import { Disc } from "./disc";
+import { Grid } from "./grid";
 import type { Home } from "./home";
 import { Isle } from "./isle";
 import { Body, Effects } from "./jelly";
@@ -279,5 +280,51 @@ describe("Music mode: colours and region", () => {
       H,
     );
     expect(b).toEqual({ x0: 0, y0: 10, x1: W, y1: 400 });
+  });
+});
+
+describe("Music mode: the beat grid (the AI's, 2026-11-03)", () => {
+  it("fits the beats, runs on between them, and tells the downbeats", () => {
+    const g = new Grid();
+    const p = 60 / 120;
+    // Beats of the last 6 s, sent at t = 10 (how long ago each was), downbeats every 4.
+    const beats = Array.from({ length: 12 }, (_, i) => 10 - (4 + i * p));
+    const downs = beats.filter((_, i) => i % 4 === 0);
+    g.heard(
+      beats.map((b) => 10 - b),
+      downs.map((d) => 10 - d),
+      10,
+    );
+    expect(g.period).toBeCloseTo(p, 6);
+    // On its own, 3 s later: still on the beats.
+    let seen = 0;
+    let downbeats = 0;
+    for (let t = 10; t < 13; t += 0.01) {
+      const c = g.crossed(t, t + 0.01);
+      if (c) {
+        seen++;
+        if (c.down) downbeats++;
+      }
+    }
+    expect(seen).toBe(6);
+    expect(downbeats).toBeGreaterThanOrEqual(1);
+    expect(g.offBeat(10 + 4 * p)).toBeLessThan(0.01);
+    expect(g.offBeat(10 + 4 * p + p / 4)).toBeCloseTo(p / 4, 3);
+  });
+
+  it("weighs nothing while unknown, and remembers a song's tempo", () => {
+    const store = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+    });
+    const g = new Grid();
+    expect(g.offBeat(3)).toBe(0);
+    g.songIs("a|b");
+    for (let i = 0; i < 8; i++) g.mark(i * 0.4, i % 4 === 0);
+    const other = new Grid();
+    other.songIs("a|b");
+    expect(other.period).toBeCloseTo(0.4, 3);
+    vi.unstubAllGlobals();
   });
 });

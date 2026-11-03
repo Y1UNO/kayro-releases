@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Compile Kayro en release et produit l'installeur NSIS (Kayro_<version>_x64-setup.exe) signe pour
   les mises a jour, l'installeur maison qui le porte (Kayro_<version>_Installer.exe), et le dossier
@@ -46,6 +46,8 @@ if (@(Get-RunningKayro).Count -gt 0) {
 # 2. Release build + NSIS bundle, signed for the updater (targets, WebView2 mode: tauri.conf.json).
 Push-Location $root
 try {
+    # The music mode's AI rhythm (src-tauriesourcesi, out of git): fetched once if missing.
+    & (Join-Path $PSScriptRoot 'fetch-ai.ps1')
     Write-Host 'Compilation release + installeur signe (npm run tauri build)...'
     $env:TAURI_SIGNING_PRIVATE_KEY = $key
     $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ''

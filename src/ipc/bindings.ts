@@ -279,6 +279,7 @@ export const events = {
 	mediaChanged: makeEvent<MediaChanged>("media-changed"),
 	modePassage: makeEvent<ModePassage>("mode-passage"),
 	moodsChanged: makeEvent<MoodsChanged_Deserialize>("moods-changed"),
+	musicBeats: makeEvent<MusicBeats>("music-beats"),
 	musicFrame: makeEvent<MusicFrame>("music-frame"),
 	palettesChanged: makeEvent<PalettesChanged>("palettes-changed"),
 	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
@@ -843,6 +844,16 @@ export type MotionStyle =
 "complete" | "lively" | 
 /**  No bounce and no magic: entrance curve everywhere, card hover = lift only. */
 "crisp";
+
+/**
+ *  The music mode's beat grid (rhythm.rs, an AI, local), every 8 s while the mode listens: how
+ *  long ago (s) each beat and each downbeat of the last 10 s was, at the moment it is sent.
+ */
+export type MusicBeats = {
+	beats: (number | null)[],
+	downbeats: (number | null)[],
+	seq: number,
+};
 
 /**  « Couleurs » of the music mode: the cover's two colours, or Kayro's theme. */
 export type MusicColors = "cover" | "theme";

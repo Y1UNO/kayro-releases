@@ -10,6 +10,7 @@ mod form;
 mod listen;
 pub mod music;
 mod onset;
+pub mod rhythm;
 mod spectrum;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -67,6 +68,16 @@ pub struct MusicFrame {
     pub build: f32,
     pub gap: bool,
     pub section: Section,
+    pub seq: u32,
+}
+
+/// The music mode's beat grid (rhythm.rs, an AI, local), every 8 s while the mode listens: how
+/// long ago (s) each beat and each downbeat of the last 10 s was, at the moment it is sent.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+#[serde(rename_all = "camelCase")]
+pub struct MusicBeats {
+    pub beats: Vec<f32>,
+    pub downbeats: Vec<f32>,
     pub seq: u32,
 }
 

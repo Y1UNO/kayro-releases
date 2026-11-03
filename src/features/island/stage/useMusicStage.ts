@@ -3,7 +3,7 @@ import type { RefObject } from "react";
 import { useWindowVisible } from "../../../app/windowVisible";
 import type { IslandStage, NowPlaying } from "../../../ipc/bindings";
 import { desktopIpc } from "../../../ipc/commands";
-import { onIslandStage, onMusicFrame } from "../../../ipc/events";
+import { onIslandStage, onMusicBeats, onMusicFrame } from "../../../ipc/events";
 import { hubStore } from "../../../store";
 import { shapeOf } from "../islandShape";
 import { rgbOf, trackKey } from "../music";
@@ -255,7 +255,15 @@ export function useMusicStage(
   useEffect(() => {
     if (!on) return;
     const off = onMusicFrame((f) => engine.current?.feed(f));
-    return () => void off.then((u) => u());
+    // The AI's beats, on the music's clock (as late as its image: « Décalage son/image »).
+    const offBeats = onMusicBeats((b) => {
+      const m = engine.current?.music;
+      if (m) m.grid.heard(b.beats, b.downbeats, m.t + opts.current.look.delayMs / 1000);
+    });
+    return () => {
+      void off.then((u) => u());
+      void offBeats.then((u) => u());
+    };
   }, [on]);
 
   return {

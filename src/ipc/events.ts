@@ -12,6 +12,7 @@ import {
   type IslandMoment,
   type IslandStage,
   type IslandTucked,
+  type MusicBeats,
   type MusicFrame,
   type NowPlaying,
   type ModePassage,
@@ -169,6 +170,19 @@ export interface MusicSignal {
  * the hits since the frame before (at most every 10 ms) and the levels (at least every 16 ms).
  * Sent as soon as the sound is read: the page delays the image by « Décalage son/image ».
  */
+/**
+ * Music mode (2026-11-03): the AI's beat grid, every 8 s while the mode listens: how long ago (s)
+ * each beat and downbeat of the last 10 s was, at the moment it was sent.
+ */
+export function onMusicBeats(
+  handler: (beats: { beats: number[]; downbeats: number[] }) => void,
+): Promise<Unlisten> {
+  const real = (xs: (number | null)[]) => xs.filter((x): x is number => x !== null);
+  return listenTo(events.musicBeats.listen, (b: MusicBeats) =>
+    handler({ beats: real(b.beats), downbeats: real(b.downbeats) }),
+  );
+}
+
 export function onMusicFrame(handler: (frame: MusicSignal) => void): Promise<Unlisten> {
   return listenTo(events.musicFrame.listen, (f: MusicFrame) =>
     handler({

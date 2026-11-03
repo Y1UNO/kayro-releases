@@ -8,6 +8,7 @@
  * (`demo.ts`). Times in s.
  */
 
+import { Grid } from "./grid";
 import { Tempo } from "./tempo";
 
 export type HitKind = "kick" | "snare" | "hat" | "crash";
@@ -31,7 +32,8 @@ const KINDS: readonly HitKind[] = ["kick", "snare", "hat", "crash"];
  * The analysed sound measures each hit against its band's recent hits (a steady beat reads about
  * 1); the test track plays its hi-hats at .45–.75 and its snares at .9: the same strengths here.
  * The kick is also weighed against the melody (2026-11-03, the user and Thomas: the bass stood
- * out too much over the rest): curved down (`v^1.4`), a third weaker under a full melody.
+ * out too much over the rest): curved down (`v^1.4`), a third weaker under a full melody; and
+ * against the beat grid, once known: a kick off its beats and half-beats (a bass note) at 60 %.
  */
 const HEARD: Record<HitKind, number> = { kick: 1, snare: 0.9, hat: 0.6, crash: 1 };
 
@@ -58,8 +60,9 @@ export class Music {
   melody = 0;
   pitch = 0.5;
   voice = 0;
-  /** The song's tempo, from its kicks. */
+  /** The song's tempo, from its kicks; its beat grid, from the AI (or the test track). */
   readonly tempo = new Tempo();
+  readonly grid = new Grid();
   /** The light's trails turn one way, then the other after each crash. */
   turn = 1;
   /** Told of each hit as it happens (the scenes move at once). */
@@ -86,8 +89,9 @@ export class Music {
     const warm = Math.min(1, (this.t - this.warmFrom) / WARM_S);
     for (const h of f.hits) {
       if (warm < 1 && h.kind === "crash") continue;
-      const v =
-        h.kind === "kick" ? h.velocity ** 1.4 * (1 - 0.33 * Math.min(1, this.melody)) : h.velocity;
+      const kick = h.kind === "kick";
+      const off = kick && this.grid.offBeat(this.t) > 0.07 ? 0.6 : 1;
+      const v = kick ? h.velocity ** 1.4 * (1 - 0.33 * Math.min(1, this.melody)) * off : h.velocity;
       this.hit(h.kind, v * HEARD[h.kind] * (0.25 + 0.75 * warm));
     }
     this.levels(f);

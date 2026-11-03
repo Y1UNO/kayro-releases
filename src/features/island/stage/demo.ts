@@ -97,6 +97,7 @@ export class Demo {
       this.step++;
       const ls = ((this.step % STEPS) + STEPS) % STEPS;
       for (const [kind, v] of hitsAt(ls)) this.music.hit(kind, v);
+      if (ls % 4 === 0) this.music.grid.mark(this.music.t, ls % 16 === 0);
     }
     this.levels(dt);
   }
