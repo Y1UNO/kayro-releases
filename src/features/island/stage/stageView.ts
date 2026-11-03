@@ -1,7 +1,7 @@
 import { drawFallback } from "./fallback";
 import { paintHome, type Home, type HomeLook } from "./home";
 import { clamp, union, type Box } from "./motion";
-import type { Palette } from "./palette";
+import type { Palette, Rgb } from "./palette";
 import { Renderer, type Frame } from "./renderer";
 
 /**
@@ -29,6 +29,7 @@ export class StageView {
   /** The cover drawn square (for the fallback). */
   cover: HTMLCanvasElement | null = null;
   private coverAt = -1;
+  private mixed: Palette | null = null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -75,6 +76,17 @@ export class StageView {
     this.cover = c;
     this.coverAt = c ? performance.now() : -1;
     if (c) this.gl?.cover(c);
+  }
+
+  /** The colours shown, gliding to `to` (0.6 s): a new song's cover never jumps (2026-11-03). */
+  blend(to: Palette, dt: number): Palette {
+    const k = this.mixed ? 1 - Math.exp(-dt / 0.6) : 1;
+    const mix = (a: Rgb, b: Rgb): Rgb => [0, 1, 2].map((i) => a[i]! + (b[i]! - a[i]!) * k) as Rgb;
+    this.mixed = {
+      c1: mix(this.mixed?.c1 ?? to.c1, to.c1),
+      c2: mix(this.mixed?.c2 ?? to.c2, to.c2),
+    };
+    return this.mixed;
   }
 
   /** How much of the cover shows: none while it loads, then fading in (0.4 s). */

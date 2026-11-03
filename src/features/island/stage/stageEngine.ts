@@ -148,7 +148,7 @@ export class StageEngine {
     if (!track?.playing) this.music.quiet();
     this.music.grid.songIs(track?.key ?? null);
     if (track && (track.title !== was?.title || track.artist !== was?.artist))
-      this.disc?.title.set(track.title, track.artist);
+      this.disc?.song(track.title, track.artist);
     if ((track?.cover ?? null) !== this.cover) this.loadCover(track?.cover ?? null);
     else if (track?.accent !== was?.accent || track?.dominant !== was?.dominant) this.colours();
     this.kick();
@@ -356,7 +356,7 @@ export class StageEngine {
     const box = boundsOf(this.parts(), this.W, this.H);
     // The light is gone before the edges of what is drawn (no cut).
     U.fade = Math.min(U.fade, fadeInside(box, U.fc[0]!, U.fc[1]!, this.W, this.H));
-    const F = StageView.frame(U, this.pal, this.look!, M, lit, this.t, dt, box);
+    const F = StageView.frame(U, view.blend(this.pal, dt), this.look!, M, lit, this.t, dt, box);
     const home2d = { h: home, look: this.homeLook, alpha: this.homeA };
     view.draw(F, this.t, home2d, show ? disc.titleBox() : null, (ctx) => {
       if (show) disc.overlay(ctx, this.pal.c1, this.lit);

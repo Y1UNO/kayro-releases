@@ -151,7 +151,7 @@ describe("Music mode: the jelly (SPEC §2, measured on the disc)", () => {
   });
 });
 
-describe("Music mode: one string per source, showing only while it plays (2026-11-03)", () => {
+describe("Music mode: one string per source, at its place while it plays (2026-11-03)", () => {
   const disc = (M: Music) =>
     new Disc(
       () => W,
@@ -174,23 +174,29 @@ describe("Music mode: one string per source, showing only while it plays (2026-1
     heavy: 0,
   } as const;
 
-  it("shows the voice's string with a voice, the sub's with the sub, and none in silence", () => {
+  it("raises the voice's string with a voice, the sub's with the sub, and rests the others on the disc", () => {
     const M = new Music();
     const d = disc(M);
     const U = uniforms();
+    // How far each string rests (0 at its place – 0.99 on the disc), from its R.w.
+    const rest = () => [0, 1, 2].map((i) => U.rings[i * 4 + 3]! - i);
     for (let i = 0; i < 480; i++) d.step(STEP);
     d.fill(U);
-    expect([U.rings[1], U.rings[5], U.rings[9]]).toEqual([0, 0, 0]);
+    expect(rest().every((r) => r > 0.95)).toBe(true);
+    expect(U.rings[1]!).toBeLessThan(0.3);
     M.levels({ ...quiet, voice: 0.8 });
     for (let i = 0; i < 480; i++) d.step(STEP);
     d.fill(U);
     expect(U.rings[9]!).toBeGreaterThan(0.7);
-    expect(U.rings[1]! + U.rings[5]!).toBe(0);
+    expect(rest()[2]).toBeLessThan(0.05);
+    expect(U.rings[8]!).toBeGreaterThan(d.radius() * 1.5);
+    expect(rest()[0]! > 0.95 && rest()[1]! > 0.95).toBe(true);
     M.levels({ ...quiet, sub: 0.6 });
     for (let i = 0; i < 960; i++) d.step(STEP);
     d.fill(U);
     expect(U.rings[1]!).toBeGreaterThan(0.5);
-    expect(U.rings[9]!).toBeLessThan(0.05);
+    expect(rest()[2]).toBeGreaterThan(0.85);
+    expect(U.rings[8]!).toBeLessThan(d.radius() * 1.1);
   });
 
   it("plucks a string on each of its notes", () => {

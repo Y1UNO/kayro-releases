@@ -50,6 +50,11 @@ export class Title {
     return clamp(1 - (this.age - 8) / 1.5, 0, 1);
   }
 
+  /** A song's title is set. */
+  has(): boolean {
+    return this.L.length > 0;
+  }
+
   /** Still showing (for the window's region). */
   shown(): boolean {
     return this.L.length > 0 && this.seen() > 0;

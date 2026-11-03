@@ -9,6 +9,7 @@
  * matte (2026-11-03, the user's choice): the lab's gloss (reflections, rim, highlights) only
  * with « Brillance » above 0, and the crash's flash spares the ink. The strings are drawn in the
  * final image only, sharp: in the light, its trails copied them into blurred ghosts (2026-11-03).
+ * A string without its source rests on the ink as its outline (the user's friend Thomas's idea).
  * A pluck's ring index carries how sharp its note was (+0–0.09): a soft note's bump is wide, slow
  * and long, a chopped one's narrow, quick, short and fast-ringing.
  * No spikes anywhere.
@@ -50,7 +51,9 @@ float sdScene(vec2 p){
   return d;
 }
 vec3 ringCol(float w){return w<.5?uC1:(w<1.5?uC2:mix(uC1,vec3(1.),.55));}
-vec3 rings(vec2 p,float glow){
+// The strings: a circle round the core, or, at rest (its fraction in R.w: string + 0–0.99), the
+// ink's own outline a few px out (d: the ink's distance here), one after the other inside out.
+vec3 rings(vec2 p,float d){
   vec3 acc=vec3(0.);if(uCore.w<.5)return acc;
   vec2 q=p-uCore.xy;float L=length(q),th=atan(q.y,q.x);
   for(int i=0;i<3;i++){vec4 R=uRings[i];if(R.y<.003)continue;float disp=0.;
@@ -59,8 +62,9 @@ vec3 rings(vec2 p,float glow){
       float a1=mod(th-P.y-tr+PI,2.*PI)-PI,a2=mod(th-P.y+tr+PI,2.*PI)-PI;
       disp+=P.w*exp(-P.z*(2.+3.5*sh))*(exp(-a1*a1*wd)+exp(-a2*a2*wd))*cos(P.z*(18.+20.*sh));}
     float dr=abs(L-R.x-disp);float line=exp(-dr*dr/(R.z*R.z));
-    float g=glow>.5?exp(-dr/(R.z*1.8))*.12+line*.3:line;
-    acc+=ringCol(R.w)*R.y*g;}
+    float rest=clamp((R.w-float(i))/.99,0.,1.);
+    float dc=abs(d-uSize.y*(.006+.0045*float(i))-disp*.35);float hug=exp(-dc*dc/(R.z*R.z*.6));
+    acc+=ringCol(float(i))*R.y*mix(line,hug,rest);}
   return acc;
 }
 vec3 waves(vec2 p,out vec2 disp){
@@ -102,8 +106,8 @@ void main(){
   vec2 uv=vec2((ps.x+wd.x)/uSize.x,1.-(ps.y+wd.y)/uSize.y);vec2 dc=(uv-.5)*uCA;
   vec3 L=vec3(texture(uLight,uv+dc).r,texture(uLight,uv).g,texture(uLight,uv-dc).b);
   float m=fadeOut(ps)*uLit;
-  vec3 col=(L*.9+wv*.35+rings(p,0.)*1.25)*m;
   float d=sdScene(p);
+  vec3 col=(L*.9+wv*.35+rings(p,d)*1.25)*m;
   float aa=max(fwidth(d)*.75,.35/uPx);float a=smoothstep(aa,-aa,d);
   if(a>.001){
     vec3 ink=vec3(0.);

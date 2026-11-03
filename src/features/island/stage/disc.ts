@@ -3,6 +3,8 @@ import { Moments, type Moment } from "./moments";
 import { clamp, rnd, Sp, TAU } from "./motion";
 import type { HitKind, Music } from "./music";
 import type { Rgb } from "./palette";
+import { halo } from "./halo";
+import { Rumble } from "./rumble";
 import { Title } from "./title";
 import type { Uniforms } from "./uniforms";
 
@@ -76,12 +78,8 @@ export class Disc {
   readonly moments = new Moments();
   private breathT = 9;
   private breathG = 0;
-  /** A big saturated bass: the sub's slow level, the rumble (0–2, with the bass setting), its clock. */
-  private subSlow = 0;
-  private rumble = 0;
-  private rumbleT = 0;
-  private fizzT = 0;
-  private crackle = 0;
+  /** A big saturated bass: the bubble rumbles and sizzles (rumble.ts). */
+  private rumble = new Rumble();
 
   constructor(
     private W: () => number,
@@ -226,31 +224,8 @@ export class Disc {
     this.breathT += h;
     const t = this.breathT;
     const breath = this.breathG * 0.14 * (t < 0.6 ? t / 0.6 : Math.exp(-(t - 0.6) / 1.2));
-    // A big saturated bass: the bubble rumbles, round (its modes 2 and 3 shaken around 9 Hz, off
-    // their resonance), breathes deeper; its halo and string thicken. In full when the bass crushes
-    // the mix more than usual (`heavy`), a third of it under a sub merely strong and held.
-    this.subSlow += (M.subIn - this.subSlow) * (1 - Math.exp(-h / 0.25));
-    const x = clamp((this.subSlow - 0.55) / 0.35, 0, 1);
-    this.rumble = Math.max(clamp(M.heavy, 0, 1), 0.35 * x * x * (3 - 2 * x)) * bass;
-    this.rumbleT += h;
-    const w = this.rumbleT * TAU * 9;
-    this.body.m[0]!.a.v += 36 * this.rumble * Math.cos(w) * h;
-    this.body.m[1]!.a.v += 24 * this.rumble * Math.cos(w * 1.3 + 1) * h;
-    // …and it sizzles (2026-11-03: « ça grésille pas assez »): about 30 times a second, a flicker
-    // of colour split, a 1–3 px jolt, a faint fine shiver of its edge, the sub's string crackling.
-    this.fizzT += h;
-    if (this.rumble > 0.05 && this.fizzT > 1 / 30) {
-      this.fizzT = 0;
-      const [r, H] = [this.rumble, this.H()];
-      this.fx.ca = Math.max(this.fx.ca, 0.006 * r * rnd(0.4, 1, this.random));
-      this.fx.sx.v += rnd(-1, 1, this.random) * H * 0.05 * r;
-      this.fx.sy.v += rnd(-1, 1, this.random) * H * 0.05 * r;
-      this.body.rip = Math.max(this.body.rip, 0.006 * r);
-      this.body.ripPh += rnd(0, TAU, this.random);
-      this.crackle = rnd(0, 0.6, this.random) * r;
-    }
-    this.crackle *= Math.exp(-h / 0.03);
-    const swell = 0.035 * M.sub * bass + 0.05 * this.rumble;
+    this.rumble.step(h, M, bass, this.body, this.fx, this.H(), this.random);
+    const swell = 0.035 * M.sub * bass + 0.05 * this.rumble.level;
     this.body.step(h, 1 + swell - 0.15 * M.build - (M.gap ? 0.04 : 0) + breath);
     this.oy.to(0, 300, 0.6, h);
     // A turn every 8 beats: the grid's tempo once known (the AI's), else the kicks'.
@@ -289,6 +264,23 @@ export class Disc {
       d.y.to(cy + d.ay * R * 0.78, 24, 0.3, h);
     }
     this.title.step(h);
+  }
+
+  /**
+   * A new song: its title. From one song to the next while it plays (2026-11-03, « un petit effet
+   * de transition »): the bubble pinches, the cover turns once quickly (the new one fades in as it
+   * loads), a soft wave leaves it and the strings ring.
+   */
+  song(title: string, artist: string): void {
+    const next = this.title.has();
+    this.title.set(title, artist);
+    if (!next) return;
+    const [cx, cy] = this.centre();
+    const [R, H, g] = [this.radius() * this.body.S.x, this.H(), Math.min(1.5, this.drive().crash)];
+    this.body.S.v -= 5 * g;
+    this.spinV.x += 8;
+    this.fx.wave(cx, cy, R, R * 2.4, 1.0, 0.7 * g, 0.5, H * 0.02, H * 0.004, 3 * g);
+    this.strands.forEach((_, i) => this.pluck(i, 0.07));
   }
 
   /** A beat of the grid: the strings brighten; on a downbeat, the strings showing ring softly. */
@@ -332,9 +324,14 @@ export class Disc {
     STRANDS.forEach(([r, w], i) => {
       const [v, shown] = [levels[i]!, this.strands[i]!.shown];
       const lift = 1 + 0.6 * this.beat;
-      const thick = 0.8 + 0.5 * v + (i === 0 ? 0.6 * this.rumble : 0);
-      const glow = lift * (i === 0 ? 1 + this.crackle : 1);
-      U.rings.set([rs * r, shown * (0.12 + v) * dim * glow, H * w * thick, i], i * 4);
+      const thick = 0.8 + 0.5 * v + (i === 0 ? 0.6 * this.rumble.level : 0);
+      const glow = lift * (i === 0 ? 1 + this.rumble.crackle : 1);
+      // Without its source, a string comes down onto the disc and rests on it as its outline
+      // (Thomas's idea, 2026-11-03), dim; with it again, it goes back up to its place.
+      const rest = 1 - shown;
+      const radius = rs * (r + (1.02 - r) * rest);
+      const light = (shown * (0.12 + v) * glow + 0.26 * rest) * dim;
+      U.rings.set([radius, light, H * w * thick, i + 0.99 * rest], i * 4);
     });
     let k = 0;
     for (const p of this.pk) {
@@ -342,7 +339,7 @@ export class Disc {
       k++;
     }
     U.npk = k;
-    halo(U, M, this.drive(), H, 1, this.rumble);
+    halo(U, M, this.drive(), H, 1, this.rumble.level);
     U.fc[0] = cx;
     U.fc[1] = cy;
   }
@@ -372,24 +369,4 @@ export class Disc {
     }
     return r;
   }
-}
-
-/** The halo, rays and rim for any scene (the lab's `haloStd`). */
-export function halo(U: Uniforms, M: Music, d: Drive, H: number, base = 1, rumble = 0): void {
-  const dim = (1 - 0.72 * M.build) * (M.gap ? 0.12 : 1);
-  const [b, c] = [d.bass, d.crash];
-  U.halo[0] =
-    ((0.1 +
-      0.22 * M.sub * b +
-      0.35 * rumble +
-      1.0 * M.kick * b +
-      0.25 * M.snare +
-      1.1 * M.crash * c +
-      0.3 * M.tail * c) *
-      dim +
-      (M.gap ? 0 : 0.45 * M.snare * M.build)) *
-    base;
-  U.halo[1] = H * (0.032 + 0.05 * M.kick * b + 0.045 * M.crash * c);
-  U.halo[2] = (0.45 * M.kick * b + 1.0 * M.crash * c + 0.35 * M.build * M.snare) * base * dim;
-  U.halo[3] = 0.35 * M.snare + 0.9 * M.crash * c;
 }

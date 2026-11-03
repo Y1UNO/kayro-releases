@@ -1,4 +1,5 @@
-import { halo, type Drive } from "./disc";
+import type { Drive } from "./disc";
+import { halo } from "./halo";
 import { homeCentre, type Home } from "./home";
 import type { Body, Effects } from "./jelly";
 import { clamp, lerp, Sp } from "./motion";
