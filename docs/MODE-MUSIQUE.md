@@ -12,8 +12,10 @@ Changements demandés par rapport au labo :
 - la scène **Encre** du labo n'est pas faite, et l'ancienne encre « Dancing » est retirée avec son sélecteur ;
 - avec Thomas (projet RAYKA), après l'essai sur l'exe : basse moins dominante face à la mélodie, fils qui bougent à
   chaque note (et sur la caisse claire et le charleston), lueur des fils fine, titre qui s'efface après 8 s, disque
-  plus petit (0,19 de la hauteur), pochette qui tourne au tempo (un tour pour 8 temps, `tempo.ts`), jamais poussée
-  par les coups.
+  plus petit (0,19 de la hauteur), pochette qui tourne au tempo (un tour pour 8 temps), jamais poussée par les coups ;
+- **un fil par source** (sub dedans, mélodie, voix dehors), chacun visible seulement quand sa source joue (la voix
+  trouvée par le stéréo, sans IA) ;
+- **IA locale du rythme** (Beat This!, voir « IA du rythme ») : la grille des temps et des mesures.
 
 ## Ce qu'on voit
 - **Départ** : l'île se tasse ; au kick suivant (600 ms au plus), une goutte part, tenue par un col de cinq boules qui
@@ -21,8 +23,9 @@ Changements demandés par rapport au labo :
 - **Lecteur** : la pochette tourne dans la bulle noire. Le kick cogne la taille (+12 % en deux images, contraction,
   rebond), la sub la fait respirer, la caisse claire la tord, le charleston fait onduler son bord. Le crash : flash,
   ondes de choc, huit gouttes qui reviennent se fondre, titre éparpillé. Halo, rayons et traînées tournantes aux
-  couleurs de la pochette. Trois cordes : la corde du registre de la mélodie s'allume (grave dedans, aigu dehors),
-  chaque nouvelle note la pince. Le titre fait une ola à chaque kick.
+  couleurs de la pochette. Trois fils, un par source (sub, mélodie, voix) : chacun n'apparaît que quand sa source
+  joue, brille avec elle et se pince à chacune de ses notes ; sur la grille du rythme, ils s'éclairent à chaque temps et
+  se pincent doucement à chaque début de mesure. Le titre fait une ola à chaque kick et s'efface après 8 s.
 - **Retour** (2 s de pause ou sans musique, interrupteur coupé, clic sur le lecteur) : la boule s'accroupit, saute au
   kick suivant, l'île descend la chercher, un pont liquide se forme ; l'île reprend sa largeur, exactement à sa place.
 - **Réduire les animations** : fondus seulement.
@@ -43,7 +46,9 @@ Image (`src/features/island/stage/`) :
 - `stageView.ts`, `fallback.ts` — résolution adaptative et qualité, repli 2D sans WebGL, l'île exacte peinte aux
   passages de relais.
 - `palette.ts`, `cover.ts` — les couleurs (pochette ou thème Kayro).
-- `useMusicStage.ts` — le crochet React qui démarre le moteur, le nourrit (`onMusicFrame`) et l'arrête.
+- `grid.ts` — la grille du rythme (les temps de l'IA prolongés entre deux analyses, la mémoire du tempo de chaque
+  morceau) ; `tempo.ts` — le tempo tiré des kicks, quand la grille manque.
+- `useMusicStage.ts` — le crochet React qui démarre le moteur, le nourrit (`onMusicFrame`, `onMusicBeats`) et l'arrête.
 - Tests : `stage.test.ts`.
 
 Son (`src-tauri/src/media/`) : voir « Son analysé » ci-dessous.
@@ -58,14 +63,38 @@ l'île est visible et que le mode musique est allumé (pas en mode démo). Rien 
 - `onset.rs` — les coups par bande : kick 40–120 Hz, caisse claire 187–250 et 1 500–5 000 Hz, charleston 7–14 kHz,
   crash 4–16 kHz. Flux spectral (comparé au maximum des 4 analyses précédentes, comme SuperFlux), seuil adaptatif,
   vélocité.
-- `continuous.rs` — les niveaux continus : sub (30–60 Hz), mélodie (250–2 000 Hz) et sa hauteur (centre de gravité du
-  spectre entre 250 et 4 000 Hz, en échelle log).
+- `continuous.rs` — les niveaux continus : sub (30–60 Hz), voix et mélodie, et la hauteur de la mélodie (centre de
+  gravité du spectre entre 250 et 4 000 Hz, en échelle log). Le son est lu en stéréo (`loopback.rs`) : la voix est ce
+  qui est au milieu du mix dans 300–3 400 Hz (ce que les côtés n'expliquent pas), la mélodie le reste de 250–5 000 Hz ;
+  un morceau mono n'a pas de voix (la mélodie comme avant).
+- `rhythm.rs` — l'IA du rythme (voir ci-dessous).
 - `form.rs` — la forme du morceau : montée, silence avant le drop, drop, section.
 - `music.rs` — l'analyseur qui assemble le tout ; tests dans `music_tests.rs` et `music_sounds.rs` (sons de synthèse).
 - L'événement `music-frame` (`MusicFrame`) : les coups depuis la trame précédente (une trame au plus toutes les 10 ms),
   et au moins toutes les 16 ms les niveaux (toutes les 250 ms quand rien ne bouge). Côté page : `onMusicFrame`
   (`src/ipc/events.ts`), puis `StageEngine.feed`, qui retarde l'image du « Décalage son/image ».
 - Coût mesuré (release) : 29 µs par analyse, 0,5 % d'un cœur. Le kick est détecté environ 15 ms après son attaque.
+
+## IA du rythme (2026-11-03)
+**Beat This!** (CPJKU, ISMIR 2024, licence MIT), son petit modèle `small0` et son spectrogramme en ONNX, lancés en
+local par ONNX Runtime 1.31.1 (Microsoft, MIT) : toutes les 8 s, il lit les 10 dernières secondes du son et trouve les
+temps et les débuts de mesure (`rhythm.rs`, son propre fil d'exécution, seulement pendant le mode musique). La page
+garde la grille et la prolonge (`grid.ts`) : la pochette tourne à son tempo, les fils battent les temps, un kick hors
+des temps et des demi-temps compte à 60 % (une note de basse lue comme kick), et le tempo de chaque morceau est gardé
+(`localStorage`, 300 morceaux) pour tourner juste dès la seconde écoute.
+- **Mesure** (MUSDB18, 130 extraits avec une batterie régulière ; référence : Beat This! sur la batterie seule) :
+  grille de Kayro tirée de ses kicks F = 0,37, Beat This! sur le mix F = 0,75 → **2,5 fois moins d'erreurs**, meilleur
+  sur 76 % des morceaux. Limite : la référence vient du même modèle (sur la batterie seule), ce qui l'avantage un peu.
+- **Écarté** : EfficientAT mn10 (étiquetage AudioSet) pour « qui joue » : sur les mêmes extraits, AUC voix 0,53,
+  basse 0,49, instruments 0,28, contre 0,76 / 0,74 / 0,81 pour l'analyse de Kayro ; il étiquette un morceau entier
+  (« Musique », « Reggae »), pas la voix instant par instant.
+- **Coût** : environ 300 ms de calcul sur un cœur toutes les 8 s (≈ 4 % d'un cœur), le temps du mode musique.
+- **Coupé** : « Qualité » à Basse (ou Auto dans le mode Éco de Kayro) ; sans ses fichiers, la grille manque et le
+  tempo des kicks reste.
+- **Fichiers** : `src-tauri/resources/ai/` (hors git), récupérés par `scripts/fetch-ai.ps1` (empreintes vérifiées,
+  lancé par les builds s'ils manquent), installés dans `ai/` à côté de Kayro.
+- **Mesurer à nouveau** : `scripts/ai-eval/` ; outils Rust `examples/music_probe.rs` (l'analyse de Kayro sur un fichier)
+  et `examples/rhythm_probe.rs` (la grille de l'IA).
 
 ## Régler la détection
 Dans l'app : Réglages › Visuel › Mode musique › Avancé.

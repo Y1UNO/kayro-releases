@@ -6,7 +6,7 @@
 Lanceur d'applications pour Windows, très fluide et très réactif, avec un accent fort sur la **personnalisation** et le **visuel** :
 thèmes de couleur au choix, verre liquide, lumière dynamique, couleurs qui s'adaptent à l'affiche du jeu, ambiances animées propres à certains jeux (braises, runes, brume…).
 Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniquement. Français par défaut.
-**Aucune IA/LLM dans l'app.** Tout est local et hors ligne par défaut.
+**Pas de LLM ni d'assistant IA dans l'app.** Une IA locale et légère est permise quand elle est mesurée meilleure que le calcul classique (décision de l'utilisateur, 2026-11-03 : le rythme du mode musique, voir `docs/MODE-MUSIQUE.md`) : elle tourne sur le PC, rien n'est envoyé, et l'app marche sans elle. Tout est local et hors ligne par défaut.
 
 ## Règles de travail (à respecter à chaque session)
 1. L'utilisateur te donne UNE étape. Ne commence jamais la suivante sans son accord.
@@ -61,7 +61,7 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 Voix (étape 21), contrôle par les mains (22), intégrations OBS, Discord, lumières (23), moteur WebGL (24), puis l'audit final (18) et la v1.0 (`docs/ROADMAP.md`). Chacune seulement quand l'utilisateur donne son étape ; les règles de sécurité et de vie privée ci-dessus restent vraies (traitement local, ne lance que ce qui est configuré, indicateur visible ; l'exception « écoute permanente » de la voix se note dans ce fichier à l'étape 21).
 
 ## Hors périmètre pour l'instant (ne pas coder sans demande)
-Salon d'amis, assistant IA (projet séparé de l'écosystème Kayro, voir `docs/ROADMAP.md` : Kayro reste sans IA). Prévoir les points d'extension, sans implémenter.
+Salon d'amis, assistant IA (projet séparé de l'écosystème Kayro, voir `docs/ROADMAP.md` : Kayro reste sans assistant IA). Prévoir les points d'extension, sans implémenter.
 
 **Moteur graphique (WebGL2 / shaders) : autorisé par l'utilisateur (étape 12b).** Toujours derrière `FxLayer`, avec repli CSS automatique (WebGL2 absent, contexte perdu, budget d'image dépassé) et coût mesuré.
 

@@ -408,7 +408,10 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   résolution avec traînées, image finale), fenêtre transparente, physique en pas de 1/480 s, résolution adaptative,
   repli 2D sans WebGL. **Son** : analyse du son joué (WASAPI loopback) côté Rust, flux spectral par bande, seuils
   adaptatifs, crash et drop, sub, mélodie. **Réglages** : Visuel › Mode musique (basse, crash, traînées, brillance à 0 ;
-  Avancé : sensibilités, décalage son/image, qualité, mode démo, couleurs).
+  Avancé : sensibilités, décalage son/image, qualité, mode démo, couleurs). Puis (même jour, avec Thomas) : un fil par
+  source (sub, mélodie, voix trouvée par le stéréo) et **IA locale du rythme** (Beat This!, ONNX Runtime) : 2,5 fois
+  moins d'erreurs sur la grille des temps que les kicks seuls (MUSDB18), environ 4 % d'un cœur ; l'IA « qui joue »
+  (EfficientAT) a été essayée et écartée, moins bonne que le stéréo.
 - [x] **Interrupteurs et curseurs en rectangle arrondi** (2026-11-02, Réglages) : même animation, forme changée
   (piste 9 px / 3 px, pouce carré arrondi 6 px).
 
