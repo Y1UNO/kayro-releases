@@ -504,7 +504,7 @@ describe("Music mode: the Milky Way and the Supernova (2026-11-03)", () => {
       thickest = Math.max(thickest, U.segB[i * 4]!);
     }
     expect(reach).toBeGreaterThan(R * 1.4);
-    expect(thickest).toBeLessThan(R * 0.1);
+    expect(thickest).toBeLessThan(R * 0.13);
     expect(s.core).toBeLessThan(0.5);
     expect(s.spin).toBeGreaterThan(10);
     for (let t = 0; t < 1.6; t += STEP) s.step(STEP, cx, cy, R);

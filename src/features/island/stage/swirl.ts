@@ -163,7 +163,7 @@ export class Swirl {
         const rr = Rc * (0.7 + 3 * Math.pow(u, 0.85) * e);
         const wind = (2.4 + 0.6 * (1 - e)) * u + trail * u;
         const th = this.base + this.turn + (k / ARMS) * TAU - wind;
-        const r = R * (0.075 * Math.pow(1 - u, 1.1) + 0.004) * (0.4 + 0.6 * Math.min(1, e));
+        const r = R * (0.1 * Math.pow(1 - u, 1.1) + 0.006) * (0.4 + 0.6 * Math.min(1, e));
         return [cx + Math.cos(th) * rr, cy + Math.sin(th) * rr, r];
       };
       let m = 0;
