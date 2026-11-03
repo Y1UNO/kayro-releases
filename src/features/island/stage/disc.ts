@@ -1,4 +1,5 @@
 import type { Body, Effects } from "./jelly";
+import { Moments, type Moment } from "./moments";
 import { clamp, rnd, Sp, TAU } from "./motion";
 import type { HitKind, Music } from "./music";
 import type { Rgb } from "./palette";
@@ -71,6 +72,10 @@ export class Disc {
   /** A pulse on each beat of the grid (0–1), stronger on the downbeats; the clock's last step. */
   private beat = 0;
   private gridT = 0;
+  /** The big moments besides the crash (moments.ts); the « Souffle »'s age (s) and strength. */
+  readonly moments = new Moments();
+  private breathT = 9;
+  private breathG = 0;
 
   constructor(
     private W: () => number,
@@ -145,19 +150,82 @@ export class Disc {
       fx.wave(cx, cy, R, R * 2.9, 1, 0.8 * gc, 0.8, H * 0.02, H * 0.004, 6 * gc, 0.09);
       this.burst(gc);
       this.title.crash(gc);
+      this.moments.crashed(this.M.t);
+    }
+  }
+
+  /**
+   * A big moment besides the crash, as strong as the crash's setting. « Éclosion » (a voice comes
+   * in): eight drops born on the voice's string spiral in and melt into the bubble, the string
+   * rings hard, a soft flash and a pale wave leave it. « Souffle » (the music settles): the bubble
+   * swells slowly and lets go, one wide slow wave, drops float out and drift back, the trails
+   * turn the other way.
+   */
+  react(m: Moment): void {
+    const g = this.drive().crash;
+    if (g <= 0) return;
+    const [cx, cy] = this.centre();
+    const R = this.radius() * this.body.S.x;
+    const H = this.H();
+    const free = this.drops.every((d) => d.t > 3);
+    const base = rnd(0, TAU, this.random);
+    if (m === "bloom") {
+      this.pluck(2, 0.16 * Math.min(1.5, g));
+      this.beat = 1;
+      this.fx.flash = Math.max(this.fx.flash, 0.35 * Math.min(1.4, g));
+      this.fx.wave(cx, cy, R * 1.64, R * 2.7, 0.9, 0.9 * g, 1, H * 0.014, H * 0.004, 4 * g);
+      this.body.S.v += 1.2 * g;
+      if (!free) return;
+      this.drops.forEach((d, i) => {
+        const a = base + (i / 8) * TAU;
+        [d.ax, d.ay] = [Math.cos(a), Math.sin(a)];
+        d.x.set(cx + d.ax * R * 1.64);
+        d.y.set(cy + d.ay * R * 1.64);
+        // Along the string (a spiral), a little inward.
+        const sp = H * (0.9 + rnd(0, 0.3, this.random)) * Math.min(1.5, g);
+        d.x.v = -d.ay * sp - d.ax * H * 0.2;
+        d.y.v = d.ax * sp - d.ay * H * 0.2;
+        d.r0 = H * rnd(0.016, 0.028, this.random);
+        d.t = 0;
+      });
+    } else {
+      [this.breathT, this.breathG] = [0, Math.min(1.5, g)];
+      this.fx.wave(cx, cy, R, R * 3.2, 2.2, 1.0 * g, 0.6, H * 0.06, H * 0.005, 5 * g);
+      this.M.turn = -this.M.turn;
+      this.strands.forEach((s, i) => {
+        if (s.shown > 0.3) this.pluck(i, 0.06);
+      });
+      if (!free) return;
+      this.drops.forEach((d, i) => {
+        if (i % 4 === 3) return;
+        const a = base + (i / 8) * TAU + rnd(-0.3, 0.3, this.random);
+        const sp = H * (0.45 + rnd(0, 0.3, this.random)) * Math.min(1.5, g);
+        [d.ax, d.ay] = [Math.cos(a), Math.sin(a)];
+        d.x.set(cx + d.ax * R * 0.9);
+        d.y.set(cy + d.ay * R * 0.9);
+        [d.x.v, d.y.v] = [d.ax * sp, d.ay * sp];
+        d.r0 = H * rnd(0.018, 0.032, this.random);
+        d.t = 0;
+      });
     }
   }
 
   step(h: number): void {
     const { M } = this;
     const { bass } = this.drive();
-    this.body.step(h, 1 + 0.035 * M.sub * bass - 0.15 * M.build - (M.gap ? 0.04 : 0));
+    // The « Souffle »: in for 0.6 s, out over about 1.2 s.
+    this.breathT += h;
+    const t = this.breathT;
+    const breath = this.breathG * 0.14 * (t < 0.6 ? t / 0.6 : Math.exp(-(t - 0.6) / 1.2));
+    this.body.step(h, 1 + 0.035 * M.sub * bass - 0.15 * M.build - (M.gap ? 0.04 : 0) + breath);
     this.oy.to(0, 300, 0.6, h);
     // A turn every 8 beats: the grid's tempo once known (the AI's), else the kicks'.
     this.spinV.to(M.grid.spin() ?? (TAU * M.tempo.bpm) / 480, 1.5, 1, h);
     const on = M.grid.crossed(this.gridT, M.t);
     this.gridT = M.t;
     if (on) this.onBeat(on.down);
+    const moment = this.moments.step(h, M, on?.down ?? false);
+    if (moment) this.react(moment);
     this.beat *= Math.exp(-h / 0.14);
     this.spin += this.spinV.x * h;
     const levels = this.sources();

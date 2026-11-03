@@ -47,7 +47,7 @@ float sdScene(vec2 p){
   for(int i=0;i<32;i++){if(i>=uN)break;vec4 b=uBalls[i];if(b.z<.35)continue;d=smin(d,length(p-b.xy)-b.z,uK*b.w);}
   return d;
 }
-vec3 ringCol(float w){return w<.5?uC1:(w<1.5?uC2:vec3(1.,.96,.92));}
+vec3 ringCol(float w){return w<.5?uC1:(w<1.5?uC2:mix(uC1,vec3(1.),.55));}
 vec3 rings(vec2 p,float glow){
   vec3 acc=vec3(0.);if(uCore.w<.5)return acc;
   vec2 q=p-uCore.xy;float L=length(q),th=atan(q.y,q.x);

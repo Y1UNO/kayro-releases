@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { BAR, Demo, hitsAt } from "./demo";
 import { Disc } from "./disc";
 import { Grid } from "./grid";
+import { Moments } from "./moments";
 import type { Home } from "./home";
 import { Isle } from "./isle";
 import { Body, Effects } from "./jelly";
@@ -270,6 +271,26 @@ describe("Music mode: colours and region", () => {
     expect(theme.c1[2]).toBeGreaterThan(theme.c1[0]);
   });
 
+  it("keep the cover's exact hue, and its second colour or a shade of the first", () => {
+    const hue = ([r, g, b]: number[]) => {
+      const [mx, mn] = [Math.max(r!, g!, b!), Math.min(r!, g!, b!)];
+      const c = mx - mn;
+      const h = mx === r ? ((g! - b!) / c) % 6 : mx === g ? (b! - r!) / c + 2 : (r! - g!) / c + 4;
+      return (h * 60 + 360) % 360;
+    };
+    // An orange-brown cover (hue 26°): not the bin's 22.5°, not a neon orange.
+    const brown = paletteOf(new Array(64).fill([200, 110, 40, 255]).flat());
+    expect(Math.abs(hue(brown.c1) - 26.25)).toBeLessThan(1.5);
+    expect(Math.abs(hue(brown.c2) - hue(brown.c1) - 12)).toBeLessThan(1.5);
+    // Teal and yellow: both, the more voted first (saturation counts as much as area).
+    const two = paletteOf([
+      ...new Array(48).fill([40, 170, 160, 255]).flat(),
+      ...new Array(16).fill([230, 200, 40, 255]).flat(),
+    ]);
+    expect(Math.abs(hue(two.c1) - 175.4)).toBeLessThan(2);
+    expect(Math.abs(hue(two.c2) - 50.5)).toBeLessThan(2);
+  });
+
   it("hold every part in one box inside the stage", () => {
     const b = boundsOf(
       [
@@ -326,5 +347,55 @@ describe("Music mode: the beat grid (the AI's, 2026-11-03)", () => {
     other.songIs("a|b");
     expect(other.period).toBeCloseTo(0.4, 3);
     vi.unstubAllGlobals();
+  });
+});
+
+describe("Music mode: the big moments besides the crash (2026-11-03)", () => {
+  const lv = {
+    sub: 0,
+    build: 0,
+    gap: false,
+    section: "drop",
+    melody: 0.5,
+    pitch: 0.5,
+    voice: 0,
+  } as const;
+  const run = (m: Moments, M: Music, secs: number, down = () => false) => {
+    const out: string[] = [];
+    for (let i = 0; i < secs * 100; i++) {
+      M.advance(0.01);
+      const got = m.step(0.01, M, down());
+      if (got) out.push(got);
+    }
+    return out;
+  };
+
+  it("blooms when a voice comes in after 3 s without one, and not right after a crash", () => {
+    const [m, M] = [new Moments(), new Music()];
+    M.levels(lv);
+    expect(run(m, M, 3.5)).toEqual([]);
+    M.levels({ ...lv, voice: 0.6 });
+    expect(run(m, M, 1)).toEqual(["bloom"]);
+    M.levels(lv);
+    run(m, M, 3.5);
+    m.crashed(M.t);
+    M.levels({ ...lv, voice: 0.6 });
+    expect(run(m, M, 1)).toEqual([]);
+  });
+
+  it("breathes when the music settles after a drop, on the next downbeat", () => {
+    const [m, M] = [new Moments(), new Music()];
+    M.levels(lv);
+    run(m, M, 7);
+    M.levels({ ...lv, section: "break" });
+    let n = 0;
+    // No grid: at once; a grid: on its downbeat.
+    expect(run(m, M, 0.5)).toEqual(["breath"]);
+    M.levels(lv);
+    run(m, M, 7);
+    for (let i = 0; i < 8; i++) M.grid.mark(M.t - 4 + i * 0.5, i % 4 === 0);
+    M.levels({ ...lv, section: "break" });
+    const out = run(m, M, 2, () => ++n === 120);
+    expect(out).toEqual(["breath"]);
   });
 });

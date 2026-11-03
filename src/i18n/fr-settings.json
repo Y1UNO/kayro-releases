@@ -189,8 +189,8 @@
           "help": "À quel point la basse fait cogner la bulle."
         },
         "crash": {
-          "label": "Intensité du crash",
-          "help": "Flash, ondes et gouttes sur les cymbales."
+          "label": "Intensité des grands moments",
+          "help": "Le crash des cymbales, l’entrée de la voix et le moment où la musique se pose : flash, ondes et gouttes."
         },
         "trails": {
           "label": "Traînées",

@@ -15,7 +15,15 @@ Changements demandés par rapport au labo :
   plus petit (0,19 de la hauteur), pochette qui tourne au tempo (un tour pour 8 temps), jamais poussée par les coups ;
 - **un fil par source** (sub dedans, mélodie, voix dehors), chacun visible seulement quand sa source joue (la voix
   trouvée par le stéréo, sans IA) ;
-- **IA locale du rythme** (Beat This!, voir « IA du rythme ») : la grille des temps et des mesures.
+- **IA locale du rythme** (Beat This!, voir « IA du rythme ») : la grille des temps et des mesures ;
+- **couleurs justes** : la teinte exacte de la pochette (moyenne fine des pixels, plus le centre d'une tranche de 15°),
+  sa saturation et sa luminosité gardées (juste relevées pour briller), la seconde couleur une nuance accordée quand la
+  pochette n'a qu'une teinte ; fils : sub = principale, mélodie = secondaire, voix = blanc teinté de la principale ;
+- **deux grands moments de plus**, dans le style du crash (`moments.ts`) : l'**Éclosion** quand une voix arrive après
+  3 s sans voix (huit gouttes nées sur le fil de la voix tournent en spirale et se fondent dans la bulle, flash doux,
+  onde pâle), le **Souffle** quand la musique se pose après un drop ou une montée (au début de mesure suivant : la bulle
+  gonfle lentement et se relâche, grande onde lente, gouttes qui flottent, traînées qui changent de sens). Un grand
+  moment toutes les 6 s au plus, crash compris ; tous suivent « Intensité des grands moments ».
 
 ## Ce qu'on voit
 - **Départ** : l'île se tasse ; au kick suivant (600 ms au plus), une goutte part, tenue par un col de cinq boules qui
