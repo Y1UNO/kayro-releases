@@ -394,28 +394,21 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   **Barres plus vives** (même jour, `media/beat.rs`) : chaque bande saute avec ce qui est nouveau (attaque au-dessus de
   sa moyenne récente), un son tenu reste vers 45 % : les barres de droite (aigus) bougent autant que celles de gauche ;
   retombée plus rapide (0,72), même cadence (30/s).
-- [x] **Mode musique** (2026-11-02, v3 le 2026-11-03, retouché le même jour après essai dans l'exe, `stage/`) :
-  interrupteur sous la musique dans l'île ouverte (`islandMusic`) et choix **Disk / Dancing** à côté
-  (`islandMusicMode`, Disk par défaut). Fenêtre : grandit **sur place**, l'île est redessinée exactement, puis couvre
-  l'écran (`stage.rs` : Enter / Go / Done) ; région = rectangles autour de ce qui est dessiné. **Départ** (≈ 1,4 s) :
-  l'île entière se tasse (0,18 s), s'affaisse comme une goutte (0,16 s), se lâche d'un coup et tombe en se balançant,
-  ronde après ≈ 0,4 s, dépasse le milieu et revient. **Retour** (≈ 2–2,5 s) : la scène se referme en boule, s'accroupit
-  (0,16 s), bondit vers le milieu de sa place en rétrécissant, haut collé dès le contact, s'étale en rebondissant par
-  le bas, fin exacte sur l'île ; demi-tour si la musique reprend avant le contact. **Disk** : gelée noire (19 % du petit
-  côté), pochette qui démarre comme une platine et s'arrête en pause, ondulations lentes permanentes du bord ; basse :
-  écrasement, petit saut, gonflement ; caisse claire : ondulation ; **crash** (aigus bien au-dessus de leurs pics
-  habituels, après 2,5 s d'écoute) : frisson, éclair du bord, anneau de lumière ; fils aux **couleurs de l'album**
-  (4 tirées de la dominante et de l'accent, éclaircies pour briller sur le noir ; pochette grise : blancs ; sans
-  pochette : Capri), plus épais avec halo, visibles seulement quand leur instrument pulse (seuil adaptatif) ; titre
-  Fredoka plus noir (plus de contour : il montrait les tracés superposés de la police variable), lancé lettre par
-  lettre (0,09 s d'écart, vol ≈ 1 s), posé 6–9 s, aspiré avec retenue (1 s penché, 1,15 s en spirale). **Dancing**
-  (24 gouttes d'encre fusionnées en WebGL2, repli en cercles) : cœur qui tourbillonne lentement, satellites, fusion,
-  miroir, floraison, **Fontaine** et **Serpent** (nouveaux), « Sauts » retiré ; figures ≈ 30 % plus longues ; à chaque
-  temps l'encre respire vers l'extérieur (plus au premier temps), basse : gonfle et bouscule, caisse claire : clap,
-  charlestons : scintillement, crash : éclatement puis nouvelle figure à la mesure ; vitesse selon le tempo et
-  l'énergie. Anti-bugs : canevas effacé là où l'on dessinait et entièrement deux fois par seconde, canevas WebGL neuf
-  à chaque spectacle, horloge jamais à rebours. Tests : 699 (vitest). Limites : CPU/GPU non mesurés (écran à 279 Hz) ;
-  DPI différents : une image vide possible ; île flottante près du coin haut gauche : double image 1–2 images.
+- [x] **Mode musique** (2026-11-02 ; refait le 2026-11-03 d'après le labo `reference-labo.html` et sa spec, voir
+  [[MODE-MUSIQUE]]) : interrupteur sous la musique dans l'île ouverte (`islandMusic`). **Île** : elle se tasse, et sur
+  le kick suivant (600 ms au plus) une goutte part, tenue par un col de cinq boules qui s'amincit comme du miel et
+  casse ; la boule tombe, s'écrase et devient le lecteur. Au retour, elle s'accroupit, saute sur le kick, l'île
+  descend la chercher et la boule s'y refond. **Lecteur (Disque)** : la pochette tourne dans un disque de gelée d'un
+  noir mat, celui de l'île ; la basse cogne la bulle (+12 % en deux images, contraction, rebond), la sub la fait respirer, la caisse
+  claire la tord, le charleston fait onduler son bord, le crash : flash, ondes de choc, huit gouttes qui reviennent,
+  titre éparpillé ; halo, rayons et traînées aux couleurs de la pochette ; titre en ola sur chaque kick. Changements
+  demandés : les **cordes suivent la mélodie** (allumées par elle, la corde de son registre, un pincement doux à chaque
+  note) ; l'encre du lecteur a **le noir mat de l'île** (les reflets du labo seulement si l'on monte « Brillance »,
+  à 0 par défaut). **L'encre (Dancing) est retirée**, avec son sélecteur. Rendu WebGL2 en deux passes (lumière en demi-
+  résolution avec traînées, image finale), fenêtre transparente, physique en pas de 1/480 s, résolution adaptative,
+  repli 2D sans WebGL. **Son** : analyse du son joué (WASAPI loopback) côté Rust, flux spectral par bande, seuils
+  adaptatifs, crash et drop, sub, mélodie. **Réglages** : Visuel › Mode musique (basse, crash, traînées, brillance à 0 ;
+  Avancé : sensibilités, décalage son/image, qualité, mode démo, couleurs).
 - [x] **Interrupteurs et curseurs en rectangle arrondi** (2026-11-02, Réglages) : même animation, forme changée
   (piste 9 px / 3 px, pouce carré arrondi 6 px).
 

@@ -4,6 +4,7 @@
 > - **Dernière étape close** : 20 — Kysland (le 2026-10-31, version 0.20.0 publiée ; versions sur github.com/Y1UNO/kayro-releases)
 > - **À envoyer** : le dernier `Kayro_<version>_Installer.exe` de la page des versions ; ensuite Kayro se met à jour seul
 > - **Dernière version** : 0.20.4, publiée le 02/11 (Capri discret à l'accroche, zone de clic de l'île à sa taille)
+> - **Prochaine version** : 0.20.6, pas encore publiée (mode musique refait d'après le labo, voir [[MODE-MUSIQUE]] ; l'île qui respire ; la 0.20.5 n'a jamais été publiée)
 > - **En cours** : 18 — Audit avant la v1 (mesures du 31/10 faites, ménage fait ; restent le CPU de l'accueil, le premier lancement à vide, la relecture sécurité et accessibilité)
 > - **DA** : gelée le 2026-10-14 (v1)
 
@@ -17,6 +18,7 @@
 - [[REVUE-OPUS55]] — note d'évolution de la revue Opus 5.5 (mouvement, verre 3D, couleurs, scan)
 - [[MISES-A-JOUR]] — mises à jour signées, publier une version
 - [[SONS]] — sons synthétisés, styles, réglages
+- [[MODE-MUSIQUE]] — le mode musique de Kysland : code, son analysé, réglages de détection
 - [[AMBIANCES]] — ambiances `.hubmood`, packs, cartes spéciales et images à fournir
 - [[MACHINE]] — PC de test
 

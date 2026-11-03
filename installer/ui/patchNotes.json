@@ -118,17 +118,13 @@
     "version": "0.18.1",
     "date": "30/10/2026",
     "title": "Première mise à jour",
-    "points": [
-      "Premier essai de mise à jour automatique : si tu lis ceci dans Kayro, ça marche."
-    ]
+    "points": ["Premier essai de mise à jour automatique : si tu lis ceci dans Kayro, ça marche."]
   },
   {
     "version": "0.18.2",
     "date": "30/10/2026",
     "title": "L'annonce au démarrage",
-    "points": [
-      "Le message « nouvelle version disponible » s'affiche bien au démarrage de Kayro."
-    ]
+    "points": ["Le message « nouvelle version disponible » s'affiche bien au démarrage de Kayro."]
   },
   {
     "version": "0.19",
@@ -231,10 +227,19 @@
     "date": "02/11/2026",
     "title": "L'île vivante",
     "points": [
-      "Nouveau « Mode musique » (interrupteur sous la musique, dans l'île ouverte), en deux styles : « Disk », un disque de gelée noire qui tourne avec la pochette, saute sur la basse, s'illumine sur les cymbales, brille aux couleurs de l'album et lance le titre avant de le rattraper ; « Dancing », des gouttes d'encre noire qui dansent en rythme (fontaine, serpent, floraison…). L'île tombe au milieu de l'écran et revient seule après 2 s de pause ; un clic sur la scène la renvoie à sa place.",
       "Seule et sans musique, l'île respire : de temps en temps un petit geste (elle respire, penche, un reflet passe), puis elle s'assoupit.",
       "Les barres de la musique réagissent mieux aux coups du son, celles de droite comprises.",
       "Interrupteurs et curseurs des Réglages en rectangles arrondis, avec les mêmes animations."
+    ]
+  },
+  {
+    "version": "0.20.6",
+    "date": "03/11/2026",
+    "title": "Le mode musique",
+    "points": [
+      "Le mode musique refait de zéro : l'île se tasse, s'étire comme du miel et lâche une goutte qui tombe au milieu de l'écran et devient un lecteur, une bulle d'encre noire où tourne la pochette. Au retour, la bulle saute et l'île descend la rattraper.",
+      "Le lecteur vit avec le son de l'ordinateur, analysé en direct : la basse cogne la bulle, la caisse claire la tord, les cymbales font flash, ondes et gouttes, et trois fils suivent la mélodie. Halo et traînées aux couleurs de la pochette.",
+      "Nouvelle section Réglages › Visuel › Mode musique : intensités, traînées, brillance, et dans « Avancé » la sensibilité de détection, le décalage son/image, la qualité et un mode démo avec un morceau de test."
     ]
   }
 ]
