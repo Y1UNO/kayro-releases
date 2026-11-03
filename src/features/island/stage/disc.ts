@@ -47,9 +47,9 @@ interface Strand {
 
 /** The strings' radii (× the disc's) and widths (× the height): sub, melody, voice. */
 const STRANDS = [
-  [1.24, 0.0026],
-  [1.44, 0.0023],
-  [1.64, 0.002],
+  [1.24, 0.003],
+  [1.44, 0.0027],
+  [1.64, 0.0024],
 ] as const;
 
 export class Disc {
@@ -80,6 +80,8 @@ export class Disc {
   private subSlow = 0;
   private rumble = 0;
   private rumbleT = 0;
+  private fizzT = 0;
+  private crackle = 0;
 
   constructor(
     private W: () => number,
@@ -110,7 +112,7 @@ export class Disc {
   /** A bump running round string `ring`: shaped by how sharp the notes are now (shaders.ts). */
   private pluck(ring: number, amp: number): void {
     const sh = clamp(this.M.sharp, 0, 1);
-    const a = amp * (0.75 + 0.5 * sh) * this.radius();
+    const a = amp * (1 + 0.6 * sh) * this.radius();
     this.pk.push({ r: ring + 0.09 * sh, th: rnd(0, TAU, this.random), age: 0, amp: a });
     if (this.pk.length > 16) this.pk.shift();
   }
@@ -232,8 +234,22 @@ export class Disc {
     this.rumble = Math.max(clamp(M.heavy, 0, 1), 0.35 * x * x * (3 - 2 * x)) * bass;
     this.rumbleT += h;
     const w = this.rumbleT * TAU * 9;
-    this.body.m[0]!.a.v += 28 * this.rumble * Math.cos(w) * h;
-    this.body.m[1]!.a.v += 18 * this.rumble * Math.cos(w * 1.3 + 1) * h;
+    this.body.m[0]!.a.v += 36 * this.rumble * Math.cos(w) * h;
+    this.body.m[1]!.a.v += 24 * this.rumble * Math.cos(w * 1.3 + 1) * h;
+    // …and it sizzles (2026-11-03: « ça grésille pas assez »): about 30 times a second, a flicker
+    // of colour split, a 1–3 px jolt, a faint fine shiver of its edge, the sub's string crackling.
+    this.fizzT += h;
+    if (this.rumble > 0.05 && this.fizzT > 1 / 30) {
+      this.fizzT = 0;
+      const [r, H] = [this.rumble, this.H()];
+      this.fx.ca = Math.max(this.fx.ca, 0.006 * r * rnd(0.4, 1, this.random));
+      this.fx.sx.v += rnd(-1, 1, this.random) * H * 0.05 * r;
+      this.fx.sy.v += rnd(-1, 1, this.random) * H * 0.05 * r;
+      this.body.rip = Math.max(this.body.rip, 0.006 * r);
+      this.body.ripPh += rnd(0, TAU, this.random);
+      this.crackle = rnd(0, 0.6, this.random) * r;
+    }
+    this.crackle *= Math.exp(-h / 0.03);
     const swell = 0.035 * M.sub * bass + 0.05 * this.rumble;
     this.body.step(h, 1 + swell - 0.15 * M.build - (M.gap ? 0.04 : 0) + breath);
     this.oy.to(0, 300, 0.6, h);
@@ -317,7 +333,8 @@ export class Disc {
       const [v, shown] = [levels[i]!, this.strands[i]!.shown];
       const lift = 1 + 0.6 * this.beat;
       const thick = 0.8 + 0.5 * v + (i === 0 ? 0.6 * this.rumble : 0);
-      U.rings.set([rs * r, shown * (0.12 + v) * dim * lift, H * w * thick, i], i * 4);
+      const glow = lift * (i === 0 ? 1 + this.crackle : 1);
+      U.rings.set([rs * r, shown * (0.12 + v) * dim * glow, H * w * thick, i], i * 4);
     });
     let k = 0;
     for (const p of this.pk) {
