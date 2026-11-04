@@ -296,7 +296,7 @@ export class LinkDirector {
     const v = on ? PROMOTE : "";
     for (const s of this.slots) s.slot.style.willChange = v;
     const els = this.els;
-    for (const el of [els?.ask, els?.title, els?.back, els?.bottom, els?.body]) {
+    for (const el of [els?.ask, els?.title, els?.back, els?.bottom, els?.scenes, els?.body]) {
       if (el) el.style.willChange = v;
     }
     if (els?.stage) {
@@ -392,6 +392,8 @@ export class LinkDirector {
       if (y !== undefined) put(el, "transform", `translateY(${y.toFixed(2)}px)`);
     };
     set(els.ask, g("ask.o"), g("ask.y"));
+    // The scenes under the fan leave downwards as the title leaves upwards.
+    set(els.scenes, g("ask.o"), -g("ask.y"));
     set(els.title, g("cat.o", 1), g("cat.y"));
     set(els.back, g("back.o", 1));
     set(els.bottom, g("tabs.o", 1));

@@ -252,7 +252,10 @@ devant, × 0,5 au fond, penchées de 5°), en font un tour ensemble en se croisa
 × 1,09 / −12 px en descendant avec un tremblement de ±2 px (440 ms), s'écrase × 0,94 en arrivant (190 ms ; les couleurs
 du jeu changent alors) et se pose (440 ms) pendant que les autres virevoltent encore, juste après la dernière (1,54 s) ; retour (« Toutes les catégories »)
 décalé de 35 ms par rang. Titres : celui qui part sort d'abord (168 ms, `sortie`), l'autre entre à +120 ms (moyen,
-`vive`). Échap sur l'éventail = liaison vers la dernière catégorie.
+`vive`). Échap sur l'éventail = liaison vers la dernière catégorie. **Scènes sous l'éventail** (2026-11-04,
+`FanScenes.tsx`) : « Scènes » en petites capitales entre deux filets de 28 px, les 5 premières scènes en pastilles douces
+`sm` (celles du dock) et « Toutes les scènes » en texte seul, au pied de l'écran à la place du dock ; sans verre ; elles
+suivent le titre de l'éventail (même fondu, 20 px vers le bas quand il monte) ; rien sans scène.
 - **Éco** : moteur à 30 i/s, mêmes étapes. **Réduire** : état final direct. **Net** : deck sur `vive`, sans dépassement.
   **Widget** : sans objet.
 

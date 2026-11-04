@@ -29,6 +29,7 @@ import { TopBar } from "./TopBar";
 import { useArrange } from "./useArrange";
 import { useCategoryDrag } from "./useCategoryDrag";
 import { CategoryFan, FanTitle } from "./fan/CategoryFan";
+import { FanScenes } from "./fan/FanScenes";
 import { useCategoryLink } from "./fan/useCategoryLink";
 import { cardGeometry, useDa } from "../../design/da";
 import { useHomeKeys } from "./useHomeKeys";
@@ -139,7 +140,7 @@ export function HomeScreen({
   const onFan = link.mode === "fan";
   const { fanMounted, fanParked, config: linkCfg } = link;
   const { fan: fanRef, area: areaRef, ask: askRef, title: titleRef, back: backRef } = link.bind;
-  const { bottom: bottomRef, card: onFanCard } = link.bind;
+  const { bottom: bottomRef, card: onFanCard, scenes: scenesRef } = link.bind;
   const slotH = cardGeometry(useDa((s) => s.values.cards)).activeH;
   const fill = useDa((s) => s.values.categoryLink?.fill);
   const counts = useMemo(
@@ -351,6 +352,8 @@ export function HomeScreen({
             />
             <SceneDock onManage={onOpenScenes} />
           </div>
+          {/* 2026-11-04: on the fan, its scenes at the foot of the screen (the dock is faded). */}
+          <FanScenes shown={onFan} onManage={onOpenScenes} stripRef={scenesRef} />
         </main>
 
         <CommandPalette

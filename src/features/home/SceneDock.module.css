@@ -25,13 +25,6 @@
   gap: 10px;
 }
 
-.progress {
-  font-size: var(--fs-12);
-  font-weight: 700;
-  opacity: 0.85;
-  font-variant-numeric: tabular-nums;
-}
-
 .disabled:disabled {
   opacity: 1;
   cursor: default;

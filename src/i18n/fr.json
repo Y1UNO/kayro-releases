@@ -98,7 +98,9 @@
       "appsOne": "1 app",
       "appsMany": "{count} apps",
       "appsNone": "Aucune app",
-      "list": "Catégories"
+      "list": "Catégories",
+      "scenes": "Scènes",
+      "allScenes": "Toutes les scènes"
     },
     "allCategories": "Toutes les catégories",
     "artDrop": {

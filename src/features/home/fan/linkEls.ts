@@ -17,11 +17,13 @@ export interface LinkEls {
   title: HTMLElement | null;
   back: HTMLElement | null;
   bottom: HTMLElement | null;
+  /** Scenes under the fan (FanScenes): faded and moved with the fan's title. */
+  scenes: HTMLElement | null;
 }
 
 const NONE: readonly (FanCardEls | null)[] = [];
 
-type Named = "fan" | "area" | "ask" | "title" | "back" | "bottom";
+type Named = "fan" | "area" | "ask" | "title" | "back" | "bottom" | "scenes";
 
 /** Elements of the home screen the category director moves, registered by ref callbacks. */
 export class LinkElements {
@@ -32,6 +34,7 @@ export class LinkElements {
     title: null,
     back: null,
     bottom: null,
+    scenes: null,
   };
   readonly cards: (FanCardEls | null)[] = [];
   /**
@@ -53,6 +56,7 @@ export class LinkElements {
     title: (e: HTMLElement | null) => void (this.found.title = e),
     back: (e: HTMLElement | null) => void (this.found.back = e),
     bottom: (e: HTMLElement | null) => void (this.found.bottom = e),
+    scenes: (e: HTMLElement | null) => void (this.found.scenes = e),
     card: (i: number, els: FanCardEls | null) => void (this.cards[i] = els),
     parked: (on: boolean) => void (this.parked = on),
   };
@@ -70,6 +74,7 @@ export class LinkElements {
       title: f.title,
       back: f.back,
       bottom: f.bottom,
+      scenes: f.scenes,
     };
   }
 }

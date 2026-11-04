@@ -356,6 +356,9 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   désinstallation (données gardées). Non essayé : mise à jour depuis une version plus ancienne, PC sans WebView2.
   Trouvé au passage : `gen_types.exe` était livré dans l'installeur → devenu un exemple cargo (`npm run gen:types`).
   Piège d'essai : lancé depuis l'app Claude (paquet MSIX), AppData est redirigé (`Packages\Claude_…\LocalCache`).
+- [x] **Les scènes sur l'accueil** — 2026-11-04 (idée du jour) : sous l'éventail, « Scènes » en petites capitales et
+  les 5 premières scènes en petites pastilles douces (celles du dock, `SceneButton` partagé) + « Toutes les scènes » ;
+  sans verre ni boucle, posée par le chef de la liaison avec le titre (`FanScenes.tsx`). Rien sans scène.
 
 ### Kysland — suite (Notion « APP à faire », relu le 2026-11-02)
 - [x] **Capri discret à l'accroche** (2026-11-02) : plus de pics qui jaillissent du bord au contact. En approchant
