@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use super::category::suggest_category;
 use super::deep_pick::{app_name, main_exe, opens_window, pick_logo, png_size};
-use super::{short_hash, DetectedApp, ScanCtx};
+use super::{is_kayro, short_hash, DetectedApp, ScanCtx};
 use crate::config::apps::{AppSource, Launch, MatchRule};
 
 /// Folders of a disk that hold apps; `true`: everything in it is a game.
@@ -75,6 +75,39 @@ const SKIP_DIRS: &[&str] = &[
     "shared",
     // Its own root (its games, one by one), not one app of « Program Files ».
     "epic games",
+    // A Steam library: the Steam source already lists its games.
+    "steamapps",
+    "steamlibrary",
+];
+
+/// At the top of a disk (2026-11-04), the folders that hold no app of their own, lower case. The
+/// folders of `ROOTS` are read on their own.
+const DISK_SKIP: &[&str] = &[
+    "windows",
+    "windows.old",
+    "program files",
+    "program files (x86)",
+    "programdata",
+    "users",
+    "documents and settings",
+    "perflogs",
+    "recovery",
+    "system volume information",
+    "boot",
+    "efi",
+    "msocache",
+    "config.msi",
+    "intel",
+    "amd",
+    "nvidia",
+    "drivers",
+    "inetpub",
+    "onedrivetemp",
+    "xboxgames",
+    "esd",
+    "swsetup",
+    "temp",
+    "tmp",
 ];
 
 /// How deep inside an app's folder a program or a logo is looked for, and how many folders a scan
@@ -107,8 +140,28 @@ pub fn roots(disks: &[PathBuf]) -> Vec<(PathBuf, bool)> {
     if let Some(local) = std::env::var_os("LOCALAPPDATA") {
         out.push((PathBuf::from(local).join("Programs"), false));
     }
+    // 2026-11-04: the top of each disk too (`C:\Jeux PixelArt`), past what holds no app.
+    out.extend(disks.iter().map(|d| (d.clone(), false)));
     out.retain(|(p, _)| p.is_dir());
     out
+}
+
+/// A folder at the top of a disk that holds no app of its own (Windows, users, drivers…), one
+/// of `ROOTS` (read on its own), a Steam library, or a code repository (its builds are no apps,
+/// and its `target` or `node_modules` would cost seconds).
+pub fn is_disk_noise(folder: &Path) -> bool {
+    let n = lower_name(folder);
+    DISK_SKIP.contains(&n.as_str())
+        || ROOTS.iter().any(|(r, _)| r.eq_ignore_ascii_case(&n))
+        || folder.join("steamapps").is_dir()
+        || folder.join(".git").exists()
+}
+
+/// `a` is the folder `b` or one inside it (lower case; `git` is not `github cli`).
+pub fn within(a: &str, b: &str) -> bool {
+    let b = b.trim_end_matches('\\');
+    a.strip_prefix(b)
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with('\\'))
 }
 
 fn lower_name(p: &Path) -> String {
@@ -165,7 +218,7 @@ fn walk(
 }
 
 /// The first kilobyte of a program: enough for its PE header (console or window).
-fn is_window(p: &Path) -> bool {
+pub fn is_window(p: &Path) -> bool {
     use std::io::Read;
     let mut head = vec![0u8; 1024];
     let read = std::fs::File::open(p).and_then(|mut f| f.read(&mut head));
@@ -179,8 +232,9 @@ fn read_png_size(p: &Path) -> Option<(u32, u32)> {
     png_size(&head)
 }
 
-/// The logo in an app's folder (`dir`), if it has one; a folder too near a disk's root is skipped.
-pub fn find_logo(dir: &Path, ctx: &ScanCtx) -> Option<PathBuf> {
+/// The logo of `app` in its folder (`dir`), if it has one; a folder too near a disk's root is
+/// skipped.
+pub fn find_logo(dir: &Path, app: &str, ctx: &ScanCtx) -> Option<PathBuf> {
     if dir.components().count() < 3 || is_skipped_dir(dir) {
         return None;
     }
@@ -196,7 +250,7 @@ pub fn find_logo(dir: &Path, ctx: &ScanCtx) -> Option<PathBuf> {
         },
         &mut files,
     );
-    pick_logo(&files, &read_png_size)
+    pick_logo(&files, app, &read_png_size)
 }
 
 /// Apps found in `roots` that no other source listed (`known`: folders already proposed, lower
@@ -214,19 +268,17 @@ pub fn scan_roots(
         let Ok(read) = std::fs::read_dir(root) else {
             continue;
         };
+        let disk_top = root.parent().is_none();
         for entry in read.flatten() {
             let folder = entry.path();
             if ctx.cancelled() || folders >= MAX_FOLDERS {
                 return apps;
             }
-            if !folder.is_dir() || is_skipped_dir(&folder) {
+            if !folder.is_dir() || is_skipped_dir(&folder) || (disk_top && is_disk_noise(&folder)) {
                 continue;
             }
             let key = folder.to_string_lossy().to_lowercase();
-            if known
-                .iter()
-                .any(|k| k.starts_with(&key) || key.starts_with(k.as_str()))
-            {
+            if known.iter().any(|k| within(k, &key) || within(&key, k)) {
                 continue;
             }
             let mut files = Vec::new();
@@ -244,7 +296,7 @@ pub fn scan_roots(
                 reported = folders;
                 on_progress(folders, apps.len() as u32);
             }
-            let Some(exe) = main_exe(&folder, &files, &is_window) else {
+            let Some(exe) = main_exe(&folder, &files, &is_window).filter(|e| !is_kayro(e)) else {
                 continue;
             };
             let name = app_name(&folder, &exe);
@@ -255,6 +307,7 @@ pub fn scan_roots(
                 suggest_category(&name, exe_name.as_deref(), None)
             };
             let path = exe.to_string_lossy().into_owned();
+            let logo = pick_logo(&files, &name, &read_png_size);
             let app = DetectedApp {
                 id: format!("deep-{}", short_hash(&path.to_lowercase())),
                 name,
@@ -273,8 +326,7 @@ pub fn scan_roots(
                 launcher: false,
                 ignored: false,
                 install_dir: Some(folder.to_string_lossy().into_owned()),
-                logo_path: pick_logo(&files, &read_png_size)
-                    .map(|p| p.to_string_lossy().into_owned()),
+                logo_path: logo.map(|p| p.to_string_lossy().into_owned()),
             };
             apps.extend(ctx.accept(super::SourceKind::Deep, app));
         }

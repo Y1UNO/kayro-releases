@@ -324,6 +324,20 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   du manifeste du paquet, sauf un simple lanceur (`GameLaunchHelper`, `SpotifyMigrator` : pas suivies). Outils de
   Windows écartés (Paramètres, Calculatrice, Photos…). Sur ce PC : 14 apps en plus (Claude, Spotify, WhatsApp,
   Celeste, Minecraft Launcher, XBOX, Teams, Terminal, TikTok, Skype, OneNote, Microsoft Store…).
+- [x] **Scan avancé rendu utile** (2026-11-04, analyse : il ne trouvait que 2 apps vraiment absentes du menu
+  Démarrer, et des logos faux) : le **Bureau** (le vrai, OneDrive compris, et le public : raccourcis et exe posés à la
+  main, `detect/desktop.rs`) ; le **haut de chaque disque** (sans Windows, les utilisateurs, les bibliothèques Steam ni
+  les dépôts de code) ; **logos** nommés comme l'app (ou juste « logo » / « icon »), 128 px au moins, jamais une variante
+  de tuile, et jamais à la place d'une icône d'exe nette ; dossiers comparés avec séparateur (`git` ≠ `github cli`) ;
+  même nom qu'une app du scan normal = doublon retiré (VALORANT) ; même nom dans la bibliothèque = déjà ajoutée ; Kayro
+  ne se propose plus lui-même ; texte « quelques secondes ». Sonde sur ce PC : 9 apps en 0,15–0,17 s (scan normal
+  0,85 s à part) : Godot 4, RAYKA, Repentogon, Modrinth App en plus de WizTree, REDlauncher, Revo Uninstaller.
+- [ ] **Santé de la bibliothèque** (analyse du 2026-11-04, à vérifier) : ~13 apps sur ~113 pointeraient vers un fichier
+  absent (Blockbench, 7-Zip, Unity Hub, Dead Cells, Noita…) ; les signaler, proposer de les retirer ou de les
+  retrouver (~3 à 4 h).
+- [ ] Scan normal, faux négatifs de ses filtres (2026-11-04) : « uninstall » dans le nom (Revo Uninstaller),
+  « driver » (GAMAKAY Driver) ; donner leur dossier aux jeux Steam (~1 à 2 h). Manifestes GOG, Ubisoft, EA,
+  Battle.net, itch pour les PC des amis (~1 h chacun, rien à tester ici).
 - [ ] Fil lumineux (`GlideThread`) pendant « Recherche de vos applications… » et « Chargement de vos données… ».
 - [ ] Scènes : mesurer en local le temps de démarrage réel de chaque app lors des tests de scène (`launchTimings.json`
   dans le dossier de données) pour proposer des délais calibrés sur la machine.

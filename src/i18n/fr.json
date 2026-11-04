@@ -172,7 +172,7 @@
       "sourceDeep": "Scan avancé",
       "deepButton": "Scan avancé",
       "deepTitle": "Scan avancé de ton PC",
-      "deepText": "{app} va parcourir les dossiers de programmes et de jeux de tes disques pour trouver les apps que le menu Démarrer ne connaît pas, et un logo plus net pour chacune. Il lit seulement : rien n’est modifié, rien n’est envoyé. Compte une minute environ.",
+      "deepText": "{app} va parcourir ton Bureau, le haut de chaque disque et les dossiers de programmes et de jeux pour trouver les apps que le menu Démarrer ne connaît pas, et un logo plus net pour celles dont l’icône est floue. Il lit seulement : rien n’est modifié, rien n’est envoyé. Ça prend quelques secondes.",
       "deepGo": "Lancer le scan avancé",
       "deepCancel": "Pas maintenant",
       "deepRunning": "Fouille de ton PC…",

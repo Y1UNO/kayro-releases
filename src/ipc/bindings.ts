@@ -236,9 +236,10 @@ export const commands = {
 	/**  `data:` URL of the icon of `app`, or none. */
 	detectIcon: (app: DetectedApp) => typedError<string | null, AppError>(__TAURI_INVOKE("detect_icon", { app })),
 	/**
-	 *  « Scan avancé » (step 19c), started by the user: the usual scan, then the program and game
-	 *  folders of the PC's disks (apps the Start Menu does not list), then a sharper logo in every
-	 *  app's folder. Read-only; progress as `DeepProgress`; `detect_cancel` stops it.
+	 *  « Scan avancé » (step 19c), started by the user: the usual scan, then the Desktop, the top of
+	 *  each disk and the program and game folders (apps the Start Menu does not list), then a sharper
+	 *  logo in every app's folder when its program's icon is not. Read-only; progress as
+	 *  `DeepProgress`; `detect_cancel` stops it.
 	 */
 	detectDeep: () => typedError<ScanReport, AppError>(__TAURI_INVOKE("detect_deep")),
 	/**  The apps in the order of `ids` (every app's id, each once). */

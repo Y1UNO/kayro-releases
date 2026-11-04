@@ -23,7 +23,7 @@ use windows::Win32::UI::Shell::{IShellLinkW, ShellLink};
 use super::filters::is_noise_shortcut;
 use super::packaged;
 use super::relevance::{clean_name, keep_mask, Candidate};
-use super::{short_hash, DetectError, DetectSource, DetectedApp, ScanCtx, SourceKind};
+use super::{is_kayro, short_hash, DetectError, DetectSource, DetectedApp, ScanCtx, SourceKind};
 use crate::config::apps::{AppSource, Launch, MatchRule};
 
 const MAX_DEPTH: usize = 8;
@@ -192,6 +192,9 @@ impl DetectSource for StartMenuSource {
             };
             if shortcut.target.as_os_str().is_empty() {
                 ctx.skip(&label, "no target");
+                continue;
+            }
+            if is_kayro(&shortcut.target) {
                 continue;
             }
             if is_noise_shortcut(&name, &shortcut.target, self.windows_dir.as_deref()) {

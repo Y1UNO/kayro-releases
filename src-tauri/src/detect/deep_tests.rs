@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use super::*;
 use crate::detect::deep_pick::{
-    app_name, is_noise_exe, main_exe, opens_window, pick_logo, png_size,
+    app_name, is_noise_exe, main_exe, named_as_logo, opens_window, pick_logo, png_size,
 };
 
 fn f(path: &str, depth: usize, size: u64) -> (PathBuf, usize, u64) {
@@ -110,13 +110,16 @@ fn console_tools_are_left_out() {
 }
 
 #[test]
-fn a_logo_is_a_square_png_named_like_one_the_sharpest_up_to_512() {
+fn a_logo_is_a_square_png_named_as_the_apps_the_sharpest_up_to_512() {
     let files = [
         f(r"D:\Games\G\splash_logo.png", 1, 900_000),
         f(r"D:\Games\G\Content\StoreLogo.png", 2, 20_000),
         f(r"D:\Games\G\Content\Square150x150Logo.png", 2, 40_000),
         f(r"D:\Games\G\banner_logo.png", 1, 80_000),
         f(r"D:\Games\G\icon.ico", 1, 80_000),
+        f(r"D:\Games\G\res\comet_logo_256.png", 2, 60_000),
+        f(r"D:\Games\G\res\icon_small.png", 1, 9_000),
+        f(r"D:\Games\G\logo.png", 0, 30_000),
     ];
     let sizes = |p: &Path| -> Option<(u32, u32)> {
         let n = p.file_name()?.to_string_lossy().into_owned();
@@ -124,11 +127,79 @@ fn a_logo_is_a_square_png_named_like_one_the_sharpest_up_to_512() {
             "StoreLogo.png" => (50, 50),
             "Square150x150Logo.png" => (150, 150),
             "banner_logo.png" => (600, 200),
+            "comet_logo_256.png" => (256, 256),
+            "logo.png" => (96, 96),
             _ => (2000, 2000),
         })
     };
-    let logo = pick_logo(&files, &sizes).unwrap();
-    assert!(logo.ends_with("Square150x150Logo.png"));
+    let logo = pick_logo(&files, "Comet", &sizes).unwrap();
+    assert!(logo.ends_with("comet_logo_256.png"));
+    // Another app: only the plain « logo.png » would do, and it is too small.
+    assert_eq!(pick_logo(&files, "Other", &sizes), None);
+}
+
+#[test]
+fn only_the_apps_own_logo_counts() {
+    assert!(named_as_logo("logo", "Steam"));
+    assert!(named_as_logo("app_icon_256", "Steam"));
+    assert!(named_as_logo("Logo.scale-200", "Steam"));
+    assert!(named_as_logo("HueSyncIcon", "Hue Sync"));
+    assert!(named_as_logo("icon-512x512", "Hue Sync"));
+    assert!(!named_as_logo("icon_steamvr_desktop", "Steam"));
+    assert!(!named_as_logo("translateIcon", "Roblox Player"));
+    assert!(!named_as_logo("PhotosSquare150x150Logo", "OneDrive"));
+    assert!(!named_as_logo("RarExtLogo", "WinRAR"));
+    assert!(!named_as_logo("VoicemeeterLogo", "Voicemeeter Banana"));
+    assert!(!named_as_logo(
+        "Square44x44Logo.targetsize-256_altform-unplated",
+        "Calc"
+    ));
+    assert!(!named_as_logo("comet_tray_icon", "Comet"));
+    assert!(!named_as_logo("comet", "Comet"), "no logo or icon word");
+}
+
+#[test]
+fn folders_inside_others_are_told_from_lookalikes() {
+    assert!(within(r"c:\program files\git", r"c:\program files\git"));
+    assert!(within(
+        r"c:\program files\git\cmd",
+        r"c:\program files\git\"
+    ));
+    assert!(!within(
+        r"c:\program files\github cli",
+        r"c:\program files\git"
+    ));
+    assert!(!within(
+        r"c:\program files\git",
+        r"c:\program files\git\cmd"
+    ));
+}
+
+#[test]
+fn the_top_of_a_disk_skips_what_holds_no_app() {
+    let dir = tempfile::tempdir().unwrap();
+    for name in [
+        "Windows",
+        "Users",
+        "Games",
+        "Riot Games",
+        "SteamLibrary",
+        "Jeux PixelArt",
+        "HUB",
+    ] {
+        std::fs::create_dir(dir.path().join(name)).unwrap();
+    }
+    std::fs::create_dir(dir.path().join("SteamLibrary").join("steamapps")).unwrap();
+    std::fs::create_dir(dir.path().join("HUB").join(".git")).unwrap();
+    let noise = |n: &str| is_disk_noise(&dir.path().join(n));
+    assert!(noise("Windows") && noise("Users"));
+    assert!(
+        noise("Games") && noise("Riot Games"),
+        "read as roots of their own"
+    );
+    assert!(noise("SteamLibrary"), "the Steam source lists its games");
+    assert!(noise("HUB"), "a code repository");
+    assert!(!noise("Jeux PixelArt"));
 }
 
 #[test]
@@ -149,6 +220,10 @@ fn roots_only_keep_folders_that_exist() {
         .iter()
         .any(|(p, games)| p.ends_with("Games") && *games));
     assert!(!found.iter().any(|(p, _)| p.ends_with("Jeux")));
+    assert!(
+        found.iter().any(|(p, _)| p == dir.path()),
+        "the disk's top too"
+    );
 }
 
 /// Manual probe, read only: `cargo test -p hub -- --ignored --nocapture deep_probe`.
@@ -156,11 +231,35 @@ fn roots_only_keep_folders_that_exist() {
 #[test]
 #[ignore]
 fn deep_probe() {
+    use crate::detect::{desktop, scan, CancelToken};
     let ctx = ScanCtx::default();
-    let roots = roots(&fixed_disks());
     let t = std::time::Instant::now();
-    let apps = scan_roots(&roots, &HashSet::new(), &ctx, &|_, _| {});
-    println!("{} apps in {:?}", apps.len(), t.elapsed());
+    let report = scan::run_scan(
+        &super::super::default_sources(),
+        &[],
+        &CancelToken::default(),
+        &|_| {},
+    );
+    let mut known: HashSet<String> = report
+        .sources
+        .iter()
+        .flat_map(|s| s.apps.iter().filter_map(|a| a.install_dir.as_ref()))
+        .map(|d| d.to_lowercase())
+        .collect();
+    println!("usual scan: {:?}", t.elapsed());
+    let t = std::time::Instant::now();
+    let mut apps = desktop::scan(&desktop::desktop_dirs(), &known, &ctx);
+    known.extend(
+        apps.iter()
+            .filter_map(|a| a.install_dir.as_ref().map(|d| d.to_lowercase())),
+    );
+    let roots = roots(&fixed_disks());
+    apps.extend(scan_roots(&roots, &known, &ctx, &|_, _| {}));
+    println!(
+        "{} apps in {:?} (Desktop, then folders)",
+        apps.len(),
+        t.elapsed()
+    );
     for a in &apps {
         let exe = match &a.launch {
             Launch::Exe { path, .. } => path.as_str(),

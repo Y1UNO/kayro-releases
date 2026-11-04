@@ -56,8 +56,64 @@ const NOISE_EXE: &[&str] = &[
 
 /// Folders under a program that hold the program itself, not its name (« bin », « x64 »…).
 const PLAIN_DIRS: &[&str] = &[
-    "bin", "bin64", "x64", "x86", "win64", "win32", "64bit", "live", "app",
+    "bin", "bin64", "x64", "x86", "win64", "win32", "64bit", "live", "app", "exe", "build",
+    "builds", "release",
 ];
+
+/// Words of a logo's file name that say nothing of which app it is (« app_icon_256 »).
+const LOGO_WORDS: &[&str] = &["logo", "icon", "app", "scale", "x"];
+
+/// Words of a PNG name that make it something else than the app's logo: a tile variant made for a
+/// coloured plate, a tray or notification picture, a banner, a splash screen.
+const NOT_A_LOGO: &[&str] = &[
+    "splash",
+    "background",
+    "banner",
+    "wide",
+    "altform",
+    "targetsize",
+    "contrast",
+    "unplated",
+    "small",
+    "tray",
+    "badge",
+    "notification",
+    "store",
+];
+
+/// Lower-case words of a name, also cut where the case or the kind of character changes
+/// (« VoicemeeterLogo » → voicemeeter, logo; « icon256 » → icon, 256).
+fn split_words(text: &str) -> Vec<String> {
+    let mut spaced = String::with_capacity(text.len() + 8);
+    let mut prev: Option<char> = None;
+    for c in text.chars() {
+        if let Some(p) = prev {
+            let case_up = p.is_lowercase() && c.is_uppercase();
+            let kind = p.is_ascii_digit() != c.is_ascii_digit() && p.is_alphanumeric();
+            if case_up || (kind && c.is_alphanumeric()) {
+                spaced.push(' ');
+            }
+        }
+        spaced.push(c);
+        prev = Some(c);
+    }
+    normalise(&spaced).split(' ').map(str::to_string).collect()
+}
+
+/// A PNG named as `app`'s logo: a logo or icon word, plain words (sizes, « app ») and, if any, the
+/// app's whole name (« VoicemeeterLogo » is not « Voicemeeter Banana »'s); never a tile variant,
+/// a tray picture, a banner.
+pub fn named_as_logo(file_stem: &str, app: &str) -> bool {
+    let words = split_words(file_stem);
+    let app_words = split_words(app);
+    let plain =
+        |w: &String| LOGO_WORDS.contains(&w.as_str()) || w.bytes().all(|b| b.is_ascii_digit());
+    let named = words.iter().any(|w| app_words.contains(w));
+    words.iter().any(|w| w == "logo" || w == "icon")
+        && !words.iter().any(|w| NOT_A_LOGO.contains(&w.as_str()))
+        && words.iter().all(|w| plain(w) || app_words.contains(w))
+        && (!named || app_words.iter().all(|a| words.contains(a)))
+}
 
 pub fn is_noise_exe(stem: &str) -> bool {
     let s = stem.to_lowercase();
@@ -167,26 +223,26 @@ pub fn opens_window(head: &[u8]) -> bool {
     }
 }
 
-/// The app's logo among `files`: a PNG named like a logo or an icon, about square, the sharpest
-/// up to 512 px (a 2 000 px splash screen is not a logo).
-pub fn pick_logo(files: &Files, read: &dyn Fn(&Path) -> Option<(u32, u32)>) -> Option<PathBuf> {
+/// The logo of `app` among `files`: a PNG named as its logo (`named_as_logo`), about square, at
+/// least 128 px, the sharpest up to 512 px (a 2 000 px splash screen is not a logo). Reviewed
+/// 2026-11-04: « any PNG with logo or icon in its name » gave Steam the SteamVR icon, OneDrive the
+/// Photos tile, eight Voicemeeter apps one 72 px logo.
+pub fn pick_logo(
+    files: &Files,
+    app: &str,
+    read: &dyn Fn(&Path) -> Option<(u32, u32)>,
+) -> Option<PathBuf> {
     files
         .iter()
         .filter(|(p, _, size)| {
-            let n = p
-                .file_name()
-                .map(|f| f.to_string_lossy().to_lowercase())
-                .unwrap_or_default();
-            n.ends_with(".png")
-                && (n.contains("logo") || n.contains("icon"))
-                && !n.contains("splash")
-                && !n.contains("background")
-                && (1_000..3_000_000).contains(size)
+            let png = p.extension().is_some_and(|e| e.eq_ignore_ascii_case("png"));
+            let stem = p.file_stem().unwrap_or_default().to_string_lossy();
+            png && named_as_logo(&stem, app) && (1_000..3_000_000).contains(size)
         })
         .filter_map(|(p, depth, _)| {
             let (w, h) = read(p)?;
             let ratio = w as f32 / h.max(1) as f32;
-            ((0.8..=1.25).contains(&ratio) && w >= 64)
+            ((0.8..=1.25).contains(&ratio) && w >= 128)
                 .then_some((i64::from(w.min(512)) - *depth as i64 * 40, p))
         })
         .max_by_key(|(s, _)| *s)

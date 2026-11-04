@@ -7,6 +7,7 @@
 pub mod category;
 pub mod deep;
 pub mod deep_pick;
+pub mod desktop;
 pub mod epic;
 pub mod filters;
 pub mod packaged;
@@ -182,6 +183,18 @@ pub fn default_sources() -> Vec<Box<dyn DetectSource>> {
     ]
 }
 
+/// Kayro's own program (its Desktop or Start Menu shortcut, its folder): never proposed to itself.
+pub(crate) fn is_kayro(program: &std::path::Path) -> bool {
+    let named = program
+        .file_name()
+        .is_some_and(|f| f.eq_ignore_ascii_case("kayro.exe"));
+    named
+        || std::env::current_exe().is_ok_and(|me| {
+            me.to_string_lossy()
+                .eq_ignore_ascii_case(&program.to_string_lossy())
+        })
+}
+
 /// 64-bit FNV-1a: tiny, deterministic, enough to derive stable ids (not a security hash).
 pub(crate) fn fnv1a(text: &str) -> u64 {
     text.bytes().fold(0xcbf2_9ce4_8422_2325, |h, b| {
@@ -203,6 +216,16 @@ mod tests {
         assert_eq!(short_hash("a"), short_hash("a"));
         assert_ne!(short_hash("a"), short_hash("b"));
         assert!(crate::config::validate::validate_id(&format!("menu-{}", short_hash("x"))).is_ok());
+    }
+
+    #[test]
+    fn kayro_is_never_proposed_to_itself() {
+        use std::path::Path;
+        assert!(is_kayro(Path::new(r"C:\Program Files\Kayro\Kayro.exe")));
+        assert!(is_kayro(&std::env::current_exe().unwrap()));
+        assert!(!is_kayro(Path::new(
+            r"C:\Program Files\obs-studio\bin\64bit\obs64.exe"
+        )));
     }
 
     #[test]
