@@ -16,6 +16,7 @@ const SETTINGS: Settings = {
   quality: "balanced",
   colorMode: "light",
   hotkey: "Ctrl+Alt+H",
+  searchHotkey: "Ctrl+Alt+K",
   language: "fr",
   atmosphereIntensity: 1,
   displayMode: "immersive",

@@ -67,6 +67,9 @@ pub struct Settings {
     pub quality: Quality,
     pub color_mode: ColorMode,
     pub hotkey: String,
+    /// « Écrire dans Kysland » (2026-11-04): opens the island with the cursor in its search
+    /// (Kayro's search when Kayro is on screen); empty: no such shortcut.
+    pub search_hotkey: String,
     pub language: String,
     /// Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »).
     pub atmosphere_intensity: f32,
@@ -163,6 +166,7 @@ impl Default for Settings {
             quality: Quality::default(),
             color_mode: ColorMode::default(),
             hotkey: "Ctrl+Alt+H".into(),
+            search_hotkey: "Ctrl+Alt+K".into(),
             language: "fr".into(),
             atmosphere_intensity: ATMOSPHERE_DEFAULT,
             display_mode: DisplayMode::default(),
@@ -229,6 +233,7 @@ pub struct SettingsPatch {
     pub quality: Option<Quality>,
     pub color_mode: Option<ColorMode>,
     pub hotkey: Option<String>,
+    pub search_hotkey: Option<String>,
     pub language: Option<String>,
     pub atmosphere_intensity: Option<f32>,
     pub display_mode: Option<DisplayMode>,
@@ -298,6 +303,7 @@ impl Settings {
             quality,
             color_mode,
             hotkey,
+            search_hotkey,
             language,
             atmosphere_intensity,
             display_mode,

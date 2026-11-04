@@ -5,6 +5,9 @@
 //! Left out: shortcuts without a target (MSI "advertised" shortcuts, Explorer, Run…), targets
 //! that are not programs, uninstallers, read-me files and Windows' own tools. Steam's `.url`
 //! shortcuts are not read at all: the Steam source already provides those games.
+//!
+//! Packaged apps (MSIX / Store), which have no `.lnk`, come from `shell:AppsFolder` in the same
+//! pass (`packaged.rs`).
 
 use std::collections::HashSet;
 use std::fs;
@@ -18,6 +21,7 @@ use windows::Win32::System::Com::{
 use windows::Win32::UI::Shell::{IShellLinkW, ShellLink};
 
 use super::filters::is_noise_shortcut;
+use super::packaged;
 use super::relevance::{clean_name, keep_mask, Candidate};
 use super::{short_hash, DetectError, DetectSource, DetectedApp, ScanCtx, SourceKind};
 use crate::config::apps::{AppSource, Launch, MatchRule};
@@ -28,6 +32,8 @@ const MAX_SHORTCUTS: usize = 5000;
 pub struct StartMenuSource {
     roots: Vec<PathBuf>,
     windows_dir: Option<PathBuf>,
+    /// Also read `shell:AppsFolder` (off for the tests' own folders).
+    packaged: bool,
 }
 
 impl StartMenuSource {
@@ -41,19 +47,27 @@ impl StartMenuSource {
         let windows_dir = std::env::var_os("SystemRoot")
             .or_else(|| std::env::var_os("windir"))
             .map(PathBuf::from);
-        Self { roots, windows_dir }
+        Self {
+            roots,
+            windows_dir,
+            packaged: true,
+        }
     }
 
     pub fn with_roots(roots: Vec<PathBuf>, windows_dir: Option<PathBuf>) -> Self {
-        Self { roots, windows_dir }
+        Self {
+            roots,
+            windows_dir,
+            packaged: false,
+        }
     }
 }
 
 /// COM for the current thread, released on drop.
-struct Com;
+pub(crate) struct Com;
 
 impl Com {
-    fn init() -> Result<Self, DetectError> {
+    pub(crate) fn init() -> Result<Self, DetectError> {
         // SAFETY: plain initialisation call, balanced by `CoUninitialize` in `Drop`.
         let hr = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
         hr.ok()
@@ -235,6 +249,14 @@ impl DetectSource for StartMenuSource {
             } else {
                 ctx.skip(&c.name, "helper, variant or side tool of a suite");
             }
+        }
+        match self.packaged.then(|| packaged::list(ctx)) {
+            Some(Ok(items)) => {
+                let more = packaged::to_apps(items, &apps, ctx);
+                apps.extend(more);
+            }
+            Some(Err(e)) => tracing::warn!(error = %e, "startmenu: packaged apps unreadable"),
+            None => {}
         }
         apps.sort_by_key(|a| a.name.to_lowercase());
         Ok(apps)

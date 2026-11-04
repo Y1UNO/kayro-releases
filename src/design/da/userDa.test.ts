@@ -15,6 +15,7 @@ const S: Settings = {
   themeId: "bleu-gris",
   colorMode: "light",
   hotkey: "Ctrl+Alt+H",
+  searchHotkey: "Ctrl+Alt+K",
   language: "fr",
   displayMode: "immersive",
   islandAlways: true,

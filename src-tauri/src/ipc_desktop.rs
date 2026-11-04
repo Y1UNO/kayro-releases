@@ -307,6 +307,35 @@ pub async fn hotkey_set<R: Runtime>(app: AppHandle<R>, hotkey: String) -> Result
     Ok(())
 }
 
+/// Changes or (empty) removes « Écrire dans Kysland ». Refused like `hotkey_set`.
+#[tauri::command]
+#[specta::specta]
+pub async fn search_hotkey_set<R: Runtime>(
+    app: AppHandle<R>,
+    hotkey: String,
+) -> Result<(), AppError> {
+    match hotkeys::set_search(&app, &hotkey) {
+        Ok(()) => {}
+        Err(HotkeyProblem::Invalid) => {
+            return Err(AppError::validation("searchHotkey", "not a valid shortcut"));
+        }
+        Err(HotkeyProblem::Conflict) => {
+            return Err(AppError::new(
+                ErrorCode::HotkeyConflict,
+                format!("{hotkey} is already used"),
+            ));
+        }
+    }
+    update_settings(
+        &app,
+        SettingsPatch {
+            search_hotkey: Some(hotkey),
+            ..Default::default()
+        },
+    )?;
+    Ok(())
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn hotkeys_get(state: State<'_, hotkeys::HotkeyState>) -> HotkeysReport {

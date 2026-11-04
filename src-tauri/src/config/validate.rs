@@ -235,6 +235,9 @@ const MAX_IGNORED: usize = 2000;
 pub fn validate_settings(s: &Settings) -> Check {
     validate_id(&s.theme_id).or_else(|_| err("themeId", "invalid theme id"))?;
     hotkey(&s.hotkey)?;
+    if !s.search_hotkey.is_empty() {
+        hotkey(&s.search_hotkey).or_else(|_| err("searchHotkey", "invalid shortcut"))?;
+    }
     if s.language != "fr" {
         return err("language", "unsupported language");
     }

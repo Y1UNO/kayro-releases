@@ -181,6 +181,7 @@ const LAUNCHERS: &[&str] = &[
     "ea",
     "rockstar games launcher",
     "xbox",
+    "microsoft store",
     "playnite",
     "curseforge",
     "overwolf",

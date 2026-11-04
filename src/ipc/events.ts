@@ -122,6 +122,17 @@ export function onWindowVisibility(
   return listenTo(own.listen, handler);
 }
 
+/** « Écrire dans Kysland » was pressed: this window (the island, or Kayro) opens its search. */
+export function onSearchSummon(handler: () => void): Promise<Unlisten> {
+  let own: ReturnType<typeof events.searchSummon>;
+  try {
+    own = events.searchSummon(getCurrentWebviewWindow());
+  } catch {
+    return Promise.resolve(noop); // not running inside Tauri (plain browser, tests)
+  }
+  return listenTo(own.listen, () => handler());
+}
+
 /** Step 20 (Kysland): one frame of a gesture on the island (stretch, lean, magnet). */
 export function onIslandFrame(handler: (f: IslandFrame) => void): Promise<Unlisten> {
   return listenTo(events.islandFrame.listen, handler);

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { onSearchSummon } from "../../ipc/events";
 
 export interface HomeKeyHandlers {
   /** Arrow keys: dx = -1 / 1 (left / right), dy = -1 / 1 (up / down). */
@@ -104,5 +105,12 @@ export function useHomeKeys(handlers: HomeKeyHandlers, enabled: boolean): void {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
+  }, [enabled]);
+
+  // « Écrire dans Kysland » pressed while Kayro is on screen: its search opens, as with Ctrl+K.
+  useEffect(() => {
+    if (!enabled) return;
+    const off = onSearchSummon(() => latest.current.onSearch());
+    return () => void off.then((u) => u());
   }, [enabled]);
 }

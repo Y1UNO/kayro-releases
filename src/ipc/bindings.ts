@@ -174,6 +174,8 @@ export const commands = {
 	 *  combination: nothing changes then.
 	 */
 	hotkeySet: (hotkey: string) => typedError<null, AppError>(__TAURI_INVOKE("hotkey_set", { hotkey })),
+	/**  Changes or (empty) removes « Écrire dans Kysland ». Refused like `hotkey_set`. */
+	searchHotkeySet: (hotkey: string) => typedError<null, AppError>(__TAURI_INVOKE("search_hotkey_set", { hotkey })),
 	hotkeysGet: () => __TAURI_INVOKE<HotkeysReport>("hotkeys_get"),
 	/**  The scene a shortcut asked to confirm, if the page was not there to hear the event. */
 	sceneHotkeyTake: () => __TAURI_INVOKE<string | null>("scene_hotkey_take"),
@@ -285,6 +287,7 @@ export const events = {
 	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
 	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
+	searchSummon: makeEvent<SearchSummon>("search-summon"),
 	settingsChanged: makeEvent<SettingsChanged_Deserialize>("settings-changed"),
 	themesChanged: makeEvent<ThemesChanged_Deserialize>("themes-changed"),
 	updateAvailable: makeEvent<UpdateAvailable>("update-available"),
@@ -609,6 +612,8 @@ export type HotkeysChanged = HotkeysReport;
 
 export type HotkeysReport = {
 	toggle: HotkeyStatus | null,
+	/**  `None` when there is no such shortcut (the user removed it). */
+	search: HotkeyStatus | null,
 	scenes: SceneHotkeyStatus[],
 };
 
@@ -1092,6 +1097,12 @@ export type SceneHotkeyStatus = {
 /**  Progress of the scene being played: one event per step change, plus its start and end. */
 export type SceneProgress = ProgressEvent;
 
+/**
+ *  « Écrire dans Kysland » was pressed: the window it is sent to opens its search (the island's
+ *  panel, or Kayro's search).
+ */
+export type SearchSummon = null;
+
 /**  Where the song is (`Unknown` while it cannot be told). */
 export type Section = "drop" | "break" | "build" | "unknown";
 
@@ -1115,6 +1126,7 @@ export type SettingsPatch_Deserialize = {
 	quality?: Quality | null,
 	colorMode?: ColorMode_Deserialize | null,
 	hotkey?: string | null,
+	searchHotkey?: string | null,
 	language?: string | null,
 	atmosphereIntensity?: number | null,
 	displayMode?: DisplayMode_Deserialize | null,
@@ -1176,6 +1188,7 @@ export type SettingsPatch_Serialize = {
 	quality: Quality | null,
 	colorMode: ColorMode_Serialize | null,
 	hotkey: string | null,
+	searchHotkey: string | null,
 	language: string | null,
 	atmosphereIntensity: number | null,
 	displayMode: DisplayMode_Serialize | null,
@@ -1237,6 +1250,11 @@ export type Settings_Deserialize = {
 	quality: Quality,
 	colorMode: ColorMode_Deserialize,
 	hotkey: string,
+	/**
+	 *  « Écrire dans Kysland » (2026-11-04): opens the island with the cursor in its search
+	 *  (Kayro's search when Kayro is on screen); empty: no such shortcut.
+	 */
+	searchHotkey: string,
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
@@ -1328,6 +1346,11 @@ export type Settings_Serialize = {
 	quality: Quality,
 	colorMode: ColorMode_Serialize,
 	hotkey: string,
+	/**
+	 *  « Écrire dans Kysland » (2026-11-04): opens the island with the cursor in its search
+	 *  (Kayro's search when Kayro is on screen); empty: no such shortcut.
+	 */
+	searchHotkey: string,
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,

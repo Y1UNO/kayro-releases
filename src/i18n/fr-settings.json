@@ -19,6 +19,12 @@
         "saved": "Raccourci enregistré."
       },
       "island": "Île cachée : le raccourci pressé deux fois (ouvrir puis fermer {app}) la fait ressortir.",
+      "search": {
+        "label": "Raccourci pour écrire dans Kysland",
+        "help": "Ouvre l’île avec le curseur dans sa recherche : tapez le nom d’une app ou d’une scène, puis Entrée. Quand {app} est à l’écran, c’est sa recherche qui s’ouvre. Retour arrière pendant la saisie : aucun raccourci.",
+        "failedAtStart": "Le raccourci {hotkey} est déjà utilisé par une autre application : choisissez-en un autre.",
+        "removed": "Raccourci retiré."
+      },
       "scenes": {
         "label": "Raccourcis des scènes",
         "help": "Ils se choisissent dans l’éditeur de chaque scène.",

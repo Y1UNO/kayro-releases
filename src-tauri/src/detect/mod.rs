@@ -9,6 +9,7 @@ pub mod deep;
 pub mod deep_pick;
 pub mod epic;
 pub mod filters;
+pub mod packaged;
 pub mod relevance;
 pub mod scan;
 pub mod startmenu;

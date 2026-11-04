@@ -319,6 +319,11 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
 - [x] Détection (étape 19b) : groupe « Lanceurs et outils » (Riot Client, Epic Games Launcher, Steam, Roblox Studio, Unity Hub, GOG
   Galaxy, Battle.net…) replié et décoché par défaut.
 - [x] Détection (étape 19b) : meilleure suggestion de catégorie par liste de motifs locale.
+- [x] Détection : **apps en paquet MSIX / Microsoft Store** (2026-11-04, `detect/packaged.rs`) : elles n'ont pas de
+  `.lnk` ; lues dans `shell:AppsFolder` (ce que montre le menu Démarrer), lancées par leur AUMID. L'exe suivi vient
+  du manifeste du paquet, sauf un simple lanceur (`GameLaunchHelper`, `SpotifyMigrator` : pas suivies). Outils de
+  Windows écartés (Paramètres, Calculatrice, Photos…). Sur ce PC : 14 apps en plus (Claude, Spotify, WhatsApp,
+  Celeste, Minecraft Launcher, XBOX, Teams, Terminal, TikTok, Skype, OneNote, Microsoft Store…).
 - [ ] Fil lumineux (`GlideThread`) pendant « Recherche de vos applications… » et « Chargement de vos données… ».
 - [ ] Scènes : mesurer en local le temps de démarrage réel de chaque app lors des tests de scène (`launchTimings.json`
   dans le dossier de données) pour proposer des délais calibrés sur la machine.
@@ -417,6 +422,10 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   (EfficientAT) a été essayée et écartée, moins bonne que le stéréo.
 - [x] **Interrupteurs et curseurs en rectangle arrondi** (2026-11-02, Réglages) : même animation, forme changée
   (piste 9 px / 3 px, pouce carré arrondi 6 px).
+- [x] **Écrire dans Kysland** (2026-11-04) : raccourci global (Ctrl+Alt+K par défaut, Réglages › Raccourcis
+  clavier, retirable par Retour arrière) qui ouvre l'île comme un clic, curseur dans sa recherche. Kayro à l'écran :
+  sa recherche (Ctrl+K) s'ouvre. Aucune île à l'écran (désactivée, ou jeu en plein écran) : Kayro vient, recherche
+  ouverte. Limite : en mode économe, Kayro se construit et la recherche ne s'ouvre pas (Ctrl+K reste à faire).
 
 ### Écosystème Kayro (très long terme, Notion 2026-11-02)
 - [ ] **Reconnaissance vocale premium** qui comprend très bien le français (rejoint « Voix » ci-dessous).

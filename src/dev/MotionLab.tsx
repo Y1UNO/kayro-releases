@@ -64,6 +64,7 @@ function seedStore(params: URLSearchParams): true {
       quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
       colorMode: "light",
       hotkey: "Ctrl+Alt+H",
+      searchHotkey: "Ctrl+Alt+K",
       language: "fr",
       atmosphereIntensity: 1,
       displayMode: "immersive",

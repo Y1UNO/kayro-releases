@@ -181,6 +181,9 @@ export const desktopIpc = {
   chooseMonitor: (name: string): Promise<Outcome<null>> => checked(commands.monitorChoose(name)),
   /** Refused with `hotkeyConflict` when another program owns the combination. */
   setHotkey: (hotkey: string): Promise<Outcome<null>> => checked(commands.hotkeySet(hotkey)),
+  /** « Écrire dans Kysland »; empty removes it. Refused like `setHotkey`. */
+  setSearchHotkey: (hotkey: string): Promise<Outcome<null>> =>
+    checked(commands.searchHotkeySet(hotkey)),
   hotkeys: (): Promise<Outcome<HotkeysReport>> => plain(commands.hotkeysGet()),
   /** The scene a shortcut asked to confirm while the page was not there to hear it. */
   takePendingScene: (): Promise<Outcome<string | null>> => plain(commands.sceneHotkeyTake()),

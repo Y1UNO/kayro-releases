@@ -6,6 +6,7 @@ import {
   onIslandFrame,
   onIslandMoment,
   onIslandTucked,
+  onSearchSummon,
   onWindowVisibility,
 } from "../../ipc/events";
 import { IslandEngine, type EngineOptions } from "./islandEngine";
@@ -128,6 +129,8 @@ export function useIsland(refs: Refs, options: EngineOptions, tuck: TuckOptions)
       onIslandTucked(({ tucked: into }) => {
         if (!into) t.peeked();
       }),
+      // « Écrire dans Kysland »: opened as by a tap, its search takes the keyboard.
+      onSearchSummon(() => e.openPanel()),
       onWindowVisibility(({ visible }) => {
         if (visible) e.appear();
         else e.vanish();

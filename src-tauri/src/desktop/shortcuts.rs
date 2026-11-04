@@ -6,7 +6,8 @@ use tauri::{AppHandle, Manager, Runtime};
 use tauri_specta::Event;
 
 use super::hotkeys::{self, Action, HotkeyState};
-use super::{bench_file, lock, show, toggle, tray, DesktopState, SceneHotkey};
+use super::windows::{self, MAIN, WIDGET};
+use super::{bench_file, lock, show, toggle, tray, DesktopState, SceneHotkey, SearchSummon};
 use crate::config::ConfigState;
 use crate::scenes::SceneRunner;
 
@@ -20,8 +21,26 @@ pub fn on_hotkey<R: Runtime>(app: &AppHandle<R>, id: u32) {
     }
     match action {
         Action::Toggle => toggle(app),
+        Action::Search => summon_search(app),
         Action::Scene(scene_id) => trigger_scene(app, &scene_id),
     }
+}
+
+/// « Écrire dans Kysland » (2026-11-04): the island opens on its search. With Kayro on screen,
+/// Kayro's own search opens instead; with no island on screen (turned off, or a program in full
+/// screen in front), Kayro comes with its search open.
+fn summon_search<R: Runtime>(app: &AppHandle<R>) {
+    let target = if let Some(main) = windows::visible(app) {
+        *lock(&app.state::<DesktopState>().shown_at) = Some(Instant::now());
+        let _ = main.set_focus();
+        MAIN
+    } else if windows::get(app, WIDGET).is_some_and(|w| w.is_visible().unwrap_or(false)) {
+        WIDGET
+    } else {
+        show(app);
+        MAIN
+    };
+    crate::ipc::notify(SearchSummon.emit_to(app, target));
 }
 
 /// Starts a scene from a shortcut or the menu. A scene that closes apps needs the user's

@@ -64,6 +64,11 @@ pub struct WindowVisibility {
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
 pub struct SceneHotkey(pub String);
 
+/// « Écrire dans Kysland » was pressed: the window it is sent to opens its search (the island's
+/// panel, or Kayro's search).
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+pub struct SearchSummon;
+
 #[derive(Default)]
 pub struct DesktopState {
     /// A window is being prepared and must be shown as soon as its page has painted.
