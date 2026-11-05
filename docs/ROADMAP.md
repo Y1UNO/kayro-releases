@@ -440,6 +440,11 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   clavier, retirable par Retour arrière) qui ouvre l'île comme un clic, curseur dans sa recherche. Kayro à l'écran :
   sa recherche (Ctrl+K) s'ouvre. Aucune île à l'écran (désactivée, ou jeu en plein écran) : Kayro vient, recherche
   ouverte. Limite : en mode économe, Kayro se construit et la recherche ne s'ouvre pas (Ctrl+K reste à faire).
+- [x] **Disposition du clavier** (2026-11-04, Réglages › Raccourcis clavier) : Automatique / AZERTY / QWERTY.
+  Windows déclenche un raccourci sur la touche qui tape sa lettre, mais l'enregistreur gardait la place de la touche
+  en QWERTY (en AZERTY, A enregistré « Q », M refusé). Automatique : la lettre tapée, sinon celle de la disposition
+  de Windows (Keyboard Map de WebView2), sinon AZERTY pour un Windows français. Les raccourcis déjà choisis gardent
+  leur lettre.
 
 ### Écosystème Kayro (très long terme, Notion 2026-11-02)
 - [ ] **Reconnaissance vocale premium** qui comprend très bien le français (rejoint « Voix » ci-dessous).
@@ -449,6 +454,11 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   l'utilisateur et grandit avec ses connexions (Obsidian…), fluide et rapide, appel aux API gratuites des grands
   modèles quand il ne sait pas. ⚠ Contraire à la règle actuelle « Aucune IA/LLM dans l'app » (CLAUDE.md) et au
   « réseau désactivé par défaut » : à trancher par l'utilisateur, et sans doute un projet séparé.
+  - **Orbe animé** façon « Rose » (vidéo TikTok vue le 2026-11-05) : il vit avec la voix (écoute, réfléchit,
+    parle). Décision de l'utilisateur (2026-11-05) : pour cette app, plus tard, pas dans Kayro.
+  - **Aussi pour cette app, pas des étapes de Kayro** (décision de l'utilisateur, 2026-11-05) : les **réponses
+    parlées** de l'assistant (voix posée et grave, mesures et extraits plus bas), **notre propre modèle de voix**, la
+    **vision de l'écran** (mesurée le 2026-11-04 : image + audio 0,35–0,5 s, juste une fois sur deux).
 
 ### Avant la v1.0 — Voix (extension A, étape 21 ; avancé le 2026-11-02)
 - [ ] **Écoute active** (demandé le 2026-10-30) : lancer des apps, des scènes et d'autres actions à la voix, avec un
@@ -457,6 +467,213 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   exception voulue à la règle « micro jamais en permanence » (CLAUDE.md, à mettre à jour à ce moment-là) : indicateur
   visible quand le micro écoute, coupure facile, veille douce respectée (jeu au premier plan → à décider).
   Traitement 100 % local, ne lance que ce qui est configuré.
+- **Plan validé le 2026-11-04** : moteur sherpa-onnx 2.0.1 (essai d'abord), transcription Parakeet TDT 0.6B v3
+  (670 Mo) ou Canary 180M (207 Mo), mot d'éveil à vocabulaire ouvert, détection de parole Silero.
+- **Demandes du 2026-11-04** :
+  - le **mot d'éveil** se définit par l'utilisateur ; le **nom de l'assistant vocal** se personnalisera plus tard,
+    chacun le sien (lien avec la future app d'IA agentique de l'écosystème, très compatible avec Kayro) ;
+  - une **section de réglages à part « Assistant vocal et IA »** : chaque réglage avec le choix du modèle et une
+    description pour bien choisir, ce qui vient plus tard marqué « Plus tard » ; téléchargement d'un modèle avec une
+    **barre de progression stylisée** ; **désinstaller un modèle** simplement.
+- **Essai du 2026-11-04** (`spikes/06-voix`, sa propre crate : `cargo test -p hub` ne compile pas sherpa-onnx) :
+  sherpa-onnx statique (runtime C « MT ») se lie sans erreur avec hub_lib, et cohabite avec l'ONNX Runtime de
+  Beat This! dans le même processus. Sur 14 phrases dites par la voix Hortense de Windows (une voix de synthèse,
+  pas un vrai micro) : Parakeet juste partout sauf « Baldur's Gate 3 » (« baldure S GAT3 ») ; Canary entend
+  « dix cordes » pour Discord. **Mot d'éveil** : échec des petits modèles anglais / chinois (0 sur 8, en lettres
+  comme en phonèmes). Le **zipformer français en flux** (k2-fsa, Apache-2.0, encodeur int8 127 Mo) entend « Hé
+  Kayro » comme « KERO » 7 fois sur 7 et « Kayro » seul comme « CAIRO » (une seconde de son avant la phrase est
+  nécessaire, comme avec un vrai micro) ; utilisé comme détecteur de mot-clé, il est instable (7 sur 8 ou 0 sur 8
+  selon la liste des mots), aucune fausse alerte. Piste retenue pour la suite : détection de parole, puis ce
+  modèle en transcription continue, et le mot d'éveil cherché dans son texte (variantes apprises en le disant
+  trois fois).
+- **Mesures du 2026-11-04** (sonde `bench`, ce processus seul ; Comet lisait un film : 10 % de la machine, les
+  durées peuvent être un peu meilleures PC au calme) — 14 phrases, 46 s de son :
+  détection de parole 0,4 % d'un cœur, 28 Mo ; modèle français en flux (1 fil) 6,2 % d'un cœur pendant qu'on parle,
+  191 Mo, chargé en 1,5 s ; Parakeet (4 fils) chargé en 2,4 s, ~730 Mo, une phrase en 266 ms (médiane, pire
+  357 ms ; 2 fils : 347 / 401 ms) ; Canary (4 fils) chargé en 1,4 s, ~320 Mo, 269 ms (pire 332 ms).
+- **Cœur Rust (2026-11-04)** : `src-tauri/src/voice/` (état et événements `VoiceStateChanged` / `VoiceHeard`,
+  fil d'écoute, mot d'éveil par clé phonétique française, commandes, actions), micro `platform/mic.rs`,
+  réglages `config/voice.rs` (`settings.voice` : mode **coupé par défaut**, mot d'éveil « Hé Kayro »,
+  push-to-talk Ctrl+Alt+V enregistré seulement dans ce mode, modèle, `inGame`). Un fil, lancé à la première
+  activation, endormi (ni micro ni boucle) quand la voix est coupée, en sourdine (« arrête d'écouter »), l'écran
+  verrouillé ou, en écoute permanente, un programme en plein écran devant (sauf `inGame`) ; le push-to-talk
+  reste actif en jeu. Une phrase ne donne qu'un id de la config ; « ferme X » demande seulement à la page.
+  sherpa-onnx lié dans l'exe (bibliothèques vérifiées par `fetch-ai.ps1`). Limites : pas encore d'interface ni de
+  téléchargement (modèles à poser dans `%APPDATA%\Kayro\voice\`), modèles gardés en mémoire tant que la voix est
+  active, micro ouvert à l'appui du push-to-talk (première syllabe possiblement coupée), non testé dans l'exe.
+- **Interface (2026-11-04)** : Réglages › **Assistant vocal et IA** (mode Coupée · En tenant une touche ·
+  Permanente, état en direct, mot d'éveil, raccourci, « Écouter aussi en jeu », lignes « Plus tard » : nom de
+  l'assistant, apprendre ma voix, modèle économe, assistant IA). **Modèles** : une carte chacun (description,
+  taille, mémoire, licence), téléchargement à la demande depuis Hugging Face (fichier par fichier, empreinte
+  SHA-256 épinglée, `.part` jusqu'à vérification, annulable, barre au dégradé du thème), désinstallation (refusée
+  tant que la voix l'utilise) ; Parakeet ou Canary au choix. **Bouton micro** de la barre du haut et du dock (déjà
+  prévu par la DA) : visible quand la voix est active, allumé quand le micro écoute, un clic coupe ou reprend.
+  **Retours** dans Kayro : une note après chaque commande ; « ferme X » et un doute ouvrent Kayro et demandent
+  (fermeture douce par `close_softly`). Réseau : uniquement ce téléchargement, au clic.
+- **Retours de l'utilisateur et corrections (2026-11-04, soir)** : « Dis YUNA » ne réveillait rien. Le petit modèle
+  entend « DIOUNOV » / « DIOUNO », Parakeet « Di Une » : comparaison refaite sur toute la phrase d'éveil, une voyelle
+  comptant moitié moins qu'une consonne (« OU » → U) ; **apprentissage guidé** en 4 étapes (le mot seul, dans deux
+  commandes, encore seul), ce que le modèle a entendu est gardé (`voice.wakeHeard`) ; secours sur le premier verbe
+  de commande quand Parakeet écrit le mot autrement. Vérifié de bout en bout sur fichiers (`voice/phrase_tests.rs`,
+  vrais modèles, voix Hortense) : 14 cas sur 14, plus « Dis Yuna » appris en une fois. **Bug** : l'écoute se mettait
+  en pause devant Kayro lui-même en plein écran (Windows dit « un programme en plein écran » sans dire lequel) :
+  seul un autre programme compte. **Choix du micro** (menu déroulant ; ce PC a 9 sorties Voicemeeter en plus du
+  Blue Snowball), **aura de l'île** quand elle écoute (Auto : la plus claire des couleurs de la pochette, sinon le
+  thème ; ou une couleur choisie), désinstallation possible même voix active (elle est coupée, après demande),
+  modèles libérés pendant un jeu ou l'écran verrouillé (≈ 0,9 Go rendus), Réglages en **style Capri** aux couleurs
+  du thème, cadres compacts, « Détails » sur chaque modèle. Vérifié dans l'exe (données de test, CDP) : état,
+  modèles, micros, aura ; non vérifié avec une vraie voix au micro.
+- **Deuxième retour (2026-11-04)** : « après l'apprentissage, rien ne marche ». Cause trouvée dans le journal :
+  l'ajout de trois champs à `voice` rendait l'ancien bloc illisible, **les réglages de voix revenaient à zéro**
+  (mode coupé, « Hé Kayro »). Corrigé dans la lecture tolérante (`config/store.rs`) : un groupe de réglages garde
+  ses valeurs, seuls les champs nouveaux prennent leur défaut (testé). Aussi : la voix se met en pause devant un
+  film en plein écran (Comet) tant que « Écouter aussi en jeu » est coupé ; le journal note maintenant chaque
+  changement d'état de la voix (jamais la phrase). L'aura ne s'allume plus qu'une fois appelée (mot d'éveil
+  entendu ou touche tenue). Menu du micro au-dessus du bloc suivant, à la largeur des noms.
+- **Troisième retour, « GIGA complet » (2026-11-04)** : (1) « ferme X » ferme en douceur **sans confirmation**
+  (décision de l'utilisateur, notée dans CLAUDE.md avec l'exception de l'écoute permanente) ; (2) **la musique à la voix** :
+  mets la musique (Spotify lancé s'il est fermé), pause, suivante, précédente, plus fort, moins fort, coupe le son, mode
+  musique allumé / éteint ; **« Votre musique »** : une playlist, un album ou un titre Spotify par un nom (« mets ma playlist
+  chill » ; adresse `spotify:` vérifiée, une playlist s'ouvre seulement, Spotify ne la lance pas depuis une autre app) ;
+  (3) **Parakeet orienté vers les mots de l'utilisateur** (hotwords : mot d'éveil, apps, scènes, musique, commandes ;
+  beam search, +10-20 % de temps) : « Dis Yuna » juste au lieu de « Di Une » ; **double vérification** : le petit modèle
+  donne l'alerte (sûre : aura et son tout de suite ; « peut-être » : on attend), Parakeet confirme, et relit aussi toute
+  phrase courte que le petit modèle a ratée (dite vite, « Yuna » seul ; mot d'éveil exigé dans les deux premiers mots) ;
+  le nom seul réveille, une voyelle entendue autrement aussi ; apprentissage guidé en 5 étapes (avec le nom seul) ;
+  (4) **son « listen »** quand l'île entend ; fin de phrase repérée à 0,3 s au lieu de 0,35 ; (5) **« Kayro apprend de
+  vous »** (idée de l'utilisateur, renforcement léger par règles, `voice/memory.rs`) : +1 quand une commande tombe juste,
+  +2 quand on choisit dans un doute, −2 si l'on referme à la voix dans les 30 s ce qu'il vient d'ouvrir ; seulement vers
+  les apps et scènes de la config ; Réglages : compteur et « Oublier ». **Mesuré** (vrais modèles, voix Hortense, normale
+  et accélérée) : **28 sur 28** de bout en bout (14 sur 14 avant sur des phrases plus faciles ; les phrases rapides
+  échouaient), aucun faux réveil sur 8 phrases pièges. **Essayé et écarté** : Nemotron 3.5 ASR streaming 0.6B
+  (NVIDIA, juin 2026, français en flux) : perd le début des phrases, moins bon que le zipformer + Parakeet.
+- **Quatrième passe, « au plus précis et au plus large » (2026-11-04)** : (0) **Calibrer ma voix** (`voice/calib.rs`,
+  `calib/eval.rs`, `CalibGuide.tsx`) : ≈ 45 cartes en 7 chapitres tirées de la config de l'utilisateur (mot d'éveil, nom
+  seul, commandes avec ses apps, plus vite, pièges, parole libre, avec musique), WAV 16 kHz gardés dans
+  `voice/me/` (avec ce que jouaient les enceintes), supprimables ; l'évaluation rejoue tout le mode « toujours » et note
+  (mot d'éveil, commandes, musique, pièges, voix, temps). Le score d'un ancien format n'efface plus les enregistrements
+  (bug trouvé en test). (1) **Seulement ma voix** (`speaker.rs`) : CAM++ zh/en « advanced » (29 Mo, 9 ms par seconde de
+  parole), choisi sur 5 modèles et 6 voix ; empreinte = moyenne des enregistrements, seuil = 10e score propre − 0,10, borné
+  0,35–0,70 ; sur la synthèse : sa voix 28/28, les 5 autres rejetées (Julie, la plus proche, 0/8). (2) **Variantes du mot
+  d'éveil apprises à l'évaluation**, jamais une qui réveille sur un piège ; une variante de moins de 4 sons ou bien plus
+  longue que le mot d'éveil est ignorée (« ONA » de l'utilisateur aurait réveillé sur « on a gagné »). (3) **Annulation
+  d'écho** (`echo.rs`, crate `aec3` 0.4.0, WebRTC AEC3 en Rust, référence par loopback WASAPI) : sortie linéaire seule (le
+  suppresseur coupait la voix : 6/18 contre 11/18), active seulement quand les enceintes jouent, 0,5 % d'un cœur ; écho
+  simulé 8 dB sous la voix : 1/18 → 12/18 commandes ; à 0 dB : 0 → 4/18. (4) **Mémoire** : reformulation apprise (une
+  phrase qui n'aboutit pas puis une autre qui lance dans les 20 s), correction (refermer puis relancer), doute tranché par
+  l'habitude du moment de la journée (≥ 4 lancements et 3 fois plus que les autres). (5) **Compréhension** : règles
+  élargies (« tu peux ouvrir… », « je veux jouer à… », « s'il te plaît », « coupe / arrête X », sigles « OBS », « VS
+  Code », « c'est trop fort », « change de musique »…) : **46 → 70 sur 70** phrases naturelles ; un modèle de sens
+  (embeddings) n'apporterait rien de mesurable ici, donc pas ajouté (CLAUDE.md). Mot d'éveil redit (« Yuna… dis Yuna,
+  ferme X ») sauté ; un verbe seul attend la suite. **Non fait, en attente** : un gros modèle sur la carte graphique
+  (Canary-1B-v2 ou Whisper) : sherpa-onnx CUDA impose un processus à part et ≈ 0,5 Go + CUDA/cuDNN à télécharger ; à
+  décider sur la mesure de la vraie voix. **Limites** : tout est mesuré sur des voix de synthèse ; la vraie voix
+  (calibration) reste à enregistrer.
+- **La vraie voix (calibration de l'utilisateur, 2026-11-04, 40 enregistrements « Dis Yuna »)** : mot d'éveil 28/32,
+  commandes 11/20, musique 2/4, pièges 8/8, sa voix reconnue 40/40 (les 6 voix de synthèse ≤ 0,29 pour un seuil de
+  0,60). Causes des ratés : les **hotwords** de ses 127 apps (« ouvre » → « Overwatch » ×3, un souffle → « Claude
+  Claude… ») ; Parakeet qui passe à l'anglais (« firm », « cash ») ; des variantes apprises qui étaient des bouts de
+  commande (« NA MONTE LE »). Corrigé : apps poussées à 0,5 (mesuré : 0,25 → 15, 0,5 → 15, 1 → 13, 1,5 → 12, aucun →
+  10, mot d'éveil et verbes seuls → 12 commandes sur 20), mots de sa voix (« firm », « cash », « m'épose », « mont le
+  son », « …bass le son »), variantes tirées des deux modèles, coupées avant la commande, ressemblantes au mot d'éveil
+  (distance ≤ 4). **Résultat : commandes 11 → 16/20, musique 2 → 3/4**, mot d'éveil 26/32 (les bouts de commande en
+  moins). Canary 180M forcé en français : 27 / 12 / 2, moins bon. **Bug corrigé** : Canary recevait des hotwords et
+  faisait tomber Kayro (type `engine::Command`). Dans la vraie vie (journal) : « Dis ARYA » réveille, mais 4 « pas
+  compris » et une mauvaise app lancée : la suite proposée est d'entendre mieux et de comprendre librement (GPU).
+- **Le cerveau (2026-11-04, accord de l'utilisateur : CLAUDE.md, « interprète de commandes vocales »)** : banc d'essai
+  sur sa voix (llama.cpp Vulkan b12110, carte graphique) : Voxtral Mini 3B 11/24 commandes ; Gemma 4 E4B en JSON
+  22/24 à 1,4 s ; **Gemma 4 E4B + grammaire courte (« appel oui / ouvrir discord ecran 1 ») : 24/24, 32/32 appels,
+  8/8 pièges, 0,16 s** ; E2B 20/24 et 3/8 pièges (écarté) ; une ligne de transcription en plus : +0,3 s (écartée).
+  Intégré (`voice/brain/`, `think.rs`) : llama-server dans un processus à part (job object : il meurt avec Kayro,
+  127.0.0.1, clé aléatoire), téléchargé à la demande (5,2 Go, empreintes épinglées), rendu en jeu, repli classique s'il
+  manque ou échoue ; l'oreille passe en mode ouvert (toute phrase ≤ 8 s va au cerveau, qui juge l'appel) ; « Arya… »
+  seul ouvre une suite de 8 s ; plusieurs actions par phrase ; « sur mon premier écran » (`platform/screens.rs`,
+  numéros de Windows). **Mesuré par le vrai chemin (oreille + écho + cerveau)** : calibration « Dis Arya » 40/40
+  (classique 34/40), « Dis Yuna » 39/40, 22 phrases libres de synthèse 21/22 (« mon jeu de course » → Forza, « le
+  logiciel de montage » → DaVinci Resolve, « Blender sur le premier écran et Audacity sur le deuxième ») ; 0,19 s par
+  phrase, chargement 4,4 s (35 s la toute première fois : shaders), ≈ 5 Go de mémoire graphique. Essayé et écarté : un
+  contre-exemple dans la consigne (déplace les erreurs), une vérification par Parakeet des appels longs (fait rater la
+  vraie voix). Limite : « Je vais lancer Steam ce soir avec Arya » est pris pour un appel. Le mot d'éveil entraîné prévu
+  n'est plus utile (32/32 appels jugés par le cerveau) ; à refaire seulement si la vraie vie montre des ratés.
+- **Suites sans redire le nom (2026-11-04, demande de l'utilisateur)** : après une commande, 15 s pendant lesquelles
+  une phrase peut continuer la demande sans « Arya » (aura allumée ; le cerveau reçoit ce qu'il vient de faire et juge ;
+  chaque suite comprise relance la fenêtre ; « merci » la ferme) ; après « Arya… » seul, 8 s où la phrase lui est
+  adressée. Mesuré sur 12 suites de synthèse : 11/12 (« en fait, reviens à la précédente » après « musique suivante »,
+  « mets-le sur le deuxième écran », « non, ferme-le » ; « je reviens dans deux minutes », « tu as vu le match » laissés ;
+  « plutôt Valorant » après Forza ferme Forza puis ouvre Valorant). En vrai (journal) : Edge, Comet, musique, fenêtres
+  posées sur l'écran 1 et 2, réponses en 0,17–0,5 s, cerveau prêt en 5 s.
+- **Relecture et amélioration à deux avec Fable 5.1 en effort Extra (2026-11-04/05, demande de l'utilisateur ; Fable
+  propose, Claude vérifie et résume, puis Fable applique)** : bugs corrigés (micro débranché : aura bloquée et écoute
+  jamais relancée ; cerveau planté : relancé ; autre voix pendant une suite : aura éteinte à tort) ; cerveau chargé sur
+  un fil à part (`brain/slot.rs` : la voie classique écoute pendant les 5 s) ; « Seulement ma voix » : score des 3 dires
+  les plus proches (marge avec la voix de synthèse la plus proche 0,01 → 0,10 sur Arya, seuil 0,519 contre 0,417) et
+  cohorte des voix de Windows à chaque évaluation (`platform/tts.rs`, `calib/impostors.rs`) ; « Enceintes à écouter »
+  (Voicemeeter : les enceintes physiques) ; aura « je reste à l'écoute » (DA-JOURNAL) ; une note pour plusieurs actions ;
+  consigne : « cacher Kayro » et « nom seulement mentionné : appel non » ; délai de secours 3 s ; fichiers découpés
+  (`voice/events.rs`, `follow.rs`, `ear.rs`, `calib/variants.rs`, CSS en trois) ; +23 tests (401 Rust, 708 interface).
+  Mesuré (Claude, après coup) : Arya 40/40, Yuna 40/40, libres 22/22, suites 11/12 et 12/12, ≈ 0,2 s. Écarté : n'envoyer
+  au cerveau que ce où le petit modèle entend le nom (28/32 appels), bannir des jetons de contrôle (9/22). Trouvé : un
+  bug de llama.cpp (erreur 500 sur 1 phrase de synthèse sur 22 : la voie classique répond). Non testé dans l'exe. Restent
+  au-dessus de 400 lignes, déjà avant l'étape : `ipc.rs`, `config/schema.rs`, `desktop/mod.rs`.
+- **Bien plus d'usages (2026-11-05, demande de l'utilisateur ; Fable propose, Claude vérifie)** : Edge s'ouvrait parce
+  que la grammaire n'avait pas de « je ne sais pas » (11 demandes impossibles sur 15 forçaient une action) : ligne
+  `inconnu` → note « Je ne sais pas encore faire ça. », rien lancé ; contexte à chaque phrase (fenêtre devant, apps
+  ouvertes, hors du préfixe mis en cache). Nouveaux verbes : fenêtres (écran N sans relancer, plein, réduire,
+  restaurer, devant, gauche, droite, fermer celle devant si c'est une app de la config), son (volume N %, son d'une app,
+  micro), dernier jeu, Réglages par page, thème, Kysland, aléatoire / répéter / titre, verrouiller, bureau, minuteur,
+  heure ; et, avec l'accord de l'utilisateur : capture (Win+Impr), recherche web (Google, requête encodée), dictée
+  (SendInput Unicode, sans touche ni retour, 300 caractères, refusée dans les consoles et terminaux). Mesuré par Claude :
+  Arya 40/40, Yuna 40/40, suites 12/12 et 12/12, impossibles 15/15, fenêtres 12/12, système 8/8, Kayro 5/5, jeux 2/2,
+  son 6/8, musique 3/4, libres 21/22 (s19 « …avec Arya » revenu) ; ≈ 0,2–0,25 s. Vision de l'écran : mesurée (image +
+  audio 0,35–0,5 s, juste 1 fois sur 2 sur « ferme cette fenêtre »), reportée (choix de l'utilisateur). Réponses
+  parlées : l'utilisateur veut une voix d'IA (pas Windows) ; 5 échantillons locaux (Supertonic 3 MIT, direct dans
+  sherpa-onnx ; Piper siwis/upmc/tom et Kokoro : phonémiseur à ajouter) envoyés pour qu'il choisisse. Non testé dans l'exe.
+- **Affinages et voix « à ton » (2026-11-05)** : règle déterministe `tidy` (un mode aléatoire/répéter retire une lecture
+  parasite, un niveau de son retire un plus/moins) : musique 3 → 4/4 ; contrepartie : « lance la musique en aléatoire »
+  ne relance pas la lecture. Laissés, mesurés trop chers : « mets le volume à vingt », « remets le son de Spotify »
+  (l'exemple qui les corrige fait Yuna 35/40, « tu as une minute ? » → minuteur), « …avec Arya » (seconde passe oui/non :
+  sans effet, +250 ms). Mesuré par Claude : Arya 40/40, Yuna 40/40, suites 12/12 et 12/12, fenêtres 12/12, système 8/8,
+  Kayro 5/5, jeux 2/2, impossibles 15/15, musique 4/4, son 6/8, libres 21/22. Voix : les 5 premiers échantillons ne
+  plaisent pas ; l'utilisateur veut régler le son (décrit ou cloné d'un extrait qu'il fournit) et la façon de parler
+  (réponses courtes formulées par le cerveau). Essais : Qwen3-TTS 1.7B (Apache-2.0 ; clonage par `llama-tts` Vulkan,
+  sans Python, 7,7 s pour 3 s de son ; voix décrite en Python ≈ 13 s), Chatterbox Multilingual (MIT, Python, 3,6–5,3 s) ;
+  personnalité par Gemma : ≈ +0,2 s, une ligne ≤ 90 caractères. Aucun < 1 s : 12 échantillons envoyés, rien intégré.
+- **Voix posée et grave en direct (2026-11-05, mesuré par Fable, vérifié par Claude)** : voix retenue par l'utilisateur,
+  conçue une fois (clip de 19 s par la voix décrite) puis clonée à chaque phrase par Qwen3-TTS 1.7B Base (`llama-tts`).
+  Phrase entière (≈ 3 s de son) : 1,1–1,7 s en Vulkan, 0,6–1,0 s en CUDA 13.4 (NVIDIA seulement), hors chargement ; mais
+  `llama-tts` recharge le modèle à chaque phrase (≈ 4 s Vulkan, 2,6 s CUDA) et `llama-server` b12110 n'a pas de voix :
+  il faut un programme à nous, résident et en flux. Mémoire graphique : voix +6,5 Go par défaut (avec le cerveau
+  11,2–11,7 Go sur 12,2 : trop juste), +2,9 Go avec `-c 2048 -b 256 -ub 256` à vitesse égale (ensemble non mesuré).
+  Personnalités par Gemma (température 0, ≈ 0,2 s) : 9 premières réponses sur 20 ont une erreur (« J'ai lancée »,
+  « la minute est écoulée » pour dix minutes…) → phrases écrites par préréglage. Pas de voix d'acteurs réels (JARVIS,
+  Grand Sage) : leur esprit par une description.
+- **Compréhension des apps (2026-11-05)** : le cerveau ne recevait que les noms des 127 apps (doublons, utilitaires).
+  `brain/apps.rs` : une entrée par app (Voicemeeter ×3, Python, FL Studio 2024/2026, Roblox, Dead Cells… → la favorite,
+  sinon la plus récente, sinon le nom le plus court ; les jeux Steam/Epic jamais regroupés), les utilitaires retirés
+  de la voix (« Check For Updates », « Module Docs »…), et ce qu'est chaque app (« Comet (navigateur) »,
+  « DaVinci Resolve (montage vidéo) »…) ; fermer, fenêtres et son prennent la copie qui tourne. Nouvelle série de
+  40 phrases sur ses apps : 27 → 32/40. Laissés : « Voicemeeter », « Hue Sync », « WinRAR », « Edge » mal entendus
+  par les voix Windows, « Chrome » (absent) → Comet, notes → OneNote, 3D → Blockbench. Séries : Arya 40/40, Yuna
+  39/40 (« ferme CrystalDiskInfo » → ouvrir), le reste inchangé. Non testé dans l'exe.
+- **Réglages de l'assistant plus simples et films (2026-11-05)** : introduction (le nom d'abord, 6 idées, puis la façon
+  de lui parler, puis un seul bouton « Installer {nom} » à une barre, cerveau coché), carte au nom de l'assistant, quatre
+  blocs numérotés, antisèche de phrases avec ses apps, avancé replié. Testé par Claude dans l'exe (CDP, données de
+  test) : 2 parcours (rien d'installé / tout installé), 7 défauts trouvés et corrigés (nom en capitales « ARYA », deux
+  boutons principaux, renvois « plus bas » vers des cartes repliées…). Un film en plein écran dans un navigateur ou un
+  lecteur (Comet, Edge, Chrome, VLC…) ne met plus la voix en pause ni ne lâche le cerveau ; les jeux, si.
+- **Page simple une fois installé (2026-11-05)** : la carte dit la place prise (« Arya prend 6 Go sur ce PC ») avec
+  « Désinstaller Arya » (question avant, la calibration gardée) ; installé et à l'écoute, seules la carte et l'antisèche
+  restent, le reste sous « Modifier les réglages ». Vérifié dans l'exe (CDP, données de test, désinstallation non validée).
+- [ ] **Réponses parlées d'Arya** → app IA à part (voir « Écosystème Kayro ») : reportées (décision de l'utilisateur, 2026-11-05 : pas encore de modèle de voix
+  français assez bon à son goût). À la reprise : la voix posée et grave et les mesures ci-dessus ; pour le timbre, ce
+  qui marchait bien dans son projet Grand Sage (sessions Claude « The GREAT SAGE ») ; personnalités en phrases écrites ;
+  un programme voix à nous, résident et en flux. Extraits gardés : `spikes/06-voix/voix-posee-grave/` (référence
+  de 19 s, échantillon aimé, variantes majordome et analytique ; voix créées par description, aucune voix réelle).
+- [ ] **Notre propre modèle** (idée de l'utilisateur, 2026-11-05) : un modèle fait par nous, optimisé pour l'usage de
+  Kayro (voix en français d'abord, peut-être aussi la compréhension), quitte à ce que ce soit difficile, pour ne
+  dépendre d'aucune limite d'un modèle tiers. Voie la plus réaliste : partir d'un modèle ouvert (Apache/MIT) et
+  l'affiner sur des données dont on a le droit (ta voix, voix créées, jeux de données libres) ; un modèle partant de
+  zéro demande beaucoup de données et de calcul. À étudier comme une étape à part.
 
 ## Abandonné
 Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).

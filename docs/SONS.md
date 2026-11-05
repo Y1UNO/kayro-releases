@@ -34,6 +34,7 @@ choix (Premium, Rétro, 8-bit) et un réglage du volume en forme d'onde.
 | `open` | **mélodie d'ouverture de Kayro** (une fois par démarrage) | calée sur l'ouverture V1-A : nappe à l'anneau (0,2 s), cloche au logo (0,95 s), éclosion à la pulsation (1,75 s), **une note par lettre** (2,0 s, puis toutes les 85 ms), accord au trait (2,55 s) ; coupée si on passe l'ouverture |
 | `launch` | lancement d'un jeu | petite mélodie montante puis accord |
 | `launchFinale` | final des scènes Sceau / Gommage | glissando et éclat, au début du final |
+| `listen` | la voix : l'île a entendu le mot d'éveil (étape 21) | deux notes douces qui montent, joué par la page de l'île |
 | `progress` | chaque étape d'une scène qui se termine | une note de plus haut en plus haut |
 | `success` | apps ajoutées, scène terminée | |
 | `error` | lancement raté | deux notes douces vers le bas |

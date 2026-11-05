@@ -6,7 +6,7 @@
 Lanceur d'applications pour Windows, très fluide et très réactif, avec un accent fort sur la **personnalisation** et le **visuel** :
 thèmes de couleur au choix, verre liquide, lumière dynamique, couleurs qui s'adaptent à l'affiche du jeu, ambiances animées propres à certains jeux (braises, runes, brume…).
 Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniquement. Français par défaut.
-**Pas de LLM ni d'assistant IA dans l'app.** Une IA locale et légère est permise quand elle est mesurée meilleure que le calcul classique (décision de l'utilisateur, 2026-11-03 : le rythme du mode musique, voir `docs/MODE-MUSIQUE.md`) : elle tourne sur le PC, rien n'est envoyé, et l'app marche sans elle. Tout est local et hors ligne par défaut.
+**Pas de LLM ni d'assistant IA dans l'app.** Une IA locale et légère est permise quand elle est mesurée meilleure que le calcul classique (décision de l'utilisateur, 2026-11-03 : le rythme du mode musique, voir `docs/MODE-MUSIQUE.md`) : elle tourne sur le PC, rien n'est envoyé, et l'app marche sans elle. Tout est local et hors ligne par défaut. Exception voulue (2026-11-04, étape 21) : un **interprète de commandes vocales** (modèle de langage local sur la carte graphique, dans un processus à part, téléchargé à la demande) : il ne rend qu'une liste d'actions Kayro (apps et scènes de la config, musique, fenêtres…), revérifiée par le cœur ; ce n'est ni un chat ni un assistant ; les règles classiques restent en secours.
 
 ## Règles de travail (à respecter à chaque session)
 1. L'utilisateur te donne UNE étape. Ne commence jamais la suivante sans son accord.
@@ -46,9 +46,9 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 - L'app ne lance QUE ce qui est dans sa configuration. La voix, les gestes et les fichiers importés ne peuvent jamais lancer une commande arbitraire.
 - Scènes partagées : le fichier ne contient que des noms d'**emplacements** (slots), jamais de chemin ni de commande.
 - Fichiers importés (`.hubmood`, thèmes, scènes) : validation stricte de schéma, limites de taille et de quantité, aucun script, chemins SVG assainis.
-- Fermer une app = fermeture douce (message de fermeture de fenêtre) avec confirmation. Jamais de fermeture forcée sans demande explicite.
+- Fermer une app = fermeture douce (message de fermeture de fenêtre) avec confirmation. Jamais de fermeture forcée sans demande explicite. Exception voulue (2026-11-04) : un « ferme X » dit à la voix ferme en douceur sans confirmation (la phrase est la demande).
 - Réseau : aucun par défaut. Toute fonction réseau future est optionnelle, désactivée par défaut et expliquée.
-- Micro et caméra : traitement 100 % local, indicateur visible quand actifs, jamais en permanence.
+- Micro et caméra : traitement 100 % local, indicateur visible quand actifs, jamais en permanence. Exception voulue (2026-10-30, notée à l'étape 21) : l'écoute permanente de la voix, choisie dans les Réglages ; témoin visible (bouton micro de Kayro, aura de l'île quand elle est appelée), coupure en un clic, pause en jeu (sauf choix) et écran verrouillé. « Calibrer ma voix » (2026-11-04) garde, à la demande de l'utilisateur seulement, ses enregistrements et son empreinte vocale dans `voice/me/` (sur le PC, supprimables en un clic) ; ce que jouent les enceintes n'est lu que pour retirer leur écho, jamais gardé (sauf à côté d'un enregistrement de calibration).
 - Permissions Tauri minimales (liste blanche), CSP stricte. Les images d'affiches viennent du dossier local de l'utilisateur : ne jamais les embarquer dans l'installeur ni les exporter dans un fichier partageable.
 
 ## Conventions
