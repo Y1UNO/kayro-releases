@@ -75,24 +75,85 @@ const UTILITIES: [&str; 11] = [
 /// What an app is, by a word of its name: the brain hears « mon navigateur », « mon logiciel de
 /// montage » (first match wins).
 const ROLES: [(&[&str], &str); 26] = [
-    (&["comet", "edge", "opera", "chrome", "firefox", "brave", "vivaldi"], "navigateur"),
+    (
+        &[
+            "comet", "edge", "opera", "chrome", "firefox", "brave", "vivaldi",
+        ],
+        "navigateur",
+    ),
     (&["spotify", "deezer", "tidal", "apple music"], "musique"),
-    (&["discord", "whatsapp", "teams", "skype", "telegram", "slack", "signal"], "messagerie"),
-    (&["obs", "streamlabs", "streamlabels"], "stream et enregistrement de l'écran"),
+    (
+        &[
+            "discord", "whatsapp", "teams", "skype", "telegram", "slack", "signal",
+        ],
+        "messagerie",
+    ),
+    (
+        &["obs", "streamlabs", "streamlabels"],
+        "stream et enregistrement de l'écran",
+    ),
     (&["medal"], "clips de jeu"),
-    (&["davinci resolve", "premiere", "capcut", "vegas"], "montage vidéo"),
+    (
+        &["davinci resolve", "premiere", "capcut", "vegas"],
+        "montage vidéo",
+    ),
     (&["fl studio", "ableton", "reaper"], "création musicale"),
     (&["audacity"], "enregistrement audio"),
     (&["blender", "blockbench"], "3D"),
     (&["unity", "godot", "unreal"], "création de jeux"),
     (&["visual studio code", "vscode"], "code"),
-    (&["terminal", "git bash", "git cmd", "powershell"], "terminal"),
+    (
+        &["terminal", "git bash", "git cmd", "powershell"],
+        "terminal",
+    ),
     (&["obsidian", "onenote", "notion"], "notes"),
-    (&["steam", "epic games", "gog galaxy", "xbox", "client riot", "riot client"], "boutique de jeux"),
-    (&["launcher", "curseforge", "modrinth", "overwolf", "ftb", "redlauncher"], "lanceur de jeu"),
+    (
+        &[
+            "steam",
+            "epic games",
+            "gog galaxy",
+            "xbox",
+            "client riot",
+            "riot client",
+        ],
+        "boutique de jeux",
+    ),
+    (
+        &[
+            "launcher",
+            "curseforge",
+            "modrinth",
+            "overwolf",
+            "ftb",
+            "redlauncher",
+        ],
+        "lanceur de jeu",
+    ),
     (&["thunderstore", "vortex", "mod manager"], "mods"),
-    (&["voicemeeter", "realtek audio", "vban", "equalizer", "graphic eq"], "réglages audio"),
-    (&["afterburner", "hwmonitor", "cpu-z", "ryzen master", "rivatuner", "frameview", "crystaldiskinfo", "crystaldiskmark", "nvidia app"], "matériel et surveillance du PC"),
+    (
+        &[
+            "voicemeeter",
+            "realtek audio",
+            "vban",
+            "equalizer",
+            "graphic eq",
+        ],
+        "réglages audio",
+    ),
+    (
+        &[
+            "afterburner",
+            "hwmonitor",
+            "cpu-z",
+            "ryzen master",
+            "rivatuner",
+            "frameview",
+            "crystaldiskinfo",
+            "crystaldiskmark",
+            "nvidia app",
+        ],
+        "matériel et surveillance du PC",
+    ),
     (&["nvidia broadcast"], "micro et caméra"),
     (&["hue sync"], "lumières"),
     (&["winrar", "7-zip"], "archives"),
@@ -136,7 +197,8 @@ fn bits(t: &str) -> bool {
 }
 
 fn version(t: &str) -> Option<Vec<u32>> {
-    let numeric = t.chars().any(|c| c.is_ascii_digit()) && t.chars().all(|c| c.is_ascii_digit() || c == '.');
+    let numeric =
+        t.chars().any(|c| c.is_ascii_digit()) && t.chars().all(|c| c.is_ascii_digit() || c == '.');
     numeric.then(|| t.split('.').filter_map(|p| p.parse().ok()).collect())
 }
 
@@ -174,7 +236,11 @@ fn bare(name: &str) -> (String, Vec<u32>) {
         })
         .map(String::from)
         .collect();
-    let key = if words.is_empty() { name.to_lowercase() } else { words.join(" ") };
+    let key = if words.is_empty() {
+        name.to_lowercase()
+    } else {
+        words.join(" ")
+    };
     (key, ver)
 }
 
@@ -244,8 +310,16 @@ pub fn spoken(apps: &[Known]) -> Spoken {
             group_name(c.name)
         } else {
             // « x64 » is never said.
-            let words: Vec<&str> = c.name.split_whitespace().filter(|t| !bits(&t.to_lowercase())).collect();
-            if words.is_empty() { c.name.trim().to_string() } else { words.join(" ") }
+            let words: Vec<&str> = c
+                .name
+                .split_whitespace()
+                .filter(|t| !bits(&t.to_lowercase()))
+                .collect();
+            if words.is_empty() {
+                c.name.trim().to_string()
+            } else {
+                words.join(" ")
+            }
         };
         let told_name = match role(c) {
             Some(r) => format!("{name} ({r})"),
@@ -255,7 +329,13 @@ pub fn spoken(apps: &[Known]) -> Spoken {
             out.rep.insert(apps[m].id.to_string(), c.id.to_string());
         }
         let favorite = members.iter().any(|&m| apps[m].favorite);
-        told.push((favorite, Named { id: c.id.to_string(), name: told_name }));
+        told.push((
+            favorite,
+            Named {
+                id: c.id.to_string(),
+                name: told_name,
+            },
+        ));
     }
     // Favourites first (« la première » of a kind is the one the user prefers).
     told.sort_by_key(|(f, _)| !*f);

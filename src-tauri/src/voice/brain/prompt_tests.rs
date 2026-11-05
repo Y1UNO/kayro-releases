@@ -39,7 +39,7 @@ fn an_answer_becomes_kayros_intents_and_nothing_else() {
     let w = world(&apps, &scenes, &links, 2);
     let a = answer(
         "appel oui\nouvrir spotify\nouvrir discord ecran 2\nfermer discord\nscene eveille\n\
-         ecouter l1\nmusique pause\nvolume moins\nmode-musique non\nkayro cacher\n\
+         ecouter chill\nmusique pause\nvolume moins\nmode-musique non\nkayro cacher\n\
          chercher blender\nstop-ecoute",
         &w,
     );
@@ -52,7 +52,7 @@ fn an_answer_becomes_kayros_intents_and_nothing_else() {
     assert_eq!(
         got,
         [
-            (Intent::Launch(Target::App("spotify".into())), None),
+            // « ouvrir spotify » went: the playlist opens in Spotify itself.
             (Intent::Launch(Target::App("discord".into())), Some(2)),
             (Intent::Close("discord".into()), None),
             (Intent::Launch(Target::Scene("eveille".into())), None),
@@ -172,4 +172,39 @@ ouvrir discord ecran 1"
         ),
         "musique suivante, ouvrir discord ecran 1"
     );
+}
+
+#[test]
+fn a_playlist_is_told_by_its_name_and_is_no_play_too() {
+    let apps = [n("spotify", "Spotify")];
+    let links = [
+        n("spotify:playlist:a", "Kiff du moment"),
+        n("spotify:playlist:b", "Été"),
+        n("spotify:playlist:c", "été"),
+    ];
+    let w = world(&apps, &[], &links, 1);
+    assert_eq!(link_id(&links, 0), "kiff-du-moment");
+    assert_eq!(link_id(&links, 1), "ete");
+    // The same name twice: the second one by its number.
+    assert_eq!(link_id(&links, 2), "l3");
+    let a = answer(
+        "appel oui\nmusique-app spotify lecture\necouter kiff-du-moment",
+        &w,
+    );
+    let got: Vec<Intent> = a.actions.into_iter().map(|x| x.intent).collect();
+    assert_eq!(got, [Intent::Link("spotify:playlist:a".into())]);
+}
+
+#[test]
+fn a_song_is_searched_by_its_name_alone() {
+    let apps = [n("spotify", "Spotify")];
+    let w = world(&apps, &[], &[], 1);
+    let a = answer("appel oui\nouvrir spotify\nspotify du Orelsan", &w);
+    let got: Vec<Intent> = a.actions.into_iter().map(|x| x.intent).collect();
+    assert_eq!(got, [Intent::SpotifySearch("Orelsan".into())]);
+    let a = answer("appel oui\nspotify la chanson toxic", &w);
+    assert_eq!(a.actions[0].intent, Intent::SpotifySearch("toxic".into()));
+    assert!(answer("appel oui\nspotify la chanson ", &w)
+        .actions
+        .is_empty());
 }

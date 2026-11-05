@@ -153,9 +153,9 @@ pub fn hotwords<R: Runtime>(app: &AppHandle<R>, wake_word: &str) -> String {
     command::hotwords(wake_word, &apps, &scenes, &links)
 }
 
-/// The user's music, opened in Spotify (an album or a track starts playing; a playlist opens:
-/// Spotify plays it from outside only on a click). Only an address Réglages checked.
-fn open_music(uri: &str) -> bool {
+/// The user's music, opened in Spotify (an album or a track starts playing; a playlist opens,
+/// and its « Lire » button is pressed: platform/spotify.rs). Only an address Réglages checked.
+fn open_music(uri: &str, name: &str) -> bool {
     if !crate::config::voice::spotify_uri_ok(uri) {
         return false;
     }
@@ -165,7 +165,18 @@ fn open_music(uri: &str) -> bool {
     } else {
         uri.to_string()
     };
-    crate::platform::shell::shell_execute(&target, &[], None, None).is_ok()
+    let opened = crate::platform::shell::shell_execute(&target, &[], None, None).is_ok();
+    if opened && uri.starts_with("spotify:playlist:") {
+        let name = name.to_string();
+        // Off the voice's thread: Spotify may still be starting (a cold start takes seconds).
+        let _ = std::thread::Builder::new()
+            .name("voice-playlist".into())
+            .spawn(move || {
+                let done = crate::platform::spotify::play_playlist(&name, Duration::from_secs(12));
+                tracing::info!(?done, "voice: the playlist's play button");
+            });
+    }
+    opened
 }
 
 /// `heard`: the whole sentence (shown to the user); `said`: its command part.
@@ -278,7 +289,7 @@ fn perform<R: Runtime>(app: &AppHandle<R>, intent: Intent, taught: &str) -> Voic
         }
         Intent::Link(uri) => {
             let name = name_of(&links, &uri);
-            if open_music(&uri) {
+            if open_music(&uri, &name) {
                 VoiceOutcome::MusicOpened { name }
             } else {
                 VoiceOutcome::NotUnderstood
@@ -293,6 +304,11 @@ fn perform<R: Runtime>(app: &AppHandle<R>, intent: Intent, taught: &str) -> Voic
                 tracing::warn!(error = %e.message, "voice: music mode not changed");
             }
             VoiceOutcome::MusicMode { on }
+        }
+        Intent::Hands(on) => {
+            let ok = app.state::<ConfigState>().settings().hands.enabled;
+            crate::hands::set_on(app, on);
+            VoiceOutcome::Hands { on, ok }
         }
         Intent::ShowKayro => {
             on_main(app, |app| crate::desktop::show(app));

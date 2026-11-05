@@ -19,10 +19,10 @@ use windows::Win32::Graphics::Gdi::{
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, RegisterClassW, SetWindowPos, ShowWindowAsync,
-    UpdateLayeredWindow, HTTRANSPARENT, MA_NOACTIVATE, SWP_ASYNCWINDOWPOS, SWP_NOACTIVATE,
-    SWP_NOMOVE, SWP_NOSIZE, SW_HIDE, SW_SHOWNOACTIVATE, ULW_ALPHA, WM_MOUSEACTIVATE, WM_NCHITTEST,
-    WNDCLASSW, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_EX_TRANSPARENT,
-    WS_POPUP,
+    UpdateLayeredWindow, HTTRANSPARENT, HWND_TOPMOST, MA_NOACTIVATE, SWP_ASYNCWINDOWPOS,
+    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SW_HIDE, SW_SHOWNOACTIVATE, ULW_ALPHA,
+    WM_MOUSEACTIVATE, WM_NCHITTEST, WNDCLASSW, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+    WS_EX_TOPMOST, WS_EX_TRANSPARENT, WS_POPUP,
 };
 
 use super::veil::kept_nonzero;
@@ -104,6 +104,23 @@ pub fn paint(
     height: u32,
     pixels: &[u32],
 ) -> bool {
+    paint_after(raw, Some(below), x, y, width, height, pixels)
+}
+
+/// As `paint`, above every window (the hands' glow under the cursor, step 22).
+pub fn paint_top(raw: isize, x: i32, y: i32, width: u32, height: u32, pixels: &[u32]) -> bool {
+    paint_after(raw, None, x, y, width, height, pixels)
+}
+
+fn paint_after(
+    raw: isize,
+    below: Option<isize>,
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+    pixels: &[u32],
+) -> bool {
     let (w, h) = (width.clamp(1, MAX_SIDE), height.clamp(1, MAX_SIDE));
     if pixels.len() < (w * h) as usize {
         return false;
@@ -169,10 +186,18 @@ pub fn paint(
             let _ = ShowWindowAsync(hwnd(raw), SW_SHOWNOACTIVATE);
             // Under the island: the spikes come out from behind it.
             let flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_ASYNCWINDOWPOS;
-            let _ = SetWindowPos(hwnd(raw), Some(hwnd(below)), 0, 0, 0, 0, flags);
+            let after = below.map_or(HWND_TOPMOST, hwnd);
+            let _ = SetWindowPos(hwnd(raw), Some(after), 0, 0, 0, 0, flags);
         }
         done
     }
+}
+
+/// Moves the window, shown, keeping its image (the hands' glow between two paints).
+pub fn place(raw: isize, x: i32, y: i32) {
+    let flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_ASYNCWINDOWPOS;
+    // SAFETY: a window of this process; a stale handle only makes the call fail.
+    let _ = unsafe { SetWindowPos(hwnd(raw), None, x, y, 0, 0, flags) };
 }
 
 /// Hides the effects window (its image is dropped at the next paint).

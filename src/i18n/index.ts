@@ -1,12 +1,13 @@
 import { APP_NAME } from "../app/appName";
 import assistant from "./fr-assistant.json";
 import base from "./fr.json";
+import hands from "./fr-hands.json";
 import scenes from "./fr-scenes.json";
 import settings from "./fr-settings.json";
 
 /** The catalogue, in several files to keep each one short (round 5: scenes and settings apart;
- * step 21: the assistant's page). */
-const fr = { ...base, ...scenes, ...settings, ...assistant };
+ * step 21: the assistant's page; step 22: the hands). */
+const fr = { ...base, ...scenes, ...settings, ...assistant, ...hands };
 
 type Flatten<T, Prefix extends string = ""> = {
   [K in keyof T & string]: T[K] extends string ? `${Prefix}${K}` : Flatten<T[K], `${Prefix}${K}.`>;

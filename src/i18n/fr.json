@@ -423,6 +423,11 @@
         "on": "Mode musique allumé.",
         "off": "Mode musique éteint."
       },
+      "hands": {
+        "on": "Mains allumées : montrez votre main.",
+        "off": "Mains coupées."
+      },
+      "handsNone": "Les mains ne sont pas installées : Réglages › Mains.",
       "showKayro": "« {said} »",
       "hideKayro": "« {said} »",
       "musicOpened": "« {said} » : {name} s’ouvre dans Spotify.",
@@ -448,7 +453,7 @@
       "appVolumeNone": "{name} ne joue aucun son en ce moment.",
       "mic": {
         "on": "Micro remis.",
-        "off": "Micro coupé."
+        "off": "Micro coupé : la voix ne vous entend plus. Le bouton micro de Kayro le remet."
       },
       "micNone": "Le micro n’a pas répondu.",
       "theme": "Thème {name}.",
@@ -461,6 +466,7 @@
       "nowPlayingNone": "Rien ne joue en ce moment.",
       "lock": "Session verrouillée.",
       "desktop": "Bureau affiché.",
+      "files": "Explorateur de fichiers ouvert.",
       "timer": "Minuteur de {minutes} min lancé.",
       "timerDone": "Votre minuteur de {minutes} min est terminé.",
       "time": "Il est {text}.",

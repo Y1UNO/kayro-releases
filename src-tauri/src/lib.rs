@@ -3,12 +3,14 @@ pub mod config;
 pub mod desktop;
 pub mod detect;
 pub mod error;
+pub mod hands;
 pub mod icons;
 pub mod intake;
 pub mod ipc;
 pub mod ipc_art;
 pub mod ipc_desktop;
 pub mod ipc_detect;
+pub mod ipc_hands;
 pub mod ipc_island;
 pub mod ipc_moods;
 pub mod ipc_outputs;
@@ -136,6 +138,7 @@ pub fn run() {
                         desktop::cover::on_foreground(pid);
                         desktop::island::on_foreground(&for_island);
                         voice::on_foreground(&for_island);
+                        hands::on_foreground(&for_island);
                         desktop::on_program_in_front(&for_island);
                     }
                 },

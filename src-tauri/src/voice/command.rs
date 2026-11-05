@@ -63,6 +63,8 @@ pub enum Intent {
     Music(Music),
     /// Kysland's music mode on (`true`) or off.
     MusicMode(bool),
+    /// The hands (step 22, the mouse in the air): the camera on (`true`) or off.
+    Hands(bool),
     /// A piece of music the user named in Réglages (its Spotify address, checked there).
     Link(String),
     ShowKayro,
@@ -80,6 +82,11 @@ pub enum Intent {
     },
     /// The PC's volume to a level (0–100).
     VolumeTo(u8),
+    /// One app's own player: play, pause, next or previous (« mets play sur Comet »).
+    AppMusic {
+        app: String,
+        what: Music,
+    },
     /// One app's own sound (the user's apps only).
     AppVolume {
         app: String,
@@ -99,6 +106,8 @@ pub enum Intent {
     WhichSong,
     Lock,
     Desktop,
+    /// File Explorer opened (the Win+E shortcut): « ouvre l'explorateur de fichiers ».
+    Files,
     /// A timer of this many minutes (a note when it ends).
     Timer(u32),
     Time,
@@ -106,6 +115,9 @@ pub enum Intent {
     Screenshot,
     /// « Cherche … sur internet »: the default browser on the search engine, with these words.
     WebSearch(String),
+    /// « Mets One More Time de Daft Punk »: searched in Spotify, its first result played
+    /// (platform/spotify.rs). Not the user's own music (`Link`).
+    SpotifySearch(String),
     /// « Écris … »: typed into the field in front (never into a console, never a key).
     Dictate(String),
     /// Said to the assistant, but nothing Kayro can do: a note says so, nothing runs.
@@ -243,6 +255,33 @@ pub fn parse_with(
     if STOP.iter().any(|s| said.contains(s)) {
         return plain(Intent::StopListening);
     }
+    // Step 22: « active les mains », « coupe les mains », « mode main ».
+    let hands = [
+        "les mains",
+        "mode main",
+        "mode mains",
+        "controle par les mains",
+    ];
+    if hands.iter().any(|p| says(&said, p)) {
+        let off = [
+            "arrete",
+            "coupe",
+            "desactive",
+            "enleve",
+            "eteins",
+            "sans",
+            "quitte",
+            "ferme",
+            "stop",
+        ];
+        return plain(Intent::Hands(!off.iter().any(|w| says(&said, w))));
+    }
+    if ["explorateur", "mes fichiers", "mes dossiers"]
+        .iter()
+        .any(|p| says(&said, p))
+    {
+        return plain(Intent::Files);
+    }
     if says(&said, "mode musique") {
         let off = [
             "arrete",
@@ -314,7 +353,15 @@ pub fn parse_with(
     };
     let remembered = recall(&rest).filter(known);
     let intent = match kind {
-        Some("hide") => Intent::HideKayro,
+        Some("hide") if rest.is_empty() || about_kayro || rest == "toi" => Intent::HideKayro,
+        // « Cache Discord »: its window reduced (its « – » button), not Kayro.
+        Some("hide") => match pick(&rest, apps, &[], false) {
+            Intent::Launch(Target::App(id)) => Intent::Window {
+                app: Some(id),
+                what: WindowAction::Minimize,
+            },
+            _ => Intent::HideKayro,
+        },
         Some("close") if about_kayro => Intent::HideKayro,
         Some("launch") if about_kayro => Intent::ShowKayro,
         _ if rest.is_empty() => Intent::NotUnderstood,

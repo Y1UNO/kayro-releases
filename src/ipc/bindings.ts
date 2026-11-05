@@ -317,6 +317,22 @@ export const commands = {
 	voiceCalibSummary: () => __TAURI_INVOKE<CalibSummary>("voice_calib_summary"),
 	/**  « Supprimer mes enregistrements ». */
 	voiceCalibClear: () => typedError<null, AppError>(__TAURI_INVOKE("voice_calib_clear")),
+	/**  Where the hands stand (the page asks once at load, then follows `HandsStateChanged`). */
+	handsState: () => __TAURI_INVOKE<HandsState>("hands_state"),
+	/**  Turns the camera on or off (as the shortcut does). Refused while the hands are not set up. */
+	handsSetOn: (on: boolean) => __TAURI_INVOKE<void>("hands_set_on", { on }),
+	handsModel: () => __TAURI_INVOKE<HandsModelInfo>("hands_model"),
+	/**
+	 *  Downloads the two models (the user's click: the hands' only network). Progress:
+	 *  `VoiceModelProgress` with the id « hands ».
+	 */
+	handsModelDownload: () => typedError<null, AppError>(__TAURI_INVOKE("hands_model_download")),
+	handsModelCancel: () => __TAURI_INVOKE<void>("hands_model_cancel"),
+	/**
+	 *  Removes the models; the camera is turned off first (the page asked the user), and the thread
+	 *  lets the models go before their files are deleted.
+	 */
+	handsModelRemove: () => typedError<null, AppError>(__TAURI_INVOKE("hands_model_remove")),
 };
 
 /** Events */
@@ -326,6 +342,7 @@ export const events = {
 	artChanged: makeEvent<ArtChanged>("art-changed"),
 	deepProgress: makeEvent<DeepProgress>("deep-progress"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
+	handsStateChanged: makeEvent<HandsStateChanged>("hands-state-changed"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
 	islandFrame: makeEvent<IslandFrame>("island-frame"),
 	islandMoment: makeEvent<IslandMoment>("island-moment"),
@@ -727,6 +744,61 @@ export type FxShape = {
 	dots: (number | null)[],
 };
 
+export type HandsModelInfo = {
+	sizeMb: number,
+	installed: boolean,
+	downloading: boolean,
+};
+
+/**  Read as a whole: a settings file without it (older), or with a broken one, keeps the default. */
+export type HandsSettings = {
+	/**  The hands are set up: their shortcut is registered (the camera still waits for it). */
+	enabled: boolean,
+	/**  Turns the camera (and the mouse in the air) on and off. */
+	hotkey: string,
+	/**
+	 *  Keep the camera while a program in full screen (a game) is in front; off: it closes until
+	 *  it leaves.
+	 */
+	inGame: boolean,
+	/**  Minutes without a hand in front of the camera before it turns itself off (1–30). */
+	idleMinutes: number,
+	/**
+	 *  How far the hand travels for the cursor to cross the screen (« Amplitude »): 0.5 (a small
+	 *  move) – 2.
+	 */
+	reach: number | null,
+	/**  The glow under the cursor while the hand leads it. */
+	glow: boolean,
+	/**  The finger that meets the thumb for a right click (the user's choice, 2026-11-05). */
+	rightFinger?: RightFinger,
+};
+
+export type HandsState = {
+	status: HandsStatus,
+	/**  Turned on by the user (the shortcut, Réglages); the status says what the camera does. */
+	on: boolean,
+};
+
+/**  Emitted whenever the hands' state changes. */
+export type HandsStateChanged = HandsState;
+
+export type HandsStatus = 
+/**  The camera is closed (the default). */
+"off" | 
+/**  On, the camera opening and the models loading. */
+"starting" | 
+/**  On, the camera open, no hand in front of it. */
+"watching" | 
+/**  A hand leads the cursor. */
+"leading" | 
+/**  On, but a game is in front or the screen is locked: the camera is closed until it ends. */
+"paused" | 
+/**  On, but the models are not installed. */
+"missing" | 
+/**  On, but no webcam answered. */
+"noCamera";
+
 export type HitKind = "kick" | "snare" | "hat" | "crash";
 
 export type HotkeyProblem = 
@@ -749,6 +821,8 @@ export type HotkeysReport = {
 	search: HotkeyStatus | null,
 	/**  `None` outside the push-to-talk mode. */
 	voice: HotkeyStatus | null,
+	/**  The hands' on/off (step 22); `None` until they are set up. */
+	hands: HotkeyStatus | null,
 	scenes: SceneHotkeyStatus[],
 };
 
@@ -1194,6 +1268,9 @@ export type RejectReason =
 /**  Beyond [`MAX_INPUTS`]. */
 "tooMany";
 
+/**  Thumb – ring finger or thumb – middle finger: the right click. */
+export type RightFinger = "ring" | "middle";
+
 export type RunStatus = 
 /**  Every step ran or was skipped without a `required` failure. */
 "completed" | 
@@ -1279,6 +1356,7 @@ export type SettingsPatch_Deserialize = {
 	searchHotkey?: string | null,
 	keyboardLayout?: KeyboardLayout | null,
 	voice?: VoiceSettings | null,
+	hands?: HandsSettings | null,
 	language?: string | null,
 	atmosphereIntensity?: number | null,
 	displayMode?: DisplayMode_Deserialize | null,
@@ -1343,6 +1421,7 @@ export type SettingsPatch_Serialize = {
 	searchHotkey: string | null,
 	keyboardLayout: KeyboardLayout | null,
 	voice: VoiceSettings | null,
+	hands: HandsSettings | null,
 	language: string | null,
 	atmosphereIntensity: number | null,
 	displayMode: DisplayMode_Serialize | null,
@@ -1413,6 +1492,8 @@ export type Settings_Deserialize = {
 	keyboardLayout: KeyboardLayout,
 	/**  Step 21: the voice (off by default; config/voice.rs). */
 	voice: VoiceSettings,
+	/**  Step 22: the hands, a mouse in the air (off by default; config/hands.rs). */
+	hands: HandsSettings,
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
@@ -1513,6 +1594,8 @@ export type Settings_Serialize = {
 	keyboardLayout: KeyboardLayout,
 	/**  Step 21: the voice (off by default; config/voice.rs). */
 	voice: VoiceSettings,
+	/**  Step 22: the hands, a mouse in the air (off by default; config/hands.rs). */
+	hands: HandsSettings,
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
@@ -1823,7 +1906,9 @@ export type VoiceOutcome = { kind: "launched"; id: string; name: string } | { ki
 /**  The user's music, by name, opened in Spotify. */
 { kind: "musicOpened"; name: string } | 
 /**  Kysland's music mode turned on or off. */
-{ kind: "musicMode"; on: boolean } | { kind: "showKayro" } | { kind: "hideKayro" } | { kind: "search"; query: string } | { kind: "stoppedListening" } | 
+{ kind: "musicMode"; on: boolean } | 
+/**  The hands' camera turned on or off (step 22); `ok` false: the hands are not set up. */
+{ kind: "hands"; on: boolean; ok: boolean } | { kind: "showKayro" } | { kind: "hideKayro" } | { kind: "search"; query: string } | { kind: "stoppedListening" } | 
 /**  Several sound alike: proposed, nothing started. */
 { kind: "doubt"; 
 /**  The words that named it (normalized): a choice teaches Kayro (memory.rs). */
@@ -1838,7 +1923,7 @@ said: string; candidates: VoiceCandidate[] } | { kind: "notUnderstood" } |
 /**  Réglages opened on a page (the page opens it). */
 { kind: "settings"; page: string } | { kind: "theme"; name: string; ok: boolean } | { kind: "kysland"; on: boolean } | 
 /**  What plays (`title` empty: nothing). */
-{ kind: "nowPlaying"; title: string; artist: string } | { kind: "lock" } | { kind: "desktop" } | { kind: "timer"; minutes: number } | 
+{ kind: "nowPlaying"; title: string; artist: string } | { kind: "lock" } | { kind: "desktop" } | { kind: "files" } | { kind: "timer"; minutes: number } | 
 /**  The timer ended (Kayro comes to say so). */
 { kind: "timerDone"; minutes: number } | { kind: "time"; text: string } | { kind: "screenshot" } | { kind: "webSearch"; query: string } | 
 /**  Typed into the window in front; `ok` false: a console, or no field (refused). */

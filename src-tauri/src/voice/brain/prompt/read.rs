@@ -15,6 +15,35 @@ fn plain(text: &str, most: usize) -> String {
         .to_string()
 }
 
+/// A song's search without the words around its name (« du Orelsan », « la chanson Toxic »).
+fn song(text: &str) -> String {
+    const AROUND: [&str; 12] = [
+        "la chanson ",
+        "le morceau ",
+        "le titre ",
+        "le son ",
+        "la musique ",
+        "l'album ",
+        "un peu de ",
+        "de la ",
+        "des ",
+        "du ",
+        "de ",
+        "d'",
+    ];
+    // A space after: « la chanson » alone is no name either.
+    let spaced = format!("{} ", text.trim());
+    let mut s = spaced.as_str();
+    while let Some(rest) = AROUND.iter().find_map(|w| {
+        s.get(..w.len())
+            .filter(|head| head.eq_ignore_ascii_case(w))
+            .map(|_| &s[w.len()..])
+    }) {
+        s = rest.trim_start();
+    }
+    s.trim().to_string()
+}
+
 fn window(rest: &str, w: &World) -> Option<Intent> {
     let (who, what) = rest.split_once(' ')?;
     let app = if who == "devant" {
@@ -33,7 +62,7 @@ fn window(rest: &str, w: &World) -> Option<Intent> {
     }
     let what = match what.trim() {
         "plein" => WindowAction::Maximize,
-        "reduire" => WindowAction::Minimize,
+        "cacher" | "reduire" => WindowAction::Minimize,
         "restaurer" => WindowAction::Restore,
         "devant" => WindowAction::Front,
         "gauche" => WindowAction::Left,
@@ -58,7 +87,11 @@ fn one(verb: &str, rest: &str, w: &World) -> (Option<Intent>, Option<u32>) {
         "ouvrir" => {
             let (id, after) = rest.split_once(" ecran ").unwrap_or((rest, ""));
             screen = after.trim().parse().ok().filter(|n| *n >= 1);
-            app(id.trim()).map(|id| Intent::Launch(Target::App(id)))
+            if id.trim() == super::FILES_ID {
+                Some(Intent::Files)
+            } else {
+                app(id.trim()).map(|id| Intent::Launch(Target::App(id)))
+            }
         }
         "fermer" => app(rest).map(Intent::Close),
         "scene" => w
@@ -67,7 +100,7 @@ fn one(verb: &str, rest: &str, w: &World) -> (Option<Intent>, Option<u32>) {
             .find(|s| s.id == rest)
             .map(|s| Intent::Launch(Target::Scene(s.id.clone()))),
         "ecouter" => (0..w.links.len())
-            .find(|i| link_id(*i) == rest)
+            .find(|i| link_id(w.links, *i) == rest)
             .map(|i| Intent::Link(w.links[i].id.clone())),
         "musique" => match rest {
             "lecture" => Some(Intent::Music(Music::Play)),
@@ -104,6 +137,19 @@ fn one(verb: &str, rest: &str, w: &World) -> (Option<Intent>, Option<u32>) {
             };
             app(id).map(|app| Intent::AppVolume { app, what })
         }
+        "musique-app" => {
+            let Some((id, what)) = rest.split_once(' ') else {
+                return (None, None);
+            };
+            let what = match what.trim() {
+                "lecture" => Music::Play,
+                "pause" => Music::Pause,
+                "suivante" => Music::Next,
+                "precedente" => Music::Previous,
+                _ => return (None, None),
+            };
+            app(id).map(|app| Intent::AppMusic { app, what })
+        }
         "micro" => match rest {
             "couper" => Some(Intent::Mic(true)),
             "remettre" => Some(Intent::Mic(false)),
@@ -121,6 +167,7 @@ fn one(verb: &str, rest: &str, w: &World) -> (Option<Intent>, Option<u32>) {
             .map(|t| Intent::Theme(t.id.clone())),
         "kysland" => Some(Intent::Kysland(rest == "oui")),
         "mode-musique" => Some(Intent::MusicMode(rest == "oui")),
+        "mains" => Some(Intent::Hands(rest == "oui")),
         "kayro" => match rest {
             "montrer" => Some(Intent::ShowKayro),
             "cacher" => Some(Intent::HideKayro),
@@ -128,9 +175,13 @@ fn one(verb: &str, rest: &str, w: &World) -> (Option<Intent>, Option<u32>) {
         },
         "chercher" if !rest.is_empty() => Some(Intent::Search(plain(rest, 40))),
         "web" if !rest.is_empty() => Some(Intent::WebSearch(plain(rest, 60))),
+        "spotify" => Some(song(&plain(rest, 60)))
+            .filter(|q| !q.is_empty())
+            .map(Intent::SpotifySearch),
         "ecrire" if !rest.is_empty() => Some(Intent::Dictate(plain(rest, 300))),
         "verrouiller" => Some(Intent::Lock),
         "bureau" => Some(Intent::Desktop),
+        "explorateur" => Some(Intent::Files),
         "minuteur" => rest
             .parse::<u32>()
             .ok()
@@ -202,7 +253,7 @@ pub fn answer(text: &str, w: &World) -> Answer {
 }
 
 /// « Mets la lecture aléatoire » is the mode, not a play too; « mets le son à vingt » is the
-/// level, not a step too.
+/// level, not a step too; « joue ma playlist X sur Spotify » is the playlist, not a play too.
 fn tidy(actions: &mut Vec<Action>) {
     let mode = actions.iter().any(|a| {
         matches!(
@@ -215,8 +266,23 @@ fn tidy(actions: &mut Vec<Action>) {
     let level = actions
         .iter()
         .any(|a| matches!(a.intent, Intent::VolumeTo(_)));
+    let playlist = actions
+        .iter()
+        .any(|a| matches!(a.intent, Intent::Link(_) | Intent::SpotifySearch(_)));
     actions.retain(|a| {
-        !(mode && a.intent == Intent::Music(Music::Play))
+        let play = matches!(
+            a.intent,
+            Intent::Music(Music::Play)
+                | Intent::AppMusic {
+                    what: Music::Play,
+                    ..
+                }
+        );
+        // The user's music opens in Spotify itself: « … sur Spotify » is no launch too.
+        let spotify =
+            matches!(&a.intent, Intent::Launch(Target::App(id)) if id.contains("spotify"));
+        !((mode || playlist) && play)
+            && !(playlist && spotify)
             && !(level && matches!(a.intent, Intent::Music(Music::Louder | Music::Quieter)))
     });
 }

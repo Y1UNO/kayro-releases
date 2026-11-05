@@ -1,0 +1,119 @@
+{
+  "hands": {
+    "intro": "Votre main devient une souris : Kayro la voit par la webcam et déplace le curseur, dans tout Windows. Tout se passe sur ce PC.",
+    "install": {
+      "missing": "Il reste {size} à télécharger (deux petits modèles).",
+      "button": "Installer les mains ({size})",
+      "progress": "Installation : {done} / {total}",
+      "cancel": "Annuler",
+      "network": "Téléchargés depuis Hugging Face et vérifiés à l’arrivée : c’est le seul accès au réseau des mains.",
+      "size": "Les mains prennent {size} sur ce PC.",
+      "remove": "Désinstaller les mains",
+      "removeAsk": "Supprimer les deux modèles ({size}) ? La caméra s’éteint.",
+      "removeYes": "Désinstaller",
+      "removing": "Désinstallation…",
+      "keep": "Garder"
+    },
+    "card": {
+      "eyebrow": "Mains",
+      "title": "La souris dans l’air",
+      "on": "Allumer la caméra",
+      "off": "Éteindre la caméra",
+      "shortcut": "Ou {key}, de n’importe où."
+    },
+    "status": {
+      "off": "Caméra éteinte.",
+      "starting": "La caméra s’allume…",
+      "watching": "Caméra allumée : montrez votre main.",
+      "leading": "Votre main mène le curseur.",
+      "paused": "En pause : un jeu est devant, ou l’écran est verrouillé.",
+      "missing": "Il manque les modèles : installez les mains.",
+      "noCamera": "La webcam ne donne pas d’image : une autre app l’utilise peut-être (OBS, un appel…). Nouvel essai toutes les 3 secondes."
+    },
+    "help": {
+      "eyebrow": "Antisèche",
+      "title": "Quelques signes, toute la souris",
+      "free": "Pouce et index écartés : le curseur est là où est votre main. Bougez doucement pour viser au pixel près.",
+      "left": "Pincez pouce et index (l’index peut se plier) : clic gauche. Gardez pincé pour glisser, pincez deux fois vite pour un double-clic.",
+      "right": "Pincez pouce et annulaire, l’index levé : clic droit.",
+      "rest": "Fermez le poing ou baissez la main : le curseur ne bouge plus.",
+      "off": "Levez le pouce une seconde (« c’est bon ») : les mains se coupent. À la voix : « coupe les mains ».",
+      "tip": "Restez dans la lumière : dans le noir, la webcam ralentit et le curseur aussi.",
+      "screens": "Plusieurs écrans : poussez la main au-delà du bord un instant, le curseur passe à l’écran d’à côté.",
+      "rightMiddle": "Pincez pouce et majeur, l’index levé : clic droit."
+    },
+    "settings": {
+      "show": "Modifier les réglages",
+      "hide": "Masquer les réglages",
+      "eyebrow": "Réglages",
+      "title": "À votre main",
+      "enabled": "Mains activées",
+      "enabledHelp": "Le raccourci allume et éteint la caméra. Coupé : elle ne s’allume jamais.",
+      "hotkey": "Raccourci",
+      "hotkeyHelp": "Allume et éteint la caméra, de n’importe où.",
+      "inGame": "Garder la caméra en jeu",
+      "inGameHelp": "Sinon, elle s’éteint quand un jeu passe en plein écran, et revient après.",
+      "glow": "Lueur sous le curseur",
+      "glowHelp": "Une lumière douce suit le curseur quand votre main le mène.",
+      "idle": "S’éteindre sans main après",
+      "idleHelp": "La caméra s’éteint seule quand aucune main ne passe devant.",
+      "minutes": "{n} min",
+      "reach": "Amplitude",
+      "reachHelp": "Combien bouger la main pour traverser l’écran.",
+      "reachSmall": "Petits gestes",
+      "reachMid": "Moyens",
+      "reachLarge": "Grands gestes"
+    },
+    "button": {
+      "on": "Mains : caméra allumée (l’éteindre)",
+      "off": "Mains : allumer la caméra"
+    },
+    "island": {
+      "on": "Mains : caméra allumée",
+      "off": "Mains : caméra éteinte",
+      "busy": "Mains : la webcam est prise par une autre app"
+    },
+    "privacy": "La caméra ne s’allume que quand vous le demandez ; sa lumière et la lueur du curseur le montrent. Les images restent dans la mémoire du PC le temps d’un calcul, jamais enregistrées ni envoyées.",
+    "limit": "Windows ne laisse pas la main cliquer dans un programme lancé en administrateur.",
+    "gesture": {
+      "eyebrow": "Bien démarrer",
+      "title": "Les gestes, pas à pas",
+      "choice": "Clic droit",
+      "choiceHelp": "Le doigt qui rejoint le pouce pour un clic droit. Prenez celui qui vous vient le plus naturellement.",
+      "ring": "Pouce + annulaire",
+      "middle": "Pouce + majeur",
+      "close": "Plus tard",
+      "replay": "Revoir les gestes"
+    },
+    "tuto": {
+      "step": "Geste {n} sur {total}",
+      "cameraOff": "Caméra éteinte",
+      "move": {
+        "title": "Main ouverte",
+        "text": "Le curseur suit votre paume. Bougez doucement pour viser au pixel près."
+      },
+      "click": {
+        "title": "Pincer",
+        "text": "Pouce contre index : un clic. Deux pincements rapides : un double-clic."
+      },
+      "drag": {
+        "title": "Garder pincé",
+        "text": "Pincez, déplacez, relâchez : vous glissez ce que vous tenez."
+      },
+      "right": {
+        "title": "Clic droit"
+      },
+      "rightRing": {
+        "text": "Pouce contre annulaire, l’index levé : le menu s’ouvre."
+      },
+      "rightMiddle": {
+        "text": "Pouce contre majeur, l’index levé : le menu s’ouvre."
+      },
+      "off": {
+        "title": "C’est bon",
+        "text": "Levez le pouce une seconde : la caméra s’éteint."
+      }
+    },
+    "credits": "Suivi de la main : MediaPipe Hands (Google, licence Apache 2.0). Main du tutoriel : « generic hand » du W3C (webxr-input-profiles), licence W3C Software and Document License."
+  }
+}

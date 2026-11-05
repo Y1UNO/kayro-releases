@@ -44,7 +44,7 @@ struct Music {
 }
 
 /// Where the AI's files are: `ai/` among Kayro's resources (next to the exe in a local build).
-fn models_dir<R: Runtime>(app: &AppHandle<R>) -> std::path::PathBuf {
+pub(crate) fn models_dir<R: Runtime>(app: &AppHandle<R>) -> std::path::PathBuf {
     let bundled = app.path().resource_dir().map(|d| d.join("ai"));
     match bundled {
         Ok(d) if d.is_dir() => d,

@@ -7,6 +7,8 @@ import {
   type AppsFile,
   type DetectedApp,
   type FxFrame,
+  type HandsModelInfo,
+  type HandsState,
   type IslandState,
   type MediaAction,
   type NowPlaying,
@@ -277,6 +279,16 @@ export const mediaIpc = {
  * Step 21, the voice: where it stands, the microphone button, a « ferme X » confirmed on screen,
  * and its models (downloaded on demand from Réglages: the voice's only network).
  */
+/** Step 22: the hands (the camera, the mouse in the air) and their two models. */
+export const handsIpc = {
+  state: (): Promise<Outcome<HandsState>> => plain(commands.handsState()),
+  setOn: (on: boolean): Promise<Outcome<void>> => plain(commands.handsSetOn(on)),
+  model: (): Promise<Outcome<HandsModelInfo>> => plain(commands.handsModel()),
+  download: (): Promise<Outcome<null>> => checked(commands.handsModelDownload()),
+  cancel: (): Promise<Outcome<void>> => plain(commands.handsModelCancel()),
+  remove: (): Promise<Outcome<null>> => checked(commands.handsModelRemove()),
+};
+
 export const voiceIpc = {
   state: (): Promise<Outcome<VoiceState>> => plain(commands.voiceState()),
   mute: (muted: boolean): Promise<Outcome<void>> => plain(commands.voiceMute(muted)),

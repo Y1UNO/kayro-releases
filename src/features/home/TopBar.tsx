@@ -1,9 +1,7 @@
 import { useRef, useState } from "react";
-import { FEATURES } from "../../app/features";
 import {
   ChevronLeftIcon,
   DisplayModeIcon,
-  HandIcon,
   IconButton,
   Pill,
   PlusIcon,
@@ -12,6 +10,7 @@ import {
 } from "../../design";
 import { t } from "../../i18n";
 import { VoiceButton } from "../voice/VoiceButton";
+import { HandsButton } from "../hands/HandsButton";
 import type { DisplayMode } from "../../ipc/bindings";
 import { chooseDisplayMode, useDisplayMode } from "../opening/expressMode";
 import { PopMenu } from "./PopMenu";
@@ -127,11 +126,7 @@ export function TopBar({
             <SettingsIcon />
           </IconButton>
           <VoiceButton size="sm" />
-          {FEATURES.hands && (
-            <IconButton label={t("home.hands")} size="sm" glass>
-              <HandIcon />
-            </IconButton>
-          )}
+          <HandsButton size="sm" />
         </>
       }
     />

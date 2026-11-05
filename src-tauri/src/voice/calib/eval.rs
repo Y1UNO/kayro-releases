@@ -23,6 +23,7 @@ pub fn key(intent: &Intent) -> String {
         Intent::Close(id) => format!("close:{id}"),
         Intent::Music(m) => format!("music:{}", format!("{m:?}").to_lowercase()),
         Intent::MusicMode(on) => format!("musicmode:{}", if *on { "on" } else { "off" }),
+        Intent::Hands(on) => format!("hands:{}", if *on { "on" } else { "off" }),
         Intent::Link(uri) => format!("link:{uri}"),
         Intent::ShowKayro => "show".into(),
         Intent::HideKayro => "hide".into(),
@@ -36,6 +37,9 @@ pub fn key(intent: &Intent) -> String {
             format!("{what:?}").to_lowercase().replace(['(', ')'], "")
         ),
         Intent::VolumeTo(n) => format!("volume:{n}"),
+        Intent::AppMusic { app, what } => {
+            format!("appmusic:{app}:{}", format!("{what:?}").to_lowercase())
+        }
         Intent::AppVolume { app, what } => {
             format!("appvol:{app}:{}", format!("{what:?}").to_lowercase())
         }
@@ -50,7 +54,9 @@ pub fn key(intent: &Intent) -> String {
         Intent::Timer(n) => format!("timer:{n}"),
         Intent::Time => "time".into(),
         Intent::Screenshot => "screenshot".into(),
+        Intent::Files => "files".into(),
         Intent::WebSearch(_) => "web".into(),
+        Intent::SpotifySearch(q) => format!("spotify:{q}"),
         Intent::Dictate(_) => "dictate".into(),
         Intent::Unknown => "inconnu".into(),
     }

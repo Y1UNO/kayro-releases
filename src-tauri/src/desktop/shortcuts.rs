@@ -23,6 +23,7 @@ pub fn on_hotkey<R: Runtime>(app: &AppHandle<R>, id: u32) {
         Action::Toggle => toggle(app),
         Action::Search => summon_search(app),
         Action::Voice => crate::voice::talk(true),
+        Action::Hands => crate::hands::toggle(app),
         Action::Scene(scene_id) => trigger_scene(app, &scene_id),
     }
 }

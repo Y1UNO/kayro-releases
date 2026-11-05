@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
@@ -133,27 +133,54 @@ fn emit<R: Runtime>(app: &AppHandle<R>, id: &str, step: DownloadStep, done: u64,
 /// Downloads what is missing of a model, file by file (`.part` until its fingerprint is right).
 pub async fn download<R: Runtime>(app: &AppHandle<R>, id: &str) -> Result<(), String> {
     let model = find(id).ok_or("unknown model")?;
-    if !set(&BUSY).insert(id.to_string()) {
-        return Err("already downloading".into());
-    }
-    set(&CANCEL).remove(id);
-    let result = fetch(app, model).await;
-    set(&BUSY).remove(id);
-    let cancelled = set(&CANCEL).remove(id);
-    let total: u64 = model.files.iter().map(|f| f.size).sum();
-    match &result {
-        Ok(()) => emit(app, id, DownloadStep::Done, total, total),
-        Err(_) if cancelled => emit(app, id, DownloadStep::Cancelled, 0, total),
-        Err(e) => {
-            tracing::warn!(model = id, error = %e, "voice: model download failed");
-            emit(app, id, DownloadStep::Failed, 0, total);
-        }
-    }
+    let dir = voice_dir().join(model.dir);
+    let result = download_files(app, id, &dir, model.files, || unpack(model)).await;
     super::models_changed(app);
     result
 }
 
-async fn fetch<R: Runtime>(app: &AppHandle<R>, model: &Model) -> Result<(), String> {
+/// Is `id` being downloaded?
+pub fn busy(id: &str) -> bool {
+    set(&BUSY).contains(id)
+}
+
+/// Downloads `files` into `dir` under the name `id` (its progress: `VoiceModelProgress`), then
+/// `after` (an archive to unpack). Also the hands' models (step 22), with their own folder.
+pub async fn download_files<R: Runtime>(
+    app: &AppHandle<R>,
+    id: &str,
+    dir: &Path,
+    files: &'static [File],
+    after: impl FnOnce() -> Result<(), String> + Send,
+) -> Result<(), String> {
+    if !set(&BUSY).insert(id.to_string()) {
+        return Err("already downloading".into());
+    }
+    set(&CANCEL).remove(id);
+    let result = match fetch(app, id, dir, files).await {
+        Ok(()) => after(),
+        Err(e) => Err(e),
+    };
+    set(&BUSY).remove(id);
+    let cancelled = set(&CANCEL).remove(id);
+    let total: u64 = files.iter().map(|f| f.size).sum();
+    match &result {
+        Ok(()) => emit(app, id, DownloadStep::Done, total, total),
+        Err(_) if cancelled => emit(app, id, DownloadStep::Cancelled, 0, total),
+        Err(e) => {
+            tracing::warn!(model = id, error = %e, "model download failed");
+            emit(app, id, DownloadStep::Failed, 0, total);
+        }
+    }
+    result
+}
+
+async fn fetch<R: Runtime>(
+    app: &AppHandle<R>,
+    id: &str,
+    dir: &Path,
+    files: &[File],
+) -> Result<(), String> {
     if rustls::crypto::CryptoProvider::get_default().is_none() {
         let _ = rustls::crypto::ring::default_provider().install_default();
     }
@@ -162,16 +189,16 @@ async fn fetch<R: Runtime>(app: &AppHandle<R>, model: &Model) -> Result<(), Stri
         .connect_timeout(Duration::from_secs(20))
         .build()
         .map_err(|e| e.to_string())?;
-    let total: u64 = model.files.iter().map(|f| f.size).sum();
+    let total: u64 = files.iter().map(|f| f.size).sum();
     let mut done = 0u64;
     let mut sent_at = Instant::now();
     tracing::info!(
-        model = model.id,
+        model = id,
         from = HF,
-        "voice: downloading a model (asked in Réglages)"
+        "downloading a model (asked in Réglages)"
     );
-    for file in model.files {
-        let target = path(model, file);
+    for file in files {
+        let target = dir.join(file.name);
         if std::fs::metadata(&target).is_ok_and(|m| m.len() == file.size) {
             done += file.size;
             continue;
@@ -190,7 +217,7 @@ async fn fetch<R: Runtime>(app: &AppHandle<R>, model: &Model) -> Result<(), Stri
             let mut out = std::fs::File::create(&part).map_err(|e| e.to_string())?;
             let mut hash = Sha256::new();
             while let Some(chunk) = response.chunk().await.map_err(|e| e.to_string())? {
-                if set(&CANCEL).contains(model.id) {
+                if set(&CANCEL).contains(id) {
                     return Err("cancelled".into());
                 }
                 out.write_all(&chunk).map_err(|e| e.to_string())?;
@@ -198,7 +225,7 @@ async fn fetch<R: Runtime>(app: &AppHandle<R>, model: &Model) -> Result<(), Stri
                 done += chunk.len() as u64;
                 if sent_at.elapsed() >= Duration::from_millis(100) {
                     sent_at = Instant::now();
-                    emit(app, model.id, DownloadStep::Downloading, done, total);
+                    emit(app, id, DownloadStep::Downloading, done, total);
                 }
             }
             out.flush().map_err(|e| e.to_string())?;
@@ -214,7 +241,7 @@ async fn fetch<R: Runtime>(app: &AppHandle<R>, model: &Model) -> Result<(), Stri
         }
         outcome?;
     }
-    unpack(model)
+    Ok(())
 }
 
 /// Deletes a model's files (its folder when it is left empty). Refused while being downloaded.

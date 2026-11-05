@@ -18,6 +18,7 @@ import { IslandApp } from "./features/island/IslandApp";
 import { startSounds } from "./sound";
 import { listenForUpdates } from "./features/update/updateStore";
 import { startVoice } from "./features/voice/voiceStore";
+import { startHands } from "./features/hands/handsStore";
 import { artStore, hubStore, sceneStore } from "./store";
 import "./index.css";
 import "./design/themeSwap.css";
@@ -101,6 +102,8 @@ if (DevPage) {
     installUserPrefs({ quality: false });
     // Step 21: the voice's state (the island's aura while it listens).
     startVoice(false);
+    // Step 22: the hands' state (the island says when the camera turns on or off).
+    startHands();
     appRoot.render(
       <StrictMode>
         <ThemeProvider initialThemeId={hubStore.getState().settings?.themeId}>
@@ -123,6 +126,7 @@ if (DevPage) {
     installUserPrefs({ quality: true });
     // Step 21: the voice's state, and a command that waited for an answer while Kayro loaded.
     startVoice(true);
+    startHands();
     appRoot.render(
       <StrictMode>
         <ThemeProvider

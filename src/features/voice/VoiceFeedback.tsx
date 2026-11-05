@@ -31,6 +31,8 @@ function wider(o: VoiceOutcome): string | null | undefined {
       return o.ok ? say("theme", { name: o.name }) : say("themeNone");
     case "kysland":
       return say(`kysland.${o.on ? "on" : "off"}`);
+    case "hands":
+      return o.ok ? say(`hands.${o.on ? "on" : "off"}`) : say("handsNone");
     case "nowPlaying":
       return o.title
         ? say("nowPlaying", { title: o.title, artist: o.artist })
@@ -46,6 +48,7 @@ function wider(o: VoiceOutcome): string | null | undefined {
       return say(o.ok ? "dictated" : "dictatedNone");
     case "lock":
     case "desktop":
+    case "files":
     case "screenshot":
     case "unknown":
       return say(o.kind);

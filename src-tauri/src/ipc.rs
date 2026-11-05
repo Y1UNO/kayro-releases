@@ -85,6 +85,7 @@ pub(crate) fn update_settings<R: Runtime>(
     notify(SettingsChanged(settings.clone()).emit(app));
     crate::desktop::settings_changed(app, &old, &settings);
     crate::voice::settings_changed(app, &old, &settings);
+    crate::hands::settings_changed(app, &old, &settings);
     Ok(settings)
 }
 
@@ -396,6 +397,12 @@ pub fn builder() -> Builder<tauri::Wry> {
             crate::ipc_voice::voice_calib_evaluate::<tauri::Wry>,
             crate::ipc_voice::voice_calib_summary,
             crate::ipc_voice::voice_calib_clear,
+            crate::ipc_hands::hands_state,
+            crate::ipc_hands::hands_set_on::<tauri::Wry>,
+            crate::ipc_hands::hands_model,
+            crate::ipc_hands::hands_model_download::<tauri::Wry>,
+            crate::ipc_hands::hands_model_cancel,
+            crate::ipc_hands::hands_model_remove::<tauri::Wry>,
         ])
         .events(collect_events![
             SettingsChanged,
@@ -429,7 +436,8 @@ pub fn builder() -> Builder<tauri::Wry> {
             crate::voice::VoiceHeard,
             crate::voice::models::VoiceModelProgress,
             crate::voice::VoiceLearned,
-            crate::voice::calib::VoiceRecorded
+            crate::voice::calib::VoiceRecorded,
+            crate::hands::HandsStateChanged
         ])
 }
 

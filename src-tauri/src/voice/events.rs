@@ -93,6 +93,11 @@ pub enum VoiceOutcome {
     MusicMode {
         on: bool,
     },
+    /// The hands' camera turned on or off (step 22); `ok` false: the hands are not set up.
+    Hands {
+        on: bool,
+        ok: bool,
+    },
     ShowKayro,
     HideKayro,
     Search {
@@ -144,6 +149,7 @@ pub enum VoiceOutcome {
     },
     Lock,
     Desktop,
+    Files,
     Timer {
         minutes: u32,
     },

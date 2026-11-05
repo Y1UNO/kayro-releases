@@ -110,6 +110,8 @@ pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
     hotkeys::init(app);
     // Step 21: the voice (nothing opens while it is off, the default).
     crate::voice::init(app);
+    // Step 22: the hands (the camera stays closed until their shortcut).
+    crate::hands::init(app);
     let s = settings(app);
     SILENT_START.store(silent, Ordering::SeqCst);
     if silent {

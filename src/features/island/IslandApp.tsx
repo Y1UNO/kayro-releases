@@ -9,6 +9,7 @@ import { desktopIpc, mediaIpc } from "../../ipc/commands";
 import { playSound } from "../../sound";
 import { hubStore, sceneStore, useHub, useScenes } from "../../store";
 import { usePassage } from "../modes/usePassage";
+import { useHands } from "../hands/handsStore";
 import { useUpdate } from "../update/updateStore";
 import { auraColour } from "../voice/aura";
 import { useVoice } from "../voice/voiceStore";
@@ -87,6 +88,21 @@ export function IslandApp() {
     if (update) say(t("island.update", { version: update.version }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [update]);
+  // Step 22: the camera turned on or off (the shortcut, a minute without a hand) is said too.
+  const handsOn = useHands((s) => s.state.on);
+  const handsBefore = useRef(handsOn);
+  useEffect(() => {
+    if (handsBefore.current === handsOn) return;
+    handsBefore.current = handsOn;
+    say(t(handsOn ? "hands.island.on" : "hands.island.off"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handsOn]);
+  // A webcam held by another app (OBS, a call) is said once, not each new try.
+  const handsBusy = useHands((s) => s.state.on && s.state.status === "noCamera");
+  useEffect(() => {
+    if (handsBusy) say(t("hands.island.busy"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handsBusy]);
   const stageCanvas = useRef<HTMLCanvasElement>(null);
   const stage = useMusicStage(
     {

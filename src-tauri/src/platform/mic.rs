@@ -16,8 +16,7 @@ use windows::Win32::Media::Audio::{
 use windows::Win32::System::Com::StructuredStorage::PropVariantToStringAlloc;
 use windows::Win32::System::Com::{CoCreateInstance, CoTaskMemFree, CLSCTX_ALL, STGM_READ};
 use windows::Win32::UI::Shell::{
-    SHQueryUserNotificationState, QUNS_BUSY, QUNS_NOT_PRESENT, QUNS_PRESENTATION_MODE,
-    QUNS_RUNNING_D3D_FULL_SCREEN,
+    SHQueryUserNotificationState, QUNS_NOT_PRESENT, QUNS_RUNNING_D3D_FULL_SCREEN,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetWindowRect, GetWindowThreadProcessId,
@@ -234,12 +233,11 @@ pub fn front(own: u32) -> Front {
     // SAFETY: a plain query; a failure reads as « nothing special ».
     let state = unsafe { SHQueryUserNotificationState() }.ok();
     let locked = state == Some(QUNS_NOT_PRESENT);
-    // Windows' « a program in full screen runs » says nothing of which one: Kayro's own
-    // immersive window counts there too. Only another program in front pauses the voice.
-    let busy = matches!(
-        state,
-        Some(QUNS_BUSY | QUNS_RUNNING_D3D_FULL_SCREEN | QUNS_PRESENTATION_MODE)
-    );
+    // Windows' « a program in full screen runs » (busy) says nothing of which one: Kayro's own
+    // window fading out counted there, and the voice stayed paused for twenty minutes after
+    // Kayro hid (2026-11-05 logs). Only the window in front is judged now, plus a game in
+    // exclusive full screen (always in front while it runs).
+    let busy = state == Some(QUNS_RUNNING_D3D_FULL_SCREEN);
     let front = foreground_pid().filter(|&pid| pid != own);
     // A film in a browser or a player is no game: the voice stays (2026-11-05, the user's wish).
     let film = front
@@ -275,7 +273,11 @@ const WATCHING: [&str; 19] = [
 ];
 
 fn watching(exe: &str) -> bool {
-    let exe = exe.rsplit(['\\', '/']).next().unwrap_or(exe).to_ascii_lowercase();
+    let exe = exe
+        .rsplit(['\\', '/'])
+        .next()
+        .unwrap_or(exe)
+        .to_ascii_lowercase();
     WATCHING.contains(&exe.as_str())
 }
 

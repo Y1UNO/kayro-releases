@@ -11,9 +11,10 @@ use tauri::{AppHandle, Manager, Runtime};
 use super::{lists, name_of, on_main, tell};
 use crate::config::schema::SettingsPatch;
 use crate::config::ConfigState;
+use crate::media::MediaAction;
 use crate::platform::{arrange, audio, system, typing};
 use crate::procwatch::{ProcWatch, RunningApps};
-use crate::voice::command::{Intent, Target, WindowAction};
+use crate::voice::command::{Intent, Music, Target, WindowAction};
 use crate::voice::VoiceOutcome;
 
 /// The search engine (one constant; a setting later).
@@ -28,6 +29,23 @@ pub(super) fn perform<R: Runtime>(app: &AppHandle<R>, intent: Intent) -> VoiceOu
             audio::set_master(level);
             VoiceOutcome::VolumeTo { level }
         }
+        Intent::AppMusic { app: id, what } => {
+            let name = name_of(&apps, &id);
+            let action = match what {
+                Music::Pause => MediaAction::Pause,
+                Music::Next => MediaAction::Next,
+                Music::Previous => MediaAction::Previous,
+                _ => MediaAction::Play,
+            };
+            // By the app's executable first (« comet », « msedge »), else by its name.
+            let exes = player_exes(app, &id);
+            let found = crate::media::control_of(app, action, &exes)
+                .or_else(|| crate::media::control_of(app, action, &name_words(&name)));
+            match found {
+                Some(_) => VoiceOutcome::Music { action: what },
+                None => VoiceOutcome::NotRunning { id, name },
+            }
+        }
         Intent::AppVolume { app: id, what } => {
             let pids = super::pids_any(app, &id);
             let ok = !pids.is_empty() && audio::app_volume(&pids, what);
@@ -40,6 +58,12 @@ pub(super) fn perform<R: Runtime>(app: &AppHandle<R>, intent: Intent) -> VoiceOu
         Intent::Mic(muted) => {
             let mic = config.settings().voice.microphone;
             let ok = audio::mute_microphone(&mic, muted);
+            // Muted, the voice hears nothing more (not even « remets mon micro »): its own
+            // microphone button goes off too, and pressing it gives Windows' microphone back
+            // (ipc_voice.rs). Seen on 2026-11-05: the voice deaf for an hour.
+            if muted && ok {
+                crate::voice::set_muted(app, true);
+            }
             VoiceOutcome::Mic { muted, ok }
         }
         Intent::LastGame => match config.ui_state().recents.first().cloned() {
@@ -92,6 +116,10 @@ pub(super) fn perform<R: Runtime>(app: &AppHandle<R>, intent: Intent) -> VoiceOu
             system::show_desktop();
             VoiceOutcome::Desktop
         }
+        Intent::Files => {
+            system::file_explorer();
+            VoiceOutcome::Files
+        }
         Intent::Timer(minutes) => {
             timer(app, minutes);
             VoiceOutcome::Timer { minutes }
@@ -112,6 +140,18 @@ pub(super) fn perform<R: Runtime>(app: &AppHandle<R>, intent: Intent) -> VoiceOu
                 tracing::warn!(error = ?e, "voice: the web search did not open");
             }
             VoiceOutcome::WebSearch { query }
+        }
+        Intent::SpotifySearch(query) => {
+            // Spotify's own search (Spotify goes online, not Kayro), then its first « Lire ».
+            let wanted = query.clone();
+            let _ = std::thread::Builder::new()
+                .name("voice-spotify".into())
+                .spawn(move || {
+                    let done =
+                        crate::platform::spotify::search_and_play(&wanted, Duration::from_secs(12));
+                    tracing::info!(?done, "voice: Spotify's first result");
+                });
+            VoiceOutcome::MusicOpened { name: query }
         }
         Intent::Dictate(text) => VoiceOutcome::Dictated {
             ok: typing::type_text(std::process::id(), &text),
@@ -225,9 +265,47 @@ fn encode(query: &str) -> String {
     out
 }
 
+/// The executables of an app that runs, lower case and without « .exe » (how Windows names
+/// their players: `Comet.…`, `MSEdge`).
+fn player_exes<R: Runtime>(app: &AppHandle<R>, id: &str) -> Vec<String> {
+    let mut exes: Vec<String> = super::pids_any(app, id)
+        .into_iter()
+        .filter_map(crate::platform::process::exe_name)
+        .map(|e| e.trim_end_matches(".exe").to_string())
+        .filter(|e| e.len() >= 3)
+        .collect();
+    exes.sort();
+    exes.dedup();
+    exes
+}
+
+/// The words of an app's name that can name its player (not « Microsoft », « Player »…).
+fn name_words(name: &str) -> Vec<String> {
+    const VAGUE: &[&str] = &[
+        "microsoft",
+        "windows",
+        "player",
+        "media",
+        "music",
+        "raccourci",
+    ];
+    name.to_lowercase()
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| w.chars().count() >= 4 && !VAGUE.contains(w))
+        .map(String::from)
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_player_is_named_by_the_words_of_its_app() {
+        assert_eq!(name_words("Comet"), ["comet"]);
+        assert_eq!(name_words("Spotify (raccourci)"), ["spotify"]);
+        assert!(name_words("Microsoft Media Player").is_empty());
+    }
 
     #[test]
     fn a_query_is_encoded_for_the_url() {

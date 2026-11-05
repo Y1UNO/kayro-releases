@@ -30,7 +30,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 19c | **Finitions ajout et rangement** (2026-10-30) : scan avancé du PC, logos ronds, cartes aux couleurs du logo, renommer sur la carte, clic droit rangé, fil physique | 19b | G |
 | [x] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
 | [ ] 21 | **Voix** (extension A) : écoute active (mot d'éveil) ou push-to-talk, très bonne en français, 100 % locale (voir « Plus tard ») | 6, 10, 20 | H |
-| [ ] 22 | **Mains** (extension B) : gestes à la webcam, traitement local | 21 | H |
+| [x] 22 | **Mains** (extension B) : gestes à la webcam, traitement local | 21 | H |
 | [ ] 23 | **Intégrations** (extension C) : OBS, Discord, lumières, en nouvelles actions de scène | 10 | H |
 | [ ] 24 | **Moteur WebGL** (extension D) : suite du moteur graphique de l'étape 12b, derrière `FxLayer` | 8, 12b | H |
 | [ ] 18 | **Audit final, juste avant la v1.0** (reporté à la fin le 2026-11-02 : l'app change encore) : perf, sécurité **et cybersécurité (test d'intrusion de Kayro)**, robustesse, accessibilité | 1–24 | I |
@@ -664,6 +664,37 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
 - **Page simple une fois installé (2026-11-05)** : la carte dit la place prise (« Arya prend 6 Go sur ce PC ») avec
   « Désinstaller Arya » (question avant, la calibration gardée) ; installé et à l'écoute, seules la carte et l'antisèche
   restent, le reste sous « Modifier les réglages ». Vérifié dans l'exe (CDP, données de test, désinstallation non validée).
+- [ ] **Affiner les commandes vocales au fil de ses retours** (demande de l'utilisateur, 2026-11-05 : il ajoutera des
+  détails au fur et à mesure ; chaque retour = une ligne ici, une phrase dans une série de test, la règle du cerveau).
+  - [x] « Cache Discord » (le bouton « – ») cachait Kayro : le cerveau écrit `fenetre <app> cacher` (le même mot
+    que la phrase : avec « reduire », « ferme Lossless Scaling » devenait « réduire ») ; « kayro cacher » seulement
+    pour Kayro lui-même ; règles de secours pareil.
+  - [x] « Lance play sur Comet » ouvrait Spotify : nouvelle action `musique-app <app> lecture | pause | suivante |
+    precedente`, sur le lecteur de cette app dans Windows (Comet s'annonce « Comet.… », trouvé par son exe ou son nom).
+  - [x] « Ouvre l'explorateur de fichiers » lançait 7-Zip File Manager : l'explorateur de Windows est dit au cerveau
+    parmi les apps (`explorateur`, ouvert par Win+E, une chose fixe comme « bureau ») ; 0 → 12/12.
+  - [x] « Elle arrête de marcher » : la voix restait en pause « jeu » 15 à 30 min après que Kayro se cache (journaux
+    du 05/11 : pause dès le départ de Kayro, reprise à son retour). Windows disait « un programme plein écran tourne »
+    pendant le fondu de Kayro lui-même. Seule la fenêtre de devant compte désormais (plus un jeu en plein écran
+    exclusif). Vu aussi : « micro couper » à la voix coupe le micro Windows, et Arya ne t'entend plus ensuite.
+  - [x] Micro coupé à la voix = voix sourde : son bouton micro s'éteint aussi, et le rallumer remet le micro Windows.
+  - [x] Les playlists (« mets ma playlist Hyperpop ») donnaient « musique lecture » : le cerveau les voyait
+    « l1, l2… ». Elles ont maintenant un id tiré de leur nom (`kiff-du-moment`) et un exemple avec la première
+    playlist ; une playlist demandée retire le « play » et l'« ouvrir Spotify » en trop. Série 4 → 20/21 ; Arya
+    40/40 avec ses playlists ; Yuna 38/40 (« Tu as une minute ? » → minuteur 1, nouveau).
+  - [x] La playlist s'ouvrait sans jouer (Spotify ne lance une playlist venue de l'extérieur que sur un clic) :
+    Kayro appuie sur son bouton « Lire : X » par l'accessibilité de Windows (`platform/spotify.rs`, sur le PC, le
+    nom à une lettre près : « Kiffe »/« Kiff »). Essayé sur son Spotify : Hyperpop, Kiff du moment, Festival
+    lancées en ≈ 0,7 s, aussi Spotify réduit. Non essayé : Spotify fermé (démarrage à froid, 12 s d'attente).
+  - [x] Choisir une musique par son nom (« mets One More Time de Daft Punk ») : action `spotify <nom>` ; Kayro ouvre
+    la recherche de Spotify (`spotify:search:`, c'est Spotify qui va en ligne, pas Kayro) et appuie sur le premier
+    « Lire » de la zone principale, une fois les résultats stables (`platform/spotify_search.rs`). Essayé : Daft Punk,
+    Basique, Tapa Toma, Thriller, Stromae justes en 2 à 5 s ; « orelsan » seul lance la « Radio Orelsan » de Spotify.
+    Le cerveau écrit les noms comme il les entend (« deft pink », Spotify retrouve) ; « joue Around the World »
+    part encore vers une app (dire « mets ») ; « tapa thomas » trompe Spotify.
+  - Mesures (voix Windows) : série « cacher / play » 3 → 8/12, « … sur Comète » 12/12, « … sur Comet » 6 → 12/18
+    (les voix françaises lisent « Komé ») ; ta voix : Arya 40/40, Yuna 39/40 ; fenêtres 12/12, son 6 → 7/8, le reste
+    inchangé. Non testé dans l'exe avec ta voix.
 - [ ] **Réponses parlées d'Arya** → app IA à part (voir « Écosystème Kayro ») : reportées (décision de l'utilisateur, 2026-11-05 : pas encore de modèle de voix
   français assez bon à son goût). À la reprise : la voix posée et grave et les mesures ci-dessus ; pour le timbre, ce
   qui marchait bien dans son projet Grand Sage (sessions Claude « The GREAT SAGE ») ; personnalités en phrases écrites ;
@@ -674,6 +705,84 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   dépendre d'aucune limite d'un modèle tiers. Voie la plus réaliste : partir d'un modèle ouvert (Apache/MIT) et
   l'affiner sur des données dont on a le droit (ta voix, voix créées, jeux de données libres) ; un modèle partant de
   zéro demande beaucoup de données et de calcul. À étudier comme une étape à part.
+
+### Avant la v1.0 — Mains (extension B, étape 22)
+- **Plan validé le 2026-11-05** (demande de l'utilisateur) : une **souris dans l'air**, pour tout Windows, deux signes.
+  Pouce et index écartés = main libre, le curseur suit la base de l'index (image en miroir) ; pincement pouce-index =
+  clic gauche, tenu = bouton maintenu (glisser), deux rapides = double-clic ; pincement pouce-annulaire = clic droit.
+  Caméra coupée par défaut, allumée par Ctrl+Alt+M, Kysland ou la voix ; éteinte seule sans main (2 min), en jeu,
+  écran verrouillé ; témoin : lumière de la webcam + icône dans Kysland. Exception à noter dans `CLAUDE.md` (la main
+  clique partout, comme la souris). Limite : Windows bloque les clics simulés vers les fenêtres administrateur.
+- **Essai du 2026-11-05** (`spikes/07-mains`, sa propre crate, hors dépôt) : webcam « FHD Camera » par Media
+  Foundation (crate `windows`, aucune nouvelle crate), 640×480 NV12 converti en BGRA ; MediaPipe Hands en ONNX
+  (OpenCV zoo 2023-02, Apache-2.0 : paume 3,9 Mo + 21 points 4,1 Mo, SHA-256 notés) dans l'ONNX Runtime 1.31.1 déjà
+  embarqué, 1 fil. **La webcam ralentit dans le noir** : 15 i/s pièce sombre (horloge de la caméra, tous formats ;
+  exposition manuelle → 20), 24–25 i/s lumière allumée. Paume 8,5–9 ms, 21 points 4,7–5 ms ; main suivie 95–100 %
+  des images (paume relancée 4 à 40 fois en 30–40 s). **Processeur 1,3–1,5 % de la machine** (cible 1 %), 2,0 % si la
+  paume tourne à chaque image. Écarts (points en mètres) : pouce-index pincé 0,8–2,5 cm, libre 3–9 cm ; pouce-annulaire
+  pincé 1,8–2,4 cm (suivi moins sûr, 0,5–0,9, 3 pertes), sinon ≥ 3,2 ; pouce-majeur jamais sous 2,5 → l'annulaire
+  reste. Base de l'index immobile à 1–2 % près pendant un pincement. Non mesuré : délai caméra → écran.
+- **Construit le 2026-11-05** (branche `step-22-mains`) : cœur `src-tauri/src/hands/` (un fil, parqué sans caméra quand
+  c'est coupé ; caméra `cam.rs`, suivi `track.rs`, souris `pointer.rs` pure et testée : deux seuils 2,4 / 3 cm, curseur
+  figé 0,15 s au pincement, clic droit seulement l'index ouvert, poing = rien, filtre One Euro ; `SendInput`
+  `platform/mouse.rs` sur l'écran où est le curseur quand la main paraît ; lueur `glow.rs` sur la couche native de
+  Kysland ; recherche de la main 5 fois par seconde au plus quand il n'y en a pas). Réglages `settings.hands`
+  (coupé par défaut, Ctrl+Alt+M, amplitude, extinction 1–10 min, lueur, « en jeu »). Modèles téléchargés à la
+  demande (téléchargeur de la voix rendu commun, `hands/models.rs`, commit et SHA-256 épinglés) dans
+  `%APPDATA%\Kayro\hands\`. ONNX Runtime partagé avec le rythme. Réglages › Mains (Capri, comme la voix), bouton
+  mains de la barre du haut (caché depuis la ronde 5) allumé quand la caméra tourne, message de l'île. Tests : cargo
+  416 (+9), vitest 708. **Non testé dans l'exe** ; non fait : « mode mains » à la voix, molette.
+- **Premier essai de l'utilisateur (2026-11-05)** : « grave cool », assez vif mais pas assez précis ni fluide, petits
+  mouvements mal vus, aucun moyen de couper les mains sans le clavier. Repris le jour même : mouvement **relatif avec
+  accélération** (comme une souris : lent = au pixel, rapide = loin ; gain 0,6 → 3,2 largeurs d'écran par largeur
+  d'image entre 0,04 et 0,5 image/s), ancre au **centre de la paume** (5 points, ne bouge pas au pincement), filtre
+  One Euro plus calme (0,8 Hz) ; **poing = soulever la souris** (repart à neuf en rouvrant) ; le curseur **glisse
+  entre deux images** (`hands/glide.rs` : fil à part, pas de 4 ms, lissage 18 ms, parqué une fois arrivé, la vraie
+  souris reprend la main ; la lueur suit sans être redessinée), le curseur peut changer d'écran ; **pouce levé
+  1 s = couper les mains** ; à la voix, « active / coupe les mains » et « ouvre les réglages des mains » (règles et
+  cerveau). « Amplitude » devient « Vitesse du curseur ». Cargo 417, vitest 708. Non testé dans l'exe.
+- **Deuxième essai (2026-11-05)** : pouce levé et voix OK ; la tenue « saute », un clic reste parfois tenu, les gestes
+  rapides font n'importe quoi. Journal : **main perdue toutes les 0,3–1 s** (souvent 1 image, parfois 0,5 s), chaque
+  perte relâchait le bouton. Corrigé : **grâce de 0,3 s** (une perte courte ne relâche ni ne bouge rien), recherche de
+  la paume **dans la même image** dès la perte, seuil de suivi 0,35 (nouvelle main 0,5), cadre suivant **avancé de
+  80 % du dernier déplacement**, saut de plus de 0,12 image en une image = erreur du modèle ignorée, gain rapide
+  2,8. Le journal note chaque clic (écarts en cm) et un résumé par session (images/s, % vu, pertes, clics). Cargo 418.
+- **Retour au curseur absolu (2026-11-05)** : le mouvement relatif décalait main et curseur (« ultra perturbant », choix
+  de l'utilisateur : main et curseur toujours alignés). Le curseur est là où est la paume : zone de 0,42 image de
+  large au centre, **aux proportions de l'écran** (même finesse en haut-bas et gauche-droite), filtre One Euro plus
+  fort au ralenti (0,6 Hz, β 6) ; le curseur glisse vers sa place (`glide.rs`), sur l'écran où il est quand la main
+  paraît ; poing = curseur immobile ; « Vitesse du curseur » redevient « Amplitude ». Gardés : grâce 0,3 s, recherche
+  immédiate, saut ignoré, pouce levé, journal. Cargo 418.
+- **Troisième essai (vidéo du 2026-11-05)** : (1) OBS tenait la webcam, Kayro réessayait toutes les 0,1 s (210 fois en
+  27 s) sans rien dire → nouvel essai toutes les 3 s, état « webcam prise » dit une fois par l'île ; (2) le pincement
+  « normal » (index plié) ne cliquait pas, il exigeait l'index tendu → un pincement compte si le bout de l'index n'est
+  pas replié dans la paume (`INDEX_OUT` 0,5), et la tenue glisse même index plié ; (3) le clic droit tenu clignotait
+  (pouce–annulaire 2,0–3,5 cm) → relâche à 3,8 cm, et chaque relâche demande 2 images de suite (ou 1 cm de plus) ;
+  (4) un seul écran atteignable → pousser la main au-delà du bord 0,3 s passe à l'écran voisin. Journal : `refused`
+  (pincements refusés, pour régler `INDEX_OUT`). Cargo 422, vitest 708.
+- **Validée le 2026-11-05** (« ça joue pas mal », webcam et éclairage modestes). Dernière session : 98 s, 23 i/s, main vue
+  84 %, 53 clics, 25 pincements refusés (au plus 0,497 : juste sous `INDEX_OUT` 0,5, à baisser vers 0,4 si les clics
+  ratent encore). Limites : un peu de bruit dans le noir ; pas de molette ; CPU de l'exe non mesuré.
+- **Main 3D et doigt du clic droit (2026-11-05)** : après l'installation, une main 3D (canvas 2D, `handPose.ts` +
+  `handDraw.ts`) montre les signes en boucle ; le clic droit se fait au choix pouce + annulaire ou pouce + majeur
+  (`rightFinger`, Réglages › Mains). Vitest 711, cargo 422.
+  Puis, sur sa référence (gravure / manga) : la main est ray-marchée en WebGL2 (`handInk.ts`, `handInkShader.ts`) à
+  l'encre dans les couleurs du thème ; < 1 ms par image (30 images en 21 ms, page de test) ; repli 2D sans WebGL2.
+  « Trop cubique » : paume en dôme (ellipsoïdes : paume, éminence du pouce, talon), poignet aplati, phalanges fondues
+  avec un renflement aux articulations, doigts un peu pliés et écartés au repos, hachures qui entourent les formes.
+  « Boudiné, articulations trop visibles » (3 passes capture + critique) : doigts fins et effilés d'un seul tube
+  (rayons qui se rejoignent aux articulations, plus de sphères), peau entre les doigts, pouce plus fin et plus
+  levé, poignet sans couture ; le trait devient une taille-douce (lignes parallèles courbées par la forme, épaisses
+  dans l'ombre, rien côté lumière) au lieu des tirets le long des bords.
+  Sur ses photos (14, plusieurs angles) : les doigts qui ne pincent pas restent levés et écartés ; paume plate
+  presque carrée (plus large aux jointures qu'au poignet) ; les trois grandes lignes de la main (sans elles, la paume
+  se lisait comme un dos de main, « à l'envers ») ; pouce plus court, plus levé, sorti de son coussinet.
+- **Tutoriel des gestes (2026-11-05)** : DA Kayro (nuit du thème, lune, anneau, gravure de lumière, filet A → B) et
+  anatomie revue (pouce à 2 phalanges visibles, solveur 2 os, proportions, ongles) ; 5 scènes en motion design avec un
+  petit écran synchronisé (`tutorialScript.ts`, `HandTutorial.tsx`, `MiniScreen.tsx`). Vitest 715.
+- **Vraie main (2026-11-05)** : modèle « generic hand » du W3C (`src/features/hands/model/`, licence W3C, embarqué en
+  `?inline` : la CSP n'autorise aucun fetch) skinné en WebGL2 (`handModel.ts`, `handSkin.ts`) ; poses calées sur ses os ;
+  caméra tournante par scène ; vérifié pose par pose en grand. Vitest 717.
 
 ## Abandonné
 Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).

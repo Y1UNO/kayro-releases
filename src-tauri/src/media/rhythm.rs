@@ -30,7 +30,7 @@ const LEAST_S: f32 = 6.0;
 const FPS: f32 = 50.0;
 
 /// ONNX Runtime, loaded once from Kayro's own `onnxruntime.dll` (never a system one).
-fn environment(dir: &Path) -> Option<&'static Environment> {
+pub(crate) fn environment(dir: &Path) -> Option<&'static Environment> {
     static ENV: OnceLock<Option<Environment>> = OnceLock::new();
     ENV.get_or_init(|| {
         let made = ort::init_from(dir.join("onnxruntime.dll"))

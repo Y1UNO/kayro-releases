@@ -11,7 +11,10 @@ fn k<'a>(id: &'a str, name: &'a str) -> Known<'a> {
 }
 
 fn told(s: &Spoken) -> Vec<String> {
-    s.apps.iter().map(|n| format!("{} = {}", n.id, n.name)).collect()
+    s.apps
+        .iter()
+        .map(|n| format!("{} = {}", n.id, n.name))
+        .collect()
 }
 
 #[test]
@@ -64,7 +67,10 @@ fn games_are_never_grouped_and_utilities_are_left_out() {
         game("slay-the-spire", "Slay the Spire"),
         game("slay-the-spire-2", "Slay the Spire 2"),
         k("check-for-updates", "Check For Updates"),
-        k("python-3-13-module-docs-64-bit", "Python 3.13 Module Docs (64-bit)"),
+        k(
+            "python-3-13-module-docs-64-bit",
+            "Python 3.13 Module Docs (64-bit)",
+        ),
         k("blender-4-4", "Blender 4.4"),
     ];
     assert_eq!(

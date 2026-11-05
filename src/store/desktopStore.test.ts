@@ -10,6 +10,7 @@ const REPORT: HotkeysReport = {
   toggle: { hotkey: "Ctrl+Alt+H", problem: "conflict" },
   search: null,
   voice: null,
+  hands: null,
   scenes: [],
 };
 
@@ -64,6 +65,7 @@ describe("desktop store", () => {
       toggle: { hotkey: "Ctrl+Alt+J", problem: null },
       search: null,
       voice: null,
+      hands: null,
       scenes: [],
     });
     expect(store.getState().recents).toEqual(["c"]);

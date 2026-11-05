@@ -6,6 +6,7 @@ import {
   type AppPalette,
   type AppEntry,
   type AppRunState,
+  type HandsState,
   type HitKind,
   type HotkeysReport,
   type IslandFrame,
@@ -258,6 +259,11 @@ export function onUpdateProgress(
   handler: (p: { downloaded: number; total: number | null }) => void,
 ): Promise<Unlisten> {
   return listenTo(events.updateProgress.listen, handler);
+}
+
+/** Step 22: where the hands stand (the camera, the hand leading the cursor). */
+export function onHandsState(handler: (s: HandsState) => void): Promise<Unlisten> {
+  return listenTo(events.handsStateChanged.listen, handler);
 }
 
 /** Step 21: where the voice stands (the microphone indicator). */

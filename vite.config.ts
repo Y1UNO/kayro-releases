@@ -14,6 +14,8 @@ export default defineConfig({
     __APP_NAME__: JSON.stringify(tauriConf.productName),
     __APP_VERSION__: JSON.stringify(tauriConf.version),
   },
+  // Step 22: the tutorial's hand model (src/features/hands/model/right.glb), inlined (`?inline`).
+  assetsInclude: ["**/*.glb"],
   clearScreen: false,
   server: {
     port: 1420,

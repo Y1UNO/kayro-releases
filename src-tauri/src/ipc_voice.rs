@@ -23,6 +23,15 @@ pub fn voice_state() -> VoiceState {
 #[tauri::command]
 #[specta::specta]
 pub fn voice_mute<R: Runtime>(app: AppHandle<R>, muted: bool) {
+    if !muted {
+        // Listening again: Windows' microphone too, in case « coupe mon micro » muted it.
+        let mic = app
+            .state::<crate::config::ConfigState>()
+            .settings()
+            .voice
+            .microphone;
+        crate::platform::audio::mute_microphone(&mic, false);
+    }
     crate::voice::set_muted(&app, muted);
 }
 

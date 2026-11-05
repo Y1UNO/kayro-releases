@@ -10,6 +10,7 @@ use specta::Type;
 pub use super::game_colors::{
     ColorCharacter, ColorIntensity, ColorPassage, ColorPick, ColorTrigger,
 };
+pub use super::hands::HandsSettings;
 use super::migrate::{current_version, Migration};
 pub use super::scene::SceneFile;
 pub use super::sounds::SoundPack;
@@ -76,6 +77,8 @@ pub struct Settings {
     pub keyboard_layout: KeyboardLayout,
     /// Step 21: the voice (off by default; config/voice.rs).
     pub voice: VoiceSettings,
+    /// Step 22: the hands, a mouse in the air (off by default; config/hands.rs).
+    pub hands: HandsSettings,
     pub language: String,
     /// Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »).
     pub atmosphere_intensity: f32,
@@ -175,6 +178,7 @@ impl Default for Settings {
             search_hotkey: "Ctrl+Alt+K".into(),
             keyboard_layout: KeyboardLayout::default(),
             voice: VoiceSettings::default(),
+            hands: HandsSettings::default(),
             language: "fr".into(),
             atmosphere_intensity: ATMOSPHERE_DEFAULT,
             display_mode: DisplayMode::default(),
@@ -244,6 +248,7 @@ pub struct SettingsPatch {
     pub search_hotkey: Option<String>,
     pub keyboard_layout: Option<KeyboardLayout>,
     pub voice: Option<VoiceSettings>,
+    pub hands: Option<HandsSettings>,
     pub language: Option<String>,
     pub atmosphere_intensity: Option<f32>,
     pub display_mode: Option<DisplayMode>,
@@ -316,6 +321,7 @@ impl Settings {
             search_hotkey,
             keyboard_layout,
             voice,
+            hands,
             language,
             atmosphere_intensity,
             display_mode,

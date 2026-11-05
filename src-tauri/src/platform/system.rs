@@ -44,6 +44,19 @@ pub fn show_desktop() {
     unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
 }
 
+/// File Explorer, as Windows opens it on Win+E (« ouvre l'explorateur de fichiers »).
+pub fn file_explorer() {
+    const VK_E: VIRTUAL_KEY = VIRTUAL_KEY(0x45);
+    let inputs = [
+        key(VK_LWIN, KEYBD_EVENT_FLAGS(0)),
+        key(VK_E, KEYBD_EVENT_FLAGS(0)),
+        key(VK_E, KEYEVENTF_KEYUP),
+        key(VK_LWIN, KEYEVENTF_KEYUP),
+    ];
+    // SAFETY: plain keyboard events built above, the size of their struct.
+    unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
+}
+
 /// A screenshot as Windows takes it on Win+Impr: saved by Windows in Images\Captures (Kayro
 /// writes no file).
 pub fn screenshot() {

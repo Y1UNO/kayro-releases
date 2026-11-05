@@ -8,6 +8,7 @@ pub mod beat;
 mod continuous;
 mod form;
 mod listen;
+pub(crate) use listen::models_dir;
 pub mod music;
 mod onset;
 pub mod rhythm;
@@ -209,7 +210,21 @@ pub fn now<R: Runtime>(app: &AppHandle<R>) -> Option<NowPlaying> {
 /// Previous, play/pause or next on the player shown.
 pub fn control<R: Runtime>(app: &AppHandle<R>, action: MediaAction) -> bool {
     let Some(w) = watch(app) else { return false };
-    let what = match action {
+    win::control(&w.manager, of(action))
+}
+
+/// The same on one app's player (`hints`: platform/media.rs); None when it shows none.
+pub fn control_of<R: Runtime>(
+    app: &AppHandle<R>,
+    action: MediaAction,
+    hints: &[String],
+) -> Option<bool> {
+    let w = watch(app)?;
+    win::control_of(&w.manager, of(action), hints)
+}
+
+fn of(action: MediaAction) -> win::Control {
+    match action {
         MediaAction::Previous => win::Control::Previous,
         MediaAction::Toggle => win::Control::Toggle,
         MediaAction::Next => win::Control::Next,
@@ -217,8 +232,7 @@ pub fn control<R: Runtime>(app: &AppHandle<R>, action: MediaAction) -> bool {
         MediaAction::Pause => win::Control::Pause,
         MediaAction::Shuffle(on) => win::Control::Shuffle(on),
         MediaAction::Repeat(on) => win::Control::Repeat(on),
-    };
-    win::control(&w.manager, what)
+    }
 }
 
 /// Follows the beat while `on` (music plays and the island shows), and the music mode's signal

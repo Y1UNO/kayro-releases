@@ -54,6 +54,14 @@ fn kayro_s_own_actions() {
     assert_eq!(parse("ouvre Kayro", &apps, &scenes), Intent::ShowKayro);
     assert_eq!(parse("Ferme Kéro.", &apps, &scenes), Intent::HideKayro);
     assert_eq!(parse("cache-toi", &apps, &scenes), Intent::HideKayro);
+    assert_eq!(parse("Cache Kayro.", &apps, &scenes), Intent::HideKayro);
+    assert_eq!(
+        parse("Cache Discord.", &apps, &scenes),
+        Intent::Window {
+            app: Some("discord".into()),
+            what: WindowAction::Minimize
+        }
+    );
     assert_eq!(
         parse("Arrête d'écouter.", &apps, &scenes),
         Intent::StopListening
@@ -147,6 +155,9 @@ fn the_music_and_its_mode() {
     }
     assert_eq!(m("mets le mode musique"), Intent::MusicMode(true));
     assert_eq!(m("arrête le mode musique"), Intent::MusicMode(false));
+    assert_eq!(m("active les mains"), Intent::Hands(true));
+    assert_eq!(m("coupe les mains"), Intent::Hands(false));
+    assert_eq!(m("désactive le mode main"), Intent::Hands(false));
     // An app is still an app, a squashed verb before it too.
     assert_eq!(
         m("lance Spotify"),

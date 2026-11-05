@@ -150,7 +150,24 @@ pub enum Control {
 /// Asks the player shown to go back, pause or play, or skip.
 pub fn control(m: &Manager, what: Control) -> bool {
     mta();
-    let Some(s) = pick(m) else { return false };
+    pick(m).is_some_and(|s| run(&s, what))
+}
+
+/// The same on one app's player (« mets play sur Comet »): the first whose app id holds one of
+/// `hints` (lower case: `comet`, `msedge`); None when that app shows no player.
+pub fn control_of(m: &Manager, what: Control, hints: &[String]) -> Option<bool> {
+    mta();
+    let all = sessions(m);
+    let s = all.iter().find(|s| {
+        s.SourceAppUserModelId().is_ok_and(|id| {
+            let id = id.to_string().to_lowercase();
+            hints.iter().any(|h| id.contains(h.as_str()))
+        })
+    })?;
+    Some(run(s, what))
+}
+
+fn run(s: &Session, what: Control) -> bool {
     let op = match what {
         Control::Previous => s.TrySkipPreviousAsync(),
         Control::Toggle => s.TryTogglePlayPauseAsync(),
