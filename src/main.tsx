@@ -17,6 +17,7 @@ import { GameAtmosphere } from "./features/gameColors/GameAtmosphere";
 import { IslandApp } from "./features/island/IslandApp";
 import { startSounds } from "./sound";
 import { listenForUpdates } from "./features/update/updateStore";
+import { startVoice } from "./features/voice/voiceStore";
 import { artStore, hubStore, sceneStore } from "./store";
 import "./index.css";
 import "./design/themeSwap.css";
@@ -98,6 +99,8 @@ if (DevPage) {
     loadCustomThemes(),
   ]).finally(() => {
     installUserPrefs({ quality: false });
+    // Step 21: the voice's state (the island's aura while it listens).
+    startVoice(false);
     appRoot.render(
       <StrictMode>
         <ThemeProvider initialThemeId={hubStore.getState().settings?.themeId}>
@@ -118,6 +121,8 @@ if (DevPage) {
   ]).finally(() => {
     const settings = hubStore.getState().settings;
     installUserPrefs({ quality: true });
+    // Step 21: the voice's state, and a command that waited for an answer while Kayro loaded.
+    startVoice(true);
     appRoot.render(
       <StrictMode>
         <ThemeProvider

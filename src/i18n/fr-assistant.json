@@ -1,0 +1,105 @@
+{
+  "assistant": {
+    "hero": {
+      "eyebrow": "Votre assistant",
+      "rename": "Changer de nom",
+      "intro": "Refaire l’introduction",
+      "say": "Vous dites : « {name}, ouvre Spotify ».",
+      "sayPush": "Tenez votre raccourci et dites : « ouvre Spotify ».",
+      "off": "{name} est coupé : choisissez comment lui parler pour l’activer."
+    },
+    "install": {
+      "missing": "Il reste {size} à télécharger pour que {name} vous entende.",
+      "button": "Installer {name} ({size})",
+      "progress": "Installation : {done} / {total}",
+      "done": "Tout est installé.",
+      "size": "{name} prend {size} sur ce PC.",
+      "remove": "Désinstaller {name}",
+      "removeAsk": "Supprimer ses modèles ({size}) ? {name} sera coupé. Vos enregistrements de calibration restent (« Calibrer ma voix »).",
+      "removeYes": "Désinstaller",
+      "removing": "Désinstallation…",
+      "keep": "Garder",
+      "brain": "Avec le cerveau ({size}) : il comprend vos phrases comme vous les dites, plusieurs demandes à la fois. Il utilise la carte graphique, et la rend en jeu.",
+      "cancel": "Arrêter",
+      "network": "Téléchargé une seule fois, puis tout reste sur ce PC. C’est le seul accès réseau de la voix."
+    },
+    "intro": {
+      "step": "Étape {n} sur 3",
+      "nameTitle": "Comment s’appelle votre assistant ?",
+      "nameHelp": "C’est le nom que vous direz pour l’appeler. Le mieux : court (deux syllabes), et qui ne ressemble pas à un mot de tous les jours.",
+      "ideas": "Idées",
+      "example": "Vous direz : « {name}, lance Steam ».",
+      "renamed": "Vos enregistrements de calibration ont été faits avec l’ancien nom : refaites « Calibrer ma voix » ensuite.",
+      "modeTitle": "Comment voulez-vous parler à {name} ?",
+      "always": "Il écoute tout le temps",
+      "alwaysHelp": "Vous dites son nom, puis ce que vous voulez. L’île s’entoure d’une aura quand il vous écoute. Il se met en pause devant un jeu en plein écran.",
+      "push": "En tenant une touche",
+      "pushHelp": "Vous tenez un raccourci pendant que vous parlez, sans dire son nom. Le micro reste fermé le reste du temps.",
+      "installTitle": "On installe {name}",
+      "doneTitle": "{name} est prêt",
+      "doneHelp": "Essayez : « {name}, ouvre mon navigateur ». Pour qu’il vous reconnaisse encore mieux, faites « Calibrer ma voix » plus bas (5 minutes).",
+      "next": "Continuer",
+      "back": "Retour",
+      "finish": "Terminer"
+    },
+    "call": {
+      "eyebrow": "1 · L’appeler",
+      "title": "Comment l’appeler"
+    },
+    "hear": {
+      "eyebrow": "2 · Vous entendre",
+      "title": "Bien vous entendre",
+      "help": "Le micro, puis vos enceintes : {name} retire leur son de ce qu’il entend, la musique ne le gêne plus."
+    },
+    "help": {
+      "eyebrow": "3 · Lui parler",
+      "title": "Ce que {name} sait faire",
+      "titleVowel": "Ce qu’{name} sait faire",
+      "eyebrowPlain": "Lui parler",
+      "intro": "Dites son nom, puis par exemple :",
+      "apps": "Apps et scènes",
+      "windows": "Fenêtres",
+      "music": "Musique et son",
+      "pc": "Le PC",
+      "more": "Et aussi",
+      "quote": "« {lead}{text} »",
+      "follow": "Juste après, sans redire son nom : « en fait, remets la précédente », « et monte le son ».",
+      "say": {
+        "game": "lance {target}",
+        "screen": "ouvre {target} sur l’écran 2",
+        "kind": "ouvre mon navigateur",
+        "two": "ouvre Spotify et Discord",
+        "close": "ferme {target}",
+        "full": "mets ça en plein écran",
+        "left": "passe Discord à gauche",
+        "small": "réduis la fenêtre",
+        "play": "mets de la musique",
+        "next": "passe à la suivante",
+        "which": "c’est quoi ce titre ?",
+        "appVol": "baisse le son de Discord",
+        "vol": "volume à 30",
+        "lock": "verrouille le PC",
+        "desk": "montre le bureau",
+        "shot": "fais une capture d’écran",
+        "time": "quelle heure il est ?",
+        "timer": "minuteur de 10 minutes",
+        "type": "écris bonjour à tous",
+        "web": "cherche sur internet une recette de crêpes",
+        "settings": "ouvre les réglages de la voix",
+        "stop": "arrête d’écouter"
+      }
+    },
+    "screen": {
+      "eyebrow": "4 · À l’écran"
+    },
+    "settings": {
+      "show": "Modifier les réglages",
+      "hide": "Masquer les réglages"
+    },
+    "advanced": {
+      "show": "Afficher les réglages avancés",
+      "hide": "Masquer les réglages avancés",
+      "help": "Les modèles un par un, le cerveau, ce que {name} a appris de vous, et ce qui arrive plus tard."
+    }
+  }
+}

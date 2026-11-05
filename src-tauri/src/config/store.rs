@@ -187,6 +187,18 @@ pub fn lenient_merge<T: Default + Serialize + DeserializeOwned>(
             report.warn(format!("unknown field «{key}» ignored"));
             continue;
         }
+        // A group of settings (`voice`) written by an older Kayro lacks the fields added since:
+        // they take their defaults, the rest of the group is kept (2026-11-04: the voice's were
+        // all lost when three fields were added).
+        let val = match (merged.get(&key), val) {
+            (Some(Value::Object(defaults)), Value::Object(mut given)) => {
+                for (k, v) in defaults {
+                    given.entry(k.clone()).or_insert_with(|| v.clone());
+                }
+                Value::Object(given)
+            }
+            (_, val) => val,
+        };
         let previous = merged.insert(key.clone(), val);
         let attempt = serde_json::from_value::<T>(Value::Object(merged.clone()))
             .map_err(|e| e.to_string())

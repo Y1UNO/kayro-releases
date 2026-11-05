@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { Button, IconButton, MicIcon, PlusIcon, ScenesIcon, Surface } from "../../design";
+import { Button, IconButton, PlusIcon, ScenesIcon, Surface } from "../../design";
 import { currentMotion } from "../../design/motion/current";
 import { durOf } from "../../design/motion/tokens";
 import { prefersReducedMotion } from "../../fx/motionPref";
@@ -8,7 +8,7 @@ import { sceneStore, useScenes } from "../../store";
 import { usePlayScene } from "../scenes/usePlayScene";
 import { SceneButton } from "./SceneButton";
 import styles from "./SceneDock.module.css";
-import { FEATURES } from "../../app/features";
+import { VoiceButton } from "../voice/VoiceButton";
 
 const RESULT_VISIBLE_MS = 5000;
 
@@ -92,12 +92,8 @@ export function SceneDock({ onManage }: Props) {
       <IconButton label={t("home.dock.manage")} glass onClick={onManage}>
         <ScenesIcon size={20} />
       </IconButton>
-      {/* Hidden until voice commands exist (app/features.ts, round 5). */}
-      {FEATURES.voice && (
-        <IconButton label={t("home.voice")} glass>
-          <MicIcon size={20} />
-        </IconButton>
-      )}
+      {/* Step 21: shown while the voice is on (its indicator; a click mutes it). */}
+      <VoiceButton />
       {dialog}
     </Surface>
   );

@@ -5,13 +5,13 @@ import {
   DisplayModeIcon,
   HandIcon,
   IconButton,
-  MicIcon,
   Pill,
   PlusIcon,
   SearchIcon,
   SettingsIcon,
 } from "../../design";
 import { t } from "../../i18n";
+import { VoiceButton } from "../voice/VoiceButton";
 import type { DisplayMode } from "../../ipc/bindings";
 import { chooseDisplayMode, useDisplayMode } from "../opening/expressMode";
 import { PopMenu } from "./PopMenu";
@@ -126,11 +126,7 @@ export function TopBar({
           <IconButton label={t("home.settings.open")} size="sm" glass onClick={onSettings}>
             <SettingsIcon />
           </IconButton>
-          {FEATURES.voice && (
-            <IconButton label={t("home.voice")} size="sm" glass>
-              <MicIcon />
-            </IconButton>
-          )}
+          <VoiceButton size="sm" />
           {FEATURES.hands && (
             <IconButton label={t("home.hands")} size="sm" glass>
               <HandIcon />

@@ -3,7 +3,12 @@ import type { AppEntry, AppError, NewApp, Settings } from "../ipc/bindings";
 import type { Ipc, Outcome } from "../ipc/commands";
 import type { EventSource } from "../ipc/events";
 import { createHubStore } from "./hubStore";
-import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS, DETECT_DEFAULTS } from "../features/settings/settingsModel";
+import {
+  SOUND_DEFAULTS,
+  UPDATE_DEFAULTS,
+  VISUAL_DEFAULTS,
+  DETECT_DEFAULTS,
+} from "../features/settings/settingsModel";
 
 const SETTINGS: Settings = {
   ...VISUAL_DEFAULTS,
@@ -17,6 +22,22 @@ const SETTINGS: Settings = {
   colorMode: "light",
   hotkey: "Ctrl+Alt+H",
   searchHotkey: "Ctrl+Alt+K",
+  keyboardLayout: "auto",
+  voice: {
+    mode: "off",
+    wakeWord: "Hé Kayro",
+    hotkey: "Ctrl+Alt+V",
+    model: "parakeet",
+    inGame: false,
+    wakeHeard: [],
+    microphone: "",
+    speakers: "",
+    aura: "",
+    links: [],
+    onlyMe: false,
+    echoCancel: true,
+    brain: true,
+  },
   language: "fr",
   atmosphereIntensity: 1,
   displayMode: "immersive",

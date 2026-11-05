@@ -19,9 +19,11 @@ pub use super::theme_file::{is_theme_colour, ThemeFile};
 use super::validate::validate_settings;
 use super::visual::{settings_v1_to_v2, settings_v2_to_v3, DEFAULT_THEME};
 pub use super::visual::{
-    CardFloat, CardHoverStyle, Elasticity, IslandPassage, MotionStyle, MusicColors, MusicQuality,
-    OpeningScreen, OpeningStyle, StartupAfter, StartupOpen, ThemeTransition, WidgetUnroll,
+    CardFloat, CardHoverStyle, Elasticity, IslandPassage, KeyboardLayout, MotionStyle, MusicColors,
+    MusicQuality, OpeningScreen, OpeningStyle, StartupAfter, StartupOpen, ThemeTransition,
+    WidgetUnroll,
 };
+pub use super::voice::{VoiceMode, VoiceModel, VoiceSettings};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]
@@ -70,6 +72,10 @@ pub struct Settings {
     /// « Écrire dans Kysland » (2026-11-04): opens the island with the cursor in its search
     /// (Kayro's search when Kayro is on screen); empty: no such shortcut.
     pub search_hotkey: String,
+    /// « Disposition du clavier » (2026-11-04): how the recorder names a pressed key.
+    pub keyboard_layout: KeyboardLayout,
+    /// Step 21: the voice (off by default; config/voice.rs).
+    pub voice: VoiceSettings,
     pub language: String,
     /// Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »).
     pub atmosphere_intensity: f32,
@@ -167,6 +173,8 @@ impl Default for Settings {
             color_mode: ColorMode::default(),
             hotkey: "Ctrl+Alt+H".into(),
             search_hotkey: "Ctrl+Alt+K".into(),
+            keyboard_layout: KeyboardLayout::default(),
+            voice: VoiceSettings::default(),
             language: "fr".into(),
             atmosphere_intensity: ATMOSPHERE_DEFAULT,
             display_mode: DisplayMode::default(),
@@ -234,6 +242,8 @@ pub struct SettingsPatch {
     pub color_mode: Option<ColorMode>,
     pub hotkey: Option<String>,
     pub search_hotkey: Option<String>,
+    pub keyboard_layout: Option<KeyboardLayout>,
+    pub voice: Option<VoiceSettings>,
     pub language: Option<String>,
     pub atmosphere_intensity: Option<f32>,
     pub display_mode: Option<DisplayMode>,
@@ -304,6 +314,8 @@ impl Settings {
             color_mode,
             hotkey,
             search_hotkey,
+            keyboard_layout,
+            voice,
             language,
             atmosphere_intensity,
             display_mode,

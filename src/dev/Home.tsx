@@ -23,7 +23,12 @@ import { installAddAppsMock } from "./addAppsMock";
 import { Opening } from "../features/opening/Opening";
 import { ACTIVE_THEME_ID } from "../design/da";
 import type { CategoryId } from "../features/home/categories";
-import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS, DETECT_DEFAULTS } from "../features/settings/settingsModel";
+import {
+  SOUND_DEFAULTS,
+  UPDATE_DEFAULTS,
+  VISUAL_DEFAULTS,
+  DETECT_DEFAULTS,
+} from "../features/settings/settingsModel";
 import { effectiveQuality } from "../design/quality";
 
 /** The category journey, as exposed by useCategoryLink.ts in development builds. */
@@ -133,6 +138,22 @@ export default function HomeDev() {
         colorMode: "light",
         hotkey: "Ctrl+Alt+H",
         searchHotkey: "Ctrl+Alt+K",
+        keyboardLayout: "auto",
+        voice: {
+          mode: "off",
+          wakeWord: "Hé Kayro",
+          hotkey: "Ctrl+Alt+V",
+          model: "parakeet",
+          inGame: false,
+          wakeHeard: [],
+          microphone: "",
+          speakers: "",
+          aura: "",
+          links: [],
+          onlyMe: false,
+          echoCancel: true,
+          brain: true,
+        },
         language: "fr",
         atmosphereIntensity: Number(params.get("intensity")) || 1,
         displayMode: "immersive",

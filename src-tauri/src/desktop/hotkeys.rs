@@ -1,5 +1,6 @@
 //! Global shortcuts: the one that shows/hides the hub, « Écrire dans Kysland » (the island opened
-//! on its search, 2026-11-04), and one per scene that has a `hotkey`.
+//! on its search, 2026-11-04), the voice's push-to-talk (step 21, held: registered in that mode
+//! only), and one per scene that has a `hotkey`.
 //! Windows hands a combination to a single program: a refusal means another program owns it, and
 //! the interface is told so (`HotkeysReport`) instead of the failure staying in a log.
 
@@ -44,6 +45,8 @@ pub struct HotkeysReport {
     pub toggle: Option<HotkeyStatus>,
     /// `None` when there is no such shortcut (the user removed it).
     pub search: Option<HotkeyStatus>,
+    /// `None` outside the push-to-talk mode.
+    pub voice: Option<HotkeyStatus>,
     pub scenes: Vec<SceneHotkeyStatus>,
 }
 
@@ -56,20 +59,23 @@ pub struct HotkeysChanged(pub HotkeysReport);
 pub enum Action {
     Toggle,
     Search,
+    Voice,
     Scene(String),
 }
 
-/// Kayro's own two shortcuts (the scenes' come apart).
+/// Kayro's own shortcuts (the scenes' come apart).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Own {
     Toggle,
     Search,
+    Voice,
 }
 
 #[derive(Default)]
 struct Inner {
     toggle: Option<Shortcut>,
     search: Option<Shortcut>,
+    voice: Option<Shortcut>,
     scenes: Vec<(Shortcut, String)>,
     report: HotkeysReport,
 }
@@ -79,16 +85,21 @@ impl Inner {
         match own {
             Own::Toggle => (&mut self.toggle, &mut self.report.toggle),
             Own::Search => (&mut self.search, &mut self.report.search),
+            Own::Voice => (&mut self.voice, &mut self.report.voice),
         }
     }
 
     /// Is `id` one of Kayro's own shortcuts other than `own`, or a scene's?
     fn taken(&self, id: u32, own: Own) -> bool {
-        let other = match own {
-            Own::Toggle => self.search,
-            Own::Search => self.toggle,
-        };
-        other.is_some_and(|s| s.id() == id) || self.scenes.iter().any(|(s, _)| s.id() == id)
+        let others = [
+            (Own::Toggle, self.toggle),
+            (Own::Search, self.search),
+            (Own::Voice, self.voice),
+        ];
+        others
+            .iter()
+            .any(|(o, s)| *o != own && s.is_some_and(|s| s.id() == id))
+            || self.scenes.iter().any(|(s, _)| s.id() == id)
     }
 }
 
@@ -111,6 +122,9 @@ impl HotkeyState {
         }
         if inner.search.is_some_and(|s| s.id() == id) {
             return Some(Action::Search);
+        }
+        if inner.voice.is_some_and(|s| s.id() == id) {
+            return Some(Action::Voice);
         }
         inner
             .scenes
@@ -167,7 +181,7 @@ fn register_own<R: Runtime>(app: &AppHandle<R>, own: Own, hotkey: &str) {
 fn set_own<R: Runtime>(app: &AppHandle<R>, own: Own, hotkey: &str) -> Result<(), HotkeyProblem> {
     let state = app.state::<HotkeyState>();
     let shortcuts = app.global_shortcut();
-    let new = if hotkey.is_empty() && own == Own::Search {
+    let new = if hotkey.is_empty() && own != Own::Toggle {
         None
     } else {
         Some(parse(hotkey).ok_or(HotkeyProblem::Invalid)?)
@@ -218,6 +232,11 @@ pub fn set_search<R: Runtime>(app: &AppHandle<R>, hotkey: &str) -> Result<(), Ho
     set_own(app, Own::Search, hotkey)
 }
 
+/// The voice's push-to-talk (empty: none, outside that mode).
+pub fn set_voice<R: Runtime>(app: &AppHandle<R>, hotkey: &str) -> Result<(), HotkeyProblem> {
+    set_own(app, Own::Voice, hotkey)
+}
+
 /// Re-registers the shortcuts of all scenes (after a scene was saved, imported or deleted).
 pub fn sync_scenes<R: Runtime>(app: &AppHandle<R>) {
     let state = app.state::<HotkeyState>();
@@ -229,7 +248,12 @@ pub fn sync_scenes<R: Runtime>(app: &AppHandle<R>) {
 
     let own: Vec<Shortcut> = {
         let inner = state.lock();
-        inner.toggle.into_iter().chain(inner.search).collect()
+        inner
+            .toggle
+            .into_iter()
+            .chain(inner.search)
+            .chain(inner.voice)
+            .collect()
     };
     let mut registered: Vec<(Shortcut, String)> = Vec::new();
     let mut statuses = Vec::new();

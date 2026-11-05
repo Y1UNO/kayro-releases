@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { SOUND_DEFAULTS, UPDATE_DEFAULTS, VISUAL_DEFAULTS, DETECT_DEFAULTS } from "../../features/settings/settingsModel";
+import {
+  SOUND_DEFAULTS,
+  UPDATE_DEFAULTS,
+  VISUAL_DEFAULTS,
+  DETECT_DEFAULTS,
+} from "../../features/settings/settingsModel";
 import type { Settings } from "../../ipc/bindings";
 import { motionTokens } from "../motion/tokens";
 import { sameUserChoices, userOverrides, withUser } from "./userDa";
@@ -16,6 +21,22 @@ const S: Settings = {
   colorMode: "light",
   hotkey: "Ctrl+Alt+H",
   searchHotkey: "Ctrl+Alt+K",
+  keyboardLayout: "auto",
+  voice: {
+    mode: "off",
+    wakeWord: "Hé Kayro",
+    hotkey: "Ctrl+Alt+V",
+    model: "parakeet",
+    inGame: false,
+    wakeHeard: [],
+    microphone: "",
+    speakers: "",
+    aura: "",
+    links: [],
+    onlyMe: false,
+    echoCancel: true,
+    brain: true,
+  },
   language: "fr",
   displayMode: "immersive",
   islandAlways: true,

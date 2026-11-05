@@ -10,6 +10,7 @@ use windows::Media::Control::{
     GlobalSystemMediaTransportControlsSessionManager as Manager,
     GlobalSystemMediaTransportControlsSessionPlaybackStatus as Status,
 };
+use windows::Media::MediaPlaybackAutoRepeatMode;
 use windows::Storage::Streams::{Buffer, DataReader, InputStreamOptions};
 use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
 
@@ -138,6 +139,12 @@ pub enum Control {
     Previous,
     Toggle,
     Next,
+    /// Step 21 (« mets la musique », « mets pause »): play or pause, not a toggle.
+    Play,
+    Pause,
+    /// Shuffle on or off, repeat (the list) on or off.
+    Shuffle(bool),
+    Repeat(bool),
 }
 
 /// Asks the player shown to go back, pause or play, or skip.
@@ -148,6 +155,14 @@ pub fn control(m: &Manager, what: Control) -> bool {
         Control::Previous => s.TrySkipPreviousAsync(),
         Control::Toggle => s.TryTogglePlayPauseAsync(),
         Control::Next => s.TrySkipNextAsync(),
+        Control::Play => s.TryPlayAsync(),
+        Control::Pause => s.TryPauseAsync(),
+        Control::Shuffle(on) => s.TryChangeShuffleActiveAsync(on),
+        Control::Repeat(on) => s.TryChangeAutoRepeatModeAsync(if on {
+            MediaPlaybackAutoRepeatMode::List
+        } else {
+            MediaPlaybackAutoRepeatMode::None
+        }),
     };
     op.ok().and_then(|o| o.join().ok()).unwrap_or(false)
 }

@@ -9,9 +9,19 @@ import { SoundsSection } from "./SoundsSection";
 import { StartupSection } from "./StartupSection";
 import { ThemesSection } from "./ThemesSection";
 import { VisualSection } from "./VisualSection";
+import { VoiceSection } from "./VoiceSection";
 import styles from "./Settings.module.css";
 
-const TABS = ["general", "startup", "shortcuts", "island", "visual", "sounds", "themes"] as const;
+const TABS = [
+  "general",
+  "startup",
+  "shortcuts",
+  "island",
+  "visual",
+  "sounds",
+  "themes",
+  "voice",
+] as const;
 type Tab = (typeof TABS)[number];
 
 /** The category shown last, while the app runs (the dialog reopens where it was left). */
@@ -20,14 +30,31 @@ let lastTab: Tab = "general";
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** A category to show now (the voice: « ouvre les réglages de la voix »). */
+  tab?: Tab | null;
+}
+
+/** The pages as the voice names them (brain/prompt.rs `SETTINGS_PAGES`) → the categories. */
+export function pageTab(page: string | null): Tab | null {
+  const pages: Record<string, Tab> = {
+    general: "general",
+    demarrage: "startup",
+    raccourcis: "shortcuts",
+    kysland: "island",
+    visuel: "visual",
+    sons: "sounds",
+    themes: "themes",
+    voix: "voice",
+  };
+  return page ? (pages[page] ?? null) : null;
 }
 
 /**
  * Réglages (round 5): a side column of categories — Général · Démarrage · Raccourcis clavier · Île
- * dynamique (Kysland, 2026-11-02) · Visuel · Sons · Thèmes — and the chosen
+ * dynamique (Kysland, 2026-11-02) · Visuel · Sons · Thèmes · Assistant vocal et IA (step 21) — and the chosen
  * one in a body that scrolls (the panel never outgrows the screen).
  */
-export function SettingsDialog({ open, onClose }: Props) {
+export function SettingsDialog({ open, onClose, tab: wanted }: Props) {
   const [tab, setTab] = useState<Tab>(lastTab);
   const ids = useId();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -35,6 +62,13 @@ export function SettingsDialog({ open, onClose }: Props) {
   useEffect(() => {
     lastTab = tab;
   }, [tab]);
+
+  // A category asked from outside (the voice): shown once; the user may then move on.
+  const [asked, setAsked] = useState<Tab | null | undefined>(null);
+  if (wanted !== asked) {
+    setAsked(wanted);
+    if (wanted) setTab(wanted);
+  }
 
   function select(next: Tab, focus = false) {
     setTab(next);
@@ -104,6 +138,7 @@ export function SettingsDialog({ open, onClose }: Props) {
           {tab === "visual" && <VisualSection />}
           {tab === "sounds" && <SoundsSection />}
           {tab === "themes" && <ThemesSection />}
+          {tab === "voice" && <VoiceSection />}
         </div>
       </div>
     </Dialog>

@@ -52,7 +52,7 @@ unsafe extern "system" fn visit(hwnd: HWND, lparam: LPARAM) -> BOOL {
     BOOL(1)
 }
 
-fn main_window(pids: &[u32]) -> Option<HWND> {
+pub(crate) fn main_window(pids: &[u32]) -> Option<HWND> {
     let mut search = Search { pids, found: None };
     // SAFETY: the callback only touches `search`, which outlives the synchronous call.
     // `EnumWindows` reports an error when the callback stops early: expected, ignored.

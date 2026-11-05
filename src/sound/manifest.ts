@@ -26,6 +26,8 @@ export const SOUND_EVENTS = [
   "open",
   "launch",
   "launchFinale",
+  // Step 21: the island heard the wake word (two soft rising notes).
+  "listen",
 ] as const;
 export type SoundEvent = (typeof SOUND_EVENTS)[number];
 

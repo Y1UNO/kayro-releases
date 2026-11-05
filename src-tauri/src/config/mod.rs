@@ -19,6 +19,7 @@ pub mod themes;
 pub mod ui_state;
 pub mod validate;
 pub mod visual;
+pub mod voice;
 
 use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard};

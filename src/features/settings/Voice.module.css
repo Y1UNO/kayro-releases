@@ -1,0 +1,341 @@
+/*
+ * Réglages › Assistant vocal et IA (step 21) in the Capri look (update/CapriSheet), in the
+ * theme's colours instead of Capri's red, green and violet: black blocks outlined in the accent,
+ * an eyebrow in capitals, a title that tears into the theme's two colours when hovered. Compact.
+ */
+
+.capri {
+  --ink-text: #f3f7fb;
+  --ink-text-2: rgb(243 247 251 / 0.66);
+  --ink-line: color-mix(in srgb, var(--accent-light) 70%, transparent);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.block {
+  /* The settings' own rows read these: white text on the black block, whatever the theme, and
+     tracks (switches, segments) that show on black. */
+  --text: var(--ink-text);
+  --text-2: var(--ink-text-2);
+  --fill-soft: rgb(255 255 255 / 0.12);
+  --field: rgb(255 255 255 / 0.1);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 14px 16px 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #0b0a12, #050508);
+  box-shadow:
+    inset 0 0 0 1.5px var(--ink-line),
+    0 14px 40px rgb(0 0 0 / 0.35);
+  color: var(--ink-text);
+}
+
+/* An off switch is a dark track: on the black block it gets a light outline to be seen. */
+.block [role="switch"][aria-checked="false"] {
+  background: rgb(255 255 255 / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent-light);
+}
+
+.title {
+  position: relative;
+  margin: -4px 0 0;
+  font-family: var(--font-title);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ink-text);
+  transition: text-shadow 140ms steps(2);
+}
+
+.block:hover .title {
+  text-shadow:
+    -1.5px 0 var(--grad-a),
+    1.5px 0 var(--grad-b);
+}
+
+.intro,
+.privacy {
+  margin: 0;
+  font-size: var(--fs-13);
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.status {
+  margin: 0;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink-text-2);
+}
+
+.status[data-status="waiting"],
+.status[data-status="hearing"],
+.status[data-status="thinking"] {
+  color: var(--accent-light);
+}
+
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.lineLabel {
+  margin: 0;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--ink-text);
+}
+
+.input {
+  box-sizing: border-box;
+  width: min(100%, 260px);
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: rgb(255 255 255 / 0.07);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  color: var(--ink-text);
+  font: inherit;
+  font-size: var(--fs-15);
+  font-weight: 500;
+  color-scheme: dark;
+}
+
+.input:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus);
+}
+
+/* The microphone drop-down. */
+.picker {
+  position: relative;
+  min-width: 0;
+}
+
+.pickerButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: min(100%, 320px);
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.07);
+  box-shadow: inset 0 0 0 1px var(--ink-line);
+  color: var(--ink-text);
+  font: inherit;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pickerButton:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus);
+}
+
+/* The open list goes over the blocks below (each block is its own layer: the cascade). */
+.block:has([aria-expanded="true"]) {
+  position: relative;
+  z-index: 3;
+}
+
+.pickerList {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  left: 0;
+  width: max-content;
+  min-width: min(100%, 320px);
+  max-width: min(480px, 80vw);
+  max-height: 220px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  border-radius: 12px;
+  background: #0b0a12;
+  box-shadow:
+    inset 0 0 0 1.5px var(--ink-line),
+    0 18px 40px rgb(0 0 0 / 0.55);
+  animation: drop 160ms var(--m-ease-in) both;
+}
+
+.pickerItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: var(--fs-13);
+  color: var(--ink-text);
+  cursor: pointer;
+}
+
+.pickerItem[data-at] {
+  background: color-mix(in srgb, var(--accent-light) 22%, transparent);
+}
+
+.pickerName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* The user's music by name. */
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 6px 6px 6px 12px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.04);
+}
+
+.linkName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  color: var(--ink-text);
+}
+
+.linkKind {
+  font-size: 12px;
+  color: var(--ink-text-2);
+}
+
+/* The aura's colours. */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18);
+  cursor: pointer;
+}
+
+.swatch[aria-checked="true"] {
+  box-shadow:
+    0 0 0 2px #050508,
+    0 0 0 3.5px var(--ink-text),
+    0 0 12px 2px var(--swatch-glow, transparent);
+}
+
+.swatch:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus);
+}
+
+.swatchAuto {
+  background: conic-gradient(var(--grad-a), var(--grad-b), var(--accent-light), var(--grad-a));
+}
+
+.swatchCustom {
+  overflow: hidden;
+}
+
+.swatchCustom input {
+  position: absolute;
+  inset: -6px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.confirm {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-light);
+}
+
+/* « Plus tard »: Capri's shard bullets. */
+.later {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.laterRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: var(--fs-13);
+  color: var(--ink-text-2);
+}
+
+.laterRow::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-light);
+  clip-path: polygon(0 40%, 100% 0, 60% 100%);
+  opacity: 0.8;
+}
+
+.laterRow strong {
+  color: var(--ink-text);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title {
+    transition: none;
+  }
+
+  .pickerList {
+    animation: none;
+  }
+}

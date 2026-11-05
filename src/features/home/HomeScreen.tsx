@@ -7,7 +7,7 @@ import { prefersReducedMotion } from "../../fx/motionPref";
 import { useReducedMotion } from "../../fx/useReducedMotion";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
-import { SettingsDialog } from "../settings/SettingsDialog";
+import { SettingsDialog, pageTab } from "../settings/SettingsDialog";
 import type { AppEntry } from "../../ipc/bindings";
 import { hubStore, useHub } from "../../store";
 import { AddAppsDialog } from "../add-app/AddAppsDialog";
@@ -23,6 +23,8 @@ import { EmptyState } from "./EmptyState";
 import { homeLeft, homeReducer, initialHomeState, rememberHome } from "./homeState";
 import { useHomeSounds } from "./useHomeSounds";
 import { LaunchToast } from "./LaunchToast";
+import { VoiceFeedback } from "../voice/VoiceFeedback";
+import { settingsShown, useVoice } from "../voice/voiceStore";
 import { DragGhost, Notice } from "./Overlays";
 import { SceneDock } from "./SceneDock";
 import { TopBar } from "./TopBar";
@@ -91,6 +93,8 @@ export function HomeScreen({
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // « Ouvre les réglages de la voix » (step 21): the voice opens Réglages on a page.
+  const settingsPage = useVoice((s) => s.settingsPage);
   const hideOnEscape = useHub((s) => s.settings?.hideOnEscape ?? true);
   const [menu, setMenu] = useState<MenuTarget | null>(null);
   const [editing, setEditing] = useState<{ app: AppEntry; remove: boolean } | null>(null);
@@ -370,7 +374,14 @@ export function HomeScreen({
             setNotice(t(count === 1 ? "addApps.addedOne" : "addApps.addedMany", { count }))
           }
         />
-        <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <SettingsDialog
+          open={settingsOpen || settingsPage !== null}
+          tab={pageTab(settingsPage)}
+          onClose={() => {
+            setSettingsOpen(false);
+            settingsShown();
+          }}
+        />
         <EditAppDialog
           app={editing?.app ?? null}
           startWithRemove={editing?.remove}
@@ -386,12 +397,15 @@ export function HomeScreen({
               void hubStore.getState().updateApp({ ...app, favorite: !app.favorite })
             }
             onMove={arrange.moveTo}
-            onNudge={(app, dir) => arrange.step(app, list, dir) && app === list[focus] && setFocus(focus + dir)}
+            onNudge={(app, dir) =>
+              arrange.step(app, list, dir) && app === list[focus] && setFocus(focus + dir)
+            }
           />
         )}
         {drag && <DragGhost name={drag.app.name} x={drag.x} y={drag.y} />}
         {notice && <Notice text={notice} />}
         <LaunchToast onFix={(app) => setEditing({ app, remove: false })} />
+        <VoiceFeedback />
       </MotionConfig>
     </LazyMotion>
   );

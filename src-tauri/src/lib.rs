@@ -11,10 +11,12 @@ pub mod ipc_desktop;
 pub mod ipc_detect;
 pub mod ipc_island;
 pub mod ipc_moods;
+pub mod ipc_outputs;
 pub mod ipc_scenes;
 pub mod ipc_startup;
 pub mod ipc_themes;
 pub mod ipc_update;
+pub mod ipc_voice;
 pub mod launcher;
 mod legacy;
 mod logging;
@@ -25,6 +27,7 @@ pub mod platform;
 pub mod procwatch;
 pub mod scenes;
 pub mod update;
+pub mod voice;
 
 use config::ConfigState;
 use tauri::Manager;
@@ -72,10 +75,9 @@ pub fn run() {
         ))
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(|app, shortcut, event| {
-                    if event.state() == ShortcutState::Pressed {
-                        desktop::on_hotkey(app, shortcut.id());
-                    }
+                .with_handler(|app, shortcut, event| match event.state() {
+                    ShortcutState::Pressed => desktop::on_hotkey(app, shortcut.id()),
+                    ShortcutState::Released => desktop::on_hotkey_released(app, shortcut.id()),
                 })
                 .build(),
         )
@@ -133,6 +135,7 @@ pub fn run() {
                     move |pid| {
                         desktop::cover::on_foreground(pid);
                         desktop::island::on_foreground(&for_island);
+                        voice::on_foreground(&for_island);
                         desktop::on_program_in_front(&for_island);
                     }
                 },

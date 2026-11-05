@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { t } from "../../i18n";
-import { hotkeyFromEvent, hotkeyTaken } from "./hotkey";
+import { useHub } from "../../store";
+import { hotkeyFromEvent, hotkeyTaken, readLayoutMap } from "./hotkey";
+import type { LayoutMap } from "./hotkey";
 import styles from "./Editor.module.css";
 
 interface Props {
@@ -19,6 +21,7 @@ interface Props {
 export function HotkeyField({ value, taken, onChange, unregistered = false }: Props) {
   const [listening, setListening] = useState(false);
   const [hint, setHint] = useState<"invalid" | null>(null);
+  const layout = useHub((s) => s.settings?.keyboardLayout ?? "auto");
   const button = useRef<HTMLButtonElement>(null);
   const change = useRef(onChange);
   useEffect(() => {
@@ -27,6 +30,9 @@ export function HotkeyField({ value, taken, onChange, unregistered = false }: Pr
 
   useEffect(() => {
     if (!listening) return;
+    // The keycap letters of the current layout (Auto), read while the user reaches for the keys.
+    let map: LayoutMap | null = null;
+    if (layout === "auto") void readLayoutMap().then((m) => (map = m));
     function onKey(e: KeyboardEvent) {
       e.preventDefault();
       e.stopPropagation();
@@ -35,7 +41,7 @@ export function HotkeyField({ value, taken, onChange, unregistered = false }: Pr
         change.current(null);
         return stop();
       }
-      const got = hotkeyFromEvent(e);
+      const got = hotkeyFromEvent(e, layout, map);
       if (got.kind === "pending") return;
       if (got.kind === "invalid") return setHint("invalid");
       change.current(got.hotkey);
@@ -48,7 +54,7 @@ export function HotkeyField({ value, taken, onChange, unregistered = false }: Pr
     }
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [listening]);
+  }, [listening, layout]);
 
   const conflict = value !== null && hotkeyTaken(value, taken);
   return (

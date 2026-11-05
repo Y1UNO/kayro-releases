@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
+import type { KeyboardLayout } from "../../ipc/bindings";
 import { errorText } from "../../ipc/errors";
-import { useDesktop, useHub, useScenes } from "../../store";
+import { hubStore, useDesktop, useHub, useScenes } from "../../store";
 import { HotkeyField } from "../scenes/HotkeyField";
+import { ChoiceRow } from "./SettingRow";
 import styles from "./Settings.module.css";
+
+const LAYOUTS: readonly KeyboardLayout[] = ["auto", "azerty", "qwerty"];
 
 type Message = { text: string; kind: "ok" | "error" } | null;
 
@@ -19,9 +23,10 @@ function Said({ message }: { message: Message }) {
 }
 
 /**
- * Réglages › Raccourcis clavier (2026-11-02): the shortcut that shows or hides Kayro (moved from
- * Général), how it brings a hidden island out, « Écrire dans Kysland » (2026-11-04, removable),
- * and the scenes' shortcuts (read only: each is chosen in its scene's editor).
+ * Réglages › Raccourcis clavier (2026-11-02): the keyboard layout the recorder reads (2026-11-04),
+ * the shortcut that shows or hides Kayro (moved from Général), how it brings a hidden island out,
+ * « Écrire dans Kysland » (2026-11-04, removable), and the scenes' shortcuts (read only: each is
+ * chosen in its scene's editor).
  */
 export function ShortcutsSection() {
   const settings = useHub((s) => s.settings);
@@ -62,6 +67,13 @@ export function ShortcutsSection() {
 
   return (
     <div className={styles.rows} data-cascade="">
+      <ChoiceRow<KeyboardLayout>
+        label={t("settings.shortcuts.layout.label")}
+        help={t("settings.shortcuts.layout.help")}
+        value={settings.keyboardLayout}
+        onChange={(keyboardLayout) => void hubStore.getState().setSettings({ keyboardLayout })}
+        options={LAYOUTS.map((v) => ({ value: v, label: t(`settings.shortcuts.layout.${v}`) }))}
+      />
       <section className={styles.row} data-row="">
         <h3 className={styles.label}>{t("settings.shortcuts.hotkey.label")}</h3>
         <HotkeyField

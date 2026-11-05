@@ -14,6 +14,13 @@ import {
   type Settings,
   type StartupApp,
   type UpdateInfo,
+  type CalibPrompt,
+  type CalibScore,
+  type CalibSummary,
+  type VoiceHeard,
+  type VoiceMicrophone,
+  type VoiceModelInfo,
+  type VoiceState,
 } from "./bindings";
 import type {
   AddReport,
@@ -264,4 +271,37 @@ export const mediaIpc = {
   control: (action: MediaAction): Promise<Outcome<boolean>> => plain(commands.mediaControl(action)),
   /** Follow the beat (the island's bars) while music plays and the island shows. */
   beat: (on: boolean): Promise<Outcome<void>> => plain(commands.mediaBeat(on)),
+};
+
+/**
+ * Step 21, the voice: where it stands, the microphone button, a « ferme X » confirmed on screen,
+ * and its models (downloaded on demand from Réglages: the voice's only network).
+ */
+export const voiceIpc = {
+  state: (): Promise<Outcome<VoiceState>> => plain(commands.voiceState()),
+  mute: (muted: boolean): Promise<Outcome<void>> => plain(commands.voiceMute(muted)),
+  /** A command that waited for the user while the page loaded. */
+  takePending: (): Promise<Outcome<VoiceHeard | null>> => plain(commands.voiceTakePending()),
+  close: (id: string): Promise<Outcome<boolean>> => checked(commands.voiceClose(id)),
+  models: (): Promise<Outcome<VoiceModelInfo[]>> => plain(commands.voiceModels()),
+  download: (id: string): Promise<Outcome<null>> => checked(commands.voiceModelDownload(id)),
+  cancel: (id: string): Promise<Outcome<void>> => plain(commands.voiceModelCancel(id)),
+  remove: (id: string): Promise<Outcome<null>> => checked(commands.voiceModelRemove(id)),
+  microphones: (): Promise<Outcome<VoiceMicrophone[]>> => plain(commands.voiceMicrophones()),
+  /** The outputs (speakers) Windows has: the one whose sound the echo canceller takes out. */
+  outputs: (): Promise<Outcome<VoiceMicrophone[]>> => plain(commands.voiceOutputs()),
+  /** The guided learning of the wake word (`onVoiceLearned` for each saying). */
+  learn: (on: boolean): Promise<Outcome<void>> => plain(commands.voiceLearn(on)),
+  /** « Kayro apprend de vous »: a choice made in a doubt, what was learned, forgetting it. */
+  teach: (said: string, scene: boolean, id: string): Promise<Outcome<void>> =>
+    plain(commands.voiceTeach(said, scene, id)),
+  memory: (): Promise<Outcome<number>> => plain(commands.voiceMemory()),
+  forget: (): Promise<Outcome<void>> => plain(commands.voiceForget()),
+  /** « Calibrer ma voix »: the guided recording, the prompt to keep next, the score. */
+  calibrate: (on: boolean): Promise<Outcome<void>> => plain(commands.voiceCalibrate(on)),
+  calibRecord: (prompt: CalibPrompt | null): Promise<Outcome<null>> =>
+    checked(commands.voiceCalibRecord(prompt)),
+  calibEvaluate: (): Promise<Outcome<CalibScore>> => checked(commands.voiceCalibEvaluate()),
+  calibSummary: (): Promise<Outcome<CalibSummary>> => plain(commands.voiceCalibSummary()),
+  calibClear: (): Promise<Outcome<null>> => checked(commands.voiceCalibClear()),
 };

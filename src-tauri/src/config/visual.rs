@@ -104,6 +104,18 @@ pub enum MusicColors {
     Theme,
 }
 
+/// « Disposition du clavier » (Raccourcis clavier, 2026-11-04). Windows fires a shortcut on the
+/// key that types its letter, so the recorder must store the letter on the keycap, not the US
+/// key at the same place (on AZERTY, A sits where QWERTY has Q). `Auto` reads the layout.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum KeyboardLayout {
+    #[default]
+    Auto,
+    Azerty,
+    Qwerty,
+}
+
 /// Bounds of the music mode's numbers: bass and crash strength ×0–2 (trails and gloss 0–1), the
 /// detection sensitivities 0.5–2, and the image's delay after the sound 0–250 ms (Bluetooth
 /// headphones play late; the image cannot come before the sound is heard, so never negative).

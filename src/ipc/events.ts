@@ -22,6 +22,10 @@ import {
   type MoodFile,
   type ThemeFile,
   type UpdateInfo,
+  type VoiceHeard,
+  type VoiceModelProgress,
+  type VoiceRecorded,
+  type VoiceState,
 } from "./bindings";
 
 export type Unlisten = () => void;
@@ -254,4 +258,29 @@ export function onUpdateProgress(
   handler: (p: { downloaded: number; total: number | null }) => void,
 ): Promise<Unlisten> {
   return listenTo(events.updateProgress.listen, handler);
+}
+
+/** Step 21: where the voice stands (the microphone indicator). */
+export function onVoiceState(handler: (s: VoiceState) => void): Promise<Unlisten> {
+  return listenTo(events.voiceStateChanged.listen, handler);
+}
+
+/** Step 21: a command was heard, and what came of it. */
+export function onVoiceHeard(handler: (h: VoiceHeard) => void): Promise<Unlisten> {
+  return listenTo(events.voiceHeard.listen, handler);
+}
+
+/** Step 21: the guided learning heard one saying of the wake word. */
+export function onVoiceLearned(handler: (heard: string) => void): Promise<Unlisten> {
+  return listenTo(events.voiceLearned.listen, (e: { heard: string }) => handler(e.heard));
+}
+
+/** Step 21: a calibration saying was kept (`ok`: written to disk). */
+export function onVoiceRecorded(handler: (r: VoiceRecorded) => void): Promise<Unlisten> {
+  return listenTo(events.voiceRecorded.listen, handler);
+}
+
+/** Step 21: a voice model downloading. */
+export function onVoiceModelProgress(handler: (p: VoiceModelProgress) => void): Promise<Unlisten> {
+  return listenTo(events.voiceModelProgress.listen, handler);
 }

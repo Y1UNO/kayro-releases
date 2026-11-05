@@ -133,7 +133,8 @@
     "elevationCancelled": "Lancement annulé : la demande d’autorisation administrateur a été refusée.",
     "launchFailed": "Cette application n’a pas pu être lancée.",
     "hotkeyConflict": "Ce raccourci est déjà utilisé par une autre application. Choisissez-en un autre.",
-    "updateFailed": "La mise à jour n'a pas pu être vérifiée ou installée. Vérifiez la connexion, puis réessayez."
+    "updateFailed": "La mise à jour n'a pas pu être vérifiée ou installée. Vérifiez la connexion, puis réessayez.",
+    "downloadFailed": "Le modèle n'a pas pu être téléchargé, ou il ne correspond pas à son empreinte. Vérifiez la connexion, puis réessayez."
   },
   "addApps": {
     "tabsLabel": "Façon d’ajouter",
@@ -381,5 +382,99 @@
     "eyebrow": "Nouveautés",
     "title": "Kayro {version}",
     "go": "C’est parti"
+  },
+  "voice": {
+    "button": {
+      "off": "Micro",
+      "loading": "Micro : chargement des modèles…",
+      "waiting": "Micro à l’écoute de votre mot d’éveil (cliquer pour le couper)",
+      "ready": "Micro prêt : tenez le raccourci pour parler (cliquer pour le couper)",
+      "hearing": "Micro : je vous écoute…",
+      "thinking": "Micro : je comprends…",
+      "following": "Micro : je reste à l’écoute, continuez sans mon nom",
+      "paused": "Micro en pause : un jeu en plein écran, ou l’écran verrouillé",
+      "muted": "Micro coupé (cliquer pour reprendre)",
+      "noModel": "Micro : il manque un modèle (Réglages › Assistant vocal et IA)",
+      "noMicrophone": "Aucun micro, ou Windows le refuse"
+    },
+    "heard": {
+      "launched": "« {said} » : {name} se lance.",
+      "launchFailed": "« {said} » : {name} ne s’est pas lancé.",
+      "sceneStarted": "« {said} » : la scène {name} démarre.",
+      "search": "« {said} » : la recherche s’ouvre.",
+      "stoppedListening": "Micro coupé. Touchez le bouton micro pour reprendre.",
+      "notUnderstood": "Pas compris : « {said} ». Dites par exemple « lance Steam ».",
+      "closed": "« {said} » : {name} se ferme.",
+      "notRunning": "« {said} » : {name} n’est pas ouvert.",
+      "music": {
+        "play": "Musique.",
+        "pause": "Pause.",
+        "next": "Musique suivante.",
+        "previous": "Musique précédente.",
+        "louder": "Plus fort.",
+        "quieter": "Moins fort.",
+        "mute": "Son coupé (ou remis).",
+        "shuffleOn": "Lecture aléatoire.",
+        "shuffleOff": "Lecture dans l’ordre.",
+        "repeatOn": "Répétition activée.",
+        "repeatOff": "Répétition désactivée."
+      },
+      "musicMode": {
+        "on": "Mode musique allumé.",
+        "off": "Mode musique éteint."
+      },
+      "showKayro": "« {said} »",
+      "hideKayro": "« {said} »",
+      "musicOpened": "« {said} » : {name} s’ouvre dans Spotify.",
+      "window": {
+        "theWindow": "La fenêtre",
+        "plein": "{name} passe en plein écran.",
+        "reduire": "{name} est réduite.",
+        "restaurer": "{name} est restaurée.",
+        "devant": "{name} passe devant.",
+        "gauche": "{name} va à gauche.",
+        "droite": "{name} va à droite.",
+        "ecran": "{name} change d’écran.",
+        "fermer": "{name} se ferme."
+      },
+      "windowNone": "Je ne trouve pas cette fenêtre, ou ce n’est pas une de vos apps.",
+      "volumeTo": "Son à {level} %.",
+      "appVolume": {
+        "louder": "{name} plus fort.",
+        "quieter": "{name} moins fort.",
+        "mute": "{name} en sourdine.",
+        "unmute": "{name} de nouveau audible."
+      },
+      "appVolumeNone": "{name} ne joue aucun son en ce moment.",
+      "mic": {
+        "on": "Micro remis.",
+        "off": "Micro coupé."
+      },
+      "micNone": "Le micro n’a pas répondu.",
+      "theme": "Thème {name}.",
+      "themeNone": "Je ne connais pas ce thème.",
+      "kysland": {
+        "on": "Kysland reste à l’écran.",
+        "off": "Kysland seulement quand Kayro est caché."
+      },
+      "nowPlaying": "Vous écoutez {title}, de {artist}.",
+      "nowPlayingNone": "Rien ne joue en ce moment.",
+      "lock": "Session verrouillée.",
+      "desktop": "Bureau affiché.",
+      "timer": "Minuteur de {minutes} min lancé.",
+      "timerDone": "Votre minuteur de {minutes} min est terminé.",
+      "time": "Il est {text}.",
+      "screenshot": "Capture d’écran prise (Images › Captures).",
+      "webSearch": "Recherche « {query} » dans le navigateur.",
+      "dictated": "Texte écrit.",
+      "dictatedNone": "Pas écrit : aucune zone de texte devant, ou une console.",
+      "unknown": "Je ne sais pas encore faire ça."
+    },
+    "doubt": {
+      "title": "Vous vouliez dire… ?",
+      "help": "« {said} » ressemble à plusieurs noms.",
+      "scene": "Scène · {name}",
+      "cancel": "Aucun"
+    }
   }
 }

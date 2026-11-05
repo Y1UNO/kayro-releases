@@ -91,6 +91,10 @@ pub enum MediaAction {
     Previous,
     Toggle,
     Next,
+    Play,
+    Pause,
+    Shuffle(bool),
+    Repeat(bool),
 }
 
 struct Watch {
@@ -209,6 +213,10 @@ pub fn control<R: Runtime>(app: &AppHandle<R>, action: MediaAction) -> bool {
         MediaAction::Previous => win::Control::Previous,
         MediaAction::Toggle => win::Control::Toggle,
         MediaAction::Next => win::Control::Next,
+        MediaAction::Play => win::Control::Play,
+        MediaAction::Pause => win::Control::Pause,
+        MediaAction::Shuffle(on) => win::Control::Shuffle(on),
+        MediaAction::Repeat(on) => win::Control::Repeat(on),
     };
     win::control(&w.manager, what)
 }

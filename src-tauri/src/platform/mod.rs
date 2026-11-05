@@ -2,19 +2,28 @@
 //! Everything `unsafe` for these two modules lives here, behind plain functions that tests
 //! replace with fakes (see `launcher::Launcher` and `procwatch::ProcessSource`).
 
+pub mod arrange;
+pub mod audio;
 pub mod com;
 pub mod icon;
 pub mod island;
+pub mod job;
+pub mod keys;
 pub mod logon_task;
 pub mod loopback;
 pub mod media;
+pub mod mic;
 pub mod overlay;
 pub mod own_window;
 pub mod process;
+pub mod screens;
 pub mod shell;
 pub mod startup;
+pub mod system;
 pub mod theme;
 pub mod top_windows;
+pub mod tts;
+pub mod typing;
 pub mod veil;
 pub mod window;
 
@@ -71,6 +80,12 @@ pub fn background_thread() {
     if let Err(e) = unsafe { SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN) } {
         tracing::debug!(error = %e, "could not lower the thread priority");
     }
+}
+
+/// The hour on the PC's clock (0–23): the voice's habits (voice/memory.rs).
+pub fn local_hour() -> u8 {
+    // SAFETY: returns a plain struct by value.
+    unsafe { windows::Win32::System::SystemInformation::GetLocalTime() }.wHour as u8
 }
 
 #[cfg(test)]

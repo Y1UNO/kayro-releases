@@ -22,14 +22,22 @@ pub fn on_hotkey<R: Runtime>(app: &AppHandle<R>, id: u32) {
     match action {
         Action::Toggle => toggle(app),
         Action::Search => summon_search(app),
+        Action::Voice => crate::voice::talk(true),
         Action::Scene(scene_id) => trigger_scene(app, &scene_id),
+    }
+}
+
+/// A global shortcut was released: only the voice's push-to-talk cares (it records while held).
+pub fn on_hotkey_released<R: Runtime>(app: &AppHandle<R>, id: u32) {
+    if app.state::<HotkeyState>().action_for(id) == Some(Action::Voice) {
+        crate::voice::talk(false);
     }
 }
 
 /// « Écrire dans Kysland » (2026-11-04): the island opens on its search. With Kayro on screen,
 /// Kayro's own search opens instead; with no island on screen (turned off, or a program in full
 /// screen in front), Kayro comes with its search open.
-fn summon_search<R: Runtime>(app: &AppHandle<R>) {
+pub fn summon_search<R: Runtime>(app: &AppHandle<R>) {
     let target = if let Some(main) = windows::visible(app) {
         *lock(&app.state::<DesktopState>().shown_at) = Some(Instant::now());
         let _ = main.set_focus();

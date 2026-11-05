@@ -277,7 +277,7 @@ pub fn show_quietly(raw: isize, shown: bool) {
 }
 
 /// The desktop's own windows, which cover a screen without being a program in full screen.
-const SHELL_CLASSES: &[&str] = &[
+pub(super) const SHELL_CLASSES: &[&str] = &[
     "Progman",
     "WorkerW",
     "Shell_TrayWnd",
@@ -316,14 +316,14 @@ pub fn other_program_in_front(own: u32) -> bool {
     }
 }
 
-fn class_of(h: HWND) -> String {
+pub(crate) fn class_of(h: HWND) -> String {
     let mut buf = [0u16; 64];
     // SAFETY: the buffer outlives the call.
     let n = unsafe { GetClassNameW(h, &mut buf) }.max(0) as usize;
     String::from_utf16_lossy(&buf[..n.min(buf.len())])
 }
 
-fn monitor_rect(h: HWND) -> Option<RECT> {
+pub(super) fn monitor_rect(h: HWND) -> Option<RECT> {
     let mut info = MONITORINFO {
         cbSize: size_of::<MONITORINFO>() as u32,
         ..Default::default()
