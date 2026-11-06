@@ -343,6 +343,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_desktop::media_beat::<tauri::Wry>,
             ipc_desktop::island_backdrop::<tauri::Wry>,
             ipc_desktop::monitors_list::<tauri::Wry>,
+            ipc_desktop::display_refresh_hz::<tauri::Wry>,
             ipc_desktop::monitor_choose::<tauri::Wry>,
             ipc_desktop::hotkey_set::<tauri::Wry>,
             ipc_desktop::search_hotkey_set::<tauri::Wry>,

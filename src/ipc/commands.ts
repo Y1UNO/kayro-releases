@@ -187,6 +187,8 @@ export const desktopIpc = {
   /** Measurement only: the page painted after being shown. */
   painted: (): Promise<Outcome<void>> => plain(commands.windowPainted()),
   monitors: (): Promise<Outcome<MonitorInfo[]>> => plain(commands.monitorsList()),
+  /** Step 24: the refresh rate (Hz) of the screen this window is on, null when Windows says not. */
+  refreshHz: (): Promise<Outcome<number | null>> => plain(commands.displayRefreshHz()),
   chooseMonitor: (name: string): Promise<Outcome<null>> => checked(commands.monitorChoose(name)),
   /** Refused with `hotkeyConflict` when another program owns the combination. */
   setHotkey: (hotkey: string): Promise<Outcome<null>> => checked(commands.hotkeySet(hotkey)),

@@ -5,6 +5,7 @@
 //! is slow at rest, quicker just after a launch, and `Paused` stops the timer entirely (the
 //! sleep state of step 13). Only *changes* are reported.
 
+pub mod folders;
 pub mod processes;
 
 use std::collections::HashMap;
@@ -180,6 +181,13 @@ fn run(
     let (mut ticks, mut spent) = (0u32, Duration::ZERO);
     let mut rescan = true;
     let mut publish = true;
+    // Step 24: COM for reading shortcuts (folders.rs), for the thread's life.
+    let _com = crate::detect::startmenu::Com::init()
+        .map_err(|e| tracing::warn!(error = %e.0, "procwatch: no COM, shortcuts not followed"))
+        .ok();
+    // App id + what it launches → its folder (or none), found once per app.
+    let mut found: HashMap<String, Option<String>> = HashMap::new();
+    let mut folders: HashMap<String, String> = HashMap::new();
 
     loop {
         if publish {
@@ -188,7 +196,9 @@ fn run(
                 procs = source.list();
                 fg_pid = foreground();
             }
-            publish_states(&shared, &apps(), &procs, fg_pid, &emit);
+            let list = apps();
+            update_folders(&list, &mut found, &mut folders);
+            publish_states(&shared, &list, &procs, fg_pid, &folders, &emit);
             if rescan {
                 ticks += 1;
                 spent += started.elapsed();
@@ -236,14 +246,48 @@ fn run(
     }
 }
 
+/// Looks up the folder of the apps not seen yet (folders.rs: files and shortcuts read once per
+/// app, never again while it keeps the same launch); `folders` gets the apps that have one.
+fn update_folders(
+    apps: &[AppEntry],
+    found: &mut HashMap<String, Option<String>>,
+    folders: &mut HashMap<String, String>,
+) {
+    let mut changed = false;
+    for app in apps {
+        if app.match_rule.exe.is_some() {
+            continue;
+        }
+        let key = format!("{}|{}", app.id, app.launch.target_key());
+        if let std::collections::hash_map::Entry::Vacant(slot) = found.entry(key) {
+            let folder = folders::install_folder(app);
+            if let Some(f) = &folder {
+                tracing::info!(app = %app.id, folder = %f, "procwatch: followed by its folder");
+            }
+            slot.insert(folder);
+            changed = true;
+        }
+    }
+    if changed {
+        folders.clear();
+        for app in apps {
+            let key = format!("{}|{}", app.id, app.launch.target_key());
+            if let Some(Some(f)) = found.get(&key) {
+                folders.insert(app.id.clone(), f.clone());
+            }
+        }
+    }
+}
+
 fn publish_states(
     shared: &Mutex<Shared>,
     apps: &[AppEntry],
     procs: &[ProcInfo],
     fg_pid: Option<u32>,
+    folders: &HashMap<String, String>,
     emit: &impl Fn(AppRunState),
 ) {
-    let computed = compute_states(apps, procs, fg_pid);
+    let computed = compute_states(apps, procs, fg_pid, folders);
     let next: Vec<AppRunState> = computed.iter().map(|(s, _)| s.clone()).collect();
     let diff = {
         let mut shared = shared.lock().unwrap();

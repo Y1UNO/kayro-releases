@@ -31,7 +31,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
 | [x] 21 | **Voix** (extension A) : écoute active (mot d'éveil) ou push-to-talk, très bonne en français, 100 % locale (voir « Plus tard ») | 6, 10, 20 | H |
 | [x] 22 | **Mains** (extension B) : gestes à la webcam, traitement local | 21 | H |
-| [ ] 24 | **Moteur WebGL** (extension D) : suite du moteur graphique de l'étape 12b, derrière `FxLayer` | 8, 12b | H |
+| [x] 24 | **Moteur WebGL** (extension D) : suite du moteur graphique de l'étape 12b, derrière `FxLayer` | 8, 12b | H |
 | [ ] 18 | **Audit final, juste avant la v1.0** (reporté à la fin le 2026-11-02 : l'app change encore) : perf, sécurité **et cybersécurité (test d'intrusion de Kayro)**, robustesse, accessibilité | 1–24 | I |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
@@ -283,7 +283,7 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   l'étape 14 ; `docs/DESIGN.md` § 7). Banc : `--exe` permet l'A/B de deux builds dans les mêmes conditions.
 
 ### Avant l'étape 19 — Fonctions et finitions
-- [ ] Qualité « Auto » adaptative, pour les PC plus faibles : proposition chiffrée dans `docs/PERF-ETAPE13.md`
+- [x] (2026-11-06, étape 24 paquet 2) Qualité « Auto » adaptative, pour les PC plus faibles : proposition chiffrée dans `docs/PERF-ETAPE13.md`
   § « Qualité Auto » (décision du 14/10 : pas maintenant).
 - [x] Gestion des apps qui démarrent avec Windows au premier lancement (fait à l'étape 19, apps du Store comprises). **Précisé le 2026-10-30 (étape 19)** : à
   l'installation, trois choix — « Garder seulement Kayro » (les autres apps ne démarrent plus avec Windows), « Ne rien
@@ -344,7 +344,7 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   dans les noms d'emplacements, bouton « Parcourir » pour importer un `.hubscene`.
 - [ ] Scènes : Échap dans l'éditeur (aujourd'hui seul « ‹ Scènes » revient).
 - [ ] Bouton « Parcourir » pour choisir un exe (plugin dialog).
-- [ ] Suivi des jeux Steam (processus sans `match.exe`) pour que `waitReady`, `focus` et `close` marchent aussi sur eux.
+- [x] (2026-11-06, étape 24 : par leur dossier d'installation, Epic et raccourcis aussi) Suivi des jeux Steam (processus sans `match.exe`) pour que `waitReady`, `focus` et `close` marchent aussi sur eux.
 - [ ] Test d'Epic avec un vrai jeu installé (URI de lancement et `.item` réels ; icône par l'exe du manifeste, étape 14).
 - [ ] Couleurs du jeu (limites de l'étape 14) : « Au lancement » gardé après un redémarrage ; une marée lancée pendant une autre repart de l'état visible (aujourd'hui, les bords sautent).
 - [ ] Images d'app : retour visuel pendant le glisser d'une image sur une carte ou une case ; dossier `art/<id>` d'une
@@ -444,6 +444,52 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   en QWERTY (en AZERTY, A enregistré « Q », M refusé). Automatique : la lettre tapée, sinon celle de la disposition
   de Windows (Keyboard Map de WebView2), sinon AZERTY pour un Windows français. Les raccourcis déjà choisis gardent
   leur lettre.
+
+### Avant la v1.0 — Moteur graphique (extension D, étape 24)
+- **Direction (2026-11-06)** : « pas du verre liquide pour du verre liquide » → des effets qui **disent quelque chose**.
+  Paquets : (1) apps ouvertes ; (2) qualité « Auto » pour les PC plus faibles + mesures en suspens ; (3) au besoin,
+  transitions qui ont un sens.
+- **Paquet 1, apps ouvertes (2026-11-06)** : une lumière dans le verre des cartes ouvertes (élément `runningLight`)
+  essayée puis **retirée** (« le voile fait moche », voir « Abandonné ») ; le point d'état reste. Ce qui en reste,
+  et compte : les jeux Steam, Epic et les apps lancées par un raccourci **n'étaient jamais vus ouverts** (ni point, ni
+  scène qui attend, ni premier plan). Suivi par dossier (`procwatch/folders.rs`) : un jeu est ouvert quand un programme
+  tourne depuis son dossier d'installation (manifeste Steam `installdir`, `InstallLocation` d'Epic), un raccourci
+  depuis le dossier de son programme ; dossiers trop généraux refusés (lecteur, Program Files, AppData…), la
+  bibliothèque `steamapps` ne compte pas pour Steam ; dossier cherché une fois par app (fil de la surveillance).
+  « Attendre qu'elle soit prête », premier plan et fermeture des scènes marchent aussi sur ces apps. Limites : un jeu
+  lancé en administrateur dont Windows cache le chemin reste invisible ; un jeu installé Kayro ouvert n'est suivi
+  qu'au démarrage suivant. Cargo 435, clippy propre ; le point vu par l'utilisateur dans l'exe (« cool »).
+- **Paquet 2, qualité « Auto » (2026-11-06)** : `src/fx/autoQuality.ts` (pur, 8 tests) lit les intervalles d'images
+  de la boucle commune (`loop.observe`, sans boucle à elle) ; une image est en retard au-delà de 1,5 × la période de
+  l'écran, que le cœur donne (`display_refresh_hz`, `EnumDisplaySettingsW` de l'écran de la fenêtre ; sinon la
+  médiane, qui ne voit que les saccades irrégulières) ; les séquences scriptées ne comptent pas. 2 fenêtres de 2 s
+  mauvaises (≥ 4 images et ≥ 4 % en retard) → un palier : survol simple → flottaison légère → Équilibré → Éco (jamais
+  plus lourd que le choix de l'utilisateur) ; remontée après 30 s calmes et 60 s depuis la descente ; 2 allers-retours
+  en 10 min → figé ; Équilibré au plus sur batterie (Battery API si WebView2 la donne). Réglages › Visuel : « En ce
+  moment : … » et pourquoi. **Auto par défaut** (nouvelles installations et « réglages par défaut » ; un choix
+  enregistré ne change pas). Vérifié dans `/dev/home?fx=auto&hz=60&fakeframes=50` (horloge factice, le volet caché ne
+  dessine rien) : descente high → hover → float → balanced → eco, `data-quality="eco"`. **Dans l'exe** (2026-11-06,
+  écran 280 Hz lu par le cœur, fond : Comet, HueSync, Steam, Wallpaper Engine) : au repos 40 s, reste Élevé ; 8 ms
+  de calcul injectés par image → un palier toutes les 4 s jusqu'à Éco ; calcul arrêté → remonté d'un palier
+  (Éco → Équilibré) dès que les images ont repris, puis Kayro s'est rangé (le PC servait en même temps) : la remontée
+  complète n'est vue que dans les tests. Pas de mesure du processeur (PC utilisé pendant la séance). Non vu : un
+  vrai PC faible. Limites : l'île reste Élevé en
+  Auto (autre fenêtre) ; les changements vont dans la console, pas dans le journal de Kayro.
+- **Paquet 3, transitions qui ont un sens (2026-11-06)** : choisies par l'utilisateur parmi quatre (« recherche qui
+  mène à la carte » laissée) : **le point qui naît** (`RunningDot`), **profondeur des dialogues** (`sceneDepth.ts`,
+  les écrans reculent, le ciel reste ; le verre suit puisque le moteur mesure la page), **retour d'un jeu**
+  (`useGameReturn.ts` : jeu lancé depuis Kayro, vu ouvert puis fermé Kayro caché → au retour, sa carte, qui remonte ;
+  animation additive Web Animations, `composite: "add"`, pour ne rien écraser). Vitest 727. **Non vus dans l'exe**
+  (volet du navigateur caché : aucune image). Limites : sous un dialogue le moteur passe à 30 i/s, le verre peut
+  suivre le recul avec un léger retard ; `HomeScreen.tsx` fait 420 lignes (412 avant).
+  Retours de l'utilisateur : point et retour d'un jeu « bons » ; « en quittant les Réglages on voit la fenêtre
+  regrandir » → recul × 0,975, retour en 200 ms sans dépassement sous le voile qui s'en va : « réglé ».
+- **Couleurs du jeu absentes (2026-11-06, une fois)** : plus aucun jeu ne colorait l'accueil (réglages normaux,
+  qualité choisie à la main), puis c'est revenu seul avant d'avoir pu le reproduire (copie de test sans affiches ;
+  palettes factices de `/dev/home` : correctes). Cause inconnue ; aucun changement des palettes depuis la 0.20.6. Si
+  ça revient : copier `%APPDATA%\Kayro` dans `target\appdata-copie` et lancer l'exe dessus (`APPDATA` redirigé).
+- **Étape 24 close le 2026-11-06** : trois paquets (apps ouvertes vues partout, qualité Auto, transitions qui ont un
+  sens) ; la lumière des cartes ouvertes abandonnée. Reste avant la v1.0 : l'audit final (18).
 
 ### Intégrations (ex-étape 23, sortie de la route v1.0 le 2026-11-06)
 - [ ] OBS, Discord, lumières en nouvelles actions de scène (changer de scène OBS, enregistrer ; activité Discord ;
@@ -668,6 +714,11 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
 - **Page simple une fois installé (2026-11-05)** : la carte dit la place prise (« Arya prend 6 Go sur ce PC ») avec
   « Désinstaller Arya » (question avant, la calibration gardée) ; installé et à l'écoute, seules la carte et l'antisèche
   restent, le reste sous « Modifier les réglages ». Vérifié dans l'exe (CDP, données de test, désinstallation non validée).
+- **LFM3 (Liquid AI, 27/10) essayé et écarté (2026-11-06, demande de l'utilisateur)** : même banc, même séance, même
+  consigne et grammaire, llama.cpp b12110 (LFM3 demande b11960+). Sur 42 phrases (Kayro 5, impossibles 15, libres 22) :
+  **Gemma 4 E4B 42/42** (≈ 4 Go de mémoire graphique), LFM3-Audio-2B 0/20, LFM3-Omni-2B 2/42 (≈ 2,5 Go : recopie les
+  apps ouvertes en actions), LFM3-Audio transcrit puis LFM3-1.7B comprend 9/42 (≈ 3,9 Go, 0,4 s). Bonne transcription
+  française (0,08 s), mais l'appel et les actions sont faux. Banc à deux modèles retiré (choix de l'utilisateur).
 - [ ] **Affiner les commandes vocales au fil de ses retours** (demande de l'utilisateur, 2026-11-05 : il ajoutera des
   détails au fur et à mesure ; chaque retour = une ligne ici, une phrase dans une série de test, la règle du cerveau).
   - [x] « Cache Discord » (le bouton « – ») cachait Kayro : le cerveau écrit `fenetre <app> cacher` (le même mot
@@ -794,4 +845,5 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
 
 ## Abandonné
 Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).
+- 2026-11-06 — Lumière des apps ouvertes (étape 24) : la carte d'une app ouverte allumée de l'intérieur par le moteur, sa lumière posée autour à la place d'une partie de son ombre. Retirée le jour même à la demande de l'utilisateur (« le point est cool mais le voile fait moche ») ; seul le point d'état reste.
 - 2026-10-30 — Mode Immersif des couleurs du jeu (héros flouté, puis carte des couleurs de l'affiche) et son repli CSS : retiré à la demande de l'utilisateur (« c'est moche »).

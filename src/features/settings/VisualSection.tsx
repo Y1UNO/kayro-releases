@@ -12,6 +12,7 @@ import { desktopIpc } from "../../ipc/commands";
 import { hubStore, useHub } from "../../store";
 import type { MotionStyle } from "../../design/motion/tokens5";
 import { AdvancedSection } from "./AdvancedSection";
+import { AutoQualityNow } from "./AutoQualityNow";
 import { MusicModeRows } from "./MusicModeRows";
 import { ChoiceRow, ToggleRow } from "./SettingRow";
 import {
@@ -83,6 +84,7 @@ export function VisualSection() {
           label: t(`settings.visual.quality.${q}`),
         }))}
       />
+      {settings.quality === "auto" && <AutoQualityNow />}
       <ChoiceRow<AtmosphereLevel>
         label={t("settings.visual.atmosphere.label")}
         help={t("settings.visual.atmosphere.help")}

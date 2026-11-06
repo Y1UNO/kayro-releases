@@ -255,5 +255,17 @@
       "Réglages rangés : « Assistant vocal » plus simple (le reste sous « Détails ») et une catégorie « Concept / Fun » pour les mains.",
       "Le scan trouve aussi les apps du Microsoft Store et le Bureau ; les scènes s'ouvrent sous l'éventail de l'accueil."
     ]
+  },
+  {
+    "version": "0.24.0",
+    "date": "06/11/2026",
+    "title": "Kayro s'adapte",
+    "points": [
+      "Kayro voit enfin quand un jeu Steam ou Epic, ou une app lancée par un raccourci, est ouvert : le petit point s'allume sur sa carte, et les scènes savent l'attendre, le mettre devant ou le fermer.",
+      "Qualité « Auto », par défaut sur les nouvelles installations : si l'image devient lente, Kayro allège tout seul ses effets (survol, flottaison, puis Équilibré et Éco), et les remet quand tout va bien. Réglages › Visuel dit où il en est.",
+      "Le point d'une app naît avec une petite onde quand elle s'ouvre, et se rétracte quand elle se ferme.",
+      "Les Réglages et la recherche font reculer légèrement l'accueil derrière eux.",
+      "En revenant d'un jeu lancé depuis Kayro, l'accueil se pose sur sa carte, qui remonte à sa place."
+    ]
   }
 ]

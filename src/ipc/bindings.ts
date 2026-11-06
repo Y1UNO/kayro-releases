@@ -167,6 +167,8 @@ export const commands = {
 	 */
 	islandBackdrop: () => __TAURI_INVOKE<number | null>("island_backdrop"),
 	monitorsList: () => __TAURI_INVOKE<MonitorInfo[]>("monitors_list"),
+	/**  Refresh rate (Hz) of the screen the calling window is on (step 24, « Auto » quality). */
+	displayRefreshHz: () => __TAURI_INVOKE<number | null>("display_refresh_hz"),
 	/**  Picks the screen of the immersive mode (a `name` from `monitors_list`). */
 	monitorChoose: (name: string) => typedError<null, AppError>(__TAURI_INVOKE("monitor_choose", { name })),
 	/**
@@ -1227,7 +1229,10 @@ export type ProgressEvent = {
 export type ProgressUpdate = { kind: "started"; total: number } | { kind: "step"; index: number; state: StepState; reason: Reason | null } | { kind: "finished"; status: RunStatus };
 
 export type Quality = 
-/**  « Auto »: high, with the engine's automatic fallback (full adaptive quality: step 13). */
+/**
+ *  « Auto » (step 24): high, lowered rung by rung while frames are missed (src/fx/autoQuality.ts),
+ *  and the engine's own fallback. The default since 0.22 (new installs; a saved choice stays).
+ */
 "auto" | "eco" | "balanced" | "high" | "ultra";
 
 export type Ratio = {

@@ -273,6 +273,14 @@ pub fn monitors_list<R: Runtime>(app: AppHandle<R>) -> Vec<MonitorInfo> {
         .collect()
 }
 
+/// Refresh rate (Hz) of the screen the calling window is on (step 24, « Auto » quality).
+#[tauri::command]
+#[specta::specta]
+pub fn display_refresh_hz<R: Runtime>(window: WebviewWindow<R>) -> Option<u32> {
+    let hwnd = window.hwnd().ok()?;
+    crate::platform::screens::refresh_hz(hwnd.0 as isize)
+}
+
 /// Picks the screen of the immersive mode (a `name` from `monitors_list`).
 #[tauri::command]
 #[specta::specta]

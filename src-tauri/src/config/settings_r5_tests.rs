@@ -20,7 +20,7 @@ fn defaults_are_the_validated_look() {
     let s = Settings::default();
     assert_eq!(s.schema_version, 3);
     assert_eq!(s.theme_id, "bleu-gris");
-    assert_eq!(s.quality, Quality::Balanced);
+    assert_eq!(s.quality, Quality::Auto);
     assert_eq!(s.atmosphere_intensity, 1.0);
     assert_eq!(s.motion_style, MotionStyle::Lively);
     assert!(s.follow_system_motion);

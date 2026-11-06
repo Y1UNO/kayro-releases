@@ -1,4 +1,6 @@
+import { autoQualityStore } from "../design/autoQualityStore";
 import { applyQuality, effectiveQuality } from "../design/quality";
+import type { AutoRung } from "../fx/autoQuality";
 import { daStore } from "../design/da/daStore";
 import { sameUserChoices, withUser } from "../design/da/userDa";
 import { setFollowSystemMotion } from "../fx/motionPref";
@@ -12,14 +14,28 @@ import { hubStore } from "../store";
  */
 export function installUserPrefs({ quality }: { quality: boolean }): void {
   const base = daStore.getState().values;
-  const apply = (s: Settings | null, prev: Settings | null) => {
+  const rungNow = () => autoQualityStore.getState().state.rung;
+  let lastRung = rungNow();
+  const apply = (s: Settings | null, prev: Settings | null, prevRung: AutoRung) => {
     if (!s) return;
-    if (!sameUserChoices(s, prev)) daStore.getState().replace(withUser(base, s));
+    const rung = rungNow();
+    if (!sameUserChoices(s, prev, rung, prevRung))
+      daStore.getState().replace(withUser(base, s, rung));
     setFollowSystemMotion(s.followSystemMotion);
-    if (quality && s.quality !== prev?.quality) applyQuality(effectiveQuality(s.quality));
+    const level = effectiveQuality(s.quality);
+    if (quality && (s.quality !== prev?.quality || rung !== prevRung)) applyQuality(level);
   };
-  apply(hubStore.getState().settings, null);
+  apply(hubStore.getState().settings, null, lastRung);
   hubStore.subscribe((s, prev) => {
-    if (s.settings !== prev.settings) apply(s.settings, prev.settings);
+    if (s.settings !== prev.settings) apply(s.settings, prev.settings, lastRung);
+  });
+  // Step 24: « Auto » moved (main window): the level drawn, the hover and the float follow.
+  autoQualityStore.subscribe(() => {
+    const prevRung = lastRung;
+    lastRung = rungNow();
+    if (lastRung !== prevRung) {
+      const s = hubStore.getState().settings;
+      apply(s, s, prevRung);
+    }
   });
 }

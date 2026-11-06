@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import type { RefObject } from "react";
 import { useDa } from "../../../design/da";
-import { isEco } from "../../../design/quality";
 import { useReducedMotion } from "../../../fx/useReducedMotion";
-import { useHub } from "../../../store";
 import { CarouselFloat, carouselFloatConfig } from "./carouselFloat";
+import { useEco } from "../../../app/useQuality";
 
 /**
  * The carousel's floating (round 5) at the settings' level (`categoryHover.float`, shared with the
@@ -17,7 +16,7 @@ export function useCarouselFloat(
   active = true,
 ): RefObject<CarouselFloat | null> {
   const name = useDa((s) => s.values.categoryHover?.float);
-  const eco = useHub((s) => isEco(s.settings?.quality));
+  const eco = useEco();
   const reduced = useReducedMotion();
   const config = useMemo(
     () => carouselFloatConfig(name, eco, reduced, active),

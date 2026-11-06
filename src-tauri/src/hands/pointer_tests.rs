@@ -290,5 +290,5 @@ fn pushing_past_an_edge_goes_to_the_next_screen_once() {
         .chain((0..25).map(|_| at(0.78, 6.0)))
         .collect();
     let again = run(&mut p, 2.0, &back);
-    assert!(again.iter().any(|a| *a == Act::Cross([1, 0])), "{again:?}");
+    assert!(again.contains(&Act::Cross([1, 0])), "{again:?}");
 }

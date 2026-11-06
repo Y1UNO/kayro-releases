@@ -39,6 +39,7 @@ import { usePosterDrop } from "./usePosterDrop";
 import { GameColorsBridge } from "../gameColors/GameColorsBridge";
 import { LaunchIntro } from "../launchIntro/LaunchIntro";
 import { startLaunch } from "../launchIntro/launchStore";
+import { useGameReturn } from "./useGameReturn";
 import styles from "./HomeScreen.module.css";
 
 // 30/10: through the launch sequence of the app's ambience, when it has one (launchStore.ts).
@@ -142,6 +143,8 @@ export function HomeScreen({
     carousel: !grid,
   });
   const onFan = link.mode === "fan";
+  // Step 24: back from a game, the home lands on its card.
+  useGameReturn(apps, onFan, show);
   const { fanMounted, fanParked, config: linkCfg } = link;
   const { fan: fanRef, area: areaRef, ask: askRef, title: titleRef, back: backRef } = link.bind;
   const { bottom: bottomRef, card: onFanCard, scenes: scenesRef } = link.bind;
@@ -220,7 +223,8 @@ export function HomeScreen({
     if (app) setEditing({ app, remove: false });
   }
 
-  function pickFromPalette(app: AppEntry) {
+  /** Shows `app`'s card: its category, then the card (the palette, the return from a game). */
+  function show(app: AppEntry) {
     const groupId = CATEGORY_IDS.find((id) => groups[id].includes(app));
     if (groupId) {
       dispatch({ type: "setCategory", category: groupId });
@@ -230,6 +234,10 @@ export function HomeScreen({
         count: groups[groupId].length,
       });
     }
+  }
+
+  function pickFromPalette(app: AppEntry) {
+    show(app);
     launch(app);
   }
 

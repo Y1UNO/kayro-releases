@@ -141,6 +141,37 @@ fn str_field<'a>(obj: &'a Obj<'_>, key: &str) -> Option<&'a str> {
     obj.0.get(key)?.first()?.get_str()
 }
 
+/// The install folder of the Steam game `app_id` (`<library>/steamapps/common/<installdir>`),
+/// for the process watcher (step 24): the game is open when a program runs from there.
+pub fn game_folder(app_id: &str) -> Option<PathBuf> {
+    if app_id.is_empty() || app_id.len() > 12 || !app_id.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let root = find_root()?;
+    let mut libs = vec![root.clone()];
+    let file = root.join("steamapps").join("libraryfolders.vdf");
+    if let Ok(paths) = read_vdf(&file).and_then(|t| parse_library_paths(&t)) {
+        libs.extend(paths);
+    }
+    libs.iter().find_map(|lib| {
+        let apps = lib.join("steamapps");
+        let text = read_vdf(&apps.join(format!("appmanifest_{app_id}.acf"))).ok()?;
+        let folder = apps.join("common").join(parse_install_dir(&text)?);
+        folder.is_dir().then_some(folder)
+    })
+}
+
+/// `installdir` of a manifest: one plain folder name (no separator, not `..`).
+pub(crate) fn parse_install_dir(text: &str) -> Option<String> {
+    let vdf = keyvalues_parser::parse(text).ok()?;
+    let Value::Obj(state) = &vdf.value else {
+        return None;
+    };
+    let dir = str_field(state, "installdir")?.trim();
+    let plain = !dir.is_empty() && dir != "." && dir != ".." && !dir.contains(['\\', '/', ':']);
+    plain.then(|| dir.to_string())
+}
+
 /// One manifest, reduced to what the hub needs.
 #[derive(Debug, PartialEq)]
 pub(crate) struct Manifest {

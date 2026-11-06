@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { daStore, useDa } from "../../../design/da";
 import { useMotionTokens } from "../../../design/motion/current";
-import { isEco } from "../../../design/quality";
 import { prefersReducedMotion } from "../../../fx/motionPref";
 import { useReducedMotion } from "../../../fx/useReducedMotion";
 import { onWindowVisibility } from "../../../ipc/events";
-import { useHub } from "../../../store";
 import { CATEGORY_IDS, type CategoryId } from "../categories";
 import { FanMotion, hoverConfig } from "./fanFloat";
 import { linkConfig, type SequenceKind } from "./fanTimeline";
 import { LinkDirector } from "./linkDirector";
+import { useEco } from "../../../app/useQuality";
 
 export type HomeMode = "fan" | "home";
 
@@ -50,7 +49,7 @@ export function useCategoryLink({ category, setCategory, startOnFan, carousel }:
   });
 
   const values = useDa((s) => s.values.categoryLink);
-  const eco = useHub((s) => isEco(s.settings?.quality));
+  const eco = useEco();
   const crisp = useMotionTokens().style === "crisp";
   const config = useMemo(() => linkConfig(values, eco, crisp), [values, eco, crisp]);
   // Holds the elements too (its `ref` callbacks), so that React never reads a ref while rendering.

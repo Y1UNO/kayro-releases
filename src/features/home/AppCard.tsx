@@ -16,6 +16,7 @@ import { cssVars } from "./cssVars";
 import { useAppIcon } from "./useAppIcon";
 import { cardTilt } from "./cardTilt";
 import { RenameField, useRenaming } from "./RenameField";
+import { RunningDot } from "./RunningDot";
 import fail from "./LaunchFail.module.css";
 import styles from "./AppCard.module.css";
 import face from "./AppCardFace.module.css";
@@ -162,7 +163,7 @@ export function AppCard({
             </span>
           )}
           <span className={styles.sheen} data-pointer-sheen="" aria-hidden="true" />
-          {running && <span className={styles.running} aria-hidden="true" />}
+          <RunningDot running={running} />
           <span className={fail.ring} data-on={failed ? "" : undefined} aria-hidden="true" />
           <span
             ref={plate}

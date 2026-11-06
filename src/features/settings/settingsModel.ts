@@ -27,7 +27,7 @@ export function atmosphereLevel(intensity: number | null | undefined): Atmospher
  * in schema.rs (tested against the generated defaults).
  */
 export const VISUAL_DEFAULTS = {
-  quality: "balanced",
+  quality: "auto",
   atmosphereIntensity: ATMOSPHERE.normal,
   motionStyle: "lively",
   followSystemMotion: true,

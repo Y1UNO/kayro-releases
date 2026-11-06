@@ -1,10 +1,9 @@
 import { useRef } from "react";
 import { useMotionTokens } from "../../../design/motion/current";
 import { useAmbientLoop } from "../../../design/motion/useAmbientLoop";
-import { isEco } from "../../../design/quality";
 import { prefersReducedMotion } from "../../../fx/motionPref";
-import { useHub } from "../../../store";
 import styles from "./Chain.module.css";
+import { useEco } from "../../../app/useQuality";
 
 /**
  * Something is loading (a step that runs): a light thread glides along a short track, never a
@@ -13,7 +12,7 @@ import styles from "./Chain.module.css";
 export function GlideThread() {
   const bead = useRef<HTMLSpanElement>(null);
   const t = useMotionTokens();
-  const eco = useHub((s) => isEco(s.settings?.quality));
+  const eco = useEco();
   const moving = !eco && !prefersReducedMotion() && t.levels[1];
   const period = t.dur.long * 2;
   useAmbientLoop(moving, (now) => {

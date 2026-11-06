@@ -52,7 +52,7 @@ fn match_exe_is_compared_by_name_ignoring_case() {
         proc(11, "other.exe", None),
         proc(12, "javaw.exe", None),
     ];
-    let out = compute_states(&apps, &procs, None);
+    let out = compute_states(&apps, &procs, None, &HashMap::new());
     assert_eq!(out.len(), 1);
     assert!(out[0].0.running && !out[0].0.foreground);
     assert_eq!(out[0].1, vec![10, 12]);
@@ -66,7 +66,7 @@ fn without_match_exe_a_plain_program_falls_back_to_its_path() {
         proc(2, "A.exe", Some(r"D:\elsewhere\A.exe")),
         proc(3, "A.exe", None),
     ];
-    let out = compute_states(&apps, &procs, None);
+    let out = compute_states(&apps, &procs, None, &HashMap::new());
     assert_eq!(out[0].1, vec![1]);
 }
 
@@ -102,7 +102,7 @@ fn links_and_shortcuts_without_match_are_not_followed() {
             Some("b.exe"),
         ),
     ];
-    let out = compute_states(&apps, &[proc(1, "b.exe", None)], None);
+    let out = compute_states(&apps, &[proc(1, "b.exe", None)], None, &HashMap::new());
     let ids: Vec<_> = out.iter().map(|(s, _)| s.id.as_str()).collect();
     assert_eq!(ids, ["lnk-matched"]);
 }
@@ -114,9 +114,9 @@ fn foreground_is_true_only_for_one_of_the_apps_processes() {
         app("b", exe_launch(r"C:\b.exe"), Some("b.exe")),
     ];
     let procs = [proc(1, "a.exe", None), proc(2, "b.exe", None)];
-    let out = compute_states(&apps, &procs, Some(2));
+    let out = compute_states(&apps, &procs, Some(2), &HashMap::new());
     assert!(!out[0].0.foreground && out[1].0.foreground);
-    let none = compute_states(&apps, &procs, Some(99));
+    let none = compute_states(&apps, &procs, Some(99), &HashMap::new());
     assert!(none.iter().all(|(s, _)| !s.foreground));
 }
 
@@ -196,4 +196,94 @@ fn paused_watcher_does_nothing_until_resumed() {
     assert!(rx.recv_timeout(SHORT).is_err(), "paused: no work");
     watch.set_pace(Pace::Idle);
     assert!(rx.recv_timeout(LONG).unwrap().running);
+}
+
+// ---- Step 24: apps followed by their folder (Steam / Epic games, shortcuts) ----
+
+#[test]
+fn a_game_is_open_when_a_program_runs_from_its_folder() {
+    let apps = [app(
+        "steam-1",
+        Launch::Uri {
+            uri: "steam://rungameid/1".into(),
+        },
+        None,
+    )];
+    let folders = HashMap::from([(
+        "steam-1".to_string(),
+        r"d:\steam\steamapps\common\game\".to_string(),
+    )]);
+    let procs = [
+        proc(
+            1,
+            "Game.exe",
+            Some(r"D:\Steam\steamapps\common\Game\bin\Game.exe"),
+        ),
+        proc(
+            2,
+            "Game.exe",
+            Some(r"D:\Steam\steamapps\common\GameTwo\Game.exe"),
+        ),
+        proc(3, "x.exe", None),
+    ];
+    let out = compute_states(&apps, &procs, Some(1), &folders);
+    assert_eq!(out[0].1, vec![1]);
+    assert!(out[0].0.running && out[0].0.foreground);
+    // Without its folder, the same game is not followed.
+    assert!(compute_states(&apps, &procs, None, &HashMap::new()).is_empty());
+}
+
+#[test]
+fn a_launcher_folder_does_not_cover_its_library() {
+    use super::folders::runs_from;
+    let steam = r"c:\program files (x86)\steam\";
+    assert!(runs_from(r"c:\program files (x86)\steam\steam.exe", steam));
+    assert!(runs_from(
+        r"c:\program files (x86)\steam\bin\cef\steamwebhelper.exe",
+        steam
+    ));
+    assert!(!runs_from(
+        r"c:\program files (x86)\steam\steamapps\common\g\g.exe",
+        steam
+    ));
+    assert!(!runs_from(r"c:\program files (x86)\steamvr\v.exe", steam));
+}
+
+#[test]
+fn general_folders_are_never_an_app_folder() {
+    use super::folders::specific;
+    let general = vec![
+        r"c:\program files".to_string(),
+        r"c:\users\me\appdata\local".to_string(),
+        r"c:\users\me".to_string(),
+    ];
+    assert!(!specific("c:", &general));
+    assert!(!specific(r"c:\program files", &general));
+    assert!(!specific(r"c:\users", &general));
+    assert!(!specific(r"c:\users\me\appdata\local", &general));
+    assert!(specific(r"c:\users\me\appdata\local\discord", &general));
+    assert!(specific(r"c:\program files\obs-studio\bin\64bit", &general));
+    assert!(specific(r"d:\games", &general));
+}
+
+#[test]
+fn steam_ids_are_read_from_their_links() {
+    use super::folders::steam_id;
+    assert_eq!(steam_id("steam://rungameid/1172470"), Some("1172470"));
+    assert_eq!(steam_id("STEAM://run/730//-novid"), Some("730"));
+    assert_eq!(steam_id("steam://open/main"), None);
+    assert_eq!(steam_id("steam://rungameid/"), None);
+}
+
+#[test]
+fn steam_install_dir_is_one_plain_folder_name() {
+    use crate::detect::steam::parse_install_dir;
+    let m = |d: &str| format!("\"AppState\"\n{{\n\"appid\" \"1\"\n\"installdir\" \"{d}\"\n}}");
+    assert_eq!(
+        parse_install_dir(&m("Apex Legends")).as_deref(),
+        Some("Apex Legends")
+    );
+    assert_eq!(parse_install_dir(&m("..")), None);
+    assert_eq!(parse_install_dir(&m("a/b")), None);
+    assert_eq!(parse_install_dir(&m("")), None);
 }
