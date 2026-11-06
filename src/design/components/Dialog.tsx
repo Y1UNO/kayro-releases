@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useDialogCap } from "../../fx/cadenceCap";
+import { useSceneDepth } from "../sceneDepth";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { Surface } from "../glass/Surface";
 import { useMotionTokens } from "../motion/current";
@@ -52,6 +53,8 @@ export function Dialog({
   const presence = usePresence(open, durOf(motion, 2, "moyen", prefersReducedMotion(), true));
   // The scene under the scrim needs fewer frames (step 13, CADENCE.underDialog).
   useDialogCap(open);
+  // Step 24: the screens behind step back while it is open.
+  useSceneDepth(open);
   // The opener often clears its data on close: the exit shows the last content.
   const [kept, setKept] = useState({ title, children });
   if (open && (kept.title !== title || kept.children !== children)) setKept({ title, children });

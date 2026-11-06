@@ -6,6 +6,7 @@ import { SearchIcon, Surface } from "../../design";
 import { useMotionTokens } from "../../design/motion/current";
 import { fmTransition } from "../../design/motion/tokens";
 import { useDialogCap } from "../../fx/cadenceCap";
+import { useSceneDepth } from "../../design/sceneDepth";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { t } from "../../i18n";
 import type { AppEntry } from "../../ipc/bindings";
@@ -37,6 +38,7 @@ function Palette({ apps, onClose, onPickApp, onPickCategory }: Props) {
   const list = useRef<HTMLUListElement>(null);
   const listId = useId();
   useDialogCap(true); // the scene under the palette needs fewer frames (step 13)
+  useSceneDepth(true); // and steps back (step 24)
   // Level 2 panel (motion token table): appears in "moyen" (scale 0.96 → 1, rises 14 px), rows in a
   // cascade at the opening only (not at every key stroke), closes in 0.7 × without a cascade.
   const motion = useMotionTokens();

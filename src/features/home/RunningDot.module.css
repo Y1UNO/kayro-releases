@@ -1,0 +1,72 @@
+/* An open app's dot on its card (step 6). Step 24 (paquet 3): it is born with one pulse when the
+   app opens while Kayro is on screen, and shrinks away when it closes; already open at load, it is
+   simply there. Transform and opacity only; « réduire les animations » = no motion at all. */
+.dot {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.28),
+    0 0 12px var(--accent);
+}
+
+/* The ring that leaves the dot once, like a ripple. */
+.dot::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-light);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dot[data-dot="born"] {
+  animation: born calc(var(--m-long) * var(--m-k2)) var(--m-ease-bounce) both;
+}
+
+.dot[data-dot="born"]::after {
+  animation: ripple calc(var(--m-long) * 1.6 * var(--m-k2)) var(--m-ease-in)
+    calc(var(--m-micro) * var(--m-k2)) both;
+}
+
+.dot[data-dot="dying"] {
+  animation: dying calc(var(--m-moyen) * var(--m-out) * var(--m-k2)) var(--m-ease-out) both;
+}
+
+@keyframes born {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ripple {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3.4);
+  }
+}
+
+@keyframes dying {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0);
+  }
+}

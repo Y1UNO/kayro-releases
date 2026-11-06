@@ -7,6 +7,18 @@
 /* The screens, in one box so that the opening (art direction round 3) can fade them in. */
 .screens {
   height: 100%;
+  transform-origin: 50% 45%;
+  /* Back to the front while the dialog's veil still covers it (veil out: 252 ms, slow at first),
+     fast at first and with no overshoot: the scene is in place before it shows (« on voit la
+     fenêtre regrandir », 2026-11-06). */
+  transition: transform calc(var(--m-moyen) * var(--m-out) * 0.8 * var(--m-k2)) var(--m-ease-in);
+}
+
+/* Step 24: a dialog is open (sceneDepth.ts): the screens step back, the sky stays where it is —
+   depth, the attention on the dialog. Transform only; none with « réduire les animations ». */
+:global(:root[data-depth]) .screens {
+  transform: scale(calc(1 - 0.025 * var(--m-rm)));
+  transition: transform calc(var(--m-long) * var(--m-k2)) var(--m-ease-in);
 }
 
 /* While the opening plays: own layer (its opacity changes at every frame of the hand-off). */

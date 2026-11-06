@@ -211,6 +211,11 @@ particules (`src/fx/motionPref.ts`, `:root:not([data-rm-ignore])`).
 **Anneau de focus clavier** (`focusShadow`, `--m-focus`) : 3 px de fond, 5 px A, 7 px B à 50 %, halo 26 px A à 45 % ;
 immédiat ; sur la carte active du carrousel et de la grille.
 
+**Moments (étape 24, paquet 3)** : le point d'une app ouverte **naît** (échelle 0 → 1, 540 ms `rebond`, une onde
+`--accent-light` × 3,4) et **se rétracte** à la fermeture (252 ms) — rien au chargement ; sous un dialogue ou Ctrl+K,
+les écrans **reculent** (× 0,975, 540 ms ; retour en 200 ms sans dépassement, sous le voile qui s'en va), le ciel reste ; **retour d'un jeu** : l'accueil se
+pose sur sa carte, qui remonte à sa place (26 px, × 0,94, 900 ms `rebond`). Aucun avec « réduire les animations ».
+
 **Règle 1** : un seul effet décoratif à la fois sur un même objet (le reflet qui suit le curseur est coupé au niveau 3,
 le reflet du titre attend la fin de l'onde).
 

@@ -323,19 +323,6 @@
 }
 
 /* "Open" dot: accent colour with a soft halo. */
-.running {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--accent-light);
-  box-shadow:
-    0 0 0 3px rgba(0, 0, 0, 0.28),
-    0 0 12px var(--accent);
-}
-
 /* Liquid glass card (engine running): the canvas under the interface draws the glass slab tinted
    with the card colour; the poster sits inside the thick rim, slightly see-through so that the
    refraction shows through its middle (art direction `glassCards`). */

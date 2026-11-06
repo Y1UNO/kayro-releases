@@ -31,7 +31,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
 | [x] 21 | **Voix** (extension A) : écoute active (mot d'éveil) ou push-to-talk, très bonne en français, 100 % locale (voir « Plus tard ») | 6, 10, 20 | H |
 | [x] 22 | **Mains** (extension B) : gestes à la webcam, traitement local | 21 | H |
-| [ ] 24 | **Moteur WebGL** (extension D) : suite du moteur graphique de l'étape 12b, derrière `FxLayer` | 8, 12b | H |
+| [x] 24 | **Moteur WebGL** (extension D) : suite du moteur graphique de l'étape 12b, derrière `FxLayer` | 8, 12b | H |
 | [ ] 18 | **Audit final, juste avant la v1.0** (reporté à la fin le 2026-11-02 : l'app change encore) : perf, sécurité **et cybersécurité (test d'intrusion de Kayro)**, robustesse, accessibilité | 1–24 | I |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
@@ -475,6 +475,21 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   complète n'est vue que dans les tests. Pas de mesure du processeur (PC utilisé pendant la séance). Non vu : un
   vrai PC faible. Limites : l'île reste Élevé en
   Auto (autre fenêtre) ; les changements vont dans la console, pas dans le journal de Kayro.
+- **Paquet 3, transitions qui ont un sens (2026-11-06)** : choisies par l'utilisateur parmi quatre (« recherche qui
+  mène à la carte » laissée) : **le point qui naît** (`RunningDot`), **profondeur des dialogues** (`sceneDepth.ts`,
+  les écrans reculent, le ciel reste ; le verre suit puisque le moteur mesure la page), **retour d'un jeu**
+  (`useGameReturn.ts` : jeu lancé depuis Kayro, vu ouvert puis fermé Kayro caché → au retour, sa carte, qui remonte ;
+  animation additive Web Animations, `composite: "add"`, pour ne rien écraser). Vitest 727. **Non vus dans l'exe**
+  (volet du navigateur caché : aucune image). Limites : sous un dialogue le moteur passe à 30 i/s, le verre peut
+  suivre le recul avec un léger retard ; `HomeScreen.tsx` fait 420 lignes (412 avant).
+  Retours de l'utilisateur : point et retour d'un jeu « bons » ; « en quittant les Réglages on voit la fenêtre
+  regrandir » → recul × 0,975, retour en 200 ms sans dépassement sous le voile qui s'en va : « réglé ».
+- **Couleurs du jeu absentes (2026-11-06, une fois)** : plus aucun jeu ne colorait l'accueil (réglages normaux,
+  qualité choisie à la main), puis c'est revenu seul avant d'avoir pu le reproduire (copie de test sans affiches ;
+  palettes factices de `/dev/home` : correctes). Cause inconnue ; aucun changement des palettes depuis la 0.20.6. Si
+  ça revient : copier `%APPDATA%\Kayro` dans `target\appdata-copie` et lancer l'exe dessus (`APPDATA` redirigé).
+- **Étape 24 close le 2026-11-06** : trois paquets (apps ouvertes vues partout, qualité Auto, transitions qui ont un
+  sens) ; la lumière des cartes ouvertes abandonnée. Reste avant la v1.0 : l'audit final (18).
 
 ### Intégrations (ex-étape 23, sortie de la route v1.0 le 2026-11-06)
 - [ ] OBS, Discord, lumières en nouvelles actions de scène (changer de scène OBS, enregistrer ; activité Discord ;
