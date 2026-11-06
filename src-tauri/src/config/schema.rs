@@ -29,10 +29,11 @@ pub use super::voice::{VoiceMode, VoiceModel, VoiceSettings};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]
 pub enum Quality {
-    /// « Auto »: high, with the engine's automatic fallback (full adaptive quality: step 13).
+    /// « Auto » (step 24): high, lowered rung by rung while frames are missed (src/fx/autoQuality.ts),
+    /// and the engine's own fallback. The default since 0.22 (new installs; a saved choice stays).
+    #[default]
     Auto,
     Eco,
-    #[default]
     Balanced,
     High,
     Ultra,

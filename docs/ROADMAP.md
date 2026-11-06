@@ -283,7 +283,7 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   l'étape 14 ; `docs/DESIGN.md` § 7). Banc : `--exe` permet l'A/B de deux builds dans les mêmes conditions.
 
 ### Avant l'étape 19 — Fonctions et finitions
-- [ ] Qualité « Auto » adaptative, pour les PC plus faibles : proposition chiffrée dans `docs/PERF-ETAPE13.md`
+- [x] (2026-11-06, étape 24 paquet 2) Qualité « Auto » adaptative, pour les PC plus faibles : proposition chiffrée dans `docs/PERF-ETAPE13.md`
   § « Qualité Auto » (décision du 14/10 : pas maintenant).
 - [x] Gestion des apps qui démarrent avec Windows au premier lancement (fait à l'étape 19, apps du Store comprises). **Précisé le 2026-10-30 (étape 19)** : à
   l'installation, trois choix — « Garder seulement Kayro » (les autres apps ne démarrent plus avec Windows), « Ne rien
@@ -459,6 +459,22 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   « Attendre qu'elle soit prête », premier plan et fermeture des scènes marchent aussi sur ces apps. Limites : un jeu
   lancé en administrateur dont Windows cache le chemin reste invisible ; un jeu installé Kayro ouvert n'est suivi
   qu'au démarrage suivant. Cargo 435, clippy propre ; le point vu par l'utilisateur dans l'exe (« cool »).
+- **Paquet 2, qualité « Auto » (2026-11-06)** : `src/fx/autoQuality.ts` (pur, 8 tests) lit les intervalles d'images
+  de la boucle commune (`loop.observe`, sans boucle à elle) ; une image est en retard au-delà de 1,5 × la période de
+  l'écran, que le cœur donne (`display_refresh_hz`, `EnumDisplaySettingsW` de l'écran de la fenêtre ; sinon la
+  médiane, qui ne voit que les saccades irrégulières) ; les séquences scriptées ne comptent pas. 2 fenêtres de 2 s
+  mauvaises (≥ 4 images et ≥ 4 % en retard) → un palier : survol simple → flottaison légère → Équilibré → Éco (jamais
+  plus lourd que le choix de l'utilisateur) ; remontée après 30 s calmes et 60 s depuis la descente ; 2 allers-retours
+  en 10 min → figé ; Équilibré au plus sur batterie (Battery API si WebView2 la donne). Réglages › Visuel : « En ce
+  moment : … » et pourquoi. **Auto par défaut** (nouvelles installations et « réglages par défaut » ; un choix
+  enregistré ne change pas). Vérifié dans `/dev/home?fx=auto&hz=60&fakeframes=50` (horloge factice, le volet caché ne
+  dessine rien) : descente high → hover → float → balanced → eco, `data-quality="eco"`. **Dans l'exe** (2026-11-06,
+  écran 280 Hz lu par le cœur, fond : Comet, HueSync, Steam, Wallpaper Engine) : au repos 40 s, reste Élevé ; 8 ms
+  de calcul injectés par image → un palier toutes les 4 s jusqu'à Éco ; calcul arrêté → remonté d'un palier
+  (Éco → Équilibré) dès que les images ont repris, puis Kayro s'est rangé (le PC servait en même temps) : la remontée
+  complète n'est vue que dans les tests. Pas de mesure du processeur (PC utilisé pendant la séance). Non vu : un
+  vrai PC faible. Limites : l'île reste Élevé en
+  Auto (autre fenêtre) ; les changements vont dans la console, pas dans le journal de Kayro.
 
 ### Intégrations (ex-étape 23, sortie de la route v1.0 le 2026-11-06)
 - [ ] OBS, Discord, lumières en nouvelles actions de scène (changer de scène OBS, enregistrer ; activité Discord ;
@@ -683,6 +699,11 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
 - **Page simple une fois installé (2026-11-05)** : la carte dit la place prise (« Arya prend 6 Go sur ce PC ») avec
   « Désinstaller Arya » (question avant, la calibration gardée) ; installé et à l'écoute, seules la carte et l'antisèche
   restent, le reste sous « Modifier les réglages ». Vérifié dans l'exe (CDP, données de test, désinstallation non validée).
+- **LFM3 (Liquid AI, 27/10) essayé et écarté (2026-11-06, demande de l'utilisateur)** : même banc, même séance, même
+  consigne et grammaire, llama.cpp b12110 (LFM3 demande b11960+). Sur 42 phrases (Kayro 5, impossibles 15, libres 22) :
+  **Gemma 4 E4B 42/42** (≈ 4 Go de mémoire graphique), LFM3-Audio-2B 0/20, LFM3-Omni-2B 2/42 (≈ 2,5 Go : recopie les
+  apps ouvertes en actions), LFM3-Audio transcrit puis LFM3-1.7B comprend 9/42 (≈ 3,9 Go, 0,4 s). Bonne transcription
+  française (0,08 s), mais l'appel et les actions sont faux. Banc à deux modèles retiré (choix de l'utilisateur).
 - [ ] **Affiner les commandes vocales au fil de ses retours** (demande de l'utilisateur, 2026-11-05 : il ajoutera des
   détails au fur et à mesure ; chaque retour = une ligne ici, une phrase dans une série de test, la règle du cerveau).
   - [x] « Cache Discord » (le bouton « – ») cachait Kayro : le cerveau écrit `fenetre <app> cacher` (le même mot

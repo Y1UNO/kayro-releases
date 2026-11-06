@@ -5,9 +5,7 @@ import { t } from "../../i18n";
 import { AppCard } from "./AppCard";
 import { cardGeometry, useDa } from "../../design/da";
 import { useMotionTokens } from "../../design/motion/current";
-import { isEco } from "../../design/quality";
 import { useReducedMotion } from "../../fx/useReducedMotion";
-import { useHub } from "../../store";
 import { useDisplayMode } from "../opening/expressMode";
 import { CardHoverFx, cardHoverConfig } from "./rim/cardHoverFx";
 import { geometryVars, mountedRange, type Geometry } from "./carouselGeometry";
@@ -16,6 +14,7 @@ import { cssVars } from "./cssVars";
 import { hoverCardOf } from "./float/carouselFloat";
 import { useCarouselFloat } from "./float/useCarouselFloat";
 import styles from "./Carousel.module.css";
+import { useEco } from "../../app/useQuality";
 
 interface Props {
   apps: readonly AppEntry[];
@@ -71,7 +70,7 @@ export function Carousel({
   const motion = useMotionTokens();
   const cardHover = useDa((s) => s.values.cardHover);
   const fanHover = useDa((s) => s.values.categoryHover);
-  const eco = useHub((s) => isEco(s.settings?.quality));
+  const eco = useEco();
   const windowMode = useDisplayMode() === "window";
   const reduced = useReducedMotion();
   const hoverCfg = useMemo(

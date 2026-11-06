@@ -1,7 +1,9 @@
 // Development page for the home screen (step 7): `/dev/home`, dev builds only (see main.tsx).
 // It fills the store with fake apps, so the screen can be checked in a plain browser:
 //   ?theme=<theme id> (default: the art direction's)   ?apps=60 (all in "jeux")   ?empty=1   ?view=grid
-//   ?fx=eco|balanced|high|ultra (quality, default high)   ?intensity=0.3…1
+//   ?fx=eco|balanced|high|ultra|auto (quality, default high)   ?intensity=0.3…1
+//   ?fx=auto&busy=ms&hz=60 (step 24: each frame burns ms, like a slow PC, on a screen at hz;
+//   `window.kayroBusy = 0` stops it)
 //   ?addmock=1 (fake core for the add / edit dialogs: detected apps, drop, add, edit, remove)
 //   ?cycle=ms (clicks the next category tab every ms: watch the glass selection pill slide)
 //   ?opening=1 (the opening above the home screen)   ?seek=ms (one moment of it, still)
@@ -30,6 +32,9 @@ import {
   DETECT_DEFAULTS,
 } from "../features/settings/settingsModel";
 import { effectiveQuality } from "../design/quality";
+import { installAutoQualityWatch } from "../app/autoQualityWatch";
+import { installUserPrefs } from "../app/userPrefs";
+import { frameLoop } from "../fx/loop";
 
 /** The category journey, as exposed by useCategoryLink.ts in development builds. */
 interface LinkDev {
@@ -134,7 +139,10 @@ export default function HomeDev() {
         openingScreen: "last",
         schemaVersion: 2,
         themeId: params.get("theme") ?? ACTIVE_THEME_ID,
-        quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
+        quality:
+          params.get("fx") === "auto"
+            ? ("auto" as const)
+            : (QUALITIES.find((q) => q === params.get("fx")) ?? "high"),
         colorMode: "light",
         hotkey: "Ctrl+Alt+H",
         searchHotkey: "Ctrl+Alt+K",
@@ -198,6 +206,40 @@ export default function HomeDev() {
       },
     });
     if (params.has("addmock")) installAddAppsMock(() => hubStore.getState().apps);
+    if (params.has("fakeframes")) {
+      // Step 24, a hidden pane draws no frame: frames on a fake clock, `window.kayroStep` ms apart.
+      const w = window as Window & { kayroStep?: number };
+      w.kayroStep = Number(params.get("fakeframes")) || 1000 / 60;
+      let clock = performance.now();
+      const ch = new MessageChannel();
+      let pending: FrameRequestCallback | null = null;
+      ch.port1.onmessage = () => {
+        const cb = pending;
+        pending = null;
+        clock += w.kayroStep ?? 16;
+        cb?.(clock);
+      };
+      window.requestAnimationFrame = (cb) => {
+        pending = cb;
+        ch.port2.postMessage(0);
+        return 1;
+      };
+      window.cancelAnimationFrame = () => {
+        pending = null;
+      };
+    }
+    if (params.get("fx") === "auto") {
+      installUserPrefs({ quality: true });
+      installAutoQualityWatch({ hz: Number(params.get("hz")) || 60 });
+      const w = window as Window & { kayroBusy?: number };
+      w.kayroBusy = Number(params.get("busy")) || 0;
+      frameLoop().subscribe(() => {
+        const end = performance.now() + (w.kayroBusy ?? 0);
+        while (performance.now() < end) {
+          /* a slow PC */
+        }
+      });
+    }
     if (params.has("colors")) installGameColorsMock(apps);
     applyQuality(effectiveQuality(hubStore.getState().settings?.quality ?? "high"));
     if (params.has("running")) {

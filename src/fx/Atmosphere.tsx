@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Backdrop, themeGradient, useTheme, type Quality, type Theme } from "../design";
-import { effectiveQuality } from "../design/quality";
 import { useDa } from "../design/da";
 import { ELEMENTS } from "../design/da/catalogue";
 import { parseColor } from "../lib/color";
@@ -8,6 +7,7 @@ import { useHub } from "../store";
 import { createFx } from "./createFx";
 import type { FxLayer, FxPalette, FxTarget } from "./FxLayer";
 import { onWindowVisibility } from "../ipc/events";
+import { useEffectiveQuality } from "../app/useQuality";
 
 interface Props {
   /** Overrides the saved settings (dev pages, catalogue). */
@@ -55,9 +55,9 @@ export function Atmosphere({
   const slot = useRef<HTMLDivElement>(null);
   const [fx, setFx] = useState<FxLayer | null>(null);
   const { theme } = useTheme();
-  const savedQuality = useHub((s) => s.settings?.quality);
+  const savedQuality = useEffectiveQuality();
   const savedIntensity = useHub((s) => s.settings?.atmosphereIntensity);
-  const q = quality ?? effectiveQuality(savedQuality);
+  const q = quality ?? savedQuality;
   const k = intensity ?? savedIntensity ?? 1;
   const params = useDa((s) => s.values);
 

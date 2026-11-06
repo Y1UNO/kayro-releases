@@ -7,6 +7,7 @@ import { StrictMode, Suspense, lazy } from "react";
 import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { installAutoQualityWatch } from "./app/autoQualityWatch";
 import { installUserPrefs } from "./app/userPrefs";
 import { ThemeProvider } from "./design";
 import { installDa } from "./design/da";
@@ -124,6 +125,8 @@ if (DevPage) {
   ]).finally(() => {
     const settings = hubStore.getState().settings;
     installUserPrefs({ quality: true });
+    // Step 24: « Auto » quality watches this window's frames.
+    installAutoQualityWatch();
     // Step 21: the voice's state, and a command that waited for an answer while Kayro loaded.
     startVoice(true);
     startHands();

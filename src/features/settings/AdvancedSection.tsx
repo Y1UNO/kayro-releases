@@ -5,7 +5,6 @@ import { useMotionTokens } from "../../design/motion/current";
 import { usePresence } from "../../design/motion/usePresence";
 import { ADVANCED_UNROLL } from "../../design/motion/tokens5";
 import type { CardHoverStyle, FloatName } from "../../design/motion/tokens5";
-import { isEco } from "../../design/quality";
 import { useReducedMotion } from "../../fx/useReducedMotion";
 import { t } from "../../i18n";
 import type {
@@ -24,6 +23,7 @@ import { hubStore, useHub } from "../../store";
 import { closeSteps, foldMs, openSteps, revealScroll, type Step } from "./advancedUnroll";
 import { ChoiceRow, ToggleRow } from "./SettingRow";
 import styles from "./Settings.module.css";
+import { useEco } from "../../app/useQuality";
 
 interface Props {
   /** What follows the section (slides down / up with it). */
@@ -57,7 +57,7 @@ const opts = <T extends string>(key: string, values: readonly T[]) =>
  */
 export function AdvancedSection({ below }: Props) {
   const settings = useHub((s) => s.settings);
-  const eco = useHub((s) => isEco(s.settings?.quality));
+  const eco = useEco();
   const reduced = useReducedMotion();
   const { speed, style } = useMotionTokens();
   const crisp = style === "crisp";

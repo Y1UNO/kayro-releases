@@ -103,7 +103,7 @@ describe("Réglages › Visuel (round 5)", () => {
     expect(undo).not.toHaveProperty("displayMode");
     expect(isVisualDefault({ ...mine, ...V })).toBe(true);
     expect(V).toMatchObject({
-      quality: "balanced",
+      quality: "auto",
       atmosphereIntensity: 1,
       motionStyle: "lively",
       cardFloat: "visible",

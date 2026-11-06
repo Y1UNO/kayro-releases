@@ -450,7 +450,16 @@
     "visual": {
       "quality": {
         "label": "Qualité",
-        "help": "Auto : qualité élevée, qui baisse d’un cran si l’image devient lente.",
+        "help": "Auto : qualité élevée, qui s’allège d’elle-même si l’image devient lente (survol, flottaison, puis Équilibré et Éco), et remonte quand tout va bien.",
+        "now": "En ce moment : {level}",
+        "nowHigh": "Élevé",
+        "nowHover": "Élevé, survol des cartes simplifié",
+        "nowFloat": "Élevé, survol simplifié et flottaison légère",
+        "nowBalanced": "Équilibré",
+        "nowEco": "Éco",
+        "whySlow": "allégé car des images arrivaient en retard",
+        "whyBattery": "sur batterie : Équilibré au plus",
+        "frozen": "il ne bouge plus jusqu’au prochain lancement (il hésitait)",
         "auto": "Auto",
         "eco": "Éco",
         "balanced": "Équilibré",

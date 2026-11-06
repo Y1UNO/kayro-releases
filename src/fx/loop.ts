@@ -26,6 +26,11 @@ export interface FrameLoop {
   subscribe(tick: Tick, maxFps?: number, first?: boolean): Unsubscribe;
   pause(): void;
   resume(): void;
+  /**
+   * Step 24 (« Auto » quality): `cb` is told the time of every frame the loop draws anyway. It
+   * never keeps the loop alive: no subscriber, no frame, no call.
+   */
+  observe?(cb: (now: number) => void): () => void;
   /** True while a frame is requested (for tests and the bench). */
   readonly active: boolean;
 }
@@ -46,11 +51,13 @@ export function createFrameLoop(
   caf: (id: number) => void = (id) => cancelAnimationFrame(id),
 ): FrameLoop {
   const subs: Sub[] = [];
+  const observers: ((now: number) => void)[] = [];
   let paused = false;
   let frame = 0;
 
   const frameCb = (now: number) => {
     frame = 0;
+    for (const o of observers) o(now);
     for (const s of subs) {
       const slot = s.interval > 0 ? Math.floor(now / s.interval) : 0;
       if (s.last < 0) {
@@ -95,6 +102,13 @@ export function createFrameLoop(
           sub.slot = -1; // the next frame ticks, then the new grid applies
         },
       });
+    },
+    observe(cb) {
+      observers.push(cb);
+      return () => {
+        const i = observers.indexOf(cb);
+        if (i >= 0) observers.splice(i, 1);
+      };
     },
     pause() {
       paused = true;

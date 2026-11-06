@@ -428,9 +428,12 @@ Défauts : `VISUAL_DEFAULTS`, `SOUND_DEFAULTS` (`settingsModel.ts`), les mêmes 
 - **Cadence** (`CADENCE`, `src/fx/budget.ts`) : pointeur seul 60 i/s ; sous un dialogue 30 ; au repos (ambiance seule)
   30 en Élevée et Équilibré ; séquence 60 ; verre qui suit 60. Éco : tout à 30. **Ultra** : non plafonné (≤ 144),
   seul le plafond du dialogue s'applique.
-- **Qualités** (`src/design/quality.ts`) : Éco · Équilibré · Élevé · Ultra ; « Auto » = Élevé avec le repli du moteur
-  (la qualité Auto adaptative est pour plus tard). Repli du moteur (`budgetWatch.ts`) : affiches → résolution → verre
-  par type → moteur entier (CSS). WebGL2 absent, shader refusé, contexte perdu → repli CSS automatique.
+- **Qualités** (`src/design/quality.ts`) : Éco · Équilibré · Élevé · Ultra ; **« Auto »** (défaut des nouvelles
+  installations depuis 0.22, étape 24) = Élevé, allégé palier par palier si des images arrivent en retard
+  (`src/fx/autoQuality.ts` : survol des cartes simplifié → flottaison légère → Équilibré → Éco ; remonte après 30 s
+  calmes, jamais moins de 60 s après une descente ; figé s'il hésite ; Équilibré au plus sur batterie ; jamais Ultra),
+  plus le repli du moteur (`budgetWatch.ts`) : affiches → résolution → verre par type → moteur entier (CSS). WebGL2
+  absent, shader refusé, contexte perdu → repli CSS automatique.
 - **Banc** : `npm run perf` (`scripts/perf/`, mode d'emploi `scripts/perf/README.md`) sur l'exe de production, données
   de test recréées, `--compare` avant / après, `--trace` ; jamais de capture CDP pendant une mesure.
 - Règles fixes : animer `transform` et `opacity` ; pas de `filter: blur()` sur de grandes surfaces ; `backdrop-filter`
