@@ -37,6 +37,26 @@ impl EpicSource {
     }
 }
 
+/// The install folder of the Epic game `app_name` (`InstallLocation` of its manifest), for the
+/// process watcher (step 24).
+pub fn install_folder(manifests: &Path, app_name: &str) -> Option<PathBuf> {
+    fs::read_dir(manifests).ok()?.flatten().find_map(|entry| {
+        let path = entry.path();
+        if !path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("item"))
+        {
+            return None;
+        }
+        let v = read_item(&path).ok()?;
+        if string(&v, "AppName") != Some(app_name) {
+            return None;
+        }
+        let dir = PathBuf::from(string(&v, "InstallLocation")?);
+        dir.is_dir().then_some(dir)
+    })
+}
+
 /// The program of the installed Epic game `app_name` (`InstallLocation` + `LaunchExecutable` of
 /// its manifest), for its icon only: Epic keeps no picture of its games on the PC.
 pub fn installed_exe(manifests: &Path, app_name: &str) -> Option<PathBuf> {

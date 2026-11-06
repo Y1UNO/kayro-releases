@@ -344,7 +344,7 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   dans les noms d'emplacements, bouton « Parcourir » pour importer un `.hubscene`.
 - [ ] Scènes : Échap dans l'éditeur (aujourd'hui seul « ‹ Scènes » revient).
 - [ ] Bouton « Parcourir » pour choisir un exe (plugin dialog).
-- [ ] Suivi des jeux Steam (processus sans `match.exe`) pour que `waitReady`, `focus` et `close` marchent aussi sur eux.
+- [x] (2026-11-06, étape 24 : par leur dossier d'installation, Epic et raccourcis aussi) Suivi des jeux Steam (processus sans `match.exe`) pour que `waitReady`, `focus` et `close` marchent aussi sur eux.
 - [ ] Test d'Epic avec un vrai jeu installé (URI de lancement et `.item` réels ; icône par l'exe du manifeste, étape 14).
 - [ ] Couleurs du jeu (limites de l'étape 14) : « Au lancement » gardé après un redémarrage ; une marée lancée pendant une autre repart de l'état visible (aujourd'hui, les bords sautent).
 - [ ] Images d'app : retour visuel pendant le glisser d'une image sur une carte ou une case ; dossier `art/<id>` d'une
@@ -444,6 +444,21 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   en QWERTY (en AZERTY, A enregistré « Q », M refusé). Automatique : la lettre tapée, sinon celle de la disposition
   de Windows (Keyboard Map de WebView2), sinon AZERTY pour un Windows français. Les raccourcis déjà choisis gardent
   leur lettre.
+
+### Avant la v1.0 — Moteur graphique (extension D, étape 24)
+- **Direction (2026-11-06)** : « pas du verre liquide pour du verre liquide » → des effets qui **disent quelque chose**.
+  Paquets : (1) apps ouvertes ; (2) qualité « Auto » pour les PC plus faibles + mesures en suspens ; (3) au besoin,
+  transitions qui ont un sens.
+- **Paquet 1, apps ouvertes (2026-11-06)** : une lumière dans le verre des cartes ouvertes (élément `runningLight`)
+  essayée puis **retirée** (« le voile fait moche », voir « Abandonné ») ; le point d'état reste. Ce qui en reste,
+  et compte : les jeux Steam, Epic et les apps lancées par un raccourci **n'étaient jamais vus ouverts** (ni point, ni
+  scène qui attend, ni premier plan). Suivi par dossier (`procwatch/folders.rs`) : un jeu est ouvert quand un programme
+  tourne depuis son dossier d'installation (manifeste Steam `installdir`, `InstallLocation` d'Epic), un raccourci
+  depuis le dossier de son programme ; dossiers trop généraux refusés (lecteur, Program Files, AppData…), la
+  bibliothèque `steamapps` ne compte pas pour Steam ; dossier cherché une fois par app (fil de la surveillance).
+  « Attendre qu'elle soit prête », premier plan et fermeture des scènes marchent aussi sur ces apps. Limites : un jeu
+  lancé en administrateur dont Windows cache le chemin reste invisible ; un jeu installé Kayro ouvert n'est suivi
+  qu'au démarrage suivant. Cargo 435, clippy propre ; le point vu par l'utilisateur dans l'exe (« cool »).
 
 ### Intégrations (ex-étape 23, sortie de la route v1.0 le 2026-11-06)
 - [ ] OBS, Discord, lumières en nouvelles actions de scène (changer de scène OBS, enregistrer ; activité Discord ;
@@ -794,4 +809,5 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
 
 ## Abandonné
 Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).
+- 2026-11-06 — Lumière des apps ouvertes (étape 24) : la carte d'une app ouverte allumée de l'intérieur par le moteur, sa lumière posée autour à la place d'une partie de son ombre. Retirée le jour même à la demande de l'utilisateur (« le point est cool mais le voile fait moche ») ; seul le point d'état reste.
 - 2026-10-30 — Mode Immersif des couleurs du jeu (héros flouté, puis carte des couleurs de l'affiche) et son repli CSS : retiré à la demande de l'utilisateur (« c'est moche »).

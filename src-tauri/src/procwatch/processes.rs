@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
 
+use super::folders::{norm, runs_from};
 use crate::config::apps::{AppEntry, Launch};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -74,8 +75,15 @@ impl ProcessSource for SysinfoSource {
 ///
 /// 1. `match.exe`: any process with that file name (case-insensitive);
 /// 2. otherwise, for a plain program, any process started from that exact path;
-/// 3. otherwise (shortcut, link, packaged app… without `match.exe`): not followed.
-fn pids_for(app: &AppEntry, procs: &[ProcInfo]) -> Option<Vec<u32>> {
+/// 3. otherwise, with a known folder (step 24: a Steam or Epic game, a shortcut's program), any
+///    process started from that folder (`lower`: the processes' paths, normalised);
+/// 4. otherwise (packaged app, web link, unknown folder…): not followed.
+fn pids_for(
+    app: &AppEntry,
+    procs: &[ProcInfo],
+    folder: Option<&str>,
+    lower: &[Option<String>],
+) -> Option<Vec<u32>> {
     let pick =
         |f: &dyn Fn(&ProcInfo) -> bool| procs.iter().filter(|p| f(p)).map(|p| p.pid).collect();
     if let Some(name) = &app.match_rule.exe {
@@ -87,19 +95,38 @@ fn pids_for(app: &AppEntry, procs: &[ProcInfo]) -> Option<Vec<u32>> {
                 .as_deref()
                 .is_some_and(|e| e.eq_ignore_ascii_case(path))
         })),
-        _ => None,
+        _ => {
+            let folder = folder?;
+            Some(
+                procs
+                    .iter()
+                    .zip(lower)
+                    .filter(|(_, e)| e.as_deref().is_some_and(|e| runs_from(e, folder)))
+                    .map(|(p, _)| p.pid)
+                    .collect(),
+            )
+        }
     }
 }
 
 /// State of every followable app; each comes with its process ids (to bring a window forward).
+/// `folders`: app id → its folder (folders.rs), for the apps followed by folder.
 pub fn compute_states(
     apps: &[AppEntry],
     procs: &[ProcInfo],
     foreground_pid: Option<u32>,
+    folders: &HashMap<String, String>,
 ) -> Vec<(AppRunState, Vec<u32>)> {
+    // The paths in lower case once per pass, only when some app is followed by folder.
+    let lower: Vec<Option<String>> = if folders.is_empty() {
+        Vec::new()
+    } else {
+        procs.iter().map(|p| p.exe.as_deref().map(norm)).collect()
+    };
     apps.iter()
         .filter_map(|app| {
-            let pids = pids_for(app, procs)?;
+            let folder = folders.get(&app.id).map(String::as_str);
+            let pids = pids_for(app, procs, folder, &lower)?;
             let state = AppRunState {
                 id: app.id.clone(),
                 running: !pids.is_empty(),
