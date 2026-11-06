@@ -22,6 +22,11 @@ interface Props {
    * screen; null: changes are instant.
    */
   change?: { id: number; origin: FxTarget | null; kind: "tide" | "fade" } | null;
+  /**
+   * Step 16b: what the light falls on now (the shown card), kept current; null: nothing. A change
+   * still starts its tide from its own `origin`.
+   */
+  focus?: FxTarget | null;
 }
 
 function rgbOf(css: string): [number, number, number] {
@@ -39,7 +44,14 @@ export function themePalette(theme: Theme): FxPalette {
  * Quality and intensity come from the settings; the palette from the theme (step 14: the game's).
  * Paused while the page is hidden (the complete standby — focus lost, game in front — is step 13).
  */
-export function Atmosphere({ quality, intensity, layers, palette, change = null }: Props) {
+export function Atmosphere({
+  quality,
+  intensity,
+  layers,
+  palette,
+  change = null,
+  focus = null,
+}: Props) {
   const slot = useRef<HTMLDivElement>(null);
   const [fx, setFx] = useState<FxLayer | null>(null);
   const { theme } = useTheme();
@@ -73,6 +85,8 @@ export function Atmosphere({ quality, intensity, layers, palette, change = null 
 
   // Params and palette before quality: the particles start once they have their sprite colours.
   useLayoutEffect(() => fx?.setParams(params), [fx, params]);
+  // Step 16b: the focus target, before the palette (a fresh change then sets its own origin).
+  useLayoutEffect(() => fx?.setFocusTarget(focus), [fx, focus]);
   // Step 14: a new change plays the tide from its card; the rest (theme, setting) is instant.
   const played = useRef(0);
   useLayoutEffect(() => {

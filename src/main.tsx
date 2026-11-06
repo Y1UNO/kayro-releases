@@ -1,6 +1,8 @@
 // Art direction fonts (docs/DESIGN.md): Cormorant Garamond (titles) + Manrope (interface).
 import "@fontsource-variable/cormorant-garamond";
 import "@fontsource-variable/manrope";
+// Kysland's « Disk » title: round, soft letters of black jelly.
+import "@fontsource-variable/fredoka";
 import { StrictMode, Suspense, lazy } from "react";
 import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
@@ -8,10 +10,16 @@ import { App } from "./App";
 import { installUserPrefs } from "./app/userPrefs";
 import { ThemeProvider } from "./design";
 import { installDa } from "./design/da";
+import { loadCustomThemes } from "./design/themes/custom";
+import { loadMoods } from "./features/moods/moodsStore";
 import { applyDefaultLogoColours } from "./brand";
 import { GameAtmosphere } from "./features/gameColors/GameAtmosphere";
-import { WidgetApp } from "./features/widget/WidgetApp";
-import { artStore, desktopStore, hubStore, sceneStore } from "./store";
+import { IslandApp } from "./features/island/IslandApp";
+import { startSounds } from "./sound";
+import { listenForUpdates } from "./features/update/updateStore";
+import { startVoice } from "./features/voice/voiceStore";
+import { startHands } from "./features/hands/handsStore";
+import { artStore, hubStore, sceneStore } from "./store";
 import "./index.css";
 import "./design/themeSwap.css";
 
@@ -45,13 +53,15 @@ const MotionDev: ComponentType | null =
     ? lazy(() => import("./dev/MotionLab"))
     : null;
 
-// The widget (art direction round 4b: its glass unrolls) with fake data. Dev only.
-const WidgetDev: ComponentType | null =
-  import.meta.env.DEV && location.pathname === "/dev/widget"
-    ? lazy(() => import("./dev/Widget"))
-    : null;
-
 const appRoot = createRoot(root);
+
+// Step 19c: never the browser's own menu (« Précédent », « Inspecter »…) on a right click: Kayro's
+// menus answer where they exist; text fields keep theirs (copy, paste).
+document.addEventListener("contextmenu", (e) => {
+  const field =
+    e.target instanceof Element && e.target.closest("input, textarea, [contenteditable]");
+  if (!field) e.preventDefault();
+});
 
 // A window built for a passage between display modes (round 4b, `?enter=1`): the page starts
 // faded out and comes in on its first show (src/features/modes/usePassage.ts).
@@ -59,7 +69,17 @@ if (new URLSearchParams(location.search).get("enter") === "1") {
   document.documentElement.dataset.entering = "";
   document.body.style.opacity = "0";
 }
-const DevPage = Catalogue ?? HomeDev ?? ScenesDev ?? MotionDev ?? WidgetDev;
+// Step 20, the Capri patch notes page: development builds only.
+const CapriDev: ComponentType | null =
+  import.meta.env.DEV && location.pathname === "/dev/capri"
+    ? lazy(() => import("./dev/Capri"))
+    : null;
+
+const DevPage = Catalogue ?? HomeDev ?? ScenesDev ?? MotionDev ?? CapriDev;
+// Step 17b: the interface sounds follow the settings as soon as they are read.
+startSounds();
+// Step 18b: the check at start (if allowed) and the download's progress.
+listenForUpdates();
 
 if (DevPage) {
   appRoot.render(
@@ -70,19 +90,24 @@ if (DevPage) {
     </StrictMode>,
   );
 } else if (new URLSearchParams(location.search).get("w") === "widget") {
-  // The widget window: a transparent page with no atmosphere, its own bar and panel.
+  // The widget window (step 20, Kysland): a transparent stage with the island (its search finds
+  // apps and scenes, its icons come from the art index).
   document.documentElement.dataset.window = "widget";
   void Promise.all([
     hubStore.getState().init(),
     sceneStore.getState().init(),
-    desktopStore.getState().init(),
     artStore.getState().init(),
+    loadCustomThemes(),
   ]).finally(() => {
     installUserPrefs({ quality: false });
+    // Step 21: the voice's state (the island's aura while it listens).
+    startVoice(false);
+    // Step 22: the hands' state (the island says when the camera turns on or off).
+    startHands();
     appRoot.render(
       <StrictMode>
         <ThemeProvider initialThemeId={hubStore.getState().settings?.themeId}>
-          <WidgetApp />
+          <IslandApp />
         </ThemeProvider>
       </StrictMode>,
     );
@@ -91,9 +116,17 @@ if (DevPage) {
   // Load the user's data first (a few ms, local): the first paint already has the right theme
   // and quality level. A failed load still renders the app (defaults, error shown by <App />).
   // The art index too (folder listings only, a few ms): posters are there on the first paint.
-  void Promise.all([hubStore.getState().init(), artStore.getState().init()]).finally(() => {
+  void Promise.all([
+    hubStore.getState().init(),
+    artStore.getState().init(),
+    loadCustomThemes(),
+    loadMoods(),
+  ]).finally(() => {
     const settings = hubStore.getState().settings;
     installUserPrefs({ quality: true });
+    // Step 21: the voice's state, and a command that waited for an answer while Kayro loaded.
+    startVoice(true);
+    startHands();
     appRoot.render(
       <StrictMode>
         <ThemeProvider

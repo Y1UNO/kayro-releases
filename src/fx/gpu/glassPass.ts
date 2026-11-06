@@ -44,6 +44,7 @@ export function shapeUniforms(f: GlassFrame, p: FxParams, stage: StageFrame | nu
     uC: f.C,
     uPo: f.P,
     uX: f.X,
+    uQ: f.Q,
     uPosterK: posterK(p),
   };
 }

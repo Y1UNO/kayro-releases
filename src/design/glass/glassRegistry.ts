@@ -110,6 +110,51 @@ export interface GlassFloat {
 
 const floats = new WeakMap<Element, GlassFloat>();
 
+/** A tilted card (review 2026-10-29): CSS `rotateX(x) rotateY(y)` (rad), perspective (px). */
+export interface GlassTilt {
+  x: number;
+  y: number;
+  persp: number;
+}
+
+const tilts = new WeakMap<Element, GlassTilt>();
+
+/** The carousel's cards tilt towards the pointer: the engine draws their glass tilted too. */
+export function setGlassTilt(el: Element, t: GlassTilt | null): void {
+  if (t && (t.x !== 0 || t.y !== 0)) tilts.set(el, t);
+  else tilts.delete(el);
+}
+
+export function glassTiltOf(el: Element): GlassTilt | undefined {
+  return tilts.get(el);
+}
+
+/**
+ * Width and height of the screen box of a w × h card tilted by `t`, over w and h: a tilted
+ * card's bounding box is a little larger than the card (its near side grows).
+ */
+export function tiltBoxGrowth(t: GlassTilt, w: number, h: number): [number, number] {
+  const [ca, sa, cb, sb] = [Math.cos(t.x), Math.sin(t.x), Math.cos(t.y), Math.sin(t.y)];
+  let [x0, x1, y0, y1] = [Infinity, -Infinity, Infinity, -Infinity];
+  for (const [x, y] of [
+    [-w / 2, -h / 2],
+    [w / 2, -h / 2],
+    [w / 2, h / 2],
+    [-w / 2, h / 2],
+  ] as const) {
+    // M = Rx(a) · Ry(b), then the perspective divide.
+    const X = cb * x;
+    const Y = sa * sb * x + ca * y;
+    const Z = -ca * sb * x + sa * y;
+    const k = t.persp > 0 ? t.persp / (t.persp - Z) : 1;
+    x0 = Math.min(x0, X * k);
+    x1 = Math.max(x1, X * k);
+    y0 = Math.min(y0, Y * k);
+    y1 = Math.max(y1, Y * k);
+  }
+  return [(x1 - x0) / w, (y1 - y0) / h];
+}
+
 /**
  * The carousel's floating cards are measured, not posed: the engine reads here how much the card
  * is rocked (to measure its true size inside its bounding box) and how high it floats.

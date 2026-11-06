@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AppEntry } from "../../ipc/bindings";
+import type { AppEntry, DetectedApp } from "../../ipc/bindings";
+import { itemFromDetected, picksByDefault } from "./items";
 import {
   EMPTY_DRAFT,
   applyDraft,
@@ -215,5 +216,36 @@ describe("fieldOfCoreError", () => {
     expect(fieldOfCoreError("launch.args")).toBe("args");
     expect(fieldOfCoreError("category")).toBeNull();
     expect(fieldOfCoreError(null)).toBeNull();
+  });
+});
+
+describe("detected apps ticked by default (step 19b)", () => {
+  const app = (id: string, over: Partial<DetectedApp> = {}): DetectedApp => ({
+    id,
+    name: id,
+    source: { kind: "startmenu" },
+    launch: { kind: "lnk", path: `C:/${id}.lnk` },
+    match: { exe: null },
+    posterPath: null,
+    heroPath: null,
+    alreadyAdded: false,
+    suggestedCategory: "jeux",
+    launcher: false,
+    ignored: false,
+    installDir: null,
+    logoPath: null,
+    ...over,
+  });
+
+  it("only the sure ones: new, known category, not a launcher, not ignored", () => {
+    const items = [
+      app("game"),
+      app("tool", { suggestedCategory: "autres" }),
+      app("steam", { launcher: true }),
+      app("old", { alreadyAdded: true }),
+      app("hidden", { ignored: true }),
+      app("chat", { suggestedCategory: "logiciels" }),
+    ].map((a) => itemFromDetected(a, "startmenu"));
+    expect(picksByDefault(items)).toEqual(["game", "chat"]);
   });
 });

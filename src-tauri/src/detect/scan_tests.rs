@@ -49,6 +49,10 @@ fn steam_app(id: &str) -> DetectedApp {
         hero_path: None,
         already_added: false,
         suggested_category: String::new(),
+        launcher: false,
+        ignored: false,
+        install_dir: None,
+        logo_path: None,
     }
 }
 
@@ -64,6 +68,7 @@ fn entry_for(app: &DetectedApp) -> AppEntry {
         mood_id: None,
         favorite: false,
         colors: None,
+        mood_tune: None,
     }
 }
 

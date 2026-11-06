@@ -32,7 +32,12 @@ import { ipc } from "../ipc/commands";
 import { hubStore } from "../store";
 import { MotionLab4b } from "./MotionLab4b";
 import styles from "./MotionLab.module.css";
-import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
+import {
+  SOUND_DEFAULTS,
+  UPDATE_DEFAULTS,
+  VISUAL_DEFAULTS,
+  DETECT_DEFAULTS,
+} from "../features/settings/settingsModel";
 import { effectiveQuality } from "../design/quality";
 
 const NAMES = ["Riot Client", "Minecraft", "Steam", "Epic Games", "Battle.net", "OBS Studio"];
@@ -55,14 +60,60 @@ function seedStore(params: URLSearchParams): true {
     apps: APPS,
     settings: {
       ...VISUAL_DEFAULTS,
+      ...SOUND_DEFAULTS,
+      ...UPDATE_DEFAULTS,
+      ...DETECT_DEFAULTS,
+      openingScreen: "last",
       schemaVersion: 2,
       themeId: params.get("theme") ?? ACTIVE_THEME_ID,
       quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
       colorMode: "light",
       hotkey: "Ctrl+Alt+H",
+      searchHotkey: "Ctrl+Alt+K",
+      keyboardLayout: "auto",
+      voice: {
+        mode: "off",
+        wakeWord: "Hé Kayro",
+        hotkey: "Ctrl+Alt+V",
+        model: "parakeet",
+        inGame: false,
+        wakeHeard: [],
+        microphone: "",
+        speakers: "",
+        aura: "",
+        links: [],
+        onlyMe: false,
+        echoCancel: true,
+        brain: true,
+      },
+      hands: {
+        enabled: false,
+        hotkey: "Ctrl+Alt+M",
+        inGame: false,
+        idleMinutes: 2,
+        reach: 1,
+        glow: true,
+      },
       language: "fr",
       atmosphereIntensity: 1,
       displayMode: "immersive",
+      islandAlways: true,
+      islandTuck: false,
+      islandTuckDelay: 1.5,
+      islandPeekDelay: 0.1,
+      islandMusic: false,
+      musicBass: 1,
+      musicCrash: 1,
+      musicTrails: 0.6,
+      musicGloss: 0,
+      musicSenseKick: 1,
+      musicSenseSnare: 1,
+      musicSenseHat: 1,
+      musicSenseCrash: 1,
+      musicDelayMs: 0,
+      musicQuality: "auto",
+      musicDemo: false,
+      musicColors: "cover",
       hideOnEscape: true,
       hideOnBlur: false,
       economyMode: false,
@@ -170,7 +221,6 @@ export default function MotionLab() {
                   options={[
                     { value: "immersive", label: "Immersif" },
                     { value: "window", label: "Fenêtre" },
-                    { value: "widget", label: "Widget" },
                   ]}
                 />
                 {toggles.map((on, i) => (

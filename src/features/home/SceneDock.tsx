@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { Button, IconButton, MicIcon, PlusIcon, ScenesIcon, StopIcon, Surface } from "../../design";
+import { Button, IconButton, PlusIcon, ScenesIcon, Surface } from "../../design";
 import { currentMotion } from "../../design/motion/current";
 import { durOf } from "../../design/motion/tokens";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { t } from "../../i18n";
-import { doneCount, sceneStore, useScenes } from "../../store";
+import { sceneStore, useScenes } from "../../store";
 import { usePlayScene } from "../scenes/usePlayScene";
+import { SceneButton } from "./SceneButton";
 import styles from "./SceneDock.module.css";
-import { FEATURES } from "../../app/features";
+import { VoiceButton } from "../voice/VoiceButton";
 
 const RESULT_VISIBLE_MS = 5000;
 
@@ -27,7 +28,6 @@ export function SceneDock({ onManage }: Props) {
   const scenes = useScenes((s) => s.scenes);
   const run = useScenes((s) => s.run);
   const { request, dialog } = usePlayScene();
-  const playing = run !== null && run.status === null;
   const finished = run?.status ?? null;
   const loaded = useScenes((s) => s.loaded);
   const row = useRef<HTMLDivElement>(null);
@@ -72,31 +72,15 @@ export function SceneDock({ onManage }: Props) {
       aria-label={t("home.dock.label")}
     >
       <div ref={row} className={styles.scenes}>
-        {scenes.map((scene, i) => {
-          const mine = run?.sceneId === scene.id ? run : null;
-          const active = mine !== null && mine.status === null;
-          return (
-            <Button
-              key={scene.id}
-              data-scene-id={scene.id}
-              variant={i === 0 || active ? "primary" : "soft"}
-              className={styles.item}
-              disabled={playing && !active}
-              aria-label={t("scenes.list.play", { name: scene.name })}
-              onClick={() => (active ? void sceneStore.getState().cancel() : request(scene))}
-            >
-              <span>{scene.name}</span>
-              {mine && (
-                <span className={styles.progress} aria-live="polite">
-                  {mine.status === null
-                    ? `${doneCount(mine)}/${mine.steps.length}`
-                    : t(`scenes.dock.${mine.status}`)}
-                </span>
-              )}
-              {active && <StopIcon size={12} />}
-            </Button>
-          );
-        })}
+        {scenes.map((scene, i) => (
+          <SceneButton
+            key={scene.id}
+            scene={scene}
+            primary={i === 0}
+            className={styles.item}
+            onPlay={request}
+          />
+        ))}
         {scenes.length === 0 && (
           <Button className={styles.item} onClick={onManage}>
             <PlusIcon size={16} />
@@ -108,12 +92,8 @@ export function SceneDock({ onManage }: Props) {
       <IconButton label={t("home.dock.manage")} glass onClick={onManage}>
         <ScenesIcon size={20} />
       </IconButton>
-      {/* Hidden until voice commands exist (app/features.ts, round 5). */}
-      {FEATURES.voice && (
-        <IconButton label={t("home.voice")} glass>
-          <MicIcon size={20} />
-        </IconButton>
-      )}
+      {/* Step 21: shown while the voice is on (its indicator; a click mutes it). */}
+      <VoiceButton />
       {dialog}
     </Surface>
   );

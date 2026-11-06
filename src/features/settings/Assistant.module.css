@@ -1,0 +1,156 @@
+/*
+ * Réglages › Assistant vocal et IA, simpler (step 21, 2026-11-05): the introduction (name ideas,
+ * the two ways of talking), the single install, the phrases by theme, « Avancé » folded. Same
+ * Capri look as Voice.module.css: white on the black blocks, the theme's accent.
+ */
+
+.name {
+  width: min(100%, 320px);
+  font-family: var(--font-title);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.ideas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.idea,
+.choice {
+  border: 0;
+  font: inherit;
+  color: var(--ink-text);
+  background: rgb(255 255 255 / 0.07);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.idea {
+  min-height: 30px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: var(--fs-13);
+  font-weight: 600;
+}
+
+.idea:hover,
+.choice:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.idea[aria-pressed="true"],
+.choice[aria-checked="true"] {
+  background: color-mix(in srgb, var(--accent-light) 22%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--accent-light);
+}
+
+.idea:focus-visible,
+.choice:focus-visible,
+.fold:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-2);
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.choice strong {
+  font-size: var(--fs-15);
+}
+
+.choice span {
+  font-size: var(--fs-13);
+  line-height: 1.4;
+  color: var(--ink-text-2);
+}
+
+.install {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.check {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  font-size: var(--fs-13);
+  line-height: 1.4;
+  color: var(--ink-text-2);
+  cursor: pointer;
+}
+
+.check input {
+  margin-top: 2px;
+  accent-color: var(--accent-light);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-light);
+}
+
+.says {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-13);
+  line-height: 1.4;
+  color: var(--ink-text);
+}
+
+.fold {
+  align-self: flex-start;
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--accent-light);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

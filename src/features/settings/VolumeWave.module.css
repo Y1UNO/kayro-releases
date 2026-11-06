@@ -1,0 +1,104 @@
+/* Step 17b, the volume as a wave: bars of the style's sound, lit up to the volume. */
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 460px;
+}
+
+.wrap[data-disabled] {
+  opacity: 0.45;
+}
+
+.wave {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 64px;
+  padding: 0 var(--space-3);
+  overflow: hidden;
+  border-radius: var(--radius-row);
+  background: var(--field);
+  box-shadow: var(--field-inset);
+}
+
+.wave:has(.range:focus-visible) {
+  box-shadow: var(--m-focus);
+}
+
+.bar {
+  flex: 1;
+  height: 100%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 16%, transparent);
+  transform: scaleY(var(--h));
+  transition:
+    transform var(--m1-court) var(--m-ease-in),
+    background-color var(--m1-court) var(--m-ease-in);
+}
+
+.bar[data-lit] {
+  background: linear-gradient(180deg, var(--grad-a), var(--grad-b));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--grad-a) 35%, transparent);
+}
+
+/* A light crossing the wave when the sound plays. */
+.sweep {
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, white 22%, transparent),
+    transparent
+  );
+  pointer-events: none;
+  animation: sweep 900ms var(--m-ease-in) both;
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+/* The native input over the wave: invisible, it keeps the keyboard and the screen readers. */
+.range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.range:disabled {
+  cursor: default;
+}
+
+.value {
+  min-width: 48px;
+  font-size: var(--fs-15);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    transition: none;
+  }
+
+  .sweep {
+    display: none;
+  }
+}

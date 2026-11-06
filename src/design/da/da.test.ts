@@ -33,10 +33,10 @@ describe("art direction catalogue", () => {
     expect(parseValues(defaultValues()).ok).toBe(true);
   });
 
-  it("keeps the brief's limits: card tilt at most 3°, at most 40 particles", () => {
+  it("keeps the limits: card tilt at most 8° (review 2026-10-29), at most 40 particles", () => {
     const param = (id: string, key: string) =>
       CATALOGUE.find((e) => e.id === id)?.params.find((p) => p.key === key);
-    expect(param("cardHover", "tilt")).toMatchObject({ max: 3 });
+    expect(param("cardHover", "tilt")).toMatchObject({ max: 8 });
     expect(param("embers", "count")).toMatchObject({ max: 40 });
     expect(param("stars", "count")).toMatchObject({ max: 40 });
   });

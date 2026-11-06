@@ -366,3 +366,30 @@ fn recents_and_placements_persist_across_a_reload() {
     assert_eq!(again.recents, ["a", "b"]);
     assert_eq!(again.widget.rect.unwrap().width, 700);
 }
+
+#[test]
+fn apps_take_a_new_order_only_when_every_app_is_listed_once() {
+    let (_d, s) = state();
+    for n in ["A", "B", "C"] {
+        s.add_app(new_app(n)).unwrap();
+    }
+    let ids = |s: &ConfigState| {
+        s.apps()
+            .apps
+            .iter()
+            .map(|a| a.id.clone())
+            .collect::<Vec<_>>()
+    };
+    let order = vec!["c".to_string(), "a".into(), "b".into()];
+    s.reorder_apps(&order).unwrap();
+    assert_eq!(ids(&s), order);
+    // Missing, repeated or unknown ids change nothing.
+    for bad in [vec!["a", "b"], vec!["a", "a", "b"], vec!["a", "b", "z"]] {
+        let bad: Vec<String> = bad.into_iter().map(String::from).collect();
+        assert_eq!(
+            s.reorder_apps(&bad).unwrap_err().code,
+            ErrorCode::Validation
+        );
+    }
+    assert_eq!(ids(&s), order);
+}

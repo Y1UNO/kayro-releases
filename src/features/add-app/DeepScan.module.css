@@ -1,0 +1,100 @@
+/* Step 19c: « Scan avancé » — what it does, then its bar in Kayro's light. */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  justify-content: center;
+  padding: var(--space-5) var(--space-6, 32px);
+  text-align: center;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.text {
+  margin: 0;
+  max-width: 520px;
+  font-size: var(--fs-14);
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+/* The bar: a glass track, a lavender → peach fill growing from the left (scaleX), a glowing head
+   at its end, and a sheen running along the track. */
+.track {
+  position: relative;
+  width: min(520px, 100%);
+  height: 10px;
+  margin: var(--space-3) 0 var(--space-1);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 50%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-light), var(--accent));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-light) 55%, transparent);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.head {
+  position: absolute;
+  top: 50%;
+  left: -7px;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 30%, color-mix(in srgb, var(--accent-light) 70%, transparent) 55%, transparent 72%);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sheen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  animation: sheen 1.6s ease-in-out infinite;
+}
+
+@keyframes sheen {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill,
+  .head {
+    transition: none;
+  }
+
+  .sheen {
+    display: none;
+  }
+}

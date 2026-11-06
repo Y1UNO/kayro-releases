@@ -1,8 +1,33 @@
 // Thin layer over the GENERATED bindings (`bindings.ts`, never edited by hand): every command
 // answers with an `Outcome` instead of throwing, so callers handle failure explicitly.
-import { commands, type AppEntry, type AppError, type NewApp, type Settings } from "./bindings";
+import {
+  commands,
+  type AppEntry,
+  type AppError,
+  type AppsFile,
+  type DetectedApp,
+  type FxFrame,
+  type HandsModelInfo,
+  type HandsState,
+  type IslandState,
+  type MediaAction,
+  type NowPlaying,
+  type NewApp,
+  type Settings,
+  type StartupApp,
+  type UpdateInfo,
+  type CalibPrompt,
+  type CalibScore,
+  type CalibSummary,
+  type VoiceHeard,
+  type VoiceMicrophone,
+  type VoiceModelInfo,
+  type VoiceState,
+} from "./bindings";
 import type {
   AddReport,
+  IslandStage,
+  IslandStageStep,
   OpeningDue,
   ImportPreview,
   SceneFile,
@@ -19,6 +44,8 @@ import type {
   AppArt,
   AppPalette,
   ArtRole,
+  MoodFile,
+  ThemeFile,
 } from "./bindings";
 
 export type Outcome<T> = { ok: true; value: T } | { ok: false; error: AppError };
@@ -56,6 +83,8 @@ export const ipc = {
   appsAdd: (app: NewApp): Promise<Outcome<AppEntry>> => checked(commands.appsAdd(app)),
   appsUpdate: (entry: AppEntry): Promise<Outcome<AppEntry>> => checked(commands.appsUpdate(entry)),
   appsRemove: (id: string): Promise<Outcome<null>> => checked(commands.appsRemove(id)),
+  /** Step 19b: every app's id in the new order of the cards. */
+  appsReorder: (ids: string[]): Promise<Outcome<AppsFile>> => checked(commands.appsReorder(ids)),
   /** Adds several apps with one write; the refused ones are listed in `failed`. */
   appsAddMany: (apps: NewApp[]): Promise<Outcome<AddReport>> => checked(commands.appsAddMany(apps)),
   /** Proposes apps for dropped / pasted files and addresses. Read-only. */
@@ -80,6 +109,10 @@ export const detect = {
   /** Resolves with what was found; a newer scan cancels this one. */
   scan: (): Promise<Outcome<ScanReport>> => checked(commands.detectScan()),
   cancel: (): Promise<Outcome<void>> => plain(commands.detectCancel()),
+  /** Step 19c, « Scan avancé »: the usual scan, then the PC's program and game folders. */
+  deep: (): Promise<Outcome<ScanReport>> => checked(commands.detectDeep()),
+  /** Step 19b: the icon of a proposed app (`data:` URL), or null. */
+  icon: (app: DetectedApp): Promise<Outcome<string | null>> => checked(commands.detectIcon(app)),
 };
 
 /** Scenes, slots, and the sharing of scenes (`.hubscene`). */
@@ -108,23 +141,72 @@ export type ScenesIpc = typeof scenesIpc;
 /** Showing, hiding and fitting the window, screens, shortcuts, starting with Windows, recent apps. */
 export const desktopIpc = {
   hide: (): Promise<Outcome<void>> => plain(commands.windowHide()),
-  /** Starts moving the window with the mouse (call from a pointer-down). */
-  drag: (): Promise<Outcome<null>> => checked(commands.windowDrag()),
-  /** The widget window follows the size of its content (logical pixels). */
-  fitWidget: (width: number, height: number): Promise<Outcome<null>> =>
-    checked(commands.widgetFit(width, height)),
+  /**
+   * Launch cover (30/10): `on` keeps the hub in front while a game starts behind it; off ends
+   * it, `hide` taking the hub off the screen.
+   */
+  launchCover: (on: boolean, hide: boolean): Promise<Outcome<void>> =>
+    plain(commands.launchCover(on, hide)),
+  /** « Après l'intro : Kysland », already in the widget mode: the intro's window gives way to it. */
+  /** « Après l'intro »: the intro's window goes; the island comes (`island`) or nothing. */
+  introDone: (island: boolean): Promise<Outcome<void>> => plain(commands.introDone(island)),
+  /** Shows Kayro (the island's « Passer en immersif »). */
+  show: (): Promise<Outcome<void>> => plain(commands.windowShow()),
+  /** Step 20 (Kysland): a press on the island; the core drives the gesture from there. */
+  islandGrab: (calm: boolean): Promise<Outcome<void>> => plain(commands.islandGrab(calm)),
+  /** Step 20: where the island is (on the top edge or floating, and in which corner). */
+  islandState: (): Promise<Outcome<IslandState>> => plain(commands.islandState()),
+  /** Step 20: the island opens or closes (its panel): the core gives its window that region. */
+  islandOpen: (open: boolean, calm: boolean): Promise<Outcome<void>> =>
+    plain(commands.islandOpen(open, calm)),
+  /** « Cacher l'île »: in the top edge (`width`: at rest, logical) or out; false: it stays out. */
+  islandTuck: (tucked: boolean, width: number): Promise<Outcome<boolean>> =>
+    plain(commands.islandTuck(tucked, width)),
+  /** Music mode: the page wants it (answered with the stage, or null: not now), or the island is
+   *  back home. */
+  islandStage: (step: IslandStageStep): Promise<Outcome<IslandStage | null>> =>
+    plain(commands.islandStage(step)),
+  /** Music mode: where the page draws, as boxes (logical, in the stage): the region follows. */
+  islandStageArea: (
+    boxes: readonly { x0: number; y0: number; x1: number; y1: number }[],
+  ): Promise<Outcome<void>> =>
+    plain(commands.islandStageArea(boxes.map((b) => [b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0]))),
+  /** The opened island's size, which follows its content (logical pixels). */
+  islandPanel: (width: number, height: number): Promise<Outcome<void>> =>
+    plain(commands.islandPanel(width, height)),
+  /** Step 20: the island's size at rest as drawn now, docked and floating (logical), for its
+   *  click region. */
+  islandFootprint: (room: readonly [number, number, number, number]): Promise<Outcome<void>> =>
+    plain(commands.islandFootprint(...room)),
+  /** Step 20: a held frame of the island's effects (the glitch's spikes on an edge). */
+  islandEffects: (frame: FxFrame): Promise<Outcome<void>> => plain(commands.islandEffects(frame)),
+  /** Step 20: the island's effects are over (the core cuts its window to it again). */
+  islandRest: (): Promise<Outcome<void>> => plain(commands.islandRest()),
+  /** Step 20: the lightness of the screen around the island (0–1), for its colours. */
+  islandBackdrop: (): Promise<Outcome<number | null>> => plain(commands.islandBackdrop()),
   /** Measurement only: the page painted after being shown. */
   painted: (): Promise<Outcome<void>> => plain(commands.windowPainted()),
   monitors: (): Promise<Outcome<MonitorInfo[]>> => plain(commands.monitorsList()),
   chooseMonitor: (name: string): Promise<Outcome<null>> => checked(commands.monitorChoose(name)),
   /** Refused with `hotkeyConflict` when another program owns the combination. */
   setHotkey: (hotkey: string): Promise<Outcome<null>> => checked(commands.hotkeySet(hotkey)),
+  /** « Écrire dans Kysland »; empty removes it. Refused like `setHotkey`. */
+  setSearchHotkey: (hotkey: string): Promise<Outcome<null>> =>
+    checked(commands.searchHotkeySet(hotkey)),
   hotkeys: (): Promise<Outcome<HotkeysReport>> => plain(commands.hotkeysGet()),
   /** The scene a shortcut asked to confirm while the page was not there to hear it. */
   takePendingScene: (): Promise<Outcome<string | null>> => plain(commands.sceneHotkeyTake()),
   autostart: (): Promise<Outcome<boolean>> => checked(commands.autostartGet()),
+  /** Step 19: the apps Windows starts at login (Réglages › Démarrage). */
+  startupApps: (): Promise<Outcome<StartupApp[]>> => checked(commands.startupApps()),
+  setStartupApp: (id: string, enabled: boolean): Promise<Outcome<StartupApp[]>> =>
+    checked(commands.startupAppSet(id, enabled)),
+  /** Puts back every app Kayro switched off, exactly as it was. */
+  restoreStartupApps: (): Promise<Outcome<StartupApp[]>> => checked(commands.startupAppsRestore()),
   setAutostart: (enabled: boolean): Promise<Outcome<boolean>> =>
     checked(commands.autostartSet(enabled)),
+  /** Zips the logs into the exports folder and shows it in Explorer; returns the zip's path. */
+  exportLogs: (): Promise<Outcome<string>> => checked(commands.logsExport()),
   recents: (): Promise<Outcome<string[]>> => plain(commands.recentsGet()),
   /** Once per run of the program, at the first show: the opening animation (round 3). */
   openingDue: (): Promise<Outcome<OpeningDue>> => plain(commands.openingDue()),
@@ -151,3 +233,87 @@ export const artIpc = {
 };
 
 export type ArtIpc = typeof artIpc;
+
+/** Personal themes (step 15): made in Réglages › Thèmes, imported from a dropped `.json`. */
+export const themesIpc = {
+  list: (): Promise<Outcome<ThemeFile[]>> => plain(commands.themesList()),
+  newId: (name: string): Promise<Outcome<string>> => plain(commands.themeNewId(name)),
+  save: (theme: ThemeFile): Promise<Outcome<ThemeFile>> => checked(commands.themeSave(theme)),
+  remove: (id: string): Promise<Outcome<null>> => checked(commands.themeDelete(id)),
+  /** Reads and validates the file, then keeps it as a new personal theme. */
+  importFile: (path: string): Promise<Outcome<ThemeFile>> => checked(commands.themeImport(path)),
+  /** Writes the shareable file in the exports folder, shows it in Explorer; returns its path. */
+  exportFile: (id: string): Promise<Outcome<string>> => checked(commands.themeExport(id)),
+};
+
+/** Ambiences (steps 16–17): the imported `.hubmood` files; the built-in packs live in the page. */
+export const moodsIpc = {
+  list: (): Promise<Outcome<MoodFile[]>> => plain(commands.moodsList()),
+  /** Reads and validates the file, then keeps it as a new ambience. */
+  importFile: (path: string): Promise<Outcome<MoodFile>> => checked(commands.moodImport(path)),
+  remove: (id: string): Promise<Outcome<null>> => checked(commands.moodDelete(id)),
+  /** Writes the ambience in the exports folder, shows it in Explorer; returns its path. */
+  exportFile: (mood: MoodFile): Promise<Outcome<string>> => checked(commands.moodExport(mood)),
+};
+
+/**
+ * Step 18b, updates: the only network of Kayro (the project's signed releases), on demand or at
+ * start if allowed. `install` downloads, checks the signature, installs: Kayro quits and restarts.
+ */
+export const updateIpc = {
+  check: (): Promise<Outcome<UpdateInfo | null>> => checked(commands.updateCheck()),
+  /** What the check at start found (it may end before the page listens). */
+  pending: (): Promise<Outcome<UpdateInfo | null>> => plain(commands.updatePending()),
+  install: (): Promise<Outcome<null>> => checked(commands.updateInstall()),
+};
+
+/** Step 20 (Kysland): the music playing on the PC (Windows' media controls, Spotify first). */
+export const mediaIpc = {
+  now: (): Promise<Outcome<NowPlaying | null>> => plain(commands.mediaNow()),
+  control: (action: MediaAction): Promise<Outcome<boolean>> => plain(commands.mediaControl(action)),
+  /** Follow the beat (the island's bars) while music plays and the island shows. */
+  beat: (on: boolean): Promise<Outcome<void>> => plain(commands.mediaBeat(on)),
+};
+
+/**
+ * Step 21, the voice: where it stands, the microphone button, a « ferme X » confirmed on screen,
+ * and its models (downloaded on demand from Réglages: the voice's only network).
+ */
+/** Step 22: the hands (the camera, the mouse in the air) and their two models. */
+export const handsIpc = {
+  state: (): Promise<Outcome<HandsState>> => plain(commands.handsState()),
+  setOn: (on: boolean): Promise<Outcome<void>> => plain(commands.handsSetOn(on)),
+  model: (): Promise<Outcome<HandsModelInfo>> => plain(commands.handsModel()),
+  download: (): Promise<Outcome<null>> => checked(commands.handsModelDownload()),
+  cancel: (): Promise<Outcome<void>> => plain(commands.handsModelCancel()),
+  remove: (): Promise<Outcome<null>> => checked(commands.handsModelRemove()),
+};
+
+export const voiceIpc = {
+  state: (): Promise<Outcome<VoiceState>> => plain(commands.voiceState()),
+  mute: (muted: boolean): Promise<Outcome<void>> => plain(commands.voiceMute(muted)),
+  /** A command that waited for the user while the page loaded. */
+  takePending: (): Promise<Outcome<VoiceHeard | null>> => plain(commands.voiceTakePending()),
+  close: (id: string): Promise<Outcome<boolean>> => checked(commands.voiceClose(id)),
+  models: (): Promise<Outcome<VoiceModelInfo[]>> => plain(commands.voiceModels()),
+  download: (id: string): Promise<Outcome<null>> => checked(commands.voiceModelDownload(id)),
+  cancel: (id: string): Promise<Outcome<void>> => plain(commands.voiceModelCancel(id)),
+  remove: (id: string): Promise<Outcome<null>> => checked(commands.voiceModelRemove(id)),
+  microphones: (): Promise<Outcome<VoiceMicrophone[]>> => plain(commands.voiceMicrophones()),
+  /** The outputs (speakers) Windows has: the one whose sound the echo canceller takes out. */
+  outputs: (): Promise<Outcome<VoiceMicrophone[]>> => plain(commands.voiceOutputs()),
+  /** The guided learning of the wake word (`onVoiceLearned` for each saying). */
+  learn: (on: boolean): Promise<Outcome<void>> => plain(commands.voiceLearn(on)),
+  /** « Kayro apprend de vous »: a choice made in a doubt, what was learned, forgetting it. */
+  teach: (said: string, scene: boolean, id: string): Promise<Outcome<void>> =>
+    plain(commands.voiceTeach(said, scene, id)),
+  memory: (): Promise<Outcome<number>> => plain(commands.voiceMemory()),
+  forget: (): Promise<Outcome<void>> => plain(commands.voiceForget()),
+  /** « Calibrer ma voix »: the guided recording, the prompt to keep next, the score. */
+  calibrate: (on: boolean): Promise<Outcome<void>> => plain(commands.voiceCalibrate(on)),
+  calibRecord: (prompt: CalibPrompt | null): Promise<Outcome<null>> =>
+    checked(commands.voiceCalibRecord(prompt)),
+  calibEvaluate: (): Promise<Outcome<CalibScore>> => checked(commands.voiceCalibEvaluate()),
+  calibSummary: (): Promise<Outcome<CalibSummary>> => plain(commands.voiceCalibSummary()),
+  calibClear: (): Promise<Outcome<null>> => checked(commands.voiceCalibClear()),
+};

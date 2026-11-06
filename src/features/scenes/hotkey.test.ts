@@ -40,6 +40,34 @@ describe("hotkeyFromEvent", () => {
   });
 });
 
+describe("keyboard layouts", () => {
+  const ctrlAlt = { ctrlKey: true, altKey: true };
+  const got = (h: ReturnType<typeof hotkeyFromEvent>) => (h.kind === "ok" ? h.hotkey : h.kind);
+
+  it("AZERTY names the keycap: A where QWERTY has Q, M on « ; », no letter on « , »", () => {
+    expect(got(hotkeyFromEvent(press("KeyQ", ctrlAlt), "azerty"))).toBe("Ctrl+Alt+A");
+    expect(got(hotkeyFromEvent(press("KeyW", ctrlAlt), "azerty"))).toBe("Ctrl+Alt+Z");
+    expect(got(hotkeyFromEvent(press("Semicolon", ctrlAlt), "azerty"))).toBe("Ctrl+Alt+M");
+    expect(got(hotkeyFromEvent(press("KeyM", ctrlAlt), "azerty"))).toBe("invalid");
+    expect(got(hotkeyFromEvent(press("KeyK", ctrlAlt), "azerty"))).toBe("Ctrl+Alt+K");
+    // The digit row stays its digits (unshifted « & » on AZERTY).
+    expect(got(hotkeyFromEvent(press("Digit1", ctrlAlt, "&"), "azerty"))).toBe("Ctrl+Alt+1");
+  });
+
+  it("QWERTY keeps the US key", () => {
+    expect(got(hotkeyFromEvent(press("KeyQ", ctrlAlt, "a"), "qwerty"))).toBe("Ctrl+Alt+Q");
+  });
+
+  it("Auto takes the typed letter, else the layout map's (AltGr gave « € »)", () => {
+    expect(got(hotkeyFromEvent(press("KeyQ", ctrlAlt, "a"), "auto"))).toBe("Ctrl+Alt+A");
+    const map = new Map([["KeyE", "e"]]);
+    expect(got(hotkeyFromEvent(press("KeyE", ctrlAlt, "€"), "auto", map))).toBe("Ctrl+Alt+E");
+    expect(
+      got(hotkeyFromEvent(press("KeyM", ctrlAlt, ","), "auto", new Map([["KeyM", ","]]))),
+    ).toBe("invalid");
+  });
+});
+
 describe("hotkeyTaken", () => {
   it("ignores case, spacing and order", () => {
     expect(hotkeyTaken("Ctrl+Alt+1", ["alt + ctrl + 1"])).toBe(true);

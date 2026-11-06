@@ -1,0 +1,307 @@
+/*
+ * Step 20 (Kysland): the opened island (IslandPanel.tsx), 360 wide and as tall as what it shows
+ * (panelSize.ts: the search, then the results or the music). Laid out from the island's top-left
+ * corner, cut by its corners, shown once it has grown (--content, from the engine). On black:
+ * near-white text, « bleu neige » accents, the album's colours for the music.
+ */
+
+.panel {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.panel[data-open] {
+  pointer-events: auto;
+}
+
+.inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 360px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: var(--content);
+  color: #f3f7fb;
+  font-family: var(--font-ui);
+}
+
+.searchRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.search {
+  flex: 1;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  color: rgb(255 255 255 / 0.55);
+  cursor: text;
+}
+
+/* Typing: no outline, the pill just lightens a little. */
+.search:focus-within {
+  background: rgb(255 255 255 / 0.11);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: #f3f7fb;
+  font: 500 14px var(--font-ui);
+}
+
+.search input:focus,
+.search input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.search input::placeholder {
+  color: rgb(255 255 255 / 0.45);
+}
+
+.round {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.08);
+  color: #d6ecff;
+  cursor: pointer;
+}
+
+.round:hover {
+  background: rgb(214 236 255 / 0.18);
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.result {
+  height: 30px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: #f3f7fb;
+  font: 500 13px var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.result[aria-selected="true"] {
+  background: rgb(214 236 255 / 0.14);
+}
+
+.result small {
+  margin-left: auto;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(214 236 255 / 0.7);
+}
+
+.resultName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sceneMark {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(214 236 255 / 0.16);
+  color: #d6ecff;
+  font-size: 9px;
+}
+
+.music {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cover {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.06);
+  box-shadow: 0 6px 18px rgb(var(--album-d, 0 0 0) / 0.5);
+  cursor: pointer;
+}
+
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: slideIn 480ms cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+
+.coverIcon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 0.45);
+  color: #fff;
+  font-size: 18px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.cover:hover .coverIcon,
+.cover:not([data-playing]) .coverIcon {
+  opacity: 1;
+}
+
+.meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.title,
+.artist {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.artist {
+  font-size: 12.5px;
+  color: rgb(255 255 255 / 0.62);
+}
+
+.progress {
+  margin-top: 9px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.12);
+  overflow: hidden;
+}
+
+.progress i {
+  display: block;
+  height: 100%;
+  background: rgb(var(--album-a, 214 236 255));
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* « Mode musique »: its switch under the music (2026-11-02). */
+.stageRow {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgb(243 247 251 / 0.82);
+  font: 600 12.5px var(--font-ui);
+}
+
+.stageToggle {
+  background: rgb(255 255 255 / 0.14);
+}
+
+/* On: filled with the album's accent (the island has no theme of its own). */
+.stageToggle[aria-checked="true"] {
+  background: rgb(var(--album-a, 61 140 255));
+}
+
+.controls {
+  display: flex;
+  gap: 4px;
+}
+
+.controls button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #d6ecff;
+  cursor: pointer;
+}
+
+.controls button:hover {
+  background: rgb(214 236 255 / 0.14);
+}
+
+.controls button:active {
+  transform: scale(0.88);
+}
+
+.empty {
+  margin: 0;
+  font-size: 13px;
+  color: rgb(255 255 255 / 0.55);
+}
+
+.round:focus-visible,
+.cover:focus-visible,
+.controls button:focus-visible {
+  outline: 2px solid #d6ecff;
+  outline-offset: 2px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(60%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cover img {
+    animation: none;
+  }
+}

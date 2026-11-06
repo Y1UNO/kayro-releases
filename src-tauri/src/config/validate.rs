@@ -5,7 +5,8 @@
 use std::path::{Component, Path};
 
 use super::apps::{AppEntry, Launch, NewApp};
-use super::schema::{Settings, ATMOSPHERE_MAX, ATMOSPHERE_MIN};
+use super::schema::{Settings, ATMOSPHERE_MAX, ATMOSPHERE_MIN, PEEK_DELAY_MAX, TUCK_DELAY_MAX};
+use super::sounds::{SOUND_VOLUME_MAX, SOUND_VOLUME_MIN};
 use crate::error::AppError;
 
 pub const MAX_APPS: usize = 2000;
@@ -161,6 +162,9 @@ pub fn validate_app(app: &AppEntry) -> Check {
         &app.art.hero,
         &app.mood_id,
     )?;
+    if let Some(t) = &app.mood_tune {
+        super::moods::validate_tune(t).or_else(|e| err("moodTune", e))?;
+    }
     match &app.colors {
         Some(c) => super::game_colors::validate_app_colors(c).or_else(|e| err("colors", e)),
         None => Ok(()),
@@ -225,15 +229,52 @@ pub fn hotkey(value: &str) -> Check {
     }
 }
 
+/// Bound of `Settings::ignored_detections` (a scan proposes a few hundred apps at most).
+const MAX_IGNORED: usize = 2000;
+
 pub fn validate_settings(s: &Settings) -> Check {
     validate_id(&s.theme_id).or_else(|_| err("themeId", "invalid theme id"))?;
     hotkey(&s.hotkey)?;
+    if !s.search_hotkey.is_empty() {
+        hotkey(&s.search_hotkey).or_else(|_| err("searchHotkey", "invalid shortcut"))?;
+    }
     if s.language != "fr" {
         return err("language", "unsupported language");
     }
     let a = s.atmosphere_intensity;
     if !(ATMOSPHERE_MIN..=ATMOSPHERE_MAX).contains(&a) {
         return err("atmosphereIntensity", "must be between 0.3 and 1.3");
+    }
+    if !(SOUND_VOLUME_MIN..=SOUND_VOLUME_MAX).contains(&s.sound_volume) {
+        return err("soundVolume", "must be between 0 and 1");
+    }
+    if !(0.0..=TUCK_DELAY_MAX).contains(&s.island_tuck_delay) {
+        return err("islandTuckDelay", "must be between 0 and 3");
+    }
+    if !(0.0..=PEEK_DELAY_MAX).contains(&s.island_peek_delay) {
+        return err("islandPeekDelay", "must be between 0 and 1");
+    }
+    if !s.music_in_bounds() {
+        return err("music", "a music mode setting is out of its bounds");
+    }
+    if !s.voice.wake_word_ok() {
+        return err("voice.wakeWord", "a few words of letters");
+    }
+    if !s.voice.extras_ok() {
+        return err("voice", "heard spellings, microphone or aura out of bounds");
+    }
+    if !s.voice.hotkey.is_empty() {
+        hotkey(&s.voice.hotkey).or_else(|_| err("voice.hotkey", "invalid shortcut"))?;
+    }
+    if !s.hands.in_bounds() {
+        return err("hands", "idle minutes or reach out of bounds");
+    }
+    if !s.hands.hotkey.is_empty() {
+        hotkey(&s.hands.hotkey).or_else(|_| err("hands.hotkey", "invalid shortcut"))?;
+    }
+    let ignored = &s.ignored_detections;
+    if ignored.len() > MAX_IGNORED || ignored.iter().any(|id| validate_id(id).is_err()) {
+        return err("ignoredDetections", "too many or invalid ids");
     }
     Ok(())
 }

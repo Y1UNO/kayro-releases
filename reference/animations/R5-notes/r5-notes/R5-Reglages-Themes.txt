@@ -1,0 +1,43 @@
+KAYRO · AVANT LE GEL · RÉGLAGES « VISUEL » ET « THÈMES » + ANIMATION DE CHANGEMENT DE THÈME   (VALIDÉ par l'utilisateur)
+Planche : R5-Reglages-Themes (toile Claude Design, rangée « Avant le gel »)
+Base technique : docs/PROPOSITIONS-DA.md, sections A et B (Fable). Cette note fait foi pour les valeurs d'animation.
+
+1. RÉGLAGES
+- Trois catégories dans la barre de côté : Général · Visuel · Thèmes (Raccourcis et À propos ensuite si besoin).
+- Visuel : Qualité (Auto · Éco · Équilibré · Élevé · Ultra) ; Mouvement (Complet · Vivant · Net) ; Suivre Windows (« Effets d'animation ») ; Atmosphère (Douce · Normale · Forte) ; Particules et lumière du curseur ; Couleurs du jeu ; Affichage au lancement (Immersif · Fenêtre · Widget).
+- Thèmes : grille de cartes 240×150 (3 colonnes, écart 18 px), miniature de l'accueil en CSS pur avec les variables du thème posées sur la carte (lune, 3 cartes en éventail en dégradé A→B, barre), nom en bas à gauche, coche sur le thème actif.
+- Thème par défaut : BLEU-GRIS (schema.rs, tokens.css, themes/index.ts).
+- ENCRE remplace MAUVE : fond #15151B / #0C0C10 / #060608, A #F6A98A, B #B7A2F2, texte doux #F3DCCF (contrastes de Fable : texte 17,0 · doux 14,9 · accent 10,2 · texte sur accent 9,6).
+- Contraste : ombre de pied sous le nom blanc des cartes de l'éventail (2,2–3,2:1 aujourd'hui → ≥ 4,5:1), sans toucher aux couleurs.
+
+2. ANIMATION DE CHANGEMENT DE THÈME (vitesse normale, tout × vitesse)
+Survol : ×1,03, ressort liaison (.34,1.32,.64,1), 240 ms.
+Appui (pointerdown) : ×1,05 en 140 ms, courbe apparition (.16,1,.3,1) — la carte « prend son élan », elle ne se tasse pas.
+Clic — LA CARTE ELLE-MÊME porte l'impact (aucune forme séparée posée par-dessus : sinon effet de « double / carte spectrale ») :
+- 0 → 260 ms : elle se soulève et grandit : translateY(-8 px) scale(1,10), ombre plus profonde ; courbe (.22,1,.36,1).
+- 260 → 380 ms : elle S'ÉCRASE : translateY(+2 px) scale(0,93), ombre aplatie ; courbe (.55,0,.75,.2). IMPACT = 380 ms.
+- 380 → 720 ms : elle se pose sur le ressort liaison jusqu'à scale(1).
+- Profondeur en filter: drop-shadow (pour laisser box-shadow à l'onde de choc).
+- 60 ms : un reflet traverse la carte (620 ms, (.45,0,.25,1)), comme le reflet du logo.
+- 370 ms : la lune de la carte s'allume (luminosité ×2,4, scale 1,06 MAXI, 560 ms). Ne pas la grossir plus : sinon double anneau avec l'onde.
+- 380 ms : onde de choc sur la carte elle-même (box-shadow 0 → 18 px + halo 40 px qui s'éteint, couleur A du nouveau thème à 85 %, 620 ms, (.16,1,.3,1)).
+- 380 ms : 12 étincelles partent du bord de la carte (46 à 82 px, 620 ms, décalées de 0 à 66 ms), couleur A du nouveau thème.
+- 380 ms : tout Kayro fait un micro-recul (scale 0,993 puis retour sur rebond, 420 ms), centré sur la carte.
+- 400 ms : le cadre de la carte se redessine (trait 2,4 px couleur A, comme l'anneau de l'ouverture, 520 ms, (.65,0,.35,1)).
+- 400 ms : LA GRANDE ONDE part de la lune de la carte : même onde que la pulsation C (trait fin couleur A du nouveau thème + halo 40 px, 850 ms, (.4,0,.2,1), pleine jusqu'à 80 % puis s'efface). Le nouveau thème se révèle en cercle derrière elle, depuis la lune, jusqu'au coin le plus éloigné. RIEN de l'onde ni du cercle n'apparaît avant l'impact.
+- 620 ms : la coche saute sur la carte (×0 → ×1,35 → ×1, rebond 6,6 %, 380 ms).
+- Fin ≈ 1,25 s : thème appliqué.
+
+3. TECHNIQUE (recommandation de Fable, retenue)
+- View Transitions (document.startViewTransition) : instantané de l'ancienne vue (canvas du moteur compris), la nouvelle vue est révélée par clip-path circle depuis la lune de la carte ; l'onde est un groupe nommé à part, au-dessus. Le moteur reçoit la nouvelle palette d'un coup sous l'instantané.
+- Coût attendu : une image lente à la capture (8 à 15 ms, acceptée), puis +0,5 à 1 ms GPU par image ; p95 attendu sous 4,5 ms. À mesurer à l'étape 13.
+- Repli automatique vers le fondu si l'API manque.
+
+4. CAS PARTICULIERS
+- Éco : la carte grandit puis s'écrase (sans étincelles, sans onde), puis fondu croisé 0,9 s.
+- Réduire les animations : changement direct.
+- Widget : autre fenêtre → fondu 0,9 s sans onde. Mode fenêtre : l'onde va jusqu'aux coins de la fenêtre.
+- Re-clic pendant le changement : ignoré jusqu'à la fin.
+
+MES REMARQUES
+- Validé tel quel ; Fable peut affiner les dosages au moment de coder.

@@ -1,0 +1,16 @@
+KAYRO · AVANT LE GEL · FLOTTAISON DES ÉVENTAILS (catégories et sous-catégories)   (VALIDÉ : les 3 niveaux, en réglage)
+Planche : R5-Flottaison
+
+DÉCISION DE L'UTILISATEUR
+« Les 3 sont bien » : ils deviennent un RÉGLAGE dans Réglages › Visuel › « Flottaison des cartes » : Aucune · Légère · Visible · Marquée.
+Par défaut : Visible (la valeur actuelle était jugée « à peine visible »).
+
+VALEURS (catégories / sous-catégories)
+- Légère  : ±2,5 px / ±2 px, bascule ±0,3°, période ~5,2 s (≈ valeur actuelle ; reprendre la vraie valeur de fanFloat.ts si elle diffère)
+- Visible : ±7 px / ±5 px, bascule ±0,8°, période ~4,4 s
+- Marquée : ±12 px / ±8 px, bascule ±1,4°, période ~4,8 s
+- Chaque carte a sa propre période (×0,90 à ×1,07) et son propre départ (décalage 0,6–0,7 s entre cartes) : jamais « en bloc ». Bascule alternée (une carte sur deux dans l'autre sens).
+- L'ombre au sol de chaque carte se resserre et pâlit quand la carte monte (opacité 0,55 → 0,32, ×0,9).
+- Montée/descente en sinus (ease-in-out), transform uniquement, sur la boucle d'images commune (pas d'animation CSS infinie, cf. étape 8) ; s'arrête fenêtre masquée.
+- Éco : comme aujourd'hui pour la flottaison (si elle est coupée en Éco, elle le reste). Réduire les animations : aucune flottaison.
+- La flottaison se suspend proprement pendant la liaison et le survol (reprendre la logique actuelle de fanFloat).

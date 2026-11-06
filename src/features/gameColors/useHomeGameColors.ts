@@ -5,7 +5,9 @@ import { focusShadow } from "../../design/motion/tokens";
 import { GAME_COLORS, tideReach, tideReachPx } from "../../design/motion/tokens14";
 import type { FxTarget } from "../../fx";
 import { useHub } from "../../store";
-import { selectGame } from "./store";
+import { gameColorsStore, refreshFocus, selectGame } from "./store";
+
+const gameColorsShown = () => gameColorsStore.getState().shown;
 import { useGameColors, type GameColorsView } from "./useGameColors";
 
 /** Centre of the selected card (viewport px); the middle of the screen when there is none. */
@@ -83,6 +85,20 @@ export function useHomeGameColors(activeId: string | null): void {
   useEffect(() => selectGame(shown, () => locate(shown), trigger === "select"), [shown, trigger]);
   // Leaving the home (scenes, editor): back to the theme's colours.
   useEffect(() => () => selectGame(null, () => locate(null)), []);
+  // Step 16b: the focus target follows the shown card when the window changes size (once per
+  // frame at most; nothing runs while the window keeps its size).
+  useEffect(() => {
+    let raf = 0;
+    const onResize = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => refreshFocus(() => locate(gameColorsShown())));
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const wait = view.tide ? waitFor(view, targets()[0] ?? null) : 0;

@@ -14,6 +14,15 @@ const STREAM: &[&str] = &[
     "elgato",
     "nvidia broadcast",
     "prism live",
+    "streamer bot",
+    "stream deck",
+    "loupedeck",
+    "touch portal",
+    "voicemeeter",
+    "restream",
+    "chatterino",
+    "medal",
+    "shadowplay",
 ];
 
 const CREATIVE: &[&str] = &[
@@ -42,6 +51,22 @@ const CREATIVE: &[&str] = &[
     "paint",
     "capcut",
     "handbrake",
+    "canva",
+    "cubase",
+    "bitwig",
+    "lmms",
+    "audition",
+    "media encoder",
+    "substance",
+    "zbrush",
+    "maya",
+    "3ds max",
+    "houdini",
+    "vegas",
+    "shotcut",
+    "kdenlive",
+    "spline",
+    "paint net",
 ];
 
 const GAMES: &[&str] = &[
@@ -58,6 +83,23 @@ const GAMES: &[&str] = &[
     "fortnite",
     "roblox",
     "playnite",
+    "xbox",
+    "rockstar games",
+    "curseforge",
+    "overwolf",
+    "prism launcher",
+    "lunar client",
+    "modrinth",
+    "heroic",
+    "itch",
+    "osu",
+    "hearthstone",
+    "genshin impact",
+    "honkai",
+    "wuthering waves",
+    "zenless zone zero",
+    "hoyoplay",
+    "lossless scaling",
 ];
 
 const SOFTWARE: &[&str] = &[
@@ -89,10 +131,69 @@ const SOFTWARE: &[&str] = &[
     "slack",
     "notion",
     "obsidian",
+    "whatsapp",
+    "telegram",
+    "signal",
+    "messenger",
+    "opera",
+    "vivaldi",
+    "thunderbird",
+    "libreoffice",
+    "acrobat",
+    "everything",
+    "powertoys",
+    "nvidia app",
+    "geforce experience",
+    "afterburner",
+    "hwinfo",
+    "cpu z",
+    "crystaldiskinfo",
+    "qbittorrent",
+    "bitwarden",
+    "keepass",
+    "anydesk",
+    "teamviewer",
+    "parsec",
+    "filezilla",
+    "sublime text",
+    "cursor",
+    "intellij",
+    "pycharm",
+    "postman",
+    "virtualbox",
+    "vmware",
+    "g hub",
+    "razer synapse",
+    "icue",
+    "steelseries gg",
+];
+
+/// Stores and launchers: real apps, but rarely what one adds (they open the games). Proposed
+/// apart, unticked (`DetectedApp::launcher`).
+const LAUNCHERS: &[&str] = &[
+    "steam",
+    "epic games launcher",
+    "riot client",
+    "battle net",
+    "ubisoft connect",
+    "gog galaxy",
+    "ea app",
+    "ea",
+    "rockstar games launcher",
+    "xbox",
+    "microsoft store",
+    "playnite",
+    "curseforge",
+    "overwolf",
+    "unity hub",
+    "roblox studio",
+    "heroic games launcher",
+    "itch",
+    "hoyoplay",
 ];
 
 /// Lower-case words of `text`, separated by single spaces (`Battle.net` → `battle net`).
-fn normalise(text: &str) -> String {
+pub(crate) fn normalise(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     for c in text.chars().flat_map(char::to_lowercase) {
         if c.is_alphanumeric() {
@@ -113,6 +214,13 @@ fn has_words(haystack: &str, keyword: &str) -> bool {
 
 fn any_match(haystack: &str, list: &[&str]) -> bool {
     list.iter().any(|k| has_words(haystack, k))
+}
+
+/// A store or a launcher (Steam, Riot Client, Battle.net…): the whole name is one of `LAUNCHERS`
+/// (« Steam », not « Steam Deck Tool »).
+pub fn is_launcher(name: &str) -> bool {
+    let n = normalise(name);
+    LAUNCHERS.iter().any(|l| normalise(l) == n)
 }
 
 /// One of `jeux`, `stream`, `creativite`, `logiciels`, `autres`.
@@ -155,6 +263,25 @@ mod tests {
         assert_eq!(s("Minecraft Launcher"), "jeux");
         assert_eq!(s("Discord"), "logiciels");
         assert_eq!(s("Google Chrome"), "logiciels");
+    }
+
+    #[test]
+    fn more_apps_are_known() {
+        assert_eq!(s("WhatsApp"), "logiciels");
+        assert_eq!(s("Voicemeeter Banana"), "stream");
+        assert_eq!(s("Stream Deck"), "stream");
+        assert_eq!(s("Prism Launcher"), "jeux");
+        assert_eq!(s("Autodesk Maya 2025"), "creativite");
+        assert_eq!(s("MSI Afterburner"), "logiciels");
+    }
+
+    #[test]
+    fn stores_and_launchers_are_told_apart() {
+        assert!(is_launcher("Steam"));
+        assert!(is_launcher("Battle.net"));
+        assert!(is_launcher("Riot Client"));
+        assert!(!is_launcher("Steam Deck Tool"));
+        assert!(!is_launcher("Hades II"));
     }
 
     #[test]

@@ -1,0 +1,46 @@
+KAYRO — CHOIX DE CATÉGORIE — LIAISON A « ÉVENTAIL QUI PIVOTE, PUIS DECK QUI SE DÉPLIE »
+Maquette : canvas Claude Design, board « R3-Liaison-A » (interactive : clique une carte, les onglets, « Toutes les catégories »).
+Vidéo associée : même nom que ce fichier, enregistrée avec OBS depuis la maquette.
+À ranger dans : C:\HUB\reference\animations\
+
+Références : Tour 2 « Choix de catégorie » (éventail, deck qui se déplie, deck qui se mélange) + Tour 3 V3 « Orbite ».
+
+INTENTION (lecture 1 : le Tour 2 complet + la rotation du Tour 3 V3)
+Le mouvement de rotation de l'orbite V3 est appliqué à l'éventail lui-même : l'éventail pivote pour amener la carte
+choisie au centre. Ensuite, comme au Tour 2, la carte devient un deck d'apps qui se déplie en carrousel, et le deck
+se mélange à chaque changement d'onglet.
+
+BASE VISUELLE COMMUNE (image de départ du Tour 2, « deck déplié »)
+- 5 cartes catégories 210 × 290 px, coins 24 px, dégradé du thème A → B selon le rang.
+- En éventail : chaque carte tourne de 7° par rang autour d'un pivot placé 1 300 px sous le centre de la carte
+  (même rendu que le Tour 2 : ≈ 160 px d'écart, petite descente vers les bords). La carte centrale est devant.
+- Survol : soulèvement 12 px + ombre plus profonde, 350 ms, cubic-bezier(.22,1,.36,1)
+  (+ l'inclinaison 3D de 2 à 3° vers le curseur prévue dans le brief).
+- Arrivée : le carrousel de l'accueil (x −428 / −230 / 0 / 230 / 428 px, voisines à 0,73 et 62 % d'opacité),
+  ressort cubic-bezier(.34,1.32,.64,1), et l'anneau cristal de l'accueil derrière (rayon ≈ 330 px).
+- Titre « Que veux-tu lancer ? » qui monte et s'efface ↔ « Jeux » qui arrive ; bouton « Toutes les catégories » ; barre d'onglets.
+
+SÉQUENCE (vitesse normale)
+Clic    — 0 ms : tout l'éventail pivote autour du pivot pour amener la carte choisie à 0° (850 ms, cubic-bezier(.65,0,.35,1)).
+          Les autres continuent sur l'arc (15° par rang) et s'effacent avec un flou de 6 px (500 ms, départ 120 ms).
+          La carte choisie se soulève : −30 px, échelle 1,06.
+650 ms  — Deck : la carte se résorbe (échelle 0,6, fondu) pendant que le deck des 5 apps apparaît à sa place
+          (cartes empilées : petits décalages de 7 px, rotations de 3,5° par rang, échelle 0,55). L'anneau remonte derrière.
+1070 ms — Dépliage en carrousel (ressort, 700 ms, décalage 70 ms du centre vers l'extérieur).
+Onglet  — Les apps se regroupent en deck AVEC les nouvelles apps (les noms changent pendant le regroupement),
+          dans un ordre d'empilement différent à chaque fois (c'est le « mélange »), puis 380 ms après le deck se redéplie.
+Retour  — Les apps rentrent dans le deck et s'effacent, la carte réapparaît au centre, puis 380 ms après
+          l'éventail pivote en sens inverse et les autres cartes réapparaissent (décalage 35 ms depuis la carte choisie).
+
+RÉGLAGES À EXPOSER DANS L'ATELIER
+Angle entre cartes, rayon du pivot, angle de sortie des autres cartes, durée de rotation, ressort du dépliage.
+
+RÈGLES
+- Une seule transition à la fois : un nouveau clic annule proprement la séquence en cours (la maquette utilise un jeton).
+- « Réduire les animations » : changement direct d'état.
+- Mode Éco : 30 images/s, pas de flou. Budget p95 ≤ 5,4 ms PENDANT la transition (mesure en mouvement obligatoire).
+- Tout en transform / opacity ; l'anneau et le verre des cartes viennent du moteur.
+
+MES REMARQUES (à remplir)
+Ce que j'aime :
+Ce que je veux changer :

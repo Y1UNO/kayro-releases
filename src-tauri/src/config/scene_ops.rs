@@ -109,7 +109,10 @@ impl ConfigState {
         let apps = self.apps().apps;
         for (slot, app_id) in links {
             if !file.slots.contains(slot) {
-                return Err(AppError::validation("links", format!("unknown slot «{slot}»")));
+                return Err(AppError::validation(
+                    "links",
+                    format!("unknown slot «{slot}»"),
+                ));
             }
             if !apps.iter().any(|a| &a.id == app_id) {
                 return Err(AppError::not_found(format!("app «{app_id}»")));

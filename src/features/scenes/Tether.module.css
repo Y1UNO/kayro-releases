@@ -1,0 +1,141 @@
+/* Steps 19b–19c: the app hanging from the pointer on a thread of light (TetherGhost.tsx). */
+
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+
+/* Light adds up on the dark page: the thread shines instead of looking translucent. */
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  mix-blend-mode: screen;
+}
+
+/* Three strokes from wide and faint to thin and white (no blur filter). */
+.halo,
+.glow,
+.core {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.halo {
+  stroke: var(--accent-light);
+  stroke-width: 16;
+  opacity: 0.24;
+}
+
+.glow {
+  stroke: var(--accent-light);
+  stroke-width: 5.5;
+  opacity: 0.9;
+}
+
+.core {
+  stroke: #fff;
+  stroke-width: 2.4;
+}
+
+.beadHalo {
+  fill: var(--accent-light);
+  opacity: 0.35;
+}
+
+.bead {
+  fill: #fff;
+}
+
+/* A point on the frame's hook: the rope moves it, the frame turns around it. */
+.hanger {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* The glass frame, hung by its top middle. */
+.frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: 260px;
+  overflow: hidden;
+  padding: 9px 16px 9px 10px;
+  translate: -50% 0;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent-light) 45%, transparent);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--card) 92%, white 10%),
+    color-mix(in srgb, var(--card) 70%, black)
+  );
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.42),
+    0 0 18px color-mix(in srgb, var(--accent-light) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+/* The little ring the thread is tied to. */
+.hook {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  translate: -50% 0;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  background: var(--accent-light);
+  box-shadow: 0 0 8px var(--accent-light);
+}
+
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--field) 70%, white 6%);
+  font-family: var(--font-title);
+  font-size: 17px;
+}
+
+.icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Step 19c: the frame landing in the scene, placed by its box (not hung by its hook). */
+.landing {
+  position: fixed;
+  translate: none;
+  max-width: none;
+  width: auto;
+}

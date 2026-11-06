@@ -12,8 +12,8 @@ export const commands = {
 	 *  the shortcut is not shown. True when the page must report its paint time (measurement).
 	 */
 	appReady: () => __TAURI_INVOKE<boolean>("app_ready"),
-	settingsGet: () => __TAURI_INVOKE<Settings>("settings_get"),
-	settingsSet: (patch: SettingsPatch) => typedError<Settings, AppError>(__TAURI_INVOKE("settings_set", { patch })),
+	settingsGet: () => __TAURI_INVOKE<Settings_Serialize>("settings_get"),
+	settingsSet: (patch: SettingsPatch_Deserialize) => typedError<Settings_Serialize, AppError>(__TAURI_INVOKE("settings_set", { patch })),
 	appsList: () => __TAURI_INVOKE<AppEntry[]>("apps_list"),
 	appsAdd: (newApp: NewApp) => typedError<AppEntry, AppError>(__TAURI_INVOKE("apps_add", { newApp })),
 	appsUpdate: (entry: AppEntry) => typedError<AppEntry, AppError>(__TAURI_INVOKE("apps_update", { entry })),
@@ -83,12 +83,89 @@ export const commands = {
 	sceneImport: (path: string, links: { [key in string]: string }) => typedError<SceneFile_Serialize, AppError>(__TAURI_INVOKE("scene_import", { path, links })),
 	/**  Hides the hub (Escape, the widget's own button…). */
 	windowHide: () => __TAURI_INVOKE<void>("window_hide"),
-	/**  Starts moving the calling window with the mouse (the widget has no title bar). */
-	windowDrag: () => typedError<null, AppError>(__TAURI_INVOKE("window_drag")),
 	/**  The page tells it painted after being shown (measurement only, see `KAYRO_BENCH_SHOW`). */
 	windowPainted: () => __TAURI_INVOKE<void>("window_painted"),
-	/**  Resizes the widget window to its content, in logical pixels. */
-	widgetFit: (width: number | null, height: number | null) => typedError<null, AppError>(__TAURI_INVOKE("widget_fit", { width, height })),
+	/**  Step 20 (Kysland): a press on the island starts its gesture (`calm`: « reduce motion »). */
+	islandGrab: (calm: boolean) => __TAURI_INVOKE<void>("island_grab", { calm }),
+	/**
+	 *  « Après l'intro »: Kysland (`island`) or « Caché »: the intro's window goes (async: a window
+	 *  may be built or destroyed).
+	 */
+	introDone: (island: boolean) => __TAURI_INVOKE<void>("intro_done", { island }),
+	/**  Shows Kayro (the island's « Passer en immersif »). */
+	windowShow: () => __TAURI_INVOKE<void>("window_show"),
+	/**  The opened island's size, which follows its content (logical pixels). */
+	islandPanel: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("island_panel", { width, height }),
+	/**  Step 20: where the island is (the page's first frame). */
+	islandState: () => __TAURI_INVOKE<IslandState>("island_state"),
+	/**  Step 20: the page's effects are over (the window is cut to the island again). */
+	islandRest: () => __TAURI_INVOKE<void>("island_rest"),
+	/**  Step 20: the page opens or closes the island (its panel); `calm`: « reduce motion ». */
+	islandOpen: (open: boolean, calm: boolean) => __TAURI_INVOKE<void>("island_open", { open, calm }),
+	/**
+	 *  « Cacher l'île » (2026-11-02): the island went into the top edge (`tucked`; `width`: its
+	 *  width at rest, logical) or comes out by itself. False: it cannot stay in, the page brings it
+	 *  out again.
+	 */
+	islandTuck: (tucked: boolean, width: number | null) => __TAURI_INVOKE<boolean>("island_tuck", { tucked, width }),
+	/**
+	 *  Kysland's music mode (2026-11-02): the page wants it (`enter`: the window grows in place,
+	 *  answered with the stage when the island may go), has drawn its drop (`go`: the window covers
+	 *  the screen), or the island is back home (`done`).
+	 */
+	islandStage: (step: IslandStageStep) => __TAURI_INVOKE<{
+	/**  On (the window covers the screen) or back to the island. */
+	on: boolean,
+	width: number | null,
+	height: number | null,
+	/**  Where the island's anchor (the middle of its top edge) is, and goes back to. */
+	homeX: number | null,
+	homeY: number | null,
+	/**  At home on the top edge (its top square against the bezel), or floating. */
+	docked: boolean,
+	/**  Docked in a corner: -1 left, 1 right (flush with that side), 0 the middle. */
+	corner: number | null,
+} | null>("island_stage", { step }),
+	/**
+	 *  Music mode: where the page draws, as rectangles (x, y, width, height; logical pixels of the
+	 *  stage): the window's region follows them.
+	 */
+	islandStageArea: (rects: ([(number | null), (number | null), (number | null), (number | null)])[]) => __TAURI_INVOKE<void>("island_stage_area", { rects }),
+	/**
+	 *  Step 20: a held frame of the island's effects that its window must not cut (the glitch's
+	 *  spikes on an edge), shown by a click-through layer. Async: rasterised off the interface's
+	 *  thread.
+	 */
+	islandEffects: (frame: FxFrame) => __TAURI_INVOKE<void>("island_effects", { frame }),
+	/**
+	 *  Step 20: the island's size at rest as drawn now, docked and floating (logical), for its
+	 *  click region.
+	 */
+	islandFootprint: (dockedWidth: number | null, dockedHeight: number | null, floatingWidth: number | null, floatingHeight: number | null) => __TAURI_INVOKE<void>("island_footprint", { dockedWidth, dockedHeight, floatingWidth, floatingHeight }),
+	/**  Step 20: the music playing (Spotify first), read from Windows; starts following the players. */
+	mediaNow: () => __TAURI_INVOKE<{
+	title: string,
+	artist: string,
+	/**  The player's app id (« Spotify.exe »…). */
+	player: string,
+	playing: boolean,
+	positionMs: number | null,
+	durationMs: number | null,
+	/**  When `position_ms` was read (ms since the Unix epoch, 0 unknown): the page moves it on. */
+	atMs: number | null,
+	/**  The cover as a data URL, and its dominant and accent colours (`#rrggbb`). */
+	cover: string | null,
+	colors: [string, string] | null,
+} | null>("media_now"),
+	/**  Step 20: previous, play/pause or next on the player shown. */
+	mediaControl: (action: MediaAction) => __TAURI_INVOKE<boolean>("media_control", { action }),
+	/**  Step 20: follow the beat (the island's bars) while music plays and the island shows. */
+	mediaBeat: (on: boolean) => __TAURI_INVOKE<void>("media_beat", { on }),
+	/**
+	 *  Step 20: the lightness of the screen around the island (0–1), for its colours. Async: one
+	 *  small read of the screen, never on the interface's thread.
+	 */
+	islandBackdrop: () => __TAURI_INVOKE<number | null>("island_backdrop"),
 	monitorsList: () => __TAURI_INVOKE<MonitorInfo[]>("monitors_list"),
 	/**  Picks the screen of the immersive mode (a `name` from `monitors_list`). */
 	monitorChoose: (name: string) => typedError<null, AppError>(__TAURI_INVOKE("monitor_choose", { name })),
@@ -97,12 +174,22 @@ export const commands = {
 	 *  combination: nothing changes then.
 	 */
 	hotkeySet: (hotkey: string) => typedError<null, AppError>(__TAURI_INVOKE("hotkey_set", { hotkey })),
+	/**  Changes or (empty) removes « Écrire dans Kysland ». Refused like `hotkey_set`. */
+	searchHotkeySet: (hotkey: string) => typedError<null, AppError>(__TAURI_INVOKE("search_hotkey_set", { hotkey })),
 	hotkeysGet: () => __TAURI_INVOKE<HotkeysReport>("hotkeys_get"),
 	/**  The scene a shortcut asked to confirm, if the page was not there to hear the event. */
 	sceneHotkeyTake: () => __TAURI_INVOKE<string | null>("scene_hotkey_take"),
-	/**  Whether Windows starts the hub at login (the Run key is the source of truth). */
+	/**
+	 *  Whether Windows starts the hub at login: its logon task (2026-10-31), or the `Run` key an
+	 *  older version wrote (moved to a task at the next start, `autostart_follow`).
+	 */
 	autostartGet: () => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_get")),
 	autostartSet: (enabled: boolean) => typedError<boolean, AppError>(__TAURI_INVOKE("autostart_set", { enabled })),
+	/**
+	 *  « Exporter les logs »: zips the log folder into the exports folder, selects it in Explorer
+	 *  and returns its path. Nothing leaves the PC.
+	 */
+	logsExport: () => typedError<string, AppError>(__TAURI_INVOKE("logs_export")),
 	recentsGet: () => __TAURI_INVOKE<string[]>("recents_get"),
 	openingDue: () => __TAURI_INVOKE<OpeningDue>("opening_due"),
 	/**
@@ -124,6 +211,128 @@ export const commands = {
 	artClearUser: (id: string, role: ArtRole) => typedError<AppArt[], AppError>(__TAURI_INVOKE("art_clear_user", { id, role })),
 	/**  The palettes known so far (the first pass may still be running: `PalettesChanged` follows). */
 	palettesGet: () => __TAURI_INVOKE<AppPalette[]>("palettes_get"),
+	themesList: () => __TAURI_INVOKE<ThemeFile_Serialize[]>("themes_list"),
+	/**  A personal theme id no theme uses yet, derived from a name (the editor's first save). */
+	themeNewId: (name: string) => __TAURI_INVOKE<string>("theme_new_id", { name }),
+	themeSave: (theme: ThemeFile_Deserialize) => typedError<ThemeFile_Serialize, AppError>(__TAURI_INVOKE("theme_save", { theme })),
+	themeDelete: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("theme_delete", { id })),
+	/**  Imports a dropped `.json` theme file as a new personal theme. Nothing is run, only read. */
+	themeImport: (path: string) => typedError<ThemeFile_Serialize, AppError>(__TAURI_INVOKE("theme_import", { path })),
+	/**  Writes `<id>.json` in the exports folder, shows it in Explorer and returns its path. */
+	themeExport: (id: string) => typedError<string, AppError>(__TAURI_INVOKE("theme_export", { id })),
+	/**  The user's imported ambiences (the built-in packs live in the page). */
+	moodsList: () => __TAURI_INVOKE<MoodFile_Serialize[]>("moods_list"),
+	/**  Imports a dropped `.hubmood` file. Nothing is run, only read and checked. */
+	moodImport: (path: string) => typedError<MoodFile_Serialize, AppError>(__TAURI_INVOKE("mood_import", { path })),
+	moodDelete: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("mood_delete", { id })),
+	/**  Writes the ambience in the exports folder, shows it in Explorer and returns its path. */
+	moodExport: (mood: MoodFile_Deserialize) => typedError<string, AppError>(__TAURI_INVOKE("mood_export", { mood })),
+	/**
+	 *  Launch cover (30/10, desktop/cover.rs): `on` keeps the hub in front of everything while a game
+	 *  starts behind it (its store's windows stay hidden) and reports the game's window
+	 *  (`LaunchLanded`); off ends it, `hide` taking the hub off the screen.
+	 */
+	launchCover: (on: boolean, hide: boolean) => __TAURI_INVOKE<void>("launch_cover", { on, hide }),
+	/**  `data:` URL of the icon of `app`, or none. */
+	detectIcon: (app: DetectedApp) => typedError<string | null, AppError>(__TAURI_INVOKE("detect_icon", { app })),
+	/**
+	 *  « Scan avancé » (step 19c), started by the user: the usual scan, then the Desktop, the top of
+	 *  each disk and the program and game folders (apps the Start Menu does not list), then a sharper
+	 *  logo in every app's folder when its program's icon is not. Read-only; progress as
+	 *  `DeepProgress`; `detect_cancel` stops it.
+	 */
+	detectDeep: () => typedError<ScanReport, AppError>(__TAURI_INVOKE("detect_deep")),
+	/**  The apps in the order of `ids` (every app's id, each once). */
+	appsReorder: (ids: string[]) => typedError<AppsFile, AppError>(__TAURI_INVOKE("apps_reorder", { ids })),
+	startupApps: () => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_apps")),
+	startupAppSet: (id: string, enabled: boolean) => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_app_set", { id, enabled })),
+	startupAppsRestore: () => typedError<StartupApp[], AppError>(__TAURI_INVOKE("startup_apps_restore")),
+	/**  « Rechercher une mise à jour »: the only network request of Kayro, on demand. */
+	updateCheck: () => typedError<{
+	version: string,
+	current: string,
+	/**  The release's notes (its patch notes), plain text, one point per line. */
+	notes: string | null,
+} | null, AppError>(__TAURI_INVOKE("update_check")),
+	/**  What the check at start found, if anything (asked by the page once it listens). */
+	updatePending: () => __TAURI_INVOKE<{
+	version: string,
+	current: string,
+	/**  The release's notes (its patch notes), plain text, one point per line. */
+	notes: string | null,
+} | null>("update_pending"),
+	/**  Installs the update the last check found (Kayro quits, then starts again on it). */
+	updateInstall: () => typedError<null, AppError>(__TAURI_INVOKE("update_install")),
+	/**  Where the voice stands (the page asks once at load, then follows `VoiceStateChanged`). */
+	voiceState: () => __TAURI_INVOKE<VoiceState>("voice_state"),
+	/**  The microphone button (and « Arrête d'écouter »): closed until pressed again. */
+	voiceMute: (muted: boolean) => __TAURI_INVOKE<void>("voice_mute", { muted }),
+	/**  A command that waited for the user while the page was loading. */
+	voiceTakePending: () => __TAURI_INVOKE<{
+	text: string,
+	outcome: VoiceOutcome,
+	also?: VoiceOutcome[],
+} | null>("voice_take_pending"),
+	/**
+	 *  « Ferme X », confirmed on screen: a gentle close (a close message to its window, never
+	 *  forced). `false`: not running, or no window to ask.
+	 */
+	voiceClose: (id: string) => typedError<boolean, AppError>(__TAURI_INVOKE("voice_close", { id })),
+	voiceModels: () => __TAURI_INVOKE<VoiceModelInfo[]>("voice_models"),
+	/**  Downloads a model (the user's click: the voice's only network). Progress: `VoiceModelProgress`. */
+	voiceModelDownload: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("voice_model_download", { id })),
+	voiceModelCancel: (id: string) => __TAURI_INVOKE<void>("voice_model_cancel", { id }),
+	/**
+	 *  Removes a model's files. One the voice needs turns the voice off first (the page asked the
+	 *  user), then waits for its models to be let go (a few hundred ms).
+	 */
+	voiceModelRemove: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("voice_model_remove", { id })),
+	/**  The microphones Windows has (Réglages: « Micro »). */
+	voiceMicrophones: () => __TAURI_INVOKE<VoiceMicrophone[]>("voice_microphones"),
+	/**  The outputs plugged in and enabled (Réglages › Assistant vocal et IA). */
+	voiceOutputs: () => __TAURI_INVOKE<VoiceMicrophone[]>("voice_outputs"),
+	/**  The guided learning of the wake word starts or ends (`VoiceLearned` for each saying). */
+	voiceLearn: (on: boolean) => __TAURI_INVOKE<void>("voice_learn", { on }),
+	/**
+	 *  A choice made in a doubt: the words said now name that app or scene (« Kayro apprend de
+	 *  vous », memory.rs); only one of the configuration.
+	 */
+	voiceTeach: (said: string, scene: boolean, id: string) => __TAURI_INVOKE<void>("voice_teach", { said, scene, id }),
+	/**  How many ways of naming things Kayro learned from the user. */
+	voiceMemory: () => __TAURI_INVOKE<number>("voice_memory"),
+	/**  « Oublier »: what Kayro learned of the user's ways of naming things. */
+	voiceForget: () => __TAURI_INVOKE<void>("voice_forget"),
+	/**  « Calibrer ma voix » opens (the voice listens and keeps what it is told to) or closes. */
+	voiceCalibrate: (on: boolean) => __TAURI_INVOKE<void>("voice_calibrate", { on }),
+	/**  What the next saying is (`None`: nothing is kept until the next prompt). */
+	voiceCalibRecord: (prompt: {
+	/**  Its name among the recordings (a new saying of the same key replaces the old one). */
+	key: string,
+	kind: CalibKind,
+	text: string,
+	expect: string,
+} | null) => typedError<null, AppError>(__TAURI_INVOKE("voice_calib_record", { prompt })),
+	/**  Every recording through the whole always mode (≈ 0.5 s each, on the listening thread). */
+	voiceCalibEvaluate: () => typedError<CalibScore, AppError>(__TAURI_INVOKE("voice_calib_evaluate")),
+	voiceCalibSummary: () => __TAURI_INVOKE<CalibSummary>("voice_calib_summary"),
+	/**  « Supprimer mes enregistrements ». */
+	voiceCalibClear: () => typedError<null, AppError>(__TAURI_INVOKE("voice_calib_clear")),
+	/**  Where the hands stand (the page asks once at load, then follows `HandsStateChanged`). */
+	handsState: () => __TAURI_INVOKE<HandsState>("hands_state"),
+	/**  Turns the camera on or off (as the shortcut does). Refused while the hands are not set up. */
+	handsSetOn: (on: boolean) => __TAURI_INVOKE<void>("hands_set_on", { on }),
+	handsModel: () => __TAURI_INVOKE<HandsModelInfo>("hands_model"),
+	/**
+	 *  Downloads the two models (the user's click: the hands' only network). Progress:
+	 *  `VoiceModelProgress` with the id « hands ».
+	 */
+	handsModelDownload: () => typedError<null, AppError>(__TAURI_INVOKE("hands_model_download")),
+	handsModelCancel: () => __TAURI_INVOKE<void>("hands_model_cancel"),
+	/**
+	 *  Removes the models; the camera is turned off first (the page asked the user), and the thread
+	 *  lets the models go before their files are deleted.
+	 */
+	handsModelRemove: () => typedError<null, AppError>(__TAURI_INVOKE("hands_model_remove")),
 };
 
 /** Events */
@@ -131,14 +340,35 @@ export const events = {
 	appStateChanged: makeEvent<AppStateChanged>("app-state-changed"),
 	appsChanged: makeEvent<AppsChanged>("apps-changed"),
 	artChanged: makeEvent<ArtChanged>("art-changed"),
+	deepProgress: makeEvent<DeepProgress>("deep-progress"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
+	handsStateChanged: makeEvent<HandsStateChanged>("hands-state-changed"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
+	islandFrame: makeEvent<IslandFrame>("island-frame"),
+	islandMoment: makeEvent<IslandMoment>("island-moment"),
+	islandStage: makeEvent<IslandStage>("island-stage"),
+	islandTucked: makeEvent<IslandTucked>("island-tucked"),
+	launchLanded: makeEvent<LaunchLanded>("launch-landed"),
+	mediaBeat: makeEvent<MediaBeat>("media-beat"),
+	mediaChanged: makeEvent<MediaChanged>("media-changed"),
 	modePassage: makeEvent<ModePassage>("mode-passage"),
+	moodsChanged: makeEvent<MoodsChanged_Deserialize>("moods-changed"),
+	musicBeats: makeEvent<MusicBeats>("music-beats"),
+	musicFrame: makeEvent<MusicFrame>("music-frame"),
 	palettesChanged: makeEvent<PalettesChanged>("palettes-changed"),
 	recentsChanged: makeEvent<RecentsChanged>("recents-changed"),
 	sceneHotkey: makeEvent<SceneHotkey>("scene-hotkey"),
 	sceneProgress: makeEvent<SceneProgress>("scene-progress"),
-	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
+	searchSummon: makeEvent<SearchSummon>("search-summon"),
+	settingsChanged: makeEvent<SettingsChanged_Deserialize>("settings-changed"),
+	themesChanged: makeEvent<ThemesChanged_Deserialize>("themes-changed"),
+	updateAvailable: makeEvent<UpdateAvailable>("update-available"),
+	updateProgress: makeEvent<UpdateProgress>("update-progress"),
+	voiceHeard: makeEvent<VoiceHeard>("voice-heard"),
+	voiceLearned: makeEvent<VoiceLearned>("voice-learned"),
+	voiceModelProgress: makeEvent<VoiceModelProgress>("voice-model-progress"),
+	voiceRecorded: makeEvent<VoiceRecorded>("voice-recorded"),
+	voiceStateChanged: makeEvent<VoiceStateChanged>("voice-state-changed"),
 	windowVisibility: makeEvent<WindowVisibility>("window-visibility"),
 };
 
@@ -182,6 +412,8 @@ export type AppEntry = {
 	favorite: boolean,
 	/**  The user's choice of colours for this app (step 14); absent = automatic. */
 	colors?: AppColors | null,
+	/**  The user's density and speed of this app's ambience (steps 16–17); absent = × 1. */
+	moodTune?: MoodTune | null,
 };
 
 /**
@@ -211,6 +443,9 @@ export type AppSource = { kind: "manual" } | { kind: "steam"; appId: string } | 
 
 /**  Emitted when an app starts, stops, or comes to / leaves the front (changes only). */
 export type AppStateChanged = AppRunState;
+
+/**  What is done to one app's sound. */
+export type AppVolume = "louder" | "quieter" | "mute" | "unmute";
 
 /**  Emitted after every successful change of the app list. */
 export type AppsChanged = AppsFile;
@@ -252,7 +487,77 @@ export type ArtRole =
 /**  Transparent title logo. */
 "logo" | 
 /**  Small square icon (Steam's 32 px one): for apps the Shell gives no icon for. */
-"icon";
+"icon" | 
+/**  Special card (steps 16–17): a cut-out character, transparent PNG, left of the active card. */
+"charLeft" | 
+/**  The same, right of the active card. */
+"charRight";
+
+export type CalibKind = 
+/**  The wake word alone. */
+"wake" | 
+/**  Its name alone (« Yuna »). */
+"name" | 
+/**  The wake word and a command, at the user's pace. */
+"command" | 
+/**  The same, quickly, without a pause. */
+"quick" | 
+/**  A command with music playing from the speakers. */
+"music" | 
+/**  A sentence that must not wake Kayro (« Tu as une minute ? »). */
+"trap" | 
+/**  Free speech: must not wake Kayro either. */
+"chat";
+
+/**  What to say next, and what it must do (`expect`: `key` of the intent, « wake » or « none »). */
+export type CalibPrompt = {
+	/**  Its name among the recordings (a new saying of the same key replaces the old one). */
+	key: string,
+	kind: CalibKind,
+	text: string,
+	expect: string,
+};
+
+/**  One recording replayed: what the command model wrote, what came of it. */
+export type CalibResult = {
+	key: string,
+	kind: CalibKind,
+	text: string,
+	heard: string,
+	/**  The intent's `key`, « none » when nothing woke. */
+	got: string,
+	woke: boolean,
+	right: boolean,
+};
+
+export type CalibScore = {
+	/**  Every saying with the wake word in it that woke Kayro. */
+	wake: Ratio,
+	/**  The commands (at the user's pace and quick) that did what was said. */
+	commands: Ratio,
+	/**  The commands said over music. */
+	music: Ratio,
+	/**  The sentences without the wake word that left Kayro asleep. */
+	calm: Ratio,
+	/**  The sayings « Seulement ma voix » knows as the user's (with the voice model only). */
+	voice: Ratio,
+	/**  The command model's time per sentence (median). */
+	medianMs: number,
+	/**  The wake word's learned spellings, with what this evaluation added (Réglages keeps them). */
+	learned: string[],
+	results: CalibResult[],
+};
+
+export type CalibSummary = {
+	/**  The prompts already said (the guided screen goes on from the first one missing). */
+	keys: string[],
+	count: number,
+	seconds: number,
+	/**  The last evaluation. */
+	score: CalibScore | null,
+	/**  The user's voiceprint is made (« Seulement ma voix » can be turned on). */
+	voiceprint: boolean,
+};
 
 /**  An app the user could add. */
 export type Candidate = {
@@ -279,7 +584,28 @@ export type ColorCharacter = "theme" | "faithful" | "vivid";
 export type ColorIntensity = "soft" | "normal" | "strong";
 
 /**  How much the colours of the selected game tint the interface (DESIGN.md). */
-export type ColorMode = "off" | "light" | "immersive";
+export type ColorMode = ColorMode_Serialize | ColorMode_Deserialize;
+
+/**  How much the colours of the selected game tint the interface (DESIGN.md). */
+export type ColorMode_Deserialize = "off" | 
+/**
+ *  « Stylisé » (30/10): the ambience and the accents take the game's colours. The immersive
+ *  mode was removed that day: an older file's `immersive` reads as this one.
+ */
+"light" | 
+/**
+ *  « Stylisé » (30/10): the ambience and the accents take the game's colours. The immersive
+ *  mode was removed that day: an older file's `immersive` reads as this one.
+ */
+"immersive";
+
+/**  How much the colours of the selected game tint the interface (DESIGN.md). */
+export type ColorMode_Serialize = "off" | 
+/**
+ *  « Stylisé » (30/10): the ambience and the accents take the game's colours. The immersive
+ *  mode was removed that day: an older file's `immersive` reads as this one.
+ */
+"light";
 
 /**  How the colours go from one game to the next (V7): the tide, a fade, or at once. */
 export type ColorPassage = "tide" | "fade" | "direct";
@@ -287,8 +613,26 @@ export type ColorPassage = "tide" | "fade" | "direct";
 /**  Which colours become A and B (V5): dominant → accent, the two most vivid, dominant → theme B. */
 export type ColorPick = "dominant" | "vivid" | "theme";
 
+/**  What a layer's colour is taken from: the game's colours (or the theme's), never a free value. */
+export type ColorRole = 
+/**  Colour A (the strongest of the picture, or the theme's first). */
+"dominant" | 
+/**  Colour B. */
+"accent" | 
+/**  The night (background). */
+"dark" | 
+/**  The text colour (near white). */
+"text";
+
 /**  When the colours change (V8): once the selection rests, at once, or only when an app starts. */
 export type ColorTrigger = "select" | "instant" | "launch";
+
+/**  Step 19c: where the advanced scan is (folders read, apps found; `logos`: looking for logos). */
+export type DeepProgress = {
+	folders: number,
+	found: number,
+	logos: boolean,
+};
 
 /**  Emitted while a scan runs, once per source and state change. */
 export type DetectProgress = {
@@ -314,13 +658,40 @@ export type DetectedApp = {
 	alreadyAdded: boolean,
 	/**  Category proposed for the app (see [`category::suggest_category`]); the user may change it. */
 	suggestedCategory: string,
+	/**  A store or launcher (Steam, Riot Client…): proposed apart, unticked (step 19b). */
+	launcher: boolean,
+	/**  The user chose « Ignorer » for it (`Settings::ignored_detections`): hidden unless asked. */
+	ignored: boolean,
+	/**  Step 19c: the app's folder when known (Start Menu target, Epic install, advanced scan). */
+	installDir: string | null,
+	/**  Step 19c, advanced scan: a sharper logo found in that folder (a PNG of the app's own). */
+	logoPath: string | null,
 };
 
+export type Direction = "up" | "down" | "left" | "right" | "none";
+
 /**
- *  How the hub is shown: a borderless window the size of the chosen screen, a normal window,
- *  or a small bar at the top of the screen (ARCHITECTURE.md §4).
+ *  How the hub is shown: a borderless window the size of the chosen screen, or a normal window
+ *  (ARCHITECTURE.md §4). The widget mode went on 2026-10-31: the island (Kysland) is there
+ *  whenever Kayro is not (`island_always`), so an older file's `widget` reads as immersive.
  */
-export type DisplayMode = "immersive" | "window" | "widget";
+export type DisplayMode = DisplayMode_Serialize | DisplayMode_Deserialize;
+
+/**
+ *  How the hub is shown: a borderless window the size of the chosen screen, or a normal window
+ *  (ARCHITECTURE.md §4). The widget mode went on 2026-10-31: the island (Kysland) is there
+ *  whenever Kayro is not (`island_always`), so an older file's `widget` reads as immersive.
+ */
+export type DisplayMode_Deserialize = "immersive" | "widget" | "window";
+
+/**
+ *  How the hub is shown: a borderless window the size of the chosen screen, or a normal window
+ *  (ARCHITECTURE.md §4). The widget mode went on 2026-10-31: the island (Kysland) is there
+ *  whenever Kayro is not (`island_always`), so an older file's `widget` reads as immersive.
+ */
+export type DisplayMode_Serialize = "immersive" | "window";
+
+export type DownloadStep = "downloading" | "done" | "failed" | "cancelled";
 
 /**  « Élasticité du widget »: overshoot of its springs. */
 export type Elasticity = "soft" | "normal" | "strong";
@@ -343,13 +714,92 @@ export type ErrorCode =
 /**  Any other failure to start (`message` has the Win32 code). */
 "launchFailed" | 
 /**  The keyboard shortcut is already used by another program (or another shortcut of the hub). */
-"hotkeyConflict";
+"hotkeyConflict" | 
+/**  An update could not be checked, downloaded or verified (no network, bad signature…). */
+"updateFailed" | 
+/**  A voice model could not be downloaded or its fingerprint was wrong (step 21). */
+"downloadFailed";
 
 export type FocusResult = "focused" | 
 /**  No process of this app is known (or the app cannot be followed). */
 "notRunning" | 
 /**  Running, but no window could be brought forward (tray app, other privileges…). */
 "failed";
+
+/**  A held frame of the effects: its shapes, their opacity, the island window's scale. */
+export type FxFrame = {
+	shapes: FxShape[],
+	alpha: number | null,
+	scale: number | null,
+};
+
+/**
+ *  One shape of an effect: a polygon, desktop logical pixels (x, y pairs), its colours
+ *  (0xRRGGBB) and white specks (x, y pairs).
+ */
+export type FxShape = {
+	pts: (number | null)[],
+	fill: number,
+	stroke: number | null,
+	dots: (number | null)[],
+};
+
+export type HandsModelInfo = {
+	sizeMb: number,
+	installed: boolean,
+	downloading: boolean,
+};
+
+/**  Read as a whole: a settings file without it (older), or with a broken one, keeps the default. */
+export type HandsSettings = {
+	/**  The hands are set up: their shortcut is registered (the camera still waits for it). */
+	enabled: boolean,
+	/**  Turns the camera (and the mouse in the air) on and off. */
+	hotkey: string,
+	/**
+	 *  Keep the camera while a program in full screen (a game) is in front; off: it closes until
+	 *  it leaves.
+	 */
+	inGame: boolean,
+	/**  Minutes without a hand in front of the camera before it turns itself off (1–30). */
+	idleMinutes: number,
+	/**
+	 *  How far the hand travels for the cursor to cross the screen (« Amplitude »): 0.5 (a small
+	 *  move) – 2.
+	 */
+	reach: number | null,
+	/**  The glow under the cursor while the hand leads it. */
+	glow: boolean,
+	/**  The finger that meets the thumb for a right click (the user's choice, 2026-11-05). */
+	rightFinger?: RightFinger,
+};
+
+export type HandsState = {
+	status: HandsStatus,
+	/**  Turned on by the user (the shortcut, Réglages); the status says what the camera does. */
+	on: boolean,
+};
+
+/**  Emitted whenever the hands' state changes. */
+export type HandsStateChanged = HandsState;
+
+export type HandsStatus = 
+/**  The camera is closed (the default). */
+"off" | 
+/**  On, the camera opening and the models loading. */
+"starting" | 
+/**  On, the camera open, no hand in front of it. */
+"watching" | 
+/**  A hand leads the cursor. */
+"leading" | 
+/**  On, but a game is in front or the screen is locked: the camera is closed until it ends. */
+"paused" | 
+/**  On, but the models are not installed. */
+"missing" | 
+/**  On, but no webcam answered. */
+"noCamera";
+
+export type HitKind = "kick" | "snare" | "hat" | "crash";
 
 export type HotkeyProblem = 
 /**  Not a combination the hub can register. */
@@ -367,6 +817,12 @@ export type HotkeysChanged = HotkeysReport;
 
 export type HotkeysReport = {
 	toggle: HotkeyStatus | null,
+	/**  `None` when there is no such shortcut (the user removed it). */
+	search: HotkeyStatus | null,
+	/**  `None` outside the push-to-talk mode. */
+	voice: HotkeyStatus | null,
+	/**  The hands' on/off (step 22); `None` until they are set up. */
+	hands: HotkeyStatus | null,
 	scenes: SceneHotkeyStatus[],
 };
 
@@ -389,6 +845,96 @@ export type InspectReport = {
 	refused: Refused[],
 };
 
+/**  One frame of a gesture, for the page (logical pixels). */
+export type IslandFrame = {
+	holding: boolean,
+	vx: number | null,
+	vy: number | null,
+	pullX: number | null,
+	pullY: number | null,
+	tension: number | null,
+	near: number | null,
+	/**  -1 (left corner) … 1 (right corner). */
+	corner: number | null,
+	/**  The window's position (physical pixels) and scale: bubbles stay where they were born. */
+	x: number,
+	y: number,
+	scale: number | null,
+	/**  The island's screen, as insets of the window (logical): nothing of it is drawn past them. */
+	clip: [(number | null), (number | null), (number | null), (number | null)],
+	/**
+	 *  « Glitch »: the edge between two screens cutting through the island, in the window
+	 *  (logical): a vertical one's x, a horizontal one's y.
+	 */
+	seamX: number | null,
+	seamY: number | null,
+	/**  The lightness behind the island (0–1), when it was just measured. */
+	backdrop: number | null,
+};
+
+/**  A moment of a gesture; `dirX`/`dirY` for a crossing, `docked` and `corner` once at rest. */
+export type IslandMoment = {
+	kind: IslandMomentKind,
+	dirX: number | null,
+	dirY: number | null,
+	docked: boolean,
+	corner: number | null,
+};
+
+export type IslandMomentKind = "detached" | "crossed" | "docking" | "touched" | "snapped" | "dropped" | "tap" | "settled";
+
+/**
+ *  Step 20 (Kysland): how the floating island goes from one screen to another. « Forcer »: the
+ *  edge holds it until it is pushed through (bubbles); « Glitch »: no resistance, it may sit
+ *  across two screens, and the edge between them glitches around it (spikes).
+ */
+export type IslandPassage = "force" | "glitch";
+
+/**  The music mode's window, for the page (logical pixels of the stage: the screen). */
+export type IslandStage = {
+	/**  On (the window covers the screen) or back to the island. */
+	on: boolean,
+	width: number | null,
+	height: number | null,
+	/**  Where the island's anchor (the middle of its top edge) is, and goes back to. */
+	homeX: number | null,
+	homeY: number | null,
+	/**  At home on the top edge (its top square against the bezel), or floating. */
+	docked: boolean,
+	/**  Docked in a corner: -1 left, 1 right (flush with that side), 0 the middle. */
+	corner: number | null,
+};
+
+/**
+ *  What the page tells: it wants the mode (the window grows in place), the drop is drawn where
+ *  the island will be (the window moves), or the island is back home.
+ */
+export type IslandStageStep = "enter" | "go" | "done";
+
+/**  Where the island is, for the page's first frame. */
+export type IslandState = {
+	docked: boolean,
+	corner: number | null,
+	/**
+	 *  Floating across two screens: the edge between them, in the window (logical), as in
+	 *  `IslandFrame` (the « Glitch » goes on from the first frame).
+	 */
+	seamX: number | null,
+	seamY: number | null,
+};
+
+/**  The core brought the island out of the top edge (the cursor touched the top of its place). */
+export type IslandTucked = {
+	tucked: boolean,
+};
+
+/**
+ *  « Disposition du clavier » (Raccourcis clavier, 2026-11-04). Windows fires a shortcut on the
+ *  key that types its letter, so the recorder must store the letter on the keycap, not the US
+ *  key at the same place (on AZERTY, A sits where QWERTY has Q). `Auto` reads the layout.
+ */
+export type KeyboardLayout = "auto" | "azerty" | "qwerty";
+
 /**  How to start an app. Exactly one of a closed set of kinds; each is validated on its own. */
 export type Launch = { kind: "exe"; path: string; args: string[]; cwd: string | null; elevated: boolean } | { kind: "lnk"; path: string } | 
 /**  Protocol URI of a known launcher (`steam://…`, `com.epicgames.launcher://…`). */
@@ -396,14 +942,32 @@ export type Launch = { kind: "exe"; path: string; args: string[]; cwd: string | 
 /**  Packaged (UWP) app, by Application User Model ID. */
 { kind: "uwp"; aumid: string } | { kind: "url"; url: string };
 
+/**  The game's window came up (file name of its program), during a cover. */
+export type LaunchLanded = string;
+
 export type LaunchResult = { kind: "started"; pid: number | null } | 
 /**  The app was already open: its window was brought to the front instead. */
 { kind: "focusedExisting" };
+
+/**  A short sequence played before the game starts (30/10): only these, drawn by Kayro itself. */
+export type LaunchStyle = 
+/**  A witch's seal traced and set alight around the card, which burns into it (Hades II). */
+"seal" | 
+/**  A painted night, a far monolith, petals; the card erased into petals (Clair Obscur). */
+"gommage";
 
 /**  Which process to watch to know the app is running. */
 export type MatchRule = {
 	exe: string | null,
 };
+
+export type MediaAction = "previous" | "toggle" | "next" | "play" | "pause" | ({ shuffle: boolean }) & { repeat?: never } | ({ repeat: boolean }) & { shuffle?: never };
+
+/**  The beat: five levels (0–1), bass to treble, about 30 times a second while asked for. */
+export type MediaBeat = (number | null)[];
+
+/**  The music changed (None: nothing plays any more). */
+export type MediaChanged = NowPlaying | null;
 
 /**  A step of a passage, for the page of window `label`. */
 export type ModePassage = {
@@ -422,12 +986,137 @@ export type MonitorInfo = {
 	chosen: boolean,
 };
 
+/**  A `.hubmood` file. */
+export type MoodFile = MoodFile_Serialize | MoodFile_Deserialize;
+
+/**  A `.hubmood` file. */
+export type MoodFile_Deserialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	/**  The game it was made for (shown, never used to pick anything). */
+	gameHint?: string | null,
+	glyphs?: { [key in string]: string },
+	layers: MoodLayer_Deserialize[],
+	/**  Played when the game is launched from its card (30/10); absent = it starts at once. */
+	launch?: LaunchStyle | null,
+};
+
+/**  A `.hubmood` file. */
+export type MoodFile_Serialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	/**  The game it was made for (shown, never used to pick anything). */
+	gameHint?: string | null,
+	glyphs: { [key in string]: string },
+	layers: MoodLayer_Serialize[],
+	/**  Played when the game is launched from its card (30/10); absent = it starts at once. */
+	launch?: LaunchStyle | null,
+};
+
+/**  One layer of an ambience. Sizes in px, speeds in px/s, lives and periods in s, opacities 0–1. */
+export type MoodLayer = MoodLayer_Serialize | MoodLayer_Deserialize;
+
+/**  One layer of an ambience. Sizes in px, speeds in px/s, lives and periods in s, opacities 0–1. */
+export type MoodLayer_Deserialize = 
+/**  Particles spread over the scene (`count` at « Élevé »); `drift`: sideways sway 0–1. */
+({ type: "particles"; shape: ParticleShape; glyph?: string | null; count: number; size: [(number | null), (number | null)]; speed: [(number | null), (number | null)]; direction: Direction; drift: number | null; life: [(number | null), (number | null)]; colorRole: ColorRole; opacity: number | null }) & { period?: never; radius?: never; rotation?: never; sway?: never } | 
+/**  Glyphs on a circle around the shown card (radius × the screen's height), turning in °/s. */
+({ type: "glyphRing"; glyph: string; count: number; radius: number | null; rotation: number | null; size: number | null; colorRole: ColorRole; opacity: number | null }) & { direction?: never; drift?: never; life?: never; period?: never; shape?: never; speed?: never; sway?: never } | 
+/**  Large soft clouds drifting low across the scene. */
+({ type: "mist"; count: number; colorRole: ColorRole; opacity: number | null; speed: number | null }) & { direction?: never; drift?: never; glyph?: never; life?: never; period?: never; radius?: never; rotation?: never; shape?: never; size?: never; sway?: never } | 
+/**  Columns of light from the top, swaying by `sway` degrees. */
+({ type: "beam"; count: number; sway: number | null; colorRole: ColorRole; opacity: number | null }) & { direction?: never; drift?: never; glyph?: never; life?: never; period?: never; radius?: never; rotation?: never; shape?: never; size?: never; speed?: never } | 
+/**  A ring of light breathing around the shown card. */
+({ type: "pulse"; period: number | null; colorRole: ColorRole; opacity: number | null }) & { count?: never; direction?: never; drift?: never; glyph?: never; life?: never; radius?: never; rotation?: never; shape?: never; size?: never; speed?: never; sway?: never };
+
+/**  One layer of an ambience. Sizes in px, speeds in px/s, lives and periods in s, opacities 0–1. */
+export type MoodLayer_Serialize = 
+/**  Particles spread over the scene (`count` at « Élevé »); `drift`: sideways sway 0–1. */
+({ type: "particles"; shape: ParticleShape; glyph?: string | null; count: number; size: [(number | null), (number | null)]; speed: [(number | null), (number | null)]; direction: Direction; drift: number | null; life: [(number | null), (number | null)]; colorRole: ColorRole; opacity: number | null }) & { period?: never; radius?: never; rotation?: never; sway?: never } | 
+/**  Glyphs on a circle around the shown card (radius × the screen's height), turning in °/s. */
+({ type: "glyphRing"; glyph: string; count: number; radius: number | null; rotation: number | null; size: number | null; colorRole: ColorRole; opacity: number | null }) & { direction?: never; drift?: never; life?: never; period?: never; shape?: never; speed?: never; sway?: never } | 
+/**  Large soft clouds drifting low across the scene. */
+({ type: "mist"; count: number; colorRole: ColorRole; opacity: number | null; speed: number | null }) & { direction?: never; drift?: never; glyph?: never; life?: never; period?: never; radius?: never; rotation?: never; shape?: never; size?: never; sway?: never } | 
+/**  Columns of light from the top, swaying by `sway` degrees. */
+({ type: "beam"; count: number; sway: number | null; colorRole: ColorRole; opacity: number | null }) & { direction?: never; drift?: never; glyph?: never; life?: never; period?: never; radius?: never; rotation?: never; shape?: never; size?: never; speed?: never } | 
+/**  A ring of light breathing around the shown card. */
+({ type: "pulse"; period: number | null; colorRole: ColorRole; opacity: number | null }) & { count?: never; direction?: never; drift?: never; glyph?: never; life?: never; radius?: never; rotation?: never; shape?: never; size?: never; speed?: never; sway?: never };
+
+/**  The user's dosage of an app's ambience (Modifier › Apparence): density and speed, × 0.25–2. */
+export type MoodTune = {
+	density: number | null,
+	speed: number | null,
+};
+
+/**  The imported ambiences changed (imported or deleted): both windows read them again. */
+export type MoodsChanged = MoodsChanged_Serialize | MoodsChanged_Deserialize;
+
+/**  The imported ambiences changed (imported or deleted): both windows read them again. */
+export type MoodsChanged_Deserialize = MoodFile_Deserialize[];
+
+/**  The imported ambiences changed (imported or deleted): both windows read them again. */
+export type MoodsChanged_Serialize = MoodFile_Serialize[];
+
 /**  « Mouvement »: `Lively` is the validated « Vivant intelligent » language. */
 export type MotionStyle = 
 /**  The « magic » level also where the intelligence rule cuts it (window mode, big grid…). */
 "complete" | "lively" | 
 /**  No bounce and no magic: entrance curve everywhere, card hover = lift only. */
 "crisp";
+
+/**  What the voice does to the music playing (Windows' media controls: Spotify or any player). */
+export type Music = "play" | "pause" | "next" | "previous" | "louder" | "quieter" | "mute" | "shuffleOn" | "shuffleOff" | "repeatOn" | "repeatOff";
+
+/**
+ *  The music mode's beat grid (rhythm.rs, an AI, local), every 8 s while the mode listens: how
+ *  long ago (s) each beat and each downbeat of the last 10 s was, at the moment it is sent.
+ */
+export type MusicBeats = {
+	beats: (number | null)[],
+	downbeats: (number | null)[],
+	seq: number,
+};
+
+/**  « Couleurs » of the music mode: the cover's two colours, or Kayro's theme. */
+export type MusicColors = "cover" | "theme";
+
+/**
+ *  The music mode's signal (2026-11-03), while the beat is followed and the mode is on (not on
+ *  its test track): the hits since the frame before (a frame at most every 10 ms when there are
+ *  some), and at least every 16 ms the levels: sub-bass, melody, its pitch, the build's tension
+ *  (all 0–1), the silence just before a drop, where the song is. As soon as the sound is read,
+ *  so the page delays the image by « Décalage son/image ». `seq` counts the frames.
+ */
+export type MusicFrame = {
+	hits: MusicHit[],
+	sub: number | null,
+	melody: number | null,
+	/**  A voice (what sits in the middle of the stereo, 300–3400 Hz), 0–1 (2026-11-03). */
+	voice: number | null,
+	pitch: number | null,
+	/**  How sharp the notes are: 0 held and soft – 1 plucked, stuttered, chopped (2026-11-03). */
+	sharp: number | null,
+	/**  A heavy bass: the sub's share of the sound over its usual one in the song (2026-11-03). */
+	heavy: number | null,
+	build: number | null,
+	gap: boolean,
+	section: Section,
+	seq: number,
+};
+
+/**  One hit: which instrument, and how hard (0–1, against the band's recent hits). */
+export type MusicHit = {
+	kind: HitKind,
+	velocity: number | null,
+};
+
+/**
+ *  Kysland's « Mode musique » › Avancé › « Qualité » (2026-11-03): the disc's resolution, « Auto »
+ *  lowering it by itself when an image takes too long.
+ */
+export type MusicQuality = "auto" | "low" | "medium" | "high";
 
 /**  An app to add: the id is chosen by the core, never by the caller. */
 export type NewApp = {
@@ -439,6 +1128,22 @@ export type NewApp = {
 	art: Art,
 	moodId: string | null,
 	favorite: boolean,
+};
+
+/**  The track the island shows. */
+export type NowPlaying = {
+	title: string,
+	artist: string,
+	/**  The player's app id (« Spotify.exe »…). */
+	player: string,
+	playing: boolean,
+	positionMs: number | null,
+	durationMs: number | null,
+	/**  When `position_ms` was read (ms since the Unix epoch, 0 unknown): the page moves it on. */
+	atMs: number | null,
+	/**  The cover as a data URL, and its dominant and accent colours (`#rrggbb`). */
+	cover: string | null,
+	colors: [string, string] | null,
 };
 
 /**
@@ -455,7 +1160,21 @@ export type OpeningDue =
  *  Silent start: no opening, but it is still the program's start (asked once, at once, even
  *  hidden, so that the home screen is ready under the first show).
  */
-"quiet" | "no";
+"quiet" | 
+/**
+ *  Express start (step 19): the logo stays still until a click or Enter, then the opening
+ *  goes on from there (asked once, at once, even hidden: the logo is ready under the show).
+ */
+"express" | "no";
+
+/**  « Écran d'ouverture » (step 15): where the hub opens from the shortcut or the notification area. */
+export type OpeningScreen = 
+/**  Where it was last (the remembered screen). */
+"last" | 
+/**  The screen under the mouse pointer. */
+"pointer" | 
+/**  The main screen of Windows. */
+"main";
 
 /**  « Ouverture au lancement »: V1-A with the C pulse, V1-A alone, or nothing. */
 export type OpeningStyle = "pulse" | "classic" | "none";
@@ -490,6 +1209,8 @@ export type PaletteSource = "poster" | "hero" |
 /**  Emitted when the palettes changed (an image was added, changed or removed). */
 export type PalettesChanged = AppPalette[];
 
+export type ParticleShape = "ember" | "dot" | "star" | "line" | "glyph";
+
 export type PassageStep = 
 /**  Fade your content out, then call `passage_faded(id)`. */
 "out" | 
@@ -508,6 +1229,11 @@ export type ProgressUpdate = { kind: "started"; total: number } | { kind: "step"
 export type Quality = 
 /**  « Auto »: high, with the engine's automatic fallback (full adaptive quality: step 13). */
 "auto" | "eco" | "balanced" | "high" | "ultra";
+
+export type Ratio = {
+	right: number,
+	total: number,
+};
 
 /**  Why a step failed or was skipped (the interface picks its own wording). */
 export type Reason = 
@@ -541,6 +1267,9 @@ export type RejectReason =
 "repeated" | 
 /**  Beyond [`MAX_INPUTS`]. */
 "tooMany";
+
+/**  Thumb – ring finger or thumb – middle finger: the right click. */
+export type RightFinger = "ring" | "middle";
 
 export type RunStatus = 
 /**  Every step ran or was skipped without a `required` failure. */
@@ -595,16 +1324,211 @@ export type SceneHotkeyStatus = {
 /**  Progress of the scene being played: one event per step change, plus its start and end. */
 export type SceneProgress = ProgressEvent;
 
-export type Settings = {
+/**
+ *  « Écrire dans Kysland » was pressed: the window it is sent to opens its search (the island's
+ *  panel, or Kayro's search).
+ */
+export type SearchSummon = null;
+
+/**  Where the song is (`Unknown` while it cannot be told). */
+export type Section = "drop" | "break" | "build" | "unknown";
+
+export type Settings = Settings_Serialize | Settings_Deserialize;
+
+/**  Emitted after every successful change of the settings (also to the window that made it). */
+export type SettingsChanged = SettingsChanged_Serialize | SettingsChanged_Deserialize;
+
+/**  Emitted after every successful change of the settings (also to the window that made it). */
+export type SettingsChanged_Deserialize = Settings_Deserialize;
+
+/**  Emitted after every successful change of the settings (also to the window that made it). */
+export type SettingsChanged_Serialize = Settings_Serialize;
+
+/**  Partial update: absent (or null) fields are left as they are. */
+export type SettingsPatch = SettingsPatch_Serialize | SettingsPatch_Deserialize;
+
+/**  Partial update: absent (or null) fields are left as they are. */
+export type SettingsPatch_Deserialize = {
+	themeId?: string | null,
+	quality?: Quality | null,
+	colorMode?: ColorMode_Deserialize | null,
+	hotkey?: string | null,
+	searchHotkey?: string | null,
+	keyboardLayout?: KeyboardLayout | null,
+	voice?: VoiceSettings | null,
+	hands?: HandsSettings | null,
+	language?: string | null,
+	atmosphereIntensity?: number | null,
+	displayMode?: DisplayMode_Deserialize | null,
+	islandAlways?: boolean | null,
+	islandTuck?: boolean | null,
+	islandTuckDelay?: number | null,
+	islandPeekDelay?: number | null,
+	islandMusic?: boolean | null,
+	musicBass?: number | null,
+	musicCrash?: number | null,
+	musicTrails?: number | null,
+	musicGloss?: number | null,
+	musicSenseKick?: number | null,
+	musicSenseSnare?: number | null,
+	musicSenseHat?: number | null,
+	musicSenseCrash?: number | null,
+	musicDelayMs?: number | null,
+	musicQuality?: MusicQuality | null,
+	musicDemo?: boolean | null,
+	musicColors?: MusicColors | null,
+	hideOnEscape?: boolean | null,
+	hideOnBlur?: boolean | null,
+	economyMode?: boolean | null,
+	motionStyle?: MotionStyle | null,
+	followSystemMotion?: boolean | null,
+	cardFloat?: CardFloat | null,
+	openingStyle?: OpeningStyle | null,
+	themeTransition?: ThemeTransition | null,
+	openingScreen?: OpeningScreen | null,
+	widgetUnroll?: WidgetUnroll | null,
+	widgetSpring?: Elasticity | null,
+	islandPassage?: IslandPassage | null,
+	cardHover?: CardHoverStyle | null,
+	bokeh?: boolean | null,
+	particles?: boolean | null,
+	cursorLight?: boolean | null,
+	colorIntensity?: ColorIntensity | null,
+	colorCharacter?: ColorCharacter | null,
+	colorPick?: ColorPick | null,
+	colorPassage?: ColorPassage | null,
+	colorTrigger?: ColorTrigger | null,
+	colorFromIcon?: boolean | null,
+	soundsOn?: boolean | null,
+	soundPack?: SoundPack | null,
+	soundVolume?: number | null,
+	soundInterface?: boolean | null,
+	soundTransitions?: boolean | null,
+	soundLaunch?: boolean | null,
+	updateAuto?: boolean | null,
+	startupHome?: boolean | null,
+	startupOpen?: StartupOpen | null,
+	startupAfter?: StartupAfter | null,
+	ignoredDetections?: string[] | null,
+};
+
+/**  Partial update: absent (or null) fields are left as they are. */
+export type SettingsPatch_Serialize = {
+	themeId: string | null,
+	quality: Quality | null,
+	colorMode: ColorMode_Serialize | null,
+	hotkey: string | null,
+	searchHotkey: string | null,
+	keyboardLayout: KeyboardLayout | null,
+	voice: VoiceSettings | null,
+	hands: HandsSettings | null,
+	language: string | null,
+	atmosphereIntensity: number | null,
+	displayMode: DisplayMode_Serialize | null,
+	islandAlways: boolean | null,
+	islandTuck: boolean | null,
+	islandTuckDelay: number | null,
+	islandPeekDelay: number | null,
+	islandMusic: boolean | null,
+	musicBass: number | null,
+	musicCrash: number | null,
+	musicTrails: number | null,
+	musicGloss: number | null,
+	musicSenseKick: number | null,
+	musicSenseSnare: number | null,
+	musicSenseHat: number | null,
+	musicSenseCrash: number | null,
+	musicDelayMs: number | null,
+	musicQuality: MusicQuality | null,
+	musicDemo: boolean | null,
+	musicColors: MusicColors | null,
+	hideOnEscape: boolean | null,
+	hideOnBlur: boolean | null,
+	economyMode: boolean | null,
+	motionStyle: MotionStyle | null,
+	followSystemMotion: boolean | null,
+	cardFloat: CardFloat | null,
+	openingStyle: OpeningStyle | null,
+	themeTransition: ThemeTransition | null,
+	openingScreen: OpeningScreen | null,
+	widgetUnroll: WidgetUnroll | null,
+	widgetSpring: Elasticity | null,
+	islandPassage: IslandPassage | null,
+	cardHover: CardHoverStyle | null,
+	bokeh: boolean | null,
+	particles: boolean | null,
+	cursorLight: boolean | null,
+	colorIntensity: ColorIntensity | null,
+	colorCharacter: ColorCharacter | null,
+	colorPick: ColorPick | null,
+	colorPassage: ColorPassage | null,
+	colorTrigger: ColorTrigger | null,
+	colorFromIcon: boolean | null,
+	soundsOn: boolean | null,
+	soundPack: SoundPack | null,
+	soundVolume: number | null,
+	soundInterface: boolean | null,
+	soundTransitions: boolean | null,
+	soundLaunch: boolean | null,
+	updateAuto: boolean | null,
+	startupHome: boolean | null,
+	startupOpen: StartupOpen | null,
+	startupAfter: StartupAfter | null,
+	ignoredDetections: string[] | null,
+};
+
+export type Settings_Deserialize = {
 	schemaVersion: number,
 	themeId: string,
 	quality: Quality,
-	colorMode: ColorMode,
+	colorMode: ColorMode_Deserialize,
 	hotkey: string,
+	/**
+	 *  « Écrire dans Kysland » (2026-11-04): opens the island with the cursor in its search
+	 *  (Kayro's search when Kayro is on screen); empty: no such shortcut.
+	 */
+	searchHotkey: string,
+	/**  « Disposition du clavier » (2026-11-04): how the recorder names a pressed key. */
+	keyboardLayout: KeyboardLayout,
+	/**  Step 21: the voice (off by default; config/voice.rs). */
+	voice: VoiceSettings,
+	/**  Step 22: the hands, a mouse in the air (off by default; config/hands.rs). */
+	hands: HandsSettings,
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
-	displayMode: DisplayMode,
+	displayMode: DisplayMode_Deserialize,
+	/**  « Kysland toujours à l'écran » (Raccourcis clavier): the island shows whenever Kayro is not. */
+	islandAlways: boolean,
+	/**
+	 *  « Cacher l'île » (2026-11-02): docked and left alone, the island goes into the top edge
+	 *  after `island_tuck_delay` s; the cursor held on the very top of its place for
+	 *  `island_peek_delay` s brings it out.
+	 */
+	islandTuck: boolean,
+	islandTuckDelay: number | null,
+	islandPeekDelay: number | null,
+	/**
+	 *  « Mode musique » (the opened island's switch, 2026-11-02): while music plays, the island
+	 *  becomes a disc in the middle of its screen (the ink scene went on 2026-11-03).
+	 */
+	islandMusic: boolean,
+	/**
+	 *  Its settings (Visuel › Mode musique; bounds and meaning in visual.rs), « Avancé » from the
+	 *  sensitivities (higher: more hits) on; `music_demo`: the test track instead of the sound.
+	 */
+	musicBass: number | null,
+	musicCrash: number | null,
+	musicTrails: number | null,
+	musicGloss: number | null,
+	musicSenseKick: number | null,
+	musicSenseSnare: number | null,
+	musicSenseHat: number | null,
+	musicSenseCrash: number | null,
+	musicDelayMs: number | null,
+	musicQuality: MusicQuality,
+	musicDemo: boolean,
+	musicColors: MusicColors,
 	/**  Escape hides the hub once there is nothing left to close. */
 	hideOnEscape: boolean,
 	/**  Losing the focus hides the hub (the widget only folds its panel). */
@@ -617,8 +1541,11 @@ export type Settings = {
 	cardFloat: CardFloat,
 	openingStyle: OpeningStyle,
 	themeTransition: ThemeTransition,
+	openingScreen: OpeningScreen,
 	widgetUnroll: WidgetUnroll,
 	widgetSpring: Elasticity,
+	/**  Step 20: « Passage de Kysland » (from one screen to another). */
+	islandPassage: IslandPassage,
 	cardHover: CardHoverStyle,
 	bokeh: boolean,
 	particles: boolean,
@@ -629,45 +1556,129 @@ export type Settings = {
 	colorPick: ColorPick,
 	colorPassage: ColorPassage,
 	colorTrigger: ColorTrigger,
-	/**  Immersive: the game's hero at the top of the night (V3 b); off = its colours only. */
-	colorHero: boolean,
 	/**  An app without a picture takes its icon's colours (V10 b); off = the theme's. */
 	colorFromIcon: boolean,
+	/**  Step 17b, Réglages › Sons: on, style, volume (0–1), and the three families. */
+	soundsOn: boolean,
+	soundPack: SoundPack,
+	soundVolume: number | null,
+	soundInterface: boolean,
+	soundTransitions: boolean,
+	soundLaunch: boolean,
+	/**  Step 18b: one look for an update at start (network: off unless the user allows it). */
+	updateAuto: boolean,
+	/**
+	 *  Step 19: started with Windows, the hub opens on its home screen (still logo) instead of
+	 *  waiting in the notification area.
+	 */
+	startupHome: boolean,
+	/**  « Au démarrage » and « Après l'intro » (they replace `startup_home`, migrated v2 → v3). */
+	startupOpen: StartupOpen,
+	startupAfter: StartupAfter,
+	/**  Step 19b: detected apps the user chose to ignore (their ids), hidden from the next scans. */
+	ignoredDetections: string[],
 };
 
-/**  Emitted after every successful change of the settings (also to the window that made it). */
-export type SettingsChanged = Settings;
-
-/**  Partial update: absent (or null) fields are left as they are. */
-export type SettingsPatch = {
-	themeId?: string | null,
-	quality?: Quality | null,
-	colorMode?: ColorMode | null,
-	hotkey?: string | null,
-	language?: string | null,
-	atmosphereIntensity?: number | null,
-	displayMode?: DisplayMode | null,
-	hideOnEscape?: boolean | null,
-	hideOnBlur?: boolean | null,
-	economyMode?: boolean | null,
-	motionStyle?: MotionStyle | null,
-	followSystemMotion?: boolean | null,
-	cardFloat?: CardFloat | null,
-	openingStyle?: OpeningStyle | null,
-	themeTransition?: ThemeTransition | null,
-	widgetUnroll?: WidgetUnroll | null,
-	widgetSpring?: Elasticity | null,
-	cardHover?: CardHoverStyle | null,
-	bokeh?: boolean | null,
-	particles?: boolean | null,
-	cursorLight?: boolean | null,
-	colorIntensity?: ColorIntensity | null,
-	colorCharacter?: ColorCharacter | null,
-	colorPick?: ColorPick | null,
-	colorPassage?: ColorPassage | null,
-	colorTrigger?: ColorTrigger | null,
-	colorHero?: boolean | null,
-	colorFromIcon?: boolean | null,
+export type Settings_Serialize = {
+	schemaVersion: number,
+	themeId: string,
+	quality: Quality,
+	colorMode: ColorMode_Serialize,
+	hotkey: string,
+	/**
+	 *  « Écrire dans Kysland » (2026-11-04): opens the island with the cursor in its search
+	 *  (Kayro's search when Kayro is on screen); empty: no such shortcut.
+	 */
+	searchHotkey: string,
+	/**  « Disposition du clavier » (2026-11-04): how the recorder names a pressed key. */
+	keyboardLayout: KeyboardLayout,
+	/**  Step 21: the voice (off by default; config/voice.rs). */
+	voice: VoiceSettings,
+	/**  Step 22: the hands, a mouse in the air (off by default; config/hands.rs). */
+	hands: HandsSettings,
+	language: string,
+	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
+	atmosphereIntensity: number | null,
+	displayMode: DisplayMode_Serialize,
+	/**  « Kysland toujours à l'écran » (Raccourcis clavier): the island shows whenever Kayro is not. */
+	islandAlways: boolean,
+	/**
+	 *  « Cacher l'île » (2026-11-02): docked and left alone, the island goes into the top edge
+	 *  after `island_tuck_delay` s; the cursor held on the very top of its place for
+	 *  `island_peek_delay` s brings it out.
+	 */
+	islandTuck: boolean,
+	islandTuckDelay: number | null,
+	islandPeekDelay: number | null,
+	/**
+	 *  « Mode musique » (the opened island's switch, 2026-11-02): while music plays, the island
+	 *  becomes a disc in the middle of its screen (the ink scene went on 2026-11-03).
+	 */
+	islandMusic: boolean,
+	/**
+	 *  Its settings (Visuel › Mode musique; bounds and meaning in visual.rs), « Avancé » from the
+	 *  sensitivities (higher: more hits) on; `music_demo`: the test track instead of the sound.
+	 */
+	musicBass: number | null,
+	musicCrash: number | null,
+	musicTrails: number | null,
+	musicGloss: number | null,
+	musicSenseKick: number | null,
+	musicSenseSnare: number | null,
+	musicSenseHat: number | null,
+	musicSenseCrash: number | null,
+	musicDelayMs: number | null,
+	musicQuality: MusicQuality,
+	musicDemo: boolean,
+	musicColors: MusicColors,
+	/**  Escape hides the hub once there is nothing left to close. */
+	hideOnEscape: boolean,
+	/**  Losing the focus hides the hub (the widget only folds its panel). */
+	hideOnBlur: boolean,
+	/**  « Mode économe »: the window is destroyed while hidden (less memory, slower to come back). */
+	economyMode: boolean,
+	motionStyle: MotionStyle,
+	/**  Follow Windows « Effets d'animation » (reduce motion); off = Kayro ignores it. */
+	followSystemMotion: boolean,
+	cardFloat: CardFloat,
+	openingStyle: OpeningStyle,
+	themeTransition: ThemeTransition,
+	openingScreen: OpeningScreen,
+	widgetUnroll: WidgetUnroll,
+	widgetSpring: Elasticity,
+	/**  Step 20: « Passage de Kysland » (from one screen to another). */
+	islandPassage: IslandPassage,
+	cardHover: CardHoverStyle,
+	bokeh: boolean,
+	particles: boolean,
+	cursorLight: boolean,
+	/**  Game colours (step 14, « Personnalisation avancée »): V1, V6, V5, V7, V8. */
+	colorIntensity: ColorIntensity,
+	colorCharacter: ColorCharacter,
+	colorPick: ColorPick,
+	colorPassage: ColorPassage,
+	colorTrigger: ColorTrigger,
+	/**  An app without a picture takes its icon's colours (V10 b); off = the theme's. */
+	colorFromIcon: boolean,
+	/**  Step 17b, Réglages › Sons: on, style, volume (0–1), and the three families. */
+	soundsOn: boolean,
+	soundPack: SoundPack,
+	soundVolume: number | null,
+	soundInterface: boolean,
+	soundTransitions: boolean,
+	soundLaunch: boolean,
+	/**  Step 18b: one look for an update at start (network: off unless the user allows it). */
+	updateAuto: boolean,
+	/**
+	 *  Step 19: started with Windows, the hub opens on its home screen (still logo) instead of
+	 *  waiting in the notification area.
+	 */
+	startupHome: boolean,
+	/**  « Au démarrage » and « Après l'intro » (they replace `startup_home`, migrated v2 → v3). */
+	startupOpen: StartupOpen,
+	startupAfter: StartupAfter,
+	/**  Step 19b: detected apps the user chose to ignore (their ids), hidden from the next scans. */
+	ignoredDetections: string[],
 };
 
 /**  Slot name → app id. Shared scenes only ever mention slot names, never paths or commands. */
@@ -676,8 +1687,13 @@ export type SlotsFile = {
 	slots: { [key in string]: string },
 };
 
+/**  « Style des sons »: crystalline and soft (the default), a warm analogue synth, or 8-bit. */
+export type SoundPack = "premium" | "retro" | "chiptune";
+
 /**  Where a detected app comes from (also the identity of a [`DetectSource`]). */
-export type SourceKind = "steam" | "epic" | "startmenu";
+export type SourceKind = "steam" | "epic" | "startmenu" | 
+/**  Step 19c: found by the advanced scan in a program or game folder. */
+"deep";
 
 export type SourceReport = {
 	source: SourceKind,
@@ -688,6 +1704,35 @@ export type SourceReport = {
 	ms: number,
 };
 
+/**  « Après l'intro »: what the intro's opening ends on. */
+export type StartupAfter = "immersive" | "island" | "hidden";
+
+export type StartupApp = {
+	id: string,
+	name: string,
+	target: string,
+	enabled: boolean,
+	locked: StartupLock | null,
+	/**  Switched off by Kayro: « Tout remettre comme avant » puts it back. */
+	byKayro: boolean,
+};
+
+/**  Why an app cannot be changed here. */
+export type StartupLock = 
+/**  For the whole PC (often drivers): needs administrator rights. */
+"machine" | 
+/**  Part of Windows. */
+"system" | 
+/**  Kayro itself: its own switch is « Démarrer avec Windows ». */
+"kayro";
+
+/**
+ *  « Au démarrage » (started with Windows): the intro (the still logo, a click or Enter plays the
+ *  opening), the hub in immersive mode, the island (Kysland), or nothing on screen (the
+ *  notification area).
+ */
+export type StartupOpen = "intro" | "immersive" | "island" | "hidden";
+
 /**  One step. `required`: if it fails, the rest of the scene is not run. */
 export type Step = { type: "launch"; slot: string; required?: boolean } | { type: "wait"; ms: number; required?: boolean } | { type: "waitReady"; slot: string; timeoutMs: number; required?: boolean } | { type: "focus"; slot: string; required?: boolean } | 
 /**  Soft close only (a close message to the window); the interface confirms first. */
@@ -697,8 +1742,75 @@ export type StepState = "pending" | "running" | "ok" | "failed" |
 /**  Not run: unlinked slot, nothing to follow, scene cancelled or aborted… */
 "skipped";
 
+/**  Colour theme file (`themes/<id>.json`), same shape as `src/design/theme.ts`. */
+export type ThemeFile = ThemeFile_Serialize | ThemeFile_Deserialize;
+
+/**  Colour theme file (`themes/<id>.json`), same shape as `src/design/theme.ts`. */
+export type ThemeFile_Deserialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	author: string,
+	description: string,
+	bg: [string, string, string],
+	accent: string,
+	glow: string,
+	fog: [string, string, string],
+	card: [number, number, number],
+	beam: [number, number, number],
+	/**  The two colours of the gradient, A and B (logo themes, personal themes). */
+	gradient?: [string, string] | null,
+	/**  Soft text colour (labels). */
+	soft?: string | null,
+};
+
+/**  Colour theme file (`themes/<id>.json`), same shape as `src/design/theme.ts`. */
+export type ThemeFile_Serialize = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	author: string,
+	description: string,
+	bg: [string, string, string],
+	accent: string,
+	glow: string,
+	fog: [string, string, string],
+	card: [number, number, number],
+	beam: [number, number, number],
+	/**  The two colours of the gradient, A and B (logo themes, personal themes). */
+	gradient?: [string, string] | null,
+	/**  Soft text colour (labels). */
+	soft?: string | null,
+};
+
 /**  « Changement de thème »: the wave with its impact, a cross-fade, or a direct switch. */
 export type ThemeTransition = "wave" | "fade" | "direct";
+
+/**  The personal themes changed (saved, imported or deleted): both windows read them again. */
+export type ThemesChanged = ThemesChanged_Serialize | ThemesChanged_Deserialize;
+
+/**  The personal themes changed (saved, imported or deleted): both windows read them again. */
+export type ThemesChanged_Deserialize = ThemeFile_Deserialize[];
+
+/**  The personal themes changed (saved, imported or deleted): both windows read them again. */
+export type ThemesChanged_Serialize = ThemeFile_Serialize[];
+
+/**  A newer version was found by the automatic check (at start, if allowed). */
+export type UpdateAvailable = UpdateInfo;
+
+/**  A newer version, as the release describes it. */
+export type UpdateInfo = {
+	version: string,
+	current: string,
+	/**  The release's notes (its patch notes), plain text, one point per line. */
+	notes: string | null,
+};
+
+/**  The download of an update: bytes so far, total when known. */
+export type UpdateProgress = {
+	downloaded: number,
+	total: number | null,
+};
 
 /**
  *  How the native veil fades when `main` gives way to the widget or takes over from it (round
@@ -712,6 +1824,209 @@ export type VeilFade = {
 	ms: number,
 	curve: (number | null)[],
 };
+
+export type VoiceCandidate = {
+	id: string,
+	name: string,
+	scene: boolean,
+};
+
+/**
+ *  A command was heard: the sentence and what came of it (several things asked at once, with
+ *  the brain: the first, then the others, one note).
+ */
+export type VoiceHeard = {
+	text: string,
+	outcome: VoiceOutcome,
+	also?: VoiceOutcome[],
+};
+
+/**
+ *  The guided learning (« Apprendre mon mot d'éveil »): what the small model heard of one
+ *  saying of the wake word (its words before the command, if one was said too).
+ */
+export type VoiceLearned = {
+	heard: string,
+};
+
+/**  A piece of music the user named: a Spotify playlist, album, track, artist, show or episode. */
+export type VoiceLink = {
+	name: string,
+	/**  « spotify:playlist:<22 letters and digits> » (Réglages turns a shared link into it). */
+	uri: string,
+};
+
+export type VoiceMicrophone = {
+	id: string,
+	name: string,
+};
+
+/**  How Kayro listens. */
+export type VoiceMode = "off" | 
+/**  The microphone opens only while the shortcut is held. */
+"pushToTalk" | 
+/**
+ *  Always listening for the wake word (the user's exception to « never the microphone all
+ *  the time », 2026-10-30): speech detection, then the wake word, then the command.
+ */
+"always";
+
+/**  Which model writes down the command (the wake word always uses the small French one). */
+export type VoiceModel = 
+/**  NVIDIA Parakeet TDT 0.6B v3: the best French and English names (~730 MB of memory). */
+"parakeet" | 
+/**  NVIDIA Canary 180M Flash: lighter (~320 MB), weaker on English names. */
+"canary";
+
+/**  A model as Réglages shows it (its texts are in the page's catalogue). */
+export type VoiceModelInfo = {
+	id: string,
+	sizeMb: number,
+	installed: boolean,
+	downloading: boolean,
+};
+
+/**  A download's progress, about ten times a second. */
+export type VoiceModelProgress = {
+	id: string,
+	step: DownloadStep,
+	/**  0–1. */
+	fraction: number | null,
+	doneMb: number,
+};
+
+/**  What a command did. */
+export type VoiceOutcome = { kind: "launched"; id: string; name: string } | { kind: "launchFailed"; id: string; name: string } | { kind: "sceneStarted"; id: string; name: string } | 
+/**  « Ferme X »: asked to close at once, gently (its window may still ask to save). */
+{ kind: "closed"; id: string; name: string } | 
+/**  « Ferme X » while X is not open. */
+{ kind: "notRunning"; id: string; name: string } | 
+/**  The music: what was done to what plays (or Spotify started, for « mets la musique »). */
+{ kind: "music"; action: Music } | 
+/**  The user's music, by name, opened in Spotify. */
+{ kind: "musicOpened"; name: string } | 
+/**  Kysland's music mode turned on or off. */
+{ kind: "musicMode"; on: boolean } | 
+/**  The hands' camera turned on or off (step 22); `ok` false: the hands are not set up. */
+{ kind: "hands"; on: boolean; ok: boolean } | { kind: "showKayro" } | { kind: "hideKayro" } | { kind: "search"; query: string } | { kind: "stoppedListening" } | 
+/**  Several sound alike: proposed, nothing started. */
+{ kind: "doubt"; 
+/**  The words that named it (normalized): a choice teaches Kayro (memory.rs). */
+said: string; candidates: VoiceCandidate[] } | { kind: "notUnderstood" } | 
+/**
+ *  A window arranged (`what`: plein, reduire, restaurer, devant, gauche, droite, ecran,
+ *  fermer); `ok` false: no such window, or not one of the user's apps (a close).
+ */
+{ kind: "window"; what: string; name: string; ok: boolean } | { kind: "volumeTo"; level: number } | 
+/**  One app's sound; `ok` false: it plays nothing right now. */
+{ kind: "appVolume"; name: string; what: AppVolume; ok: boolean } | { kind: "mic"; muted: boolean; ok: boolean } | 
+/**  Réglages opened on a page (the page opens it). */
+{ kind: "settings"; page: string } | { kind: "theme"; name: string; ok: boolean } | { kind: "kysland"; on: boolean } | 
+/**  What plays (`title` empty: nothing). */
+{ kind: "nowPlaying"; title: string; artist: string } | { kind: "lock" } | { kind: "desktop" } | { kind: "files" } | { kind: "timer"; minutes: number } | 
+/**  The timer ended (Kayro comes to say so). */
+{ kind: "timerDone"; minutes: number } | { kind: "time"; text: string } | { kind: "screenshot" } | { kind: "webSearch"; query: string } | 
+/**  Typed into the window in front; `ok` false: a console, or no field (refused). */
+{ kind: "dictated"; ok: boolean } | 
+/**  Said to the assistant, but nothing Kayro can do yet. */
+{ kind: "unknown" };
+
+/**  A saying was kept (`ok`: written to disk). */
+export type VoiceRecorded = {
+	key: string,
+	ok: boolean,
+};
+
+/**
+ *  Read as a whole: a settings file without it (older), or with a broken one, keeps the default
+ *  (the settings' lenient read, field by field).
+ */
+export type VoiceSettings = {
+	mode: VoiceMode,
+	/**
+	 *  Said before a command in the « always » mode; the user's own (the assistant's name comes
+	 *  later, with the ecosystem's AI app).
+	 */
+	wakeWord: string,
+	/**  The push-to-talk shortcut (empty: none). */
+	hotkey: string,
+	model: VoiceModel,
+	/**
+	 *  Keep listening while a program in full screen (a game) is in front; off: the
+	 *  microphone closes until it leaves (push-to-talk still works).
+	 */
+	inGame: boolean,
+	/**
+	 *  What the small model heard when the user taught it the wake word (« DIOUNOV »): matched
+	 *  too. Emptied when the wake word changes.
+	 */
+	wakeHeard: string[],
+	/**  The microphone's Windows id (empty: Windows' default one). */
+	microphone: string,
+	/**
+	 *  The output whose sound the echo canceller takes out, by Windows id (empty: the default
+	 *  one; with Voicemeeter, the physical speakers hold every bus).
+	 */
+	speakers: string,
+	/**
+	 *  The island's aura while it listens: empty = the island's own colour of the moment, or
+	 *  « #rrggbb ».
+	 */
+	aura: string,
+	/**  The user's music by name (« chill » → a Spotify playlist): « mets ma playlist chill ». */
+	links: VoiceLink[],
+	/**
+	 *  « Seulement ma voix »: a sentence in another voice (the TV, a video, a friend) does not
+	 *  wake Kayro (voice/speaker.rs, from the calibration's recordings).
+	 */
+	onlyMe: boolean,
+	/**
+	 *  What the speakers play (music, a video, a game) is taken out of what the microphone
+	 *  hears (voice/echo.rs); useless with headphones.
+	 */
+	echoCancel: boolean,
+	/**
+	 *  The brain (voice/brain/): once downloaded, it hears and understands the sentences on the
+	 *  graphics card; off, or missing, the classic way answers.
+	 */
+	brain: boolean,
+};
+
+export type VoiceState = {
+	status: VoiceStatus,
+	missing: string | null,
+};
+
+/**  The microphone indicator follows this (the island, Réglages). */
+export type VoiceStateChanged = VoiceState;
+
+export type VoiceStatus = "off" | 
+/**  The models are loading (a few seconds). */
+"loading" | 
+/**  Always mode: the microphone is open, waiting for the wake word. */
+"waiting" | 
+/**  Push-to-talk mode, the shortcut not held: the microphone is closed. */
+"ready" | 
+/**
+ *  Called (the wake word heard, the shortcut held, or a sentence may still follow the
+ *  last one): the aura is lit, the command is being said.
+ */
+"hearing" | 
+/**  The sentence is being understood (the brain, or written down the classic way). */
+"thinking" | 
+/**
+ *  A sentence may still follow the last one without the name (follow.rs): the aura stays
+ *  lit, softer.
+ */
+"following" | 
+/**  A program in full screen is in front, or the screen is locked: the microphone is closed. */
+"paused" | 
+/**  « Arrête d'écouter »: closed until the voice is turned on again. */
+"muted" | 
+/**  A model is missing (`missing` says which): to download in Réglages. */
+"noModel" | 
+/**  No microphone, or Windows refuses it (its privacy settings). */
+"noMicrophone";
 
 /**  « Dépliage du widget ». */
 export type WidgetUnroll = "unroll" | "sober";

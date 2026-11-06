@@ -5,7 +5,9 @@
   },
   "opening": {
     "subtitle": "Lanceur d’applications",
-    "skip": "Animation d’ouverture : Échap, Entrée, Espace ou clic pour passer"
+    "skip": "Animation d’ouverture : Échap, Entrée, Espace ou clic pour passer",
+    "express": "Écran d’accueil : Entrée, Espace ou clic pour entrer, Échap pour masquer",
+    "enter": "Clique ou appuie sur Entrée"
   },
   "home": {
     "search": {
@@ -75,7 +77,16 @@
       "unfavorite": "Retirer des favoris",
       "remove": "Retirer de {app}…",
       "editButton": "Modifier {name}",
-      "moved": "« {name} » est maintenant dans {category}."
+      "moved": "« {name} » est maintenant dans {category}.",
+      "moveTo": "Déplacer vers {category}",
+      "moveMenu": "Déplacer vers",
+      "rename": "Renommer",
+      "renameField": "Nouveau nom de {name}",
+      "order": "Place dans la catégorie",
+      "forward": "Avancer",
+      "backward": "Reculer",
+      "keyForward": "Alt + →",
+      "keyBackward": "Alt + ←"
     },
     "settings": {
       "open": "Réglages"
@@ -87,11 +98,17 @@
       "appsOne": "1 app",
       "appsMany": "{count} apps",
       "appsNone": "Aucune app",
-      "list": "Catégories"
+      "list": "Catégories",
+      "scenes": "Scènes",
+      "allScenes": "Toutes les scènes"
     },
     "allCategories": "Toutes les catégories",
     "artDrop": {
       "refused": "Cette image ne peut pas servir d’affiche : il faut un fichier JPEG, PNG ou WebP de 16 Mo au plus."
+    },
+    "launchIntro": {
+      "label": "Lancement de {name}",
+      "skip": "Échap ou clic · passer"
     },
     "launchFail": {
       "title": "{name} ne s’est pas lancé.",
@@ -115,7 +132,9 @@
     "elevationRequired": "Cette application demande les droits administrateur. Marquez-la « exécuter en administrateur » pour la lancer.",
     "elevationCancelled": "Lancement annulé : la demande d’autorisation administrateur a été refusée.",
     "launchFailed": "Cette application n’a pas pu être lancée.",
-    "hotkeyConflict": "Ce raccourci est déjà utilisé par une autre application. Choisissez-en un autre."
+    "hotkeyConflict": "Ce raccourci est déjà utilisé par une autre application. Choisissez-en un autre.",
+    "updateFailed": "La mise à jour n'a pas pu être vérifiée ou installée. Vérifiez la connexion, puis réessayez.",
+    "downloadFailed": "Le modèle n'a pas pu être téléchargé, ou il ne correspond pas à son empreinte. Vérifiez la connexion, puis réessayez."
   },
   "addApps": {
     "tabsLabel": "Façon d’ajouter",
@@ -150,12 +169,35 @@
       "startmenu": "Menu Démarrer · {count}",
       "sourceSteam": "Steam",
       "sourceEpic": "Epic",
-      "sourceStartmenu": "Menu Démarrer"
+      "sourceStartmenu": "Menu Démarrer",
+      "sourceDeep": "Scan avancé",
+      "deepButton": "Scan avancé",
+      "deepTitle": "Scan avancé de ton PC",
+      "deepText": "{app} va parcourir ton Bureau, le haut de chaque disque et les dossiers de programmes et de jeux pour trouver les apps que le menu Démarrer ne connaît pas, et un logo plus net pour celles dont l’icône est floue. Il lit seulement : rien n’est modifié, rien n’est envoyé. Ça prend quelques secondes.",
+      "deepGo": "Lancer le scan avancé",
+      "deepCancel": "Pas maintenant",
+      "deepRunning": "Fouille de ton PC…",
+      "deepCount": "{folders} dossiers parcourus · {found} apps trouvées",
+      "deepLogos": "Recherche des logos…",
+      "deepStop": "Arrêter",
+      "search": "Chercher une app",
+      "viewLabel": "Quelles apps montrer",
+      "viewNew": "Nouvelles · {count}",
+      "viewAdded": "Déjà ajoutées · {count}",
+      "viewIgnored": "Ignorées · {count}",
+      "launchers": "Lanceurs et outils",
+      "picked": "Les apps sûres sont déjà cochées : vérifie, puis « Ajouter ».",
+      "emptyNew": "Tout est déjà dans {app}. Glisse un .exe ou un lien pour en ajouter d’autres.",
+      "emptySearch": "Aucune app ne correspond à « {query} »."
     },
     "row": {
       "pick": "Choisir {name}",
       "category": "Catégorie de {name}",
-      "name": "Nom de {name}"
+      "name": "Nom de {name}",
+      "ignore": "Ignorer {name} : il ne sera plus proposé",
+      "unignore": "Proposer de nouveau {name}",
+      "ignoreShort": "Ignorer",
+      "unignoreShort": "Réafficher"
     },
     "drop": {
       "zone": "Glisse ici un .exe, un raccourci ou un lien",
@@ -229,10 +271,12 @@
     },
     "look": {
       "title": "Apparence",
-      "help": "Appliqué tout de suite. Glissez une image (JPEG, PNG ou WebP) sur une case.",
+      "help": "Appliqué tout de suite. Glissez une image (JPEG, PNG ou WebP) sur une case. Avec un personnage détouré (PNG transparent) à gauche ou à droite, la carte devient spéciale.",
       "poster": "Affiche",
       "hero": "Fond",
       "logo": "Logo",
+      "charLeft": "Personnage gauche",
+      "charRight": "Personnage droit",
       "none": "Aucune",
       "fromSteam": "Steam",
       "fromYou": "vous",
@@ -244,7 +288,55 @@
       "colorA": "Couleur A",
       "colorB": "Couleur B",
       "noPalette": "Pas encore de couleurs pour cette app : ajoutez une image.",
-      "preview": "Aperçu des couleurs"
+      "preview": "Aperçu des couleurs",
+      "mood": {
+        "title": "Ambiance du jeu",
+        "help": "Animée derrière les cartes quand cette app est sélectionnée. Visible avec « Couleurs du jeu » activé, en qualité Équilibré ou plus.",
+        "off": "« Couleurs du jeu » est désactivé dans Réglages › Visuel : l’ambiance ne s’affiche pas.",
+        "choices": "Ambiance",
+        "packs": {
+          "aucune": "Aucune",
+          "braises": "Braises",
+          "etoiles": "Étoiles",
+          "brume": "Brume",
+          "runes": "Runes",
+          "pluie": "Pluie"
+        },
+        "custom": "Sur mesure",
+        "mine": "Importées",
+        "density": "Densité",
+        "speed": "Vitesse",
+        "drop": "Déposez un fichier .hubmood sur la fenêtre pour ajouter une ambiance.",
+        "imported": "Ambiance « {name} » ajoutée.",
+        "importFailed": "{file} n’est pas une ambiance valide.",
+        "export": "Exporter",
+        "exported": "Ambiance exportée dans le dossier « exports ».",
+        "exportFailed": "L’export a échoué.",
+        "remove": "Supprimer",
+        "removed": "Ambiance supprimée."
+      }
+    }
+  },
+  "island": {
+    "label": "Île {app} : clique pour l’ouvrir, tire-la vers le bas pour la décrocher, fais-la glisser le long du bord jusqu’à un coin, pose-la en haut d’un écran pour l’y raccrocher",
+    "openLabel": "Île {app} ouverte",
+    "toImmersive": "Passer en immersif",
+    "update": "Mise à jour {version} prête",
+    "front": "Mettre {name} au premier plan",
+    "search": {
+      "label": "Rechercher une app ou une scène",
+      "placeholder": "Rechercher une app ou une scène…",
+      "none": "Rien trouvé.",
+      "scene": "Scène"
+    },
+    "music": {
+      "play": "Lecture",
+      "pause": "Pause",
+      "previous": "Morceau précédent",
+      "next": "Morceau suivant",
+      "none": "Rien en lecture pour l’instant.",
+      "stage": "Mode musique",
+      "stageLeave": "Quitter le mode musique"
     }
   },
   "widget": {
@@ -270,5 +362,125 @@
     "noneInCategory": "Aucune application dans cette catégorie.",
     "launch": "Lancer {name}",
     "toWindow": "Ouvrir en fenêtre"
+  },
+  "update": {
+    "title": "Mise à jour disponible",
+    "from": "Kayro {version}",
+    "to": "Kayro {version}",
+    "since": "Tu es en {version}. Tes réglages, tes apps et tes images restent.",
+    "restart": "Kayro va se fermer, s'installer et redémarrer tout seul. Tes réglages, tes apps et tes images restent.",
+    "install": "Installer et redémarrer",
+    "later": "Plus tard",
+    "downloading": "Téléchargement et vérification de la signature…",
+    "notice": "Kayro {version} est disponible.",
+    "see": "Voir",
+    "checking": "Recherche en cours…",
+    "upToDate": "Kayro est à jour (version {version}).",
+    "found": "La version {version} est disponible."
+  },
+  "whatsNew": {
+    "eyebrow": "Nouveautés",
+    "title": "Kayro {version}",
+    "go": "C’est parti"
+  },
+  "voice": {
+    "button": {
+      "off": "Micro",
+      "loading": "Micro : chargement des modèles…",
+      "waiting": "Micro à l’écoute de votre mot d’éveil (cliquer pour le couper)",
+      "ready": "Micro prêt : tenez le raccourci pour parler (cliquer pour le couper)",
+      "hearing": "Micro : je vous écoute…",
+      "thinking": "Micro : je comprends…",
+      "following": "Micro : je reste à l’écoute, continuez sans mon nom",
+      "paused": "Micro en pause : un jeu en plein écran, ou l’écran verrouillé",
+      "muted": "Micro coupé (cliquer pour reprendre)",
+      "noModel": "Micro : il manque un modèle (Réglages › Assistant vocal)",
+      "noMicrophone": "Aucun micro, ou Windows le refuse"
+    },
+    "heard": {
+      "launched": "« {said} » : {name} se lance.",
+      "launchFailed": "« {said} » : {name} ne s’est pas lancé.",
+      "sceneStarted": "« {said} » : la scène {name} démarre.",
+      "search": "« {said} » : la recherche s’ouvre.",
+      "stoppedListening": "Micro coupé. Touchez le bouton micro pour reprendre.",
+      "notUnderstood": "Pas compris : « {said} ». Dites par exemple « lance Steam ».",
+      "closed": "« {said} » : {name} se ferme.",
+      "notRunning": "« {said} » : {name} n’est pas ouvert.",
+      "music": {
+        "play": "Musique.",
+        "pause": "Pause.",
+        "next": "Musique suivante.",
+        "previous": "Musique précédente.",
+        "louder": "Plus fort.",
+        "quieter": "Moins fort.",
+        "mute": "Son coupé (ou remis).",
+        "shuffleOn": "Lecture aléatoire.",
+        "shuffleOff": "Lecture dans l’ordre.",
+        "repeatOn": "Répétition activée.",
+        "repeatOff": "Répétition désactivée."
+      },
+      "musicMode": {
+        "on": "Mode musique allumé.",
+        "off": "Mode musique éteint."
+      },
+      "hands": {
+        "on": "Mains allumées : montrez votre main.",
+        "off": "Mains coupées."
+      },
+      "handsNone": "Les mains ne sont pas installées : Réglages › Mains.",
+      "showKayro": "« {said} »",
+      "hideKayro": "« {said} »",
+      "musicOpened": "« {said} » : {name} s’ouvre dans Spotify.",
+      "window": {
+        "theWindow": "La fenêtre",
+        "plein": "{name} passe en plein écran.",
+        "reduire": "{name} est réduite.",
+        "restaurer": "{name} est restaurée.",
+        "devant": "{name} passe devant.",
+        "gauche": "{name} va à gauche.",
+        "droite": "{name} va à droite.",
+        "ecran": "{name} change d’écran.",
+        "fermer": "{name} se ferme."
+      },
+      "windowNone": "Je ne trouve pas cette fenêtre, ou ce n’est pas une de vos apps.",
+      "volumeTo": "Son à {level} %.",
+      "appVolume": {
+        "louder": "{name} plus fort.",
+        "quieter": "{name} moins fort.",
+        "mute": "{name} en sourdine.",
+        "unmute": "{name} de nouveau audible."
+      },
+      "appVolumeNone": "{name} ne joue aucun son en ce moment.",
+      "mic": {
+        "on": "Micro remis.",
+        "off": "Micro coupé : la voix ne vous entend plus. Le bouton micro de Kayro le remet."
+      },
+      "micNone": "Le micro n’a pas répondu.",
+      "theme": "Thème {name}.",
+      "themeNone": "Je ne connais pas ce thème.",
+      "kysland": {
+        "on": "Kysland reste à l’écran.",
+        "off": "Kysland seulement quand Kayro est caché."
+      },
+      "nowPlaying": "Vous écoutez {title}, de {artist}.",
+      "nowPlayingNone": "Rien ne joue en ce moment.",
+      "lock": "Session verrouillée.",
+      "desktop": "Bureau affiché.",
+      "files": "Explorateur de fichiers ouvert.",
+      "timer": "Minuteur de {minutes} min lancé.",
+      "timerDone": "Votre minuteur de {minutes} min est terminé.",
+      "time": "Il est {text}.",
+      "screenshot": "Capture d’écran prise (Images › Captures).",
+      "webSearch": "Recherche « {query} » dans le navigateur.",
+      "dictated": "Texte écrit.",
+      "dictatedNone": "Pas écrit : aucune zone de texte devant, ou une console.",
+      "unknown": "Je ne sais pas encore faire ça."
+    },
+    "doubt": {
+      "title": "Vous vouliez dire… ?",
+      "help": "« {said} » ressemble à plusieurs noms.",
+      "scene": "Scène · {name}",
+      "cancel": "Aucun"
+    }
   }
 }

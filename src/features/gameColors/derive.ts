@@ -9,16 +9,8 @@ import type {
   Palette,
   PaletteColor,
 } from "../../ipc/bindings";
-import {
-  chromaOf,
-  hexToLab,
-  hexToRgb,
-  hueGap,
-  hueOf,
-  labToHex,
-  mixLab,
-  type Lab,
-} from "../../lib/oklab";
+import { chromaOf, hexToLab, hexToRgb, hueGap, hueOf, labToHex, type Lab } from "../../lib/oklab";
+import { GREY_C, hueFamilies, SECOND_MIN } from "./palettePick";
 
 /**
  * How a game's palette becomes Kayro's colours (step 14). The core gives raw colours (OKLab, with
@@ -41,7 +33,11 @@ export const DEFAULT_CHOICE: ColorChoice = {
   pick: "dominant",
 };
 
-const MIX: Record<ColorChoice["intensity"], number> = { soft: 0.35, normal: 0.6, strong: 1 };
+/**
+ * Share of the game's colour (review 2026-10-29: 0.35 / 0.6 → 0.55 / 0.85, mixed round the hue
+ * circle: the game leads, the theme only softens it).
+ */
+const MIX: Record<ColorChoice["intensity"], number> = { soft: 0.55, normal: 0.85, strong: 1 };
 
 /** V6 a = the lightness and chroma of the six themes' A and B. */
 const BOUNDS: Record<ColorChoice["character"], { lMin: number; lMax: number; cMax: number }> = {
@@ -50,9 +46,19 @@ const BOUNDS: Record<ColorChoice["character"], { lMin: number; lMax: number; cMa
   faithful: { lMin: 0.62, lMax: 0.95, cMax: 0.37 },
 };
 
-/** The night of the immersive mode, top → bottom (lightness), and its largest chroma. */
+/** The game's night at full share, top → bottom (lightness), and its largest chroma. */
 const NIGHT_L = [0.22, 0.155, 0.09] as const;
-const NIGHT_C = 0.045;
+const NIGHT_C = 0.055;
+/**
+ * Review 2026-10-29: the night takes the game's hue too, at this share (the user saw no change
+ * from one game to the next with the night left alone). The immersive mode (full share) was
+ * removed on 30/10: « Stylisé » keeps this one.
+ */
+const LIGHT_NIGHT = 0.55;
+/** The dominant colour speaks for the image only above this chroma (a night-blue sky does not). */
+const DOMINANT_C = 0.05;
+/** A colour must cover this share of the image to speak for it. */
+const MIN_WEIGHT = 0.06;
 
 /** The palettes a game's colours come from: its main image, and its other one if any. */
 export interface GameSource {
@@ -60,7 +66,7 @@ export interface GameSource {
   other: Palette | null;
 }
 
-/** The game's colours: A and B (hex), and the immersive night (null in « Léger »). */
+/** The game's colours: A and B (hex), and the night (lighter-handed in « Léger »). */
 export interface GameColors {
   a: string;
   b: string;
@@ -78,6 +84,25 @@ function bounded(c: Lab, character: ColorChoice["character"]): Lab {
   return [L, C * Math.cos(h), C * Math.sin(h)];
 }
 
+/**
+ * Mixes two colours round the hue circle (review 2026-10-29): lightness and chroma in a line, the
+ * hue the short way round. A straight OKLab line between two far hues (the theme's peach, Apex's
+ * cyan) passes through grey: the user saw a grey hub on a blue game.
+ */
+export function mixLch(p: Lab, q: Lab, t: number): Lab {
+  const [cp, cq] = [chromaOf(p), chromaOf(q)];
+  let hp = hueOf(p);
+  let hq = hueOf(q);
+  if (cp < 0.01) hp = hq;
+  if (cq < 0.01) hq = hp;
+  let d = hq - hp;
+  if (d > Math.PI) d -= 2 * Math.PI;
+  if (d < -Math.PI) d += 2 * Math.PI;
+  const h = hp + d * t;
+  const C = cp + (cq - cp) * t;
+  return [p[0] + (q[0] - p[0]) * t, C * Math.cos(h), C * Math.sin(h)];
+}
+
 /** One colour of a palette: the accent, unless it is the dominant one (an image of one colour). */
 function accentOf(p: Palette | null): Lab | null {
   if (!p || p.accent === p.dominant) return null;
@@ -93,14 +118,47 @@ function vividOrder(p: Palette): Lab[] {
 }
 
 /**
- * A and B of a game (V5), raw. The user's rule (14/10): an image of one colour takes its accent
- * from the game's other image (poster or hero), else from the theme.
+ * The colour that speaks for an image (review 2026-10-29): its dominant one, unless that one is a
+ * grey or a near black (most posters: a dark sky behind the hero); then the most present colour
+ * that has a hue.
+ */
+export function characterOf(p: Palette): Lab | null {
+  const dom = p.colors[p.dominant];
+  if (dom && chromaOf(lab(dom)) >= DOMINANT_C) return lab(dom);
+  let best: Lab | null = null;
+  let score = 0;
+  for (const c of p.colors) {
+    const l = lab(c);
+    const s = Math.sqrt(c.weight ?? 0) * chromaOf(l);
+    if ((c.weight ?? 0) >= MIN_WEIGHT && chromaOf(l) >= GREY_C && s > score) {
+      best = l;
+      score = s;
+    }
+  }
+  return best ?? (dom ? lab(dom) : null);
+}
+
+/** B must not repeat A: the accent, else the most vivid colour of another hue (≥ 25°). */
+function apart(a: Lab, acc: Lab, p: Palette): Lab {
+  if (chromaOf(acc) < GREY_C || chromaOf(a) < GREY_C || hueGap(acc, a) >= 25) return acc;
+  return vividOrder(p).find((c) => chromaOf(c) >= GREY_C && hueGap(c, a) >= 25) ?? acc;
+}
+
+/**
+ * A and B of a game (V5), raw. « Dominante » (review 2026-10-29): the two strongest hue families of
+ * its poster and hero (`palettePick.ts`); a game without colour (a grey poster) falls back on the
+ * colour that speaks for its image. The user's rule (14/10) stays: an image of one colour takes its
+ * accent from the game's other image, else from the theme.
  */
 export function gamePair(source: GameSource, themeB: Lab, pick: ColorChoice["pick"]): [Lab, Lab] {
   const { main, other } = source;
-  const dom = main.colors[main.dominant];
-  const d = dom ? lab(dom) : themeB;
-  const acc = accentOf(main) ?? accentOf(other) ?? themeB;
+  const fams = hueFamilies([
+    { palette: main, weight: 1 },
+    ...(other ? [{ palette: other, weight: 0.5 }] : []),
+  ]);
+  const d = fams[0]?.colour ?? characterOf(main) ?? themeB;
+  const second = fams[1] && fams[1].score >= SECOND_MIN * fams[0]!.score ? fams[1].colour : null;
+  const acc = second ?? apart(d, accentOf(main) ?? accentOf(other) ?? themeB, main);
   if (pick === "theme") return [d, themeB];
   if (pick === "vivid") {
     const [first, ...rest] = vividOrder(main);
@@ -130,16 +188,15 @@ export function deriveGameColors(
   const [rawA, rawB] = chosen
     ? [hexToLab(chosen.a), hexToLab(chosen.b)]
     : gamePair(source!, tb, choice.pick);
-  const a = labToHex(mixLab(ta, bounded(rawA, choice.character), t));
-  const b = labToHex(mixLab(tb, bounded(rawB, choice.character), t));
-  if (mode !== "immersive") return { a, b, night: null };
-  // The night takes the hue of the dominant colour (or of A when the dominant one is grey).
-  const dom = chosen || !source ? undefined : source.main.colors[source.main.dominant];
-  const hueFrom = dom && chromaOf(lab(dom)) > 0.02 ? lab(dom) : rawA;
-  const C = Math.min(NIGHT_C, chromaOf(hueFrom));
-  const h = hueOf(hueFrom);
+  const a = labToHex(mixLch(ta, bounded(rawA, choice.character), t));
+  const b = labToHex(mixLch(tb, bounded(rawB, choice.character), t));
+  // The night takes A's hue (review 2026-10-29: was the dominant colour's, often a grey sky), at
+  // LIGHT_NIGHT of the full share (the immersive mode is gone since 30/10).
+  const C = Math.min(NIGHT_C, chromaOf(rawA));
+  const h = hueOf(rawA);
+  const share = t * LIGHT_NIGHT;
   const night = NIGHT_L.map((L, i) =>
-    labToHex(mixLab(hexToLab(theme.bg[i]!), [L, C * Math.cos(h), C * Math.sin(h)], t)),
+    labToHex(mixLch(hexToLab(theme.bg[i]!), [L, C * Math.cos(h), C * Math.sin(h)], share)),
   ) as [string, string, string];
   return { a, b, night };
 }
@@ -162,7 +219,7 @@ export function withGameColors(theme: Theme, c: GameColors): Theme {
 }
 
 export interface PaletteExtras {
-  /** Immersive mode: the game's hero picture, drawn by the engine (see `FxPalette.hero`). */
+  /** The special card's background (steps 16–17), drawn by the engine (see `FxPalette.hero`). */
   hero: FxPalette["hero"];
   /** How the engine goes from the previous palette (step 14). */
   passage: "tide" | "instant";

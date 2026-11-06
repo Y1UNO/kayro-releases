@@ -5,15 +5,22 @@ pub mod apps;
 pub mod atomic;
 pub mod dirstore;
 pub mod game_colors;
+pub mod hands;
 pub mod migrate;
+pub mod mood_store;
+pub mod moods;
 pub mod scene;
 pub mod scene_ops;
 pub mod schema;
 pub mod share;
+pub mod sounds;
 pub mod store;
+pub mod theme_file;
+pub mod themes;
 pub mod ui_state;
 pub mod validate;
 pub mod visual;
+pub mod voice;
 
 use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard};
@@ -39,7 +46,8 @@ pub struct ConfigState {
     slots: Mutex<SlotsFile>,
     scenes: Mutex<Vec<SceneFile>>,
     ui_state: Mutex<UiState>,
-    themes: Vec<ThemeFile>,
+    themes: Mutex<Vec<ThemeFile>>,
+    moods: Mutex<Vec<moods::MoodFile>>,
 }
 
 impl ConfigState {
@@ -52,10 +60,12 @@ impl ConfigState {
         let (ui_state, _) = store::load::<UiState>(&paths.ui_state());
         let scenes = dirstore::load_dir::<SceneFile>(&paths.scenes_dir());
         let themes = dirstore::load_dir::<ThemeFile>(&paths.themes_dir());
+        let moods = dirstore::load_dir_ext::<moods::MoodFile>(&paths.moods_dir(), "hubmood");
         tracing::info!(
             apps = apps.apps.len(),
             scenes = scenes.len(),
             themes = themes.len(),
+            moods = moods.len(),
             elapsed_us = started.elapsed().as_micros() as u64,
             "config loaded"
         );
@@ -66,7 +76,8 @@ impl ConfigState {
             slots: Mutex::new(slots),
             scenes: Mutex::new(scenes),
             ui_state: Mutex::new(ui_state),
-            themes,
+            themes: Mutex::new(themes),
+            moods: Mutex::new(moods),
         }
     }
 
@@ -166,6 +177,29 @@ impl ConfigState {
         Ok(app)
     }
 
+    /// Step 19b: the apps in a new order (the order of the cards). `ids` must be exactly the apps'
+    /// ids, each once: anything else is refused and nothing changes.
+    pub fn reorder_apps(&self, ids: &[String]) -> Result<AppsFile, AppError> {
+        let mut guard = lock(&self.apps);
+        let mut next = guard.clone();
+        let mut by_id: std::collections::HashMap<&str, &AppEntry> =
+            guard.apps.iter().map(|a| (a.id.as_str(), a)).collect();
+        let mut ordered = Vec::with_capacity(ids.len());
+        for id in ids {
+            let app = by_id
+                .remove(id.as_str())
+                .ok_or_else(|| AppError::validation("ids", "unknown or repeated app id"))?;
+            ordered.push(app.clone());
+        }
+        if !by_id.is_empty() {
+            return Err(AppError::validation("ids", "every app must be listed"));
+        }
+        next.apps = ordered;
+        store::save(&self.paths.apps(), &next)?;
+        *guard = next.clone();
+        Ok(next)
+    }
+
     pub fn remove_app(&self, id: &str) -> Result<(), AppError> {
         let mut guard = lock(&self.apps);
         let mut next = guard.clone();
@@ -235,10 +269,6 @@ impl ConfigState {
         }
         Ok(scene)
     }
-
-    pub fn themes(&self) -> &[ThemeFile] {
-        &self.themes
-    }
 }
 
 /// Validates `new` and appends it to `file` (not saved here).
@@ -303,6 +333,8 @@ fn unique_id(name: &str, apps: &AppsFile) -> String {
 mod scene_tests;
 #[cfg(test)]
 mod settings_r5_tests;
+#[cfg(test)]
+mod sounds_tests;
 #[cfg(test)]
 mod store_tests;
 #[cfg(test)]

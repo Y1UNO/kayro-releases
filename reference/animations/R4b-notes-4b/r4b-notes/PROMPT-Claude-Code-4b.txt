@@ -1,0 +1,27 @@
+/plan
+Contexte : projet Kayro (Hub) dans C:\HUB, branche step-12b-atelier-da, tag de départ da-r4a. Lis d'abord docs/DA-JOURNAL.md, puis reference/animations/ : les notes R4a (dont R4a-Mouvement-FINAL-Vivant-intelligent.txt) et les notes R4b-*.txt. Les planches de la ronde 4b sont sur la toile Claude Design (rangée « Tour 4b »).
+
+Mission : ronde 4b, en TROIS sous-étapes, avec un arrêt de validation visuelle à la fin de chacune. Fais un plan complet avant de coder et attends mon accord.
+
+4b-1 · Widget (3c) + éditeur chaîne de points + états
+- Widget qui se déplie : le verre se DÉROULE du haut vers le bas, élastique, et un peu sur les côtés : R4b-3c-Widget.txt (coque séparée du contenu, deux nouveaux ressorts vertical/horizontal en linear(), à ajouter aux tokens ; c'est la seule exception au niveau 2 dans le widget).
+- Éditeur : chaîne de points (ajout, retrait, réordonner, test de la chaîne) : R4b-3c-Editeur.txt.
+- États vides, erreur de lancement, nouvelle scène : R4b-Etats.txt.
+- Tout passe par src/design/motion/tokens.ts (niveau 2 : ressort liaison + cascade). Aucune valeur en dur. Niveau 3 interdit ici, SAUF le déroulé du widget décrit dans sa note.
+- Ajoute les réglages correspondants dans l'atelier (/dev/motion) quand c'est pertinent.
+
+4b-2 · Passages entre modes (immersif ↔ fenêtre ↔ widget)
+- R4b-Modes.txt. Durée « long » 540 ms. Fenêtre système jamais redimensionnée pendant l'animation si on peut l'éviter ; sinon redimensionner avant d'agrandir / après avoir rétréci. Dis-moi dans le plan ce qui est faisable avec Tauri 2 (clics qui traversent en mode widget, zones de capture).
+
+4b-3 · Ouverture transparente, variante C : chronologie de A, UNE seule pulsation (celle de base, 2,45 s) qui ouvre toute la page
+- R4b-Ouverture-Transparente.txt : section « DÉCISION », section VARIANTE C, et « côté technique ». A et B ne sont là que pour mémoire, ne pas les coder.
+- Fenêtre Tauri transparente plein écran, animation dans une seule couche. Repli sur l'ouverture opaque actuelle si la transparence échoue. Échap/clic = saute à la fin. Démarrage silencieux et mode économie = pas d'ouverture (opening_due inchangé). « Réduire les animations » = état final direct.
+- C'est la sous-étape la plus risquée : fais-en un plan séparé, avec les risques Windows 11 / WebView2 listés, et arrête-toi après le plan de 4b-3 pour mon accord.
+
+Règles :
+- Pas de commit tant que je ne l'ai pas demandé. Quand je le fais, ce sera : « Commit OK : « … », tag da-r4b-1 (puis -2, -3), sur la branche step-12b-atelier-da, sans fusion dans main », avec exclusions reference/, src/design/presets/history/ et SceneDock.module.css (fins de ligne seulement).
+- Aucune IA dans l'application. Ne me demande jamais d'identifiants.
+- Mesures : seulement si aucun jeu n'est lancé (vérifie avec Get-Process) et que je ne touche pas au PC ; sinon note-les « à mesurer » dans docs/DA-JOURNAL.md. Les mesures complètes sont reportées à la vérification globale (étape 13, en production, jeux fermés), cases à ajouter : repos fenêtre, repos widget, pendant un passage de mode.
+- Budget p95 ≤ 5,4 ms (Élevée et Éco) inchangé.
+- Mets à jour docs/DA-JOURNAL.md à chaque sous-étape pour qu'il reste autonome.
+- Arrête-toi à la fin de chaque sous-étape avec : ce qui est fait, ce que je dois regarder (commande exacte pour lancer), ce qui reste.

@@ -42,6 +42,7 @@ type Ask = null | { kind: "leave" } | { kind: "slot"; slot: string; steps: numbe
 export function SceneEditor({ sceneId, seed, onBack }: Props) {
   const apps = useHub((s) => s.apps);
   const settingsHotkey = useHub((s) => s.settings?.hotkey);
+  const searchHotkey = useHub((s) => s.settings?.searchHotkey);
   const scenes = useScenes((s) => s.scenes);
   const run = useScenes((s) => s.run);
   const registrations = useDesktop((s) => s.hotkeys?.scenes);
@@ -176,6 +177,7 @@ export function SceneEditor({ sceneId, seed, onBack }: Props) {
                 taken={[
                   ...scenes.filter((s) => s.id !== savedId).map((s) => s.hotkey),
                   settingsHotkey,
+                  searchHotkey,
                 ]}
                 onChange={(hotkey) => dispatch({ type: "hotkey", hotkey })}
               />

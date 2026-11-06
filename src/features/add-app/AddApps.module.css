@@ -8,6 +8,20 @@
   min-height: 0;
 }
 
+/* Edit dialog (30/10): Apparence then the form are taller than the panel; the body scrolls (the
+   wheel, the keyboard, the scroll bar) and its sections keep their height. */
+.editBody {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+  padding-right: var(--space-2);
+}
+
+.editBody > * {
+  flex-shrink: 0;
+}
+
 .panel {
   display: flex;
   flex-direction: column;

@@ -1,4 +1,5 @@
 import type { Quality } from "../design";
+import type { FxMood } from "./mood/types";
 
 /**
  * Colours of the atmosphere. By default the theme's (see `themePalette`); step 14 feeds the
@@ -20,8 +21,9 @@ export interface FxPalette {
   /** Glass tint of the cards, rgb (step 14; the theme's `card`, which is A in the 6 themes). */
   card?: readonly [number, number, number];
   /**
-   * Immersive mode (step 14): the game's hero picture (`kayro-art` URL); `blurred` when the picture
-   * is already blurred (Steam's), else the engine blurs it. Null or absent = none.
+   * Step 14: the game's hero picture (`kayro-art` URL); `blurred` when the picture
+   * is already blurred (Steam's), else the engine blurs it. Null or absent = none. Since 30/10 (no
+   * immersive mode) only the special card's background (steps 16–17).
    */
   hero?: { url: string; blurred: boolean } | null;
   /**
@@ -30,6 +32,17 @@ export interface FxPalette {
    * changes them at once (a theme change already plays its own wave, reduced motion: no movement).
    */
   passage?: "tide" | "fade" | "instant";
+  /**
+   * Steps 16–17: the shown game's ambience (`.hubmood`) and its dosage, drawn with the palette's
+   * colours around the focus target; null or absent = none. A new one fades in over the old.
+   */
+  mood?: FxMood | null;
+  /**
+   * Steps 16–17, special card: the user's cut-out characters (left / right of the shown card) and
+   * the game's logo, `kayro-art` URLs, drawn behind the glass, tinted by the palette, fading into
+   * the mist; the background is `hero`. Null or absent = an ordinary card.
+   */
+  special?: { left: string | null; right: string | null; logo: string | null } | null;
 }
 
 /**
@@ -62,8 +75,10 @@ export interface FxLayer {
   /** Strength 0.3–1 (setting `atmosphereIntensity`). */
   setIntensity(intensity: number): void;
   /**
-   * `null`: nothing selected (empty screen), the light fades out. No layer uses it since the art
-   * direction freeze (the step 8 beam is gone): an extension point for the game ambiences (16).
+   * What the light falls on: the shown app's card, kept current (step 16b: selection, resize).
+   * The tide of a palette change starts there (step 14); the game ambiences (16c) and the special
+   * cards (17a) place their light and layers around it. `null`: nothing shown (the fan, another
+   * screen): what hangs on it fades out. Called before `setPalette` when both change.
    */
   setFocusTarget(target: FxTarget | null): void;
   setParams(params: FxParams): void;

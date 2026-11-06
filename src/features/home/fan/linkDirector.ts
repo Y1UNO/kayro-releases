@@ -5,7 +5,9 @@ import { setStageCue, type GlassPose, type StageFrame } from "../../../fx/gpu/cu
 import { frameLoop } from "../../../fx/loop";
 import type { FanMotion, HoverConfig } from "./fanFloat";
 import { put, renderFan, type FanCardEls } from "./fanRender";
-import { LinkElements, type LinkEls } from "./linkEls";
+import { centre, LinkElements, type LinkEls } from "./linkEls";
+import { holdGameColors } from "../../gameColors/store";
+import { playSound, stopSound } from "../../../sound";
 import {
   deckOrder,
   restValues,
@@ -28,11 +30,6 @@ interface Slot {
 }
 
 const PROMOTE = "transform, opacity";
-/** Centre of an element in the viewport (CSS px). */
-function centre(el: HTMLElement | null): { x: number; y: number } {
-  const r = el?.getBoundingClientRect();
-  return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: 0, y: 0 };
-}
 
 /** Cadence of the fan's floating and hover (decision round 3: 60 images/s, 30 in Eco). */
 const FLOAT_FPS = 60;
@@ -165,6 +162,21 @@ export class LinkDirector {
     if (phase === "spread") this.release();
   }
 
+  /**
+   * Step 17b, on the rhythm of the sequence: a tab change whirls (its run stretched to end at the
+   * impact) then lands at the squash; the fan unfolds (« link ») or folds back. A sequence that
+   * replaces another cuts its sounds.
+   */
+  private sound(kind: SequenceKind, impact: number, reduced: boolean): void {
+    stopSound("tab");
+    stopSound("land");
+    if (kind === "link") return playSound("link");
+    if (kind === "back") return playSound("linkBack");
+    if (reduced || impact <= 0) return playSound("land");
+    playSound("tab", { timeScale: Math.max(0.5, impact / 1000 / 0.7) });
+    playSound("land", { delay: impact / 1000 });
+  }
+
   /** Plays a sequence from the picture of now: true at its end, false if replaced. */
   async play(
     kind: SequenceKind,
@@ -173,6 +185,9 @@ export class LinkDirector {
     opts: { eco: boolean; reduced: boolean },
   ): Promise<boolean> {
     const seq = this.prepare(kind, cat, shuf);
+    // 30/10: a tab change lands with the selected card's impact; its colours change then.
+    if (seq.impact > 0 && !opts.reduced) holdGameColors(performance.now() + seq.impact);
+    this.sound(kind, seq.impact, opts.reduced);
     const out: Values = new Map();
     const done = await this.choreo.play(
       seq.duration,
@@ -281,7 +296,7 @@ export class LinkDirector {
     const v = on ? PROMOTE : "";
     for (const s of this.slots) s.slot.style.willChange = v;
     const els = this.els;
-    for (const el of [els?.ask, els?.title, els?.back, els?.bottom, els?.body]) {
+    for (const el of [els?.ask, els?.title, els?.back, els?.bottom, els?.scenes, els?.body]) {
       if (el) el.style.willChange = v;
     }
     if (els?.stage) {
@@ -346,7 +361,9 @@ export class LinkDirector {
       const rot = g(`a${s.k}.rot`);
       const sc = g(`a${s.k}.sc`, s.s);
       const o = g(`a${s.k}.o`, 1);
-      const z = spread ? 10 - Math.abs(s.k - 2) : 10 + deckOrder(s.k, this.ctx.shuf);
+      const z = spread
+        ? 10 - Math.abs(s.k - 2)
+        : 10 + Math.round(g(`a${s.k}.z`, deckOrder(s.k, this.ctx.shuf)));
       put(
         s.slot,
         "transform",
@@ -375,6 +392,8 @@ export class LinkDirector {
       if (y !== undefined) put(el, "transform", `translateY(${y.toFixed(2)}px)`);
     };
     set(els.ask, g("ask.o"), g("ask.y"));
+    // The scenes under the fan leave downwards as the title leaves upwards.
+    set(els.scenes, g("ask.o"), -g("ask.y"));
     set(els.title, g("cat.o", 1), g("cat.y"));
     set(els.back, g("back.o", 1));
     set(els.bottom, g("tabs.o", 1));

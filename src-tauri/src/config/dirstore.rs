@@ -11,13 +11,18 @@ const MAX_FILES: usize = 500;
 const MAX_FILE_BYTES: u64 = 1024 * 1024;
 
 pub fn load_dir<T: StrictFile>(dir: &Path) -> Vec<T> {
+    load_dir_ext(dir, "json")
+}
+
+/// Same, for files ending in `.<ext>` (`.hubmood`, steps 16–17).
+pub fn load_dir_ext<T: StrictFile>(dir: &Path, ext: &str) -> Vec<T> {
     let Ok(entries) = fs::read_dir(dir) else {
         return Vec::new();
     };
     let mut files: Vec<_> = entries
         .flatten()
         .map(|e| e.path())
-        .filter(|p| p.is_file() && p.extension().is_some_and(|e| e == "json"))
+        .filter(|p| p.is_file() && p.extension().is_some_and(|e| e == ext))
         .collect();
     files.sort();
     let mut out = Vec::new();

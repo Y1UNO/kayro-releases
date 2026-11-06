@@ -36,6 +36,7 @@ export const VISUAL_DEFAULTS = {
   themeTransition: "wave",
   widgetUnroll: "unroll",
   widgetSpring: "normal",
+  islandPassage: "force",
   cardHover: "full",
   bokeh: true,
   particles: true,
@@ -47,7 +48,6 @@ export const VISUAL_DEFAULTS = {
   colorPick: "dominant",
   colorPassage: "tide",
   colorTrigger: "select",
-  colorHero: true,
   colorFromIcon: true,
 } as const satisfies SettingsPatch;
 
@@ -65,3 +65,30 @@ export function visualSnapshot(s: Settings): SettingsPatch {
 export function isVisualDefault(s: Settings): boolean {
   return VISUAL_KEYS.every((k) => s[k] === VISUAL_DEFAULTS[k]);
 }
+
+/**
+ * Step 17b, Réglages › Sons: the defaults (same values as `Settings::default`, schema.rs).
+ * Crystalline « Premium » style, low volume, every family on.
+ */
+export const SOUND_DEFAULTS = {
+  soundsOn: true,
+  soundPack: "premium",
+  soundVolume: 0.4,
+  soundInterface: true,
+  soundTransitions: true,
+  soundLaunch: true,
+} as const satisfies SettingsPatch;
+
+/**
+ * What the installer asks (`Settings::default`): no update check unless the user allows it
+ * (step 18b); started with Windows, no home screen unless asked (step 19).
+ */
+export const UPDATE_DEFAULTS = {
+  updateAuto: false,
+  startupHome: false,
+  startupOpen: "intro",
+  startupAfter: "immersive",
+} as const satisfies SettingsPatch;
+
+/** Step 19b: no detected app ignored (`Settings::default`). */
+export const DETECT_DEFAULTS = { ignoredDetections: [] as string[] } satisfies SettingsPatch;

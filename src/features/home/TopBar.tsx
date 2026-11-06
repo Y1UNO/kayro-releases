@@ -1,31 +1,30 @@
 import { useRef, useState } from "react";
-import { FEATURES } from "../../app/features";
 import {
   ChevronLeftIcon,
   DisplayModeIcon,
-  HandIcon,
   IconButton,
-  MicIcon,
   Pill,
   PlusIcon,
   SearchIcon,
   SettingsIcon,
 } from "../../design";
 import { t } from "../../i18n";
+import { VoiceButton } from "../voice/VoiceButton";
+import { HandsButton } from "../hands/HandsButton";
 import type { DisplayMode } from "../../ipc/bindings";
-import { hubStore, useHub } from "../../store";
+import { chooseDisplayMode, useDisplayMode } from "../opening/expressMode";
 import { PopMenu } from "./PopMenu";
 import { TopBarShell } from "./TopBarShell";
 import styles from "./TopBar.module.css";
 
-const MODES: readonly DisplayMode[] = ["immersive", "window", "widget"];
+const MODES: readonly DisplayMode[] = ["immersive", "window"];
 
 /**
  * The display mode (round 5, proposal 6): a rare action, one round button that opens a small menu
  * (Immersif · Fenêtre · Widget), instead of three segments in the middle of the bar.
  */
 function ModeButton() {
-  const mode = useHub((s) => s.settings?.displayMode ?? "immersive");
+  const mode = useDisplayMode();
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   // The press that closes the menu (a click outside it) must not open it again.
   const wasOpen = useRef(false);
@@ -57,7 +56,7 @@ function ModeButton() {
             id: m,
             label: t(`home.modes.${m}`),
             checked: m === mode,
-            onSelect: () => void hubStore.getState().setSettings({ displayMode: m }),
+            onSelect: () => void chooseDisplayMode(m),
           }))}
         />
       )}
@@ -126,16 +125,8 @@ export function TopBar({
           <IconButton label={t("home.settings.open")} size="sm" glass onClick={onSettings}>
             <SettingsIcon />
           </IconButton>
-          {FEATURES.voice && (
-            <IconButton label={t("home.voice")} size="sm" glass>
-              <MicIcon />
-            </IconButton>
-          )}
-          {FEATURES.hands && (
-            <IconButton label={t("home.hands")} size="sm" glass>
-              <HandIcon />
-            </IconButton>
-          )}
+          <VoiceButton size="sm" />
+          <HandsButton size="sm" />
         </>
       }
     />

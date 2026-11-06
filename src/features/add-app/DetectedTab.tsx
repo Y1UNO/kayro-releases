@@ -1,23 +1,48 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Chip, UploadIcon } from "../../design";
 import { t } from "../../i18n";
-import type { MessageKey } from "../../i18n";
-import type { SourceKind } from "../../ipc/bindings";
 import { detect } from "../../ipc/commands";
-import { itemFromDetected, type ItemList } from "./items";
-import { ItemPanel } from "./ItemPanel";
+import { hubStore } from "../../store";
+import { CATEGORY_IDS, CATEGORY_LABELS } from "../home/categories";
+import { normalize } from "../home/search";
+import { itemFromDetected, picksByDefault, type Item, type ItemList } from "./items";
+import { DeepScan } from "./DeepScan";
+import { ItemPanel, type ItemGroup } from "./ItemPanel";
 import type { FileDrop } from "./useFileDrop";
 import styles from "./AddApps.module.css";
+import extra from "./Detected.module.css";
 
 type Status = "scanning" | "done" | "failed";
-type Filter = "all" | SourceKind;
+/** Step 19b: the new apps (default), the ones already added, the ignored ones. */
+type View = "new" | "added" | "ignored";
 
-const SOURCE_ORDER: readonly SourceKind[] = ["steam", "epic", "startmenu"];
-const FILTER_LABELS: Record<SourceKind, MessageKey> = {
-  steam: "addApps.detected.steam",
-  epic: "addApps.detected.epic",
-  startmenu: "addApps.detected.startmenu",
-};
+function viewOf(i: Item): View {
+  return i.alreadyAdded ? "added" : i.ignored ? "ignored" : "new";
+}
+
+/** By category in the home screen's order, stores and launchers last and folded. */
+export function groupItems(items: readonly Item[]): ItemGroup[] {
+  const groups: ItemGroup[] = CATEGORY_IDS.map((id) => ({
+    key: id,
+    label: t(CATEGORY_LABELS[id]),
+    items: items.filter((i) => !i.launcher && i.category === id),
+  }));
+  groups.push({
+    key: "launchers",
+    label: t("addApps.detected.launchers"),
+    items: items.filter((i) => i.launcher),
+    folded: true,
+  });
+  return groups.filter((g) => g.items.length > 0);
+}
+
+/** « Ignorer » is kept in the settings: the next scans mark the app as ignored. */
+function rememberIgnored(id: string, ignored: boolean) {
+  const { settings, setSettings } = hubStore.getState();
+  const current = settings?.ignoredDetections ?? [];
+  const next = ignored ? [...new Set([...current, id])] : current.filter((x) => x !== id);
+  void setSettings({ ignoredDetections: next });
+}
 
 /**
  * Runs the scan when the dialog opens (never on the interface thread: the core does the work).
@@ -44,9 +69,10 @@ function useScan(list: ItemList) {
         return;
       }
       if (result.value.cancelled && attempt === 0) continue;
-      replaceAll(
-        result.value.sources.flatMap((s) => s.apps.map((app) => itemFromDetected(app, s.source))),
+      const items = result.value.sources.flatMap((s) =>
+        s.apps.map((app) => itemFromDetected(app, s.source)),
       );
+      replaceAll(items, picksByDefault(items));
       setStatus("done");
       return;
     }
@@ -73,20 +99,29 @@ interface Props {
   onCancel: () => void;
 }
 
-/** Apps found on this PC (Steam, Epic, Start Menu): tick the ones to add. */
+/**
+ * Apps found on this PC (Steam, Epic, Start Menu), step 19b: the new ones by category with their
+ * logo, the sure ones already ticked, a search, stores and launchers apart, « Ignorer » remembered.
+ */
 export function DetectedTab({ list, drop, onAdded, onCancel }: Props) {
   const { status, rescan } = useScan(list);
-  const [filter, setFilter] = useState<Filter>("all");
+  const [view, setView] = useState<View>("new");
+  const [query, setQuery] = useState("");
+  /** Step 19c: « Scan avancé » open (its explanation, then its bar). */
+  const [deep, setDeep] = useState(false);
 
   const counts = useMemo(() => {
-    const by: Record<SourceKind, number> = { steam: 0, epic: 0, startmenu: 0 };
-    for (const item of list.items) if (item.origin !== "drop") by[item.origin] += 1;
+    const by: Record<View, number> = { new: 0, added: 0, ignored: 0 };
+    for (const item of list.items) by[viewOf(item)] += 1;
     return by;
   }, [list.items]);
-  const visible = useMemo(
-    () => (filter === "all" ? list.items : list.items.filter((i) => i.origin === filter)),
-    [list.items, filter],
-  );
+  const visible = useMemo(() => {
+    const q = normalize(query.trim());
+    return list.items.filter(
+      (i) => viewOf(i) === view && (!q || normalize(i.name).includes(q)),
+    );
+  }, [list.items, view, query]);
+  const groups = useMemo(() => groupItems(visible), [visible]);
 
   if (status === "scanning") {
     return (
@@ -104,32 +139,80 @@ export function DetectedTab({ list, drop, onAdded, onCancel }: Props) {
     );
   }
 
-  const filters = (
-    <div className={styles.filters} role="group" aria-label={t("addApps.detected.filterLabel")}>
-      <Chip className={styles.chip} selected={filter === "all"} onClick={() => setFilter("all")}>
-        {t("addApps.detected.all", { count: list.items.length })}
+  const ignore = (key: string, ignored: boolean) => {
+    list.setIgnored(key, ignored);
+    rememberIgnored(key, ignored);
+  };
+
+  const header = (
+    <div className={extra.detectBar}>
+      <input
+        className={`${styles.input} ${extra.search}`}
+        type="search"
+        value={query}
+        placeholder={t("addApps.detected.search")}
+        aria-label={t("addApps.detected.search")}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      <div className={styles.filters} role="group" aria-label={t("addApps.detected.viewLabel")}>
+        {(["new", "added", "ignored"] as const)
+          .filter((v) => v === "new" || counts[v] > 0)
+          .map((v) => (
+            <Chip
+              key={v}
+              className={styles.chip}
+              selected={view === v}
+              onClick={() => setView(v)}
+            >
+              {t(
+                v === "new"
+                  ? "addApps.detected.viewNew"
+                  : v === "added"
+                    ? "addApps.detected.viewAdded"
+                    : "addApps.detected.viewIgnored",
+                { count: counts[v] },
+              )}
+            </Chip>
+          ))}
+      </div>
+      <Chip className={`${styles.chip} ${extra.deepChip}`} onClick={() => setDeep(true)}>
+        {t("addApps.detected.deepButton")}
       </Chip>
-      {SOURCE_ORDER.filter((s) => counts[s] > 0).map((source) => (
-        <Chip
-          key={source}
-          className={styles.chip}
-          selected={filter === source}
-          onClick={() => setFilter(source)}
-        >
-          {t(FILTER_LABELS[source], { count: counts[source] })}
-        </Chip>
-      ))}
     </div>
   );
+
+  if (deep) {
+    return (
+      <DeepScan
+        onClose={() => setDeep(false)}
+        onDone={(report) => {
+          const items = report.sources.flatMap((s) =>
+            s.apps.map((app) => itemFromDetected(app, s.source)),
+          );
+          list.replaceAll(items, picksByDefault(items));
+          setView("new");
+          setDeep(false);
+        }}
+      />
+    );
+  }
+
+  const empty = query.trim()
+    ? t("addApps.detected.emptySearch", { query: query.trim() })
+    : view === "new"
+      ? t("addApps.detected.emptyNew")
+      : t("addApps.detected.empty");
 
   return (
     <ItemPanel
       list={list}
       visible={visible}
-      label={t("addApps.detected.listLabel")}
-      header={filters}
-      empty={<div className={styles.centered}>{t("addApps.detected.empty")}</div>}
+      groups={groups}
+      label={view === "new" && list.chosen.length > 0 ? t("addApps.detected.picked") : t("addApps.detected.listLabel")}
+      header={header}
+      empty={<div className={styles.centered}>{empty}</div>}
       addAll
+      onIgnore={ignore}
       beforeFooter={
         <div
           className={`${styles.zone} ${styles.zoneSmall}`}

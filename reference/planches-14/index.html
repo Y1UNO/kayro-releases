@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planches couleurs du jeu</title>
+<!-- Local only: the real fonts and tokens of Kayro, the real Steam posters of this PC (read in place
+     from Steam's cache through file:// URLs, never copied). Rebuild data.js: node make-data.mjs -->
+<link rel="stylesheet" href="../../node_modules/@fontsource-variable/cormorant-garamond/index.css">
+<link rel="stylesheet" href="../../node_modules/@fontsource-variable/manrope/index.css">
+<link rel="stylesheet" href="../../src/design/tokens.css">
+<link rel="stylesheet" href="planche.css">
+</head>
+<body>
+<div class="page">
+  <div class="left">
+    <div class="head">
+      <h1>Couleurs du jeu · planches V1–V10</h1>
+      <p>Flèches ← → ou clic sur une carte : changer de jeu. Survol de la carte active : filets.</p>
+    </div>
+    <div class="frame" id="frame">
+      <div class="stage" id="stage">
+        <div class="ui" id="ui">
+          <div class="topbar" id="topbar">
+            <span class="logo">Kayro</span>
+            <span class="search">Rechercher une app ou une scène</span>
+            <span class="round"></span><span class="round"></span>
+          </div>
+          <div class="widget"><i></i>Kayro</div>
+          <div class="titleBlock">
+            <div class="eyebrow" id="eyebrow">CATÉGORIE</div>
+            <h2 class="title" id="title">Jeux</h2>
+            <div class="filet"></div>
+          </div>
+          <div class="carousel" id="carousel"></div>
+          <div class="fan" id="fan"></div>
+          <div class="tabs" id="tabs"></div>
+        </div>
+        <div class="tide" id="tide"></div>
+      </div>
+    </div>
+    <div class="nav">
+      <button id="prev">← Jeu précédent</button>
+      <button id="next">Jeu suivant →</button>
+      <button id="burst">Défilement rapide (5 cartes)</button>
+      <button id="replay">Rejouer le passage depuis le thème</button>
+    </div>
+    <div class="strip" id="strip"></div>
+  </div>
+  <aside class="side" id="side"></aside>
+</div>
+<script src="data.js"></script>
+<script src="derive.js"></script>
+<script src="planche.js"></script>
+</body>
+</html>

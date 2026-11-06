@@ -7,34 +7,42 @@ import { prefersReducedMotion } from "../../fx/motionPref";
 import { useReducedMotion } from "../../fx/useReducedMotion";
 import { t } from "../../i18n";
 import { desktopIpc } from "../../ipc/commands";
-import { SettingsDialog } from "../settings/SettingsDialog";
+import { SettingsDialog, pageTab } from "../settings/SettingsDialog";
 import type { AppEntry } from "../../ipc/bindings";
 import { hubStore, useHub } from "../../store";
 import { AddAppsDialog } from "../add-app/AddAppsDialog";
 import { EditAppDialog } from "../add-app/EditAppDialog";
 import { AppGrid } from "./AppGrid";
 import { AppMenu, type MenuTarget } from "./AppMenu";
-import { CATEGORY_IDS, CATEGORY_LABELS, groupByCategory, type CategoryId } from "./categories";
+import { CATEGORY_IDS, groupByCategory, type CategoryId } from "./categories";
 import { Carousel } from "./Carousel";
 import { CategoryTabs } from "./CategoryTabs";
 import { CategoryTitle } from "./CategoryTitle";
 import { CommandPalette } from "./CommandPalette";
 import { EmptyState } from "./EmptyState";
 import { homeLeft, homeReducer, initialHomeState, rememberHome } from "./homeState";
+import { useHomeSounds } from "./useHomeSounds";
 import { LaunchToast } from "./LaunchToast";
+import { VoiceFeedback } from "../voice/VoiceFeedback";
+import { settingsShown, useVoice } from "../voice/voiceStore";
 import { DragGhost, Notice } from "./Overlays";
 import { SceneDock } from "./SceneDock";
 import { TopBar } from "./TopBar";
+import { useArrange } from "./useArrange";
 import { useCategoryDrag } from "./useCategoryDrag";
 import { CategoryFan, FanTitle } from "./fan/CategoryFan";
+import { FanScenes } from "./fan/FanScenes";
 import { useCategoryLink } from "./fan/useCategoryLink";
 import { cardGeometry, useDa } from "../../design/da";
 import { useHomeKeys } from "./useHomeKeys";
 import { usePosterDrop } from "./usePosterDrop";
 import { GameColorsBridge } from "../gameColors/GameColorsBridge";
+import { LaunchIntro } from "../launchIntro/LaunchIntro";
+import { startLaunch } from "../launchIntro/launchStore";
 import styles from "./HomeScreen.module.css";
 
-const launch = (app: AppEntry) => void hubStore.getState().launchApp(app.id);
+// 30/10: through the launch sequence of the app's ambience, when it has one (launchStore.ts).
+const launch = (app: AppEntry) => startLaunch(app);
 
 const NOTICE_MS = 4000;
 
@@ -85,6 +93,8 @@ export function HomeScreen({
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // « Ouvre les réglages de la voix » (step 21): the voice opens Réglages on a page.
+  const settingsPage = useVoice((s) => s.settingsPage);
   const hideOnEscape = useHub((s) => s.settings?.hideOnEscape ?? true);
   const [menu, setMenu] = useState<MenuTarget | null>(null);
   const [editing, setEditing] = useState<{ app: AppEntry; remove: boolean } | null>(null);
@@ -97,6 +107,7 @@ export function HomeScreen({
   const focus = Math.min(state.focus[state.category], Math.max(0, count - 1));
   const grid = state.view === "grid";
   useEffect(() => rememberHome(state), [state]);
+  useHomeSounds(state.category, focus);
 
   // The confirmation disappears by itself; the timer exists only while one is shown.
   useEffect(() => {
@@ -105,20 +116,11 @@ export function HomeScreen({
     return () => window.clearTimeout(id);
   }, [notice]);
 
+  const arrange = useArrange(setNotice);
   const { drag, onPointerDown } = useCategoryDrag(
     (id) => apps.find((a) => a.id === id),
-    (app, category) => {
-      void hubStore
-        .getState()
-        .updateApp({ ...app, category })
-        .then((r) => {
-          if (r.ok) {
-            setNotice(
-              t("home.menu.moved", { name: app.name, category: t(CATEGORY_LABELS[category]) }),
-            );
-          }
-        });
-    },
+    arrange.moveTo,
+    arrange.dropNear,
   );
 
   const setFocus = useCallback(
@@ -142,7 +144,7 @@ export function HomeScreen({
   const onFan = link.mode === "fan";
   const { fanMounted, fanParked, config: linkCfg } = link;
   const { fan: fanRef, area: areaRef, ask: askRef, title: titleRef, back: backRef } = link.bind;
-  const { bottom: bottomRef, card: onFanCard } = link.bind;
+  const { bottom: bottomRef, card: onFanCard, scenes: scenesRef } = link.bind;
   const slotH = cardGeometry(useDa((s) => s.values.cards)).activeH;
   const fill = useDa((s) => s.values.categoryLink?.fill);
   const counts = useMemo(
@@ -194,12 +196,16 @@ export function HomeScreen({
         const app = onFan ? undefined : list[focus];
         if (app) setMenu({ app, ...cardCentre(app.id) });
       },
+      onNudge: (dir) => {
+        const app = onFan ? undefined : list[focus];
+        if (app && arrange.step(app, list, dir)) setFocus(focus + dir);
+      },
     },
     !paletteOpen && !menu,
   );
 
   function onAreaContextMenu(e: MouseEvent) {
-    if (!(e.target instanceof Element)) return;
+    if (onFan || !(e.target instanceof Element)) return;
     const id = e.target.closest<HTMLElement>("[data-app-id]")?.dataset.appId;
     const app = id ? apps.find((a) => a.id === id) : list[focus];
     if (!app) return;
@@ -258,6 +264,7 @@ export function HomeScreen({
         <main className={styles.screen}>
           {/* Step 14: the selected app's colours (the fan has none: back to the theme's). */}
           <GameColorsBridge activeId={onFan ? null : (list[focus]?.id ?? null)} />
+          <LaunchIntro />
           <TopBar
             onSearch={() => setPaletteOpen(true)}
             onAdd={() => setAddOpen(true)}
@@ -273,7 +280,13 @@ export function HomeScreen({
             <FanTitle askRef={askRef} shown={onFan} />
           </div>
 
-          <div ref={areaRef} className={styles.area} data-game-accents="">
+          {/* Step 19c: a right click anywhere around the cards opens the selected app's menu. */}
+          <div
+            ref={areaRef}
+            className={styles.area}
+            data-game-accents=""
+            onContextMenu={onAreaContextMenu}
+          >
             {fanMounted && (
               <CategoryFan
                 counts={counts}
@@ -295,7 +308,6 @@ export function HomeScreen({
               role="tabpanel"
               inert={onFan}
               onPointerDown={onPointerDown}
-              onContextMenu={onAreaContextMenu}
               onClick={onAreaClick}
             >
               <AnimatePresence initial={false}>
@@ -344,6 +356,8 @@ export function HomeScreen({
             />
             <SceneDock onManage={onOpenScenes} />
           </div>
+          {/* 2026-11-04: on the fan, its scenes at the foot of the screen (the dock is faded). */}
+          <FanScenes shown={onFan} onManage={onOpenScenes} stripRef={scenesRef} />
         </main>
 
         <CommandPalette
@@ -360,7 +374,14 @@ export function HomeScreen({
             setNotice(t(count === 1 ? "addApps.addedOne" : "addApps.addedMany", { count }))
           }
         />
-        <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <SettingsDialog
+          open={settingsOpen || settingsPage !== null}
+          tab={pageTab(settingsPage)}
+          onClose={() => {
+            setSettingsOpen(false);
+            settingsShown();
+          }}
+        />
         <EditAppDialog
           app={editing?.app ?? null}
           startWithRemove={editing?.remove}
@@ -375,11 +396,16 @@ export function HomeScreen({
             onFavorite={(app) =>
               void hubStore.getState().updateApp({ ...app, favorite: !app.favorite })
             }
+            onMove={arrange.moveTo}
+            onNudge={(app, dir) =>
+              arrange.step(app, list, dir) && app === list[focus] && setFocus(focus + dir)
+            }
           />
         )}
         {drag && <DragGhost name={drag.app.name} x={drag.x} y={drag.y} />}
         {notice && <Notice text={notice} />}
         <LaunchToast onFix={(app) => setEditing({ app, remove: false })} />
+        <VoiceFeedback />
       </MotionConfig>
     </LazyMotion>
   );

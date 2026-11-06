@@ -4,6 +4,7 @@ import type {
   AppEntry,
   AppError,
   AppRunState,
+  AppsFile,
   FocusResult,
   LaunchResult,
   NewApp,
@@ -33,6 +34,8 @@ export interface HubState {
   /** Not optimistic: the core decides which ones are accepted (duplicates, invalid…). */
   addApps: (apps: NewApp[]) => Promise<Outcome<AddReport>>;
   updateApp: (entry: AppEntry) => Promise<Outcome<AppEntry>>;
+  /** Step 19b: the apps in the order of `ids` (every app, each once). */
+  reorderApps: (ids: string[]) => Promise<Outcome<AppsFile>>;
   removeApp: (id: string) => Promise<Outcome<null>>;
   setSettings: (patch: SettingsPatch) => Promise<Outcome<Settings>>;
   launchApp: (id: string) => Promise<Outcome<LaunchResult>>;
@@ -135,6 +138,17 @@ export function createHubStore(ipc: Ipc = realIpc, events: EventSource = tauriEv
             a.id === entry.id ? (result.ok ? result.value : (before ?? a)) : a,
           ),
         }));
+        return result;
+      },
+
+      async reorderApps(ids) {
+        const before = get().apps;
+        const byId = new Map(before.map((a) => [a.id, a]));
+        const next = ids.map((id) => byId.get(id)).filter((a): a is AppEntry => a !== undefined);
+        if (next.length !== before.length) return mutate(() => ipc.appsReorder(ids));
+        set({ apps: next });
+        const result = await mutate(() => ipc.appsReorder(ids));
+        set({ apps: result.ok ? result.value.apps : before });
         return result;
       },
 

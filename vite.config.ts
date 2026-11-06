@@ -2,14 +2,20 @@ import { readFileSync } from "node:fs";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-// Single source of truth for the display name: productName in tauri.conf.json.
+// Single source of truth for the display name and the version: tauri.conf.json.
 const tauriConf = JSON.parse(readFileSync("./src-tauri/tauri.conf.json", "utf-8")) as {
   productName: string;
+  version: string;
 };
 
 export default defineConfig({
   plugins: [react()],
-  define: { __APP_NAME__: JSON.stringify(tauriConf.productName) },
+  define: {
+    __APP_NAME__: JSON.stringify(tauriConf.productName),
+    __APP_VERSION__: JSON.stringify(tauriConf.version),
+  },
+  // Step 22: the tutorial's hand model (src/features/hands/model/right.glb), inlined (`?inline`).
+  assetsInclude: ["**/*.glb"],
   clearScreen: false,
   server: {
     port: 1420,

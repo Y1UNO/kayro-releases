@@ -1,0 +1,27 @@
+KAYRO · RONDE 4b · PASSAGES ENTRE MODES (immersif ↔ fenêtre ↔ widget)
+Planche : R4b-Modes (interactive : boutons de mode, « Faire le tour des 3 modes »)
+
+PRINCIPE
+Un seul geste long (540 ms) sur le ressort liaison : la surface visible de Kayro se resserre ou s'étend, le bureau réapparaît autour. Même mécanique que l'ouverture B (fenêtre qui grandit) : la fenêtre Tauri est déjà à sa taille maximale et transparente, seule la couche visible bouge.
+
+ÉTATS
+- Immersif : plein écran, bureau assombri (voile 42 %), cartes en éventail.
+- Fenêtre : surface arrondie (rayon 28 px) avec barre de titre, voile léger (16 %), ombre portée.
+- Widget : pastille en haut, aucun voile, bureau cliquable autour.
+
+TRANSITIONS (durée « long » 540 ms, ressort liaison .34,1.32,.64,1)
+- Immersif → Fenêtre : la surface se pose (bords vers l'intérieur), le voile passe de 42 % à 16 %, la barre de titre apparaît après 260 ms, les cartes se re-cascadent (45 ms, départ à 200 ms).
+- Fenêtre → Widget : le contenu s'efface en 140 ms, la surface se resserre en pastille, la pastille apparaît à 260 ms (240 ms apparition).
+- Widget → Fenêtre (bouton ↗) : la pastille s'agrandit, le contenu apparaît 180 ms après le début.
+- Fenêtre → Immersif : la surface s'étend, la barre de titre sort (0,7 ×), le voile remonte.
+- Widget ↔ Immersif (Ctrl + Alt + H) : deux gestes enchaînés sans pause.
+
+RÈGLES TECHNIQUES
+- Ne PAS animer la taille de la fenêtre système (reflow, clignotements). Fenêtre transparente plein écran ; la couche visible utilise clip-path / transform. Si une fenêtre doit vraiment être redimensionnée (ex. mode widget qui doit laisser le bureau cliquable), redimensionner AVANT d'agrandir et APRÈS avoir rétréci, jamais pendant.
+- Clics : en widget, hors de la pastille/panneau, la fenêtre doit laisser passer les clics (zones de capture à définir par Claude Code ; sinon repli : fenêtre réellement réduite après l'animation).
+- Les niveaux de mouvement dépendent du mode : immersif = niveaux 1-3 ; fenêtre = niveaux 1-2 ; widget = niveau 1-2, pas de filets.
+- Réduire les animations : changement d'état direct. Économie : idem + pas de cascade.
+- Mesures : cases à ajouter dans la vérification globale (étape 13) : « repos fenêtre », « repos widget », « pendant un passage » (information seulement).
+
+MES REMARQUES
+-

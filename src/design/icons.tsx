@@ -121,13 +121,6 @@ export const ShareIcon = (p: IconProps) => (
   </Icon>
 );
 
-/** Open larger (the widget's « ↗ »: back to a window). */
-export const ExpandIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M14 4h6v6M20 4l-8 8M10 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-4" />
-  </Icon>
-);
-
 /** Display mode (round 5): a screen with a small window in it. */
 export const DisplayModeIcon = (p: IconProps) => (
   <Icon {...p}>
@@ -139,5 +132,44 @@ export const DisplayModeIcon = (p: IconProps) => (
 export const ScenesIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="m12 4 9 5-9 5-9-5zM3 14l9 5 9-5" />
+  </Icon>
+);
+
+/* Step 19c: the app menu's icons. */
+export const StarIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9Z" />
+  </Icon>
+);
+
+export const RenameIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 7V5h10v2M9 5v14M7 19h4" />
+    <path d="M17 8v11M15 8h4M15 19h4" />
+  </Icon>
+);
+
+export const ArrowLeftIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M19 12H5m0 0 6-6m-6 6 6 6" />
+  </Icon>
+);
+
+export const ArrowRightIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5 12h14m0 0-6-6m6 6-6 6" />
+  </Icon>
+);
+
+export const ChevronRightIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m9 18 6-6-6-6" />
+  </Icon>
+);
+
+export const MoveToIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+    <path d="M10 13h6m0 0-2.5-2.5M16 13l-2.5 2.5" />
   </Icon>
 );

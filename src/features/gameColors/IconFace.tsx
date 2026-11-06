@@ -3,6 +3,7 @@ import { useTheme } from "../../design";
 import type { AppColors, Palette } from "../../ipc/bindings";
 import { paletteOf, useArt, useHub } from "../../store";
 import { cssVars } from "../home/cssVars";
+import { ICON_FACE } from "../../design/motion/tokensReview";
 import { deriveGameColors, faceColors } from "./derive";
 import { useColorSettings } from "./useGameColors";
 
@@ -33,7 +34,7 @@ function TintedFace({
     if (own?.mode === "chosen") {
       const c = deriveGameColors(theme, null, "light", choice, own);
       pair = c ? [c.a, c.b] : null;
-    } else if (icon && cs.fromIcon) pair = faceColors(theme, icon, choice);
+    } else if (icon && cs.fromIcon) pair = faceColors(theme, icon, { ...choice, ...ICON_FACE });
   }
   if (!pair) return plain(className, mix);
   return (

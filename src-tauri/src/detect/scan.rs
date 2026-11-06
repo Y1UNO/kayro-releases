@@ -134,6 +134,9 @@ pub fn run_scan(
             })
             .collect()
     });
+    let mut reports: Vec<SourceReport> = reports;
+    super::tidy::merge_twins(&mut reports);
+    super::tidy::mark_launchers(&mut reports);
     ScanReport {
         sources: reports,
         total_ms: millis(started),

@@ -1,8 +1,10 @@
+import { playSound } from "../../../sound";
 import { useLayoutEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 import { useGlass } from "../../../design";
 import { PointerFrame } from "../../../fx/pointerFrame";
 import { t } from "../../../i18n";
 import { CATEGORY_IDS, CATEGORY_LABELS, type CategoryId } from "../categories";
+import { CategoryEmblem } from "./CategoryEmblem";
 import { MAX_SPARKS } from "./fanFloat";
 import { FAN_SIZE } from "./fanTimeline";
 import type { FanCardEls } from "./fanRender";
@@ -137,9 +139,10 @@ function FanCard({
   const face = (
     <>
       <span className={styles.fill} />
+      <CategoryEmblem id={id} mark />
       <span className={styles.shade} />
       <span className={styles.content}>
-        <span className={styles.letter}>{name.slice(0, 1)}</span>
+        <CategoryEmblem id={id} />
         <span className={styles.foot}>
           <span className={styles.name}>{name}</span>
           <span className={styles.count}>{apps}</span>
@@ -166,7 +169,10 @@ function FanCard({
         // card in front: the fan's right cards lie behind their left neighbour).
         data-side={i > (FAN_SIZE - 1) / 2 ? "end" : undefined}
         onClick={() => onPick(id)}
-        onPointerEnter={(e) => onHover(i, true, ...pointerOf(e))}
+        onPointerEnter={(e) => {
+          playSound("hover", { degree: i });
+          onHover(i, true, ...pointerOf(e));
+        }}
         onPointerMove={(e) => {
           moveHandlers.set(e.currentTarget, (nx, ny) => onHover(i, true, nx, ny));
           fanMoves.push(e.currentTarget, e.currentTarget, e.clientX, e.clientY);

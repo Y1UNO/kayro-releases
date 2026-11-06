@@ -1,0 +1,300 @@
+/*
+ * Step 20 (Kysland): the island. Pure black (#000): on the top edge, it is part of the screen's
+ * bezel (on OLED those pixels are off), centred or flush in a top corner. Its size, corners,
+ * shoulders, colours and transform are written each frame by islandEngine.ts while it moves;
+ * nothing animates here by itself. Stage and anchor: the core's `WINDOW` and `ANCHOR`
+ * (desktop/island/mod.rs), repeated in islandShape.ts.
+ */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  width: 720px;
+  height: 420px;
+  overflow: hidden;
+  user-select: none;
+  background: transparent;
+}
+
+.bubbles {
+  position: absolute;
+  inset: 0;
+  width: 720px;
+  height: 420px;
+  pointer-events: none;
+}
+
+/* Music mode (stage/): the window covers the screen, the island's own layer hides and the
+   ink drop is drawn on a canvas as big as the screen. */
+.music {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+
+.stage[data-music] {
+  width: 100vw;
+  height: 100vh;
+}
+
+.stage[data-music] .music {
+  display: block;
+}
+
+/* The island shows until the drop is drawn where it is (the window grows in place first), and
+   again before the window goes back (stage/useMusicStage.ts). */
+.stage[data-music="on"] .layer,
+.stage[data-music="on"] .bubbles {
+  visibility: hidden;
+}
+
+/* Cut to the island's screen by the engine (clip-path), so it never shows past a bezel. */
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.island {
+  --sh-tl: 1;
+  --sh-tr: 1;
+  --sh-sl: 0;
+  --sh-sr: 0;
+  --rim: 0;
+  --hover: 0;
+  --glitch: 0;
+  --content: 0;
+  --breath: 0;
+  /* The island's tone (« bleu neige » on a dark screen, ink blue on a light one). */
+  --tone: 214 236 255;
+  --rim-a: 0.55;
+  --glow-a: 0.28;
+  --shoulder: 10px;
+
+  position: absolute;
+  left: 360px;
+  top: 150px;
+  width: 184px;
+  height: 32px;
+  box-sizing: border-box;
+  background: #000;
+  border-radius: 0 0 16px 16px;
+  transform: translate(-50%, 0);
+  transform-origin: 50% 0;
+  opacity: 0;
+  cursor: grab;
+  touch-action: none;
+  pointer-events: auto;
+  /* Floating: a 1.5 px rim in the island's tone and a short shadow. Hovered: the rim brightens,
+     on the top edge a line of the tone lights the bottom edge, and with music the album's
+     colour glows inside it. Nothing outside the core's click region (no cut glow). */
+  box-shadow:
+    inset 0 0 0 1.5px
+      rgb(var(--tone) / calc(var(--rim-a) * var(--rim) * (0.7 + 0.3 * var(--hover)))),
+    inset 0 -1.5px 0 rgb(var(--tone) / calc(var(--rim-a) * var(--hover) * (1 - var(--rim)))),
+    inset 0 0 16px rgb(var(--album-d, 0 0 0) / calc(0.55 * var(--hover) * var(--rest-music, 0))),
+    0 4px 10px rgb(0 0 0 / calc(0.45 * var(--rim))),
+    0 0 0 1.5px rgb(139 61 255 / var(--glitch)),
+    /* On the top edge, a strip of black above it, into the bezel: no line of light between. */ 0
+      calc(-3px * (1 - var(--rim))) 0 0 #000;
+  /* The music's bass makes it breathe a little (useBeat, 30 times a second, no transition). */
+  scale: calc(1 + var(--breath, 0) * 0.03);
+}
+
+/* Step 21: the aura once the voice is called (the wake word heard, or the push-to-talk key held),
+   outside the island (the core's click region makes room for it, clickRegion.ts): the user's
+   colour, else the album's, else the theme's. Opacity only, with a slow pulse; at 55 % and still
+   while the next sentence may follow the last one without the name (`--listen`, IslandApp.tsx).
+   Nothing while it only waits for the wake word (2026-11-04, the user's choice). */
+.island::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    0 0 14px 4px var(--aura-colour, var(--accent-light)),
+    0 0 3px 1px var(--aura-colour, var(--accent-light));
+  opacity: var(--listen, 0);
+  transition: opacity 420ms ease;
+  pointer-events: none;
+}
+
+.island[data-hearing]::after {
+  animation: aura-pulse 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes aura-pulse {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.island[data-open] {
+  cursor: default;
+}
+
+/* Music mode: during the switches the island does not breathe (the drop ends on it exactly). */
+.island[data-stage] {
+  scale: 1;
+}
+
+.island:active {
+  cursor: grabbing;
+}
+
+/* The shoulders: inverted corners that curve the island into the bezels. Along the top (left
+   and right of the island) on the top edge; along the side (below it) in a corner. */
+.shoulder {
+  /* The album's glow goes on along their curves (as on the island's edge: inset 0 0 16px). */
+  --sh-glow: rgb(var(--album-d, 0 0 0) / calc(0.3 * var(--hover) * var(--rest-music, 0)));
+
+  position: absolute;
+  width: var(--shoulder);
+  height: var(--shoulder);
+  pointer-events: none;
+}
+
+.shoulder[data-at="top-left"],
+.shoulder[data-at="top-right"] {
+  box-shadow: 0 -3px 0 0 #000;
+}
+
+.shoulder[data-at="top-left"] {
+  top: 0;
+  right: 100%;
+  opacity: var(--sh-tl);
+  transform: scale(var(--sh-tl));
+  transform-origin: 100% 0;
+  background:
+    radial-gradient(
+      circle at 0 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      var(--sh-glow) var(--shoulder),
+      transparent calc(var(--shoulder) + 7px)
+    ),
+    radial-gradient(
+      circle at 0 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      #000 var(--shoulder)
+    );
+}
+
+.shoulder[data-at="top-right"] {
+  top: 0;
+  left: 100%;
+  opacity: var(--sh-tr);
+  transform: scale(var(--sh-tr));
+  transform-origin: 0 0;
+  background:
+    radial-gradient(
+      circle at 100% 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      var(--sh-glow) var(--shoulder),
+      transparent calc(var(--shoulder) + 7px)
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      #000 var(--shoulder)
+    );
+}
+
+.shoulder[data-at="side-left"] {
+  top: 100%;
+  left: 0;
+  opacity: var(--sh-sl);
+  transform: scale(var(--sh-sl));
+  transform-origin: 0 0;
+  background:
+    radial-gradient(
+      circle at 100% 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      var(--sh-glow) var(--shoulder),
+      transparent calc(var(--shoulder) + 7px)
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      #000 var(--shoulder)
+    );
+}
+
+.shoulder[data-at="side-right"] {
+  top: 100%;
+  right: 0;
+  opacity: var(--sh-sr);
+  transform: scale(var(--sh-sr));
+  transform-origin: 100% 0;
+  background:
+    radial-gradient(
+      circle at 0 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      var(--sh-glow) var(--shoulder),
+      transparent calc(var(--shoulder) + 7px)
+    ),
+    radial-gradient(
+      circle at 0 100%,
+      transparent calc(var(--shoulder) - 0.5px),
+      #000 var(--shoulder)
+    );
+}
+
+/* The idle's glint (islandIdle.ts): a thin light running along the bottom once, on the
+   compositor (transform and opacity only), restarted by [data-glint]. */
+.glint {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 0;
+  height: 1.5px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.glint::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(var(--tone) / 0.85), transparent);
+  transform: translateX(-100%);
+}
+
+[data-glint] .glint {
+  animation: glintShow 900ms ease-in-out;
+}
+
+[data-glint] .glint::before {
+  animation: glintRun 900ms cubic-bezier(0.45, 0.05, 0.35, 1);
+}
+
+@keyframes glintShow {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  75% {
+    opacity: 1;
+  }
+}
+
+@keyframes glintRun {
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (forced-colors: active) {
+  .island {
+    border: 1px solid CanvasText;
+  }
+}

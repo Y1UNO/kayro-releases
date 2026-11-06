@@ -242,6 +242,7 @@ mod tests {
             mood_id: None,
             favorite: false,
             colors: None,
+            mood_tune: None,
         }
     }
 

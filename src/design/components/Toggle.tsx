@@ -1,3 +1,4 @@
+import { playSound } from "../../sound/engine";
 import type { ButtonHTMLAttributes } from "react";
 import styles from "./Toggle.module.css";
 
@@ -18,7 +19,10 @@ export function Toggle({ checked, onChange, className, type = "button", ...rest 
       role="switch"
       aria-checked={checked}
       className={[styles.toggle, checked ? styles.on : "", className].filter(Boolean).join(" ")}
-      onClick={() => onChange(!checked)}
+      onClick={() => {
+        playSound("toggle", { degree: checked ? 0 : 2 });
+        onChange(!checked);
+      }}
     >
       <span className={styles.thumb} />
     </button>

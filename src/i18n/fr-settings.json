@@ -5,26 +5,447 @@
     "nav": {
       "label": "Catégories des réglages",
       "general": "Général",
+      "startup": "Démarrage",
+      "shortcuts": "Raccourcis clavier",
+      "island": "Île dynamique",
       "visual": "Visuel",
-      "themes": "Thèmes"
+      "sounds": "Sons",
+      "themes": "Thèmes",
+      "voice": "Assistant vocal",
+      "fun": "Concept / Fun"
     },
-    "general": {
+    "fun": {
+      "intro": "Des façons à l’essai de piloter Kayro, pour le plaisir.",
+      "hands": "Mains"
+    },
+    "shortcuts": {
+      "layout": {
+        "label": "Disposition du clavier",
+        "help": "Pour que la lettre d’un raccourci soit celle de la touche pressée. Automatique : celle de Windows. Les raccourcis déjà choisis gardent leur lettre.",
+        "auto": "Automatique",
+        "azerty": "AZERTY",
+        "qwerty": "QWERTY"
+      },
       "hotkey": {
         "label": "Raccourci pour afficher ou cacher {app}",
         "failedAtStart": "Le raccourci {hotkey} est déjà utilisé par une autre application. {app} reste accessible par la zone de notification : choisissez un autre raccourci.",
         "saved": "Raccourci enregistré."
       },
+      "island": "Île cachée : le raccourci pressé deux fois (ouvrir puis fermer {app}) la fait ressortir.",
+      "search": {
+        "label": "Raccourci pour écrire dans Kysland",
+        "help": "Ouvre l’île avec le curseur dans sa recherche : tapez le nom d’une app ou d’une scène, puis Entrée. Quand {app} est à l’écran, c’est sa recherche qui s’ouvre. Retour arrière pendant la saisie : aucun raccourci.",
+        "failedAtStart": "Le raccourci {hotkey} est déjà utilisé par une autre application : choisissez-en un autre.",
+        "removed": "Raccourci retiré."
+      },
+      "scenes": {
+        "label": "Raccourcis des scènes",
+        "help": "Ils se choisissent dans l’éditeur de chaque scène.",
+        "none": "Aucune scène n’a de raccourci.",
+        "taken": "Déjà utilisé par une autre application : il ne marche pas."
+      }
+    },
+    "voice": {
+      "intro": "Lancez vos apps, vos scènes et Kayro à la voix. Tout se passe sur ce PC, et une phrase ne lance que ce qui est dans Kayro.",
+      "mode": {
+        "label": "Écoute",
+        "off": "Coupée",
+        "pushToTalk": "En tenant une touche",
+        "always": "Permanente",
+        "offHelp": "Le micro n’est jamais ouvert.",
+        "pushToTalkHelp": "Le micro s’ouvre seulement pendant que vous tenez le raccourci : dites « lance Steam », puis relâchez.",
+        "alwaysHelp": "Le micro reste ouvert et attend votre mot d’éveil (« Hé Kayro, lance Steam »). L’île s’entoure d’une aura quand vous l’appelez ; dites « arrête d’écouter » ou touchez le bouton micro de Kayro pour couper."
+      },
+      "status": {
+        "off": "Coupée.",
+        "loading": "Chargement des modèles…",
+        "waiting": "À l’écoute de votre mot d’éveil.",
+        "ready": "Prête : tenez le raccourci pour parler.",
+        "hearing": "Je vous écoute…",
+        "thinking": "Je comprends…",
+        "following": "Je reste à l’écoute : continuez sans dire mon nom.",
+        "paused": "En pause : un jeu en plein écran est devant, ou l’écran est verrouillé. « Écouter aussi en jeu » la garde active.",
+        "muted": "En sourdine : touchez le bouton micro de Kayro pour reprendre.",
+        "noModel": "Il manque un modèle ({model}) : installez-le avec le bouton « Installer ».",
+        "noMicrophone": "Aucun micro, ou Windows le refuse (Paramètres › Confidentialité › Microphone)."
+      },
+      "wake": {
+        "label": "Mot d’éveil",
+        "help": "À dire juste avant la commande. Le vôtre : un ou quelques mots.",
+        "invalid": "Quelques mots de lettres, sans chiffres ni signes (2 à 40 caractères)."
+      },
+      "hotkey": {
+        "label": "Raccourci pour parler",
+        "help": "Tenez-le pendant que vous parlez, puis relâchez. Il marche aussi en jeu."
+      },
+      "inGame": {
+        "label": "Écouter aussi en jeu",
+        "help": "Coupé : le micro se ferme quand un jeu est en plein écran, et se rouvre après (un film dans le navigateur ou un lecteur ne coupe rien). La touche pour parler marche toujours."
+      },
+      "models": {
+        "label": "Modèles",
+        "help": "Téléchargés une seule fois depuis Hugging Face ou GitHub et vérifiés par leur empreinte, puis tout reste sur ce PC. C’est le seul accès réseau de la voix, et seulement quand vous cliquez sur Télécharger.",
+        "listenLabel": "Pour l’écoute permanente",
+        "brainLabel": "Le cerveau (carte graphique)",
+        "brainUse": "Utiliser le cerveau",
+        "brainUseHelp": "Il entend et comprend vos phrases comme vous les dites (« Arya, tu peux ouvrir Spotify et mettre Discord sur mon premier écran ? »). En jeu, il rend la mémoire de la carte graphique et la manière classique répond. Éteint : la manière classique seule.",
+        "speakerLabel": "Pour reconnaître votre voix",
+        "chosen": "Utilisé",
+        "installed": "Installé",
+        "use": "Utiliser",
+        "remove": "Désinstaller",
+        "download": "Télécharger ({size} Mo)",
+        "cancel": "Annuler",
+        "progress": "{done} / {total} Mo",
+        "rhythm": "Déjà là : l’IA du rythme du mode musique (Beat This!), installée avec Kayro.",
+        "parakeet": {
+          "name": "Parakeet v3",
+          "desc": "Le plus juste, noms anglais compris. Conseillé.",
+          "facts": "670 Mo · environ 730 Mo de mémoire tant que la voix est active · une phrase en 0,3 s",
+          "licence": "NVIDIA, licence CC BY 4.0",
+          "when": "Pour tout comprendre du premier coup, même « Counter-Strike 2 » ou « Baldur’s Gate 3 »."
+        },
+        "canary": {
+          "name": "Canary 180M",
+          "desc": "Plus léger, moins sûr sur les noms anglais.",
+          "facts": "207 Mo · environ 320 Mo de mémoire · une phrase en 0,3 s",
+          "licence": "NVIDIA, licence CC BY 4.0",
+          "when": "Pour un PC qui manque de mémoire. « Discord » peut devenir « dix cordes »."
+        },
+        "silero": {
+          "name": "Détection de parole",
+          "desc": "Repère quand quelqu’un parle.",
+          "facts": "0,6 Mo · 30 Mo de mémoire · 0,4 % d’un cœur",
+          "licence": "Silero VAD, licence MIT",
+          "when": "Le reste ne se réveille qu’à ce moment-là : presque rien au repos."
+        },
+        "brain": {
+          "name": "Gemma 4 (cerveau)",
+          "desc": "Comprend vos phrases libres, plusieurs choses à la fois.",
+          "facts": "5,2 Go · environ 5 Go de mémoire graphique tant que la voix est active (rendus en jeu) · une phrase en 0,2 s · chargement en 5 s",
+          "licence": "Gemma 4 E4B (Google), licence Apache 2.0 ; llama.cpp (Vulkan), licence MIT",
+          "when": "Sur votre calibration « Dis Arya » : 40 enregistrements sur 40 compris, musique comprise, aucun piège. Il faut une carte graphique avec 6 Go de mémoire ou plus."
+        },
+        "speaker": {
+          "name": "Votre voix",
+          "desc": "Reconnaît votre voix parmi d’autres.",
+          "facts": "29 Mo · environ 40 Mo de mémoire · 30 ms par phrase",
+          "licence": "CAM++ (3D-Speaker, Alibaba), licence Apache 2.0",
+          "when": "Avec « Seulement ma voix » (après la calibration) : la télé, une vidéo ou un ami ne réveillent pas Kayro."
+        },
+        "wake": {
+          "name": "Mot d’éveil",
+          "desc": "Entend votre mot d’éveil.",
+          "facts": "128 Mo · 190 Mo de mémoire · 6 % d’un cœur pendant qu’on parle",
+          "licence": "Zipformer français (k2-fsa), licence Apache 2.0",
+          "when": "Un petit modèle français qui écoute seulement quand quelqu’un parle."
+        },
+        "details": "Détails",
+        "less": "Moins",
+        "removeAsk": "Utilisé par la voix : elle sera coupée."
+      },
+      "later": {
+        "label": "Bientôt",
+        "name": "Nom de l’assistant",
+        "nameHelp": "le vôtre, avec la future app d’IA de l’écosystème Kayro.",
+        "light": "Modèle économe",
+        "lightHelp": "le petit modèle français seul, environ 200 Mo de mémoire en tout.",
+        "assistant": "Assistant IA",
+        "assistantHelp": "une app à part de l’écosystème, qui pourra parler à Kayro.",
+        "deep": "Entraîner l’écoute sur votre voix",
+        "deepHelp": "aller plus loin que vos mots : adapter le modèle lui-même à votre voix, sur ce PC."
+      },
+      "privacy": "Kayro ne garde rien de ce qu’il entend : la phrase disparaît dès qu’elle est comprise, et les journaux ne notent que l’action, jamais la phrase.",
+      "eyebrow": {
+        "voice": "Voix",
+        "island": "Kysland",
+        "models": "IA locale",
+        "later": "Plus tard",
+        "music": "Spotify",
+        "calib": "Votre voix"
+      },
+      "mic": {
+        "label": "Micro",
+        "default": "Celui de Windows (par défaut)",
+        "gone": "Micro débranché : celui de Windows est utilisé"
+      },
+      "output": {
+        "label": "Enceintes à écouter",
+        "default": "Celles de Windows (par défaut)",
+        "gone": "Sortie débranchée : celle de Windows est utilisée",
+        "help": "La sortie dont Kayro retire le son. Avec Voicemeeter, choisissez vos enceintes physiques : leur son contient tous les bus."
+      },
+      "learn": {
+        "button": "Apprendre mon mot d’éveil",
+        "again": "Réapprendre",
+        "forget": "Oublier",
+        "why": "Quelques secondes : vous le dites cinq fois, et Kayro le reconnaît mieux dans votre voix (surtout un mot inventé).",
+        "learned": "Appris de votre voix ({count} façons de le dire).",
+        "needListening": "Pour l’apprendre, l’écoute permanente doit être prête : modèles téléchargés, micro branché.",
+        "title": "Apprendre mon mot d’éveil",
+        "cancel": "Annuler",
+        "say": {
+          "alone": "Dites « {word} »",
+          "name": "Dites seulement « {name} »",
+          "launch": "Dites « {word}, lance Spotify »",
+          "open": "Dites « {name}, ouvre Discord »",
+          "again": "Une dernière fois : « {word} »"
+        },
+        "listening": "Je vous écoute… parlez normalement, comme d’habitude. Rien n’est lancé pendant l’apprentissage.",
+        "notListening": "L’écoute n’est pas prête : vérifiez les modèles et le micro.",
+        "done": "C’est appris : Kayro reconnaîtra votre mot d’éveil dans votre voix.",
+        "save": "Terminer"
+      },
+      "echo": {
+        "label": "Ignorer le son des enceintes",
+        "help": "Musique, vidéo, jeu : Kayro retire ce que jouent vos enceintes de ce qu’entend le micro, seulement quand elles jouent. Inutile au casque."
+      },
+      "calib": {
+        "title": "Calibrer ma voix",
+        "help": "Quelques minutes : Kayro enregistre votre mot d’éveil, vos commandes avec vos apps et des phrases pièges, puis s’écoute avec et vous donne une note. Les enregistrements restent sur ce PC : ils servent à régler Kayro sur votre voix.",
+        "start": "Commencer (≈ 6 min)",
+        "resume": "Reprendre ({left} restantes)",
+        "again": "Recommencer",
+        "evaluate": "Évaluer",
+        "evaluating": "Kayro s’écoute avec votre voix… (≈ {seconds} s)",
+        "clear": "Supprimer mes enregistrements",
+        "clearAsk": "Supprimer les {count} enregistrements de votre voix ? La note s’efface aussi.",
+        "clearYes": "Supprimer",
+        "keep": "Garder",
+        "count": "{count} enregistrements, {seconds} s de votre voix, sur ce PC.",
+        "none": "Aucun enregistrement pour l’instant.",
+        "needModels": "Pour calibrer, les trois modèles de l’écoute permanente doivent être installés (bouton « Installer » en haut de la page).",
+        "failed": "L’évaluation n’a pas pu se faire ({reason}).",
+        "onlyMe": "Seulement ma voix",
+        "onlyMeHelp": "La télé, une vidéo ou un ami ne réveillent plus Kayro : il compare chaque phrase à votre empreinte vocale (faite pendant l’évaluation).",
+        "onlyMeNeed": "Il faut le modèle « Votre voix » (bouton « Installer » en haut de la page), puis une évaluation, pour faire votre empreinte vocale.",
+        "score": {
+          "title": "Dernière note",
+          "wake": "Mot d’éveil entendu",
+          "commands": "Commandes comprises",
+          "music": "Avec de la musique",
+          "calm": "Pièges évités",
+          "voice": "Votre voix reconnue",
+          "learned": "Kayro connaît {count} façons dont vous dites votre mot d’éveil.",
+          "time": "Temps par phrase",
+          "ms": "{ms} ms",
+          "ratio": "{right} / {total}",
+          "misses": "À revoir ({count})",
+          "heard": "entendu « {heard} »",
+          "understood": "compris : {heard}",
+          "calledOnly": "appelé, rien compris de plus",
+          "notCalled": "pas compris comme un appel",
+          "nothing": "rien entendu",
+          "woke": "réveillé à tort"
+        },
+        "guide": {
+          "progress": "{n} sur {total}",
+          "skip": "Passer",
+          "back": "Refaire la précédente",
+          "later": "Terminer plus tard",
+          "listening": "Je vous écoute… Rien ne se lance pendant la calibration.",
+          "notListening": "L’écoute n’est pas prête : vérifiez les modèles et le micro.",
+          "failed": "Celle-ci n’a pas pu être enregistrée : redites-la.",
+          "done": "C’est enregistré. Kayro va s’écouter avec votre voix (≈ 30 s).",
+          "evaluate": "Voir ma note",
+          "musicGate": "Lancez de la musique sur vos enceintes, assez fort, comme quand vous jouez. Au casque, passez cette partie.",
+          "musicStart": "La musique joue",
+          "musicSkip": "Passer cette partie"
+        },
+        "chapter": {
+          "wake": "Votre mot d’éveil",
+          "wakeHelp": "Dites-le comme d’habitude, une fois par carte.",
+          "name": "Le nom seul",
+          "nameHelp": "Juste le nom, sans rien d’autre.",
+          "command": "Vos commandes",
+          "commandHelp": "Avec vos apps. Parlez normalement : rien ne se lance.",
+          "quick": "Plus vite",
+          "quickHelp": "Les mêmes, d’une traite, sans pause après le nom.",
+          "trap": "Phrases pièges",
+          "trapHelp": "Kayro ne doit pas réagir à celles-ci.",
+          "chat": "Parlez librement",
+          "chatHelp": "Quelques secondes, comme au téléphone : Kayro ne doit pas réagir.",
+          "music": "Avec de la musique",
+          "musicHelp": "Les commandes, pendant que la musique joue."
+        },
+        "hint": {
+          "faster": "un peu plus vite",
+          "softer": "plus bas, ou un peu plus loin du micro",
+          "far": "en vous reculant du micro"
+        },
+        "say": {
+          "wake": "{word}",
+          "name": "{name}",
+          "open": "{word}, ouvre {target}",
+          "launch": "{word}, lance {target}",
+          "close": "{word}, ferme {target}",
+          "scene": "{word}, lance la scène {scene}",
+          "play": "{word}, mets de la musique",
+          "pause": "{word}, mets pause",
+          "next": "{word}, chanson suivante",
+          "louder": "{word}, monte le son",
+          "quieter": "{word}, baisse le son",
+          "linkPlaylist": "{word}, mets ma playlist {link}",
+          "linkAlbum": "{word}, mets l’album {link}",
+          "linkTrack": "{word}, mets le titre {link}",
+          "linkOther": "{word}, mets ma musique {link}",
+          "show": "{word}, montre Kayro",
+          "hide": "{word}, cache Kayro",
+          "search": "{word}, cherche {target}",
+          "musicMode": "{word}, active le mode musique",
+          "trap1": "Tu as une minute ?",
+          "trap2": "Dis-moi ce que tu en penses.",
+          "trap3": "J’ai ouvert {target} tout à l’heure.",
+          "trap4": "On lance une partie ce soir ?",
+          "trap5": "La lune est belle ce soir.",
+          "trap6": "Hier, j’ai parlé de {name} à un ami.",
+          "chat1": "Racontez votre journée, par exemple.",
+          "chat2": "Décrivez ce qu’il y a autour de vous."
+        }
+      },
+      "aura": {
+        "title": "L’île qui écoute",
+        "help": "Une aura autour de l’île quand vous l’appelez (mot d’éveil entendu, ou touche tenue). Auto : la couleur de l’île (la pochette quand une musique joue, sinon le thème).",
+        "auto": "Auto (couleur de l’île)",
+        "custom": "Autre couleur",
+        "colour": "Couleur {hex}"
+      },
+      "memory": {
+        "title": "Kayro apprend de vous",
+        "help": "Quand une commande tombe juste, Kayro retient vos mots pour la prochaine fois. Si une phrase n’aboutit pas et que vous la redites autrement, il retient que les deux veulent dire la même chose. Quand vous choisissez dans un doute, il apprend la correction ; si vous refermez à la voix ce qu’il vient d’ouvrir, il retient que ce n’était pas ça. Et quand plusieurs noms se ressemblent, il prend celui que vous lancez le plus à ce moment de la journée. Toujours vers vos apps et vos scènes, rien n’est envoyé.",
+        "count": "{count} façons de nommer vos apps et vos scènes apprises.",
+        "forget": "Oublier"
+      },
+      "music": {
+        "title": "Votre musique",
+        "help": "Donnez un nom à une playlist, un album ou un titre Spotify (dans Spotify : Partager › Copier le lien), puis dites « mets ma playlist chill ». Un album ou un titre démarre ; une playlist s’ouvre dans Spotify (Spotify ne la lance pas tout seul depuis une autre app). « Mets la musique », « pause », « suivante », « plus fort » marchent sans rien régler.",
+        "name": "Nom (ex. Chill)",
+        "link": "Lien Spotify",
+        "add": "Ajouter",
+        "remove": "Retirer",
+        "bad": "Ce n’est pas un lien Spotify de playlist, d’album ou de titre.",
+        "kind": {
+          "playlist": "Playlist",
+          "album": "Album",
+          "track": "Titre",
+          "artist": "Artiste",
+          "show": "Podcast",
+          "episode": "Épisode"
+        }
+      }
+    },
+    "island": {
+      "intro": "Kysland, l’île dynamique de {app} : la petite île noire en haut de l’écran quand {app} est fermé (musique, apps ouvertes, recherche).",
+      "always": {
+        "label": "Toujours à l’écran",
+        "help": "Quand {app} est fermé, l’île reste en haut de l’écran ; le raccourci ouvre ou ferme {app}, et une app qui passe devant {app} le ferme. L’île se cache devant un jeu en plein écran."
+      },
+      "tuck": {
+        "label": "Cacher l’île",
+        "help": "Ancrée en haut, l’île rentre dans le bord quand la souris la quitte et ressort quand la souris touche tout en haut de l’écran, à sa place. Elle ressort aussi le temps d’annoncer un lancement.",
+        "after": "Se cache après",
+        "afterHelp": "Le temps qu’elle attend une fois la souris partie.",
+        "peek": "Ressort après",
+        "peekHelp": "Le temps que la souris reste collée en haut avant qu’elle ressorte : elle ne sort pas quand on vise juste les onglets d’un navigateur.",
+        "seconds": "{value} s",
+        "now": "Aussitôt"
+      },
+      "passage": {
+        "label": "Passage d’un écran à l’autre",
+        "force": "Forcer (bulles)",
+        "glitch": "Capri",
+        "help": "Forcer : l’île résiste au bord entre deux écrans puis le traverse dans une gerbe de bulles. Capri : aucune résistance, elle peut rester à cheval et le bord « glitche » autour d’elle. Aussi dans l’île ouverte."
+      },
+      "startup": "Pour que Kysland soit seule à l’écran au démarrage de Windows : Réglages › Démarrage."
+    },
+    "startup": {
+      "autostart": {
+        "label": "Démarrer avec Windows",
+        "help": "{app} se lance à l’ouverture de ta session.",
+        "failed": "Impossible de modifier le démarrage avec Windows."
+      },
+      "open": {
+        "label": "Au démarrage de Windows",
+        "help": "Intro : {app} s’ouvre sur son logo, un clic ou Entrée lance la cinématique. Immersif : tes apps tout de suite. Kysland : seulement l’île en haut de l’écran. Caché : rien à l’écran (ni l’île) jusqu’à ce que tu ouvres {app}.",
+        "intro": "Intro",
+        "immersive": "Immersif",
+        "island": "Kysland",
+        "hidden": "Caché"
+      },
+      "after": {
+        "label": "Après l’intro",
+        "help": "Ce qui reste à l’écran une fois la cinématique finie.",
+        "immersive": "Immersif",
+        "island": "Kysland",
+        "hidden": "Caché"
+      },
+      "apps": {
+        "label": "Apps lancées avec Windows",
+        "help": "Comme dans le Gestionnaire des tâches : une app coupée n’est pas supprimée, elle ne démarre simplement plus avec Windows.",
+        "byKayro": "Coupée par {app}",
+        "none": "Aucune autre app de ton compte ne démarre avec Windows.",
+        "locked": "Jamais modifiées ici (Windows, pilotes, apps pour tout le PC) : {names}.",
+        "failed": "Windows a refusé ce changement."
+      },
+      "restore": {
+        "label": "Tout remettre comme avant",
+        "help": "Rallume les apps que {app} a coupées (à l’installation ou ici), exactement comme elles étaient.",
+        "done": "C’est remis comme avant.",
+        "nothing": "{app} n’a rien coupé."
+      }
+    },
+    "sounds": {
+      "on": {
+        "label": "Sons de l'interface",
+        "help": "De petits sons doux quand tu cliques, changes de carte ou lances un jeu. Coupés quand {app} est caché."
+      },
+      "pack": {
+        "label": "Style",
+        "help": "Synthétisés à la volée, sans fichier ni connexion.",
+        "premium": "Premium",
+        "retro": "Rétro",
+        "chiptune": "8-bit"
+      },
+      "volume": {
+        "label": "Volume",
+        "value": "{percent} %",
+        "help": "Relâche le curseur pour écouter."
+      },
+      "families": {
+        "label": "Quand en jouer",
+        "interface": "Interface (clics, survol des cartes, fenêtres, validation)",
+        "transitions": "Changements de catégorie et de thème",
+        "launch": "Ouverture de Kayro et lancement d'un jeu"
+      },
+      "listen": "Écouter"
+    },
+    "general": {
+      "update": {
+        "auto": "Rechercher les mises à jour au démarrage",
+        "help": "Une seule petite vérification auprès de la page des versions de Kayro sur GitHub, rien d'autre n'est envoyé. Une mise à jour ne s'installe jamais sans ton accord.",
+        "check": "Rechercher une mise à jour"
+      },
       "economy": {
         "label": "Mode économe",
         "help": "La fenêtre est détruite quand elle est cachée : moins de mémoire utilisée, mais environ 0,4 s pour la rouvrir. Désactivé, {app} reste chargé et apparaît en un instant."
       },
+      "openingScreen": {
+        "label": "Écran d’ouverture",
+        "help": "L’écran où {app} s’ouvre avec le raccourci ou la zone de notification.",
+        "last": "Dernier utilisé",
+        "pointer": "Écran de la souris",
+        "main": "Écran principal"
+      },
       "hideOnEscape": "Échap cache {app}",
       "hideOnBlur": "Cliquer ailleurs cache {app}",
-      "autostart": {
-        "label": "Démarrer avec Windows",
-        "help": "{app} démarre sans fenêtre, dans la zone de notification.",
-        "failed": "Impossible de modifier le démarrage avec Windows."
-      }
+      "logs": {
+        "label": "Journal de {app}",
+        "help": "Crée un fichier .zip du journal (ce que {app} a fait ces derniers jours, sans vos images) et l’affiche dans l’Explorateur. Rien n’est envoyé : c’est vous qui le transmettez si vous le souhaitez.",
+        "action": "Exporter les logs",
+        "done": "Exporté : {file}",
+        "failed": "Impossible d’exporter les logs."
+      },
+      "version": "{app} {version} prétest"
     },
     "visual": {
       "quality": {
@@ -45,10 +466,9 @@
       },
       "gameColors": {
         "label": "Couleurs du jeu",
-        "help": "Léger : l’ambiance et les accents prennent les couleurs du jeu sélectionné. Immersif : le fond aussi, avec l’image du jeu en haut.",
+        "help": "Stylisé : l’ambiance, la nuit et les accents prennent les couleurs du jeu sélectionné.",
         "off": "Désactivé",
-        "light": "Léger",
-        "immersive": "Immersif"
+        "light": "Stylisé"
       },
       "motion": {
         "label": "Mouvement",
@@ -63,11 +483,65 @@
       },
       "launch": {
         "label": "Mode d’affichage",
-        "help": "Change tout de suite ; c’est aussi le mode au prochain lancement. Immersif : sans bordure, à la taille de l’écran. Fenêtre : classique. Widget : une barre en haut de l’écran, toujours au premier plan."
+        "help": "Change tout de suite ; c’est aussi le mode au prochain lancement. Immersif : sans bordure, à la taille de l’écran. Fenêtre : classique. Quand {app} est fermé, Kysland reste en haut de l’écran."
       },
       "screen": {
         "label": "Écran du mode immersif",
         "item": "{name} · {width}×{height}"
+      },
+      "music": {
+        "title": "Mode musique",
+        "intro": "Le lecteur de Kysland, quand le mode musique est activé dans l’île ouverte : la pochette tourne dans une bulle de gelée noire qui bouge avec la musique.",
+        "bass": {
+          "label": "Intensité de la basse",
+          "help": "À quel point la basse fait cogner la bulle."
+        },
+        "crash": {
+          "label": "Intensité des grands moments",
+          "help": "Le crash des cymbales, l’entrée de la voix et le moment où la musique se pose : flash, ondes et gouttes."
+        },
+        "trails": {
+          "label": "Traînées",
+          "help": "La lumière laisse des traînées qui tournent autour du lecteur."
+        },
+        "gloss": {
+          "label": "Brillance",
+          "help": "À 0, le lecteur a le noir mat de l’île. Plus haut, des reflets de gelée."
+        },
+        "advanced": "Avancé",
+        "sense": {
+          "label": "Sensibilité de détection",
+          "help": "Plus haut : les coups plus faibles comptent aussi.",
+          "kick": "Basse (kick)",
+          "snare": "Caisse claire",
+          "hat": "Charleston",
+          "crash": "Crash"
+        },
+        "delay": {
+          "label": "Décalage son/image",
+          "help": "Retarde l’image si le son arrive en retard (casque Bluetooth, par exemple).",
+          "ms": "{value} ms"
+        },
+        "quality": {
+          "label": "Qualité",
+          "help": "Auto baisse la résolution si les images tardent. En Basse, l’IA du rythme est coupée (moins de calcul).",
+          "auto": "Auto",
+          "low": "Basse",
+          "medium": "Moyenne",
+          "high": "Haute"
+        },
+        "demo": {
+          "label": "Mode démo",
+          "help": "Joue le morceau de test du labo, son compris, à la place de la musique : pour régler et comparer."
+        },
+        "colors": {
+          "label": "Couleurs",
+          "help": "La lumière prend les couleurs de la pochette, ou celles du thème de Kayro.",
+          "cover": "Pochette",
+          "theme": "Thème Kayro"
+        },
+        "times": "×{value}",
+        "percent": "{value} %"
       },
       "advanced": {
         "label": "Personnalisation avancée",
@@ -140,7 +614,6 @@
           "instant": "Tout de suite",
           "launch": "Au lancement"
         },
-        "colorHero": "Image du jeu en fond (Immersif)",
         "colorFromIcon": "Apps sans image aux couleurs de leur icône"
       },
       "reset": {
@@ -150,7 +623,34 @@
       }
     },
     "themes": {
-      "apply": "Thème {name}"
+      "apply": "Thème {name}",
+      "mine": "Mes thèmes",
+      "mineHelp": "Créez votre thème à partir de deux couleurs, ou déposez ici un fichier de thème (.json) pour l’importer.",
+      "create": "Créer mon thème",
+      "edit": "Modifier {name}",
+      "editShort": "Modifier",
+      "newTitle": "Nouveau thème",
+      "editTitle": "Modifier le thème",
+      "back": "Thèmes",
+      "name": "Nom",
+      "namePlaceholder": "Mon thème",
+      "colorA": "Couleur principale",
+      "colorB": "Couleur d’accent",
+      "tint": "Fond",
+      "tintNeutral": "Neutre",
+      "tintTinted": "Teinté",
+      "adjusted": "{app} ajuste les couleurs pour que le texte reste lisible partout.",
+      "save": "Enregistrer et appliquer",
+      "cancel": "Annuler",
+      "export": "Exporter",
+      "exported": "Exporté : {file}",
+      "exportFailed": "Impossible d’exporter le thème.",
+      "delete": "Supprimer",
+      "confirmDelete": "Confirmer la suppression",
+      "saveFailed": "Impossible d’enregistrer le thème.",
+      "imported": "Thème importé : {name}",
+      "importFailed": "« {file} » n’est pas un thème valide.",
+      "full": "{max} thèmes personnels au maximum."
     }
   }
 }

@@ -12,6 +12,8 @@ interface Props {
   onDone: () => void;
   /** Dev: shows this moment (ms) and stays there. */
   seek?: number | null;
+  /** Step 19, express start: waits on the still logo for a click or Enter. */
+  express?: boolean;
 }
 
 /**
@@ -25,7 +27,7 @@ interface Props {
  * ringOut opens it in a circle with a wave (openingReveal.ts).
  * The sequence itself: runOpening.ts (pure timing: openingTimeline.ts).
  */
-export function Opening({ under, onDone, seek = null }: Props) {
+export function Opening({ under, onDone, seek = null, express = false }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const done = useRef(onDone);
   const pulseC = openingSettings(daStore.getState().values.opening).pulse === "c";
@@ -36,13 +38,15 @@ export function Opening({ under, onDone, seek = null }: Props) {
   useLayoutEffect(() => {
     const host = root.current;
     if (!host) return;
-    return runOpening(host, under.current, seek, () => done.current());
+    return runOpening(host, under.current, seek, () => done.current(), express);
+    // `express` is read once: the page starts on the logo or does not.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [under, seek]);
 
   return (
     <div ref={root} className={styles.root} role="presentation">
       <span className={styles.hint} role="status">
-        {t("opening.skip")}
+        {t(express ? "opening.express" : "opening.skip")}
       </span>
       <div data-part="bg" className={styles.bg} aria-hidden="true">
         <div data-part="bg-light" className={styles.bgLight} />
@@ -89,6 +93,11 @@ export function Opening({ under, onDone, seek = null }: Props) {
           </div>
         </div>
       </div>
+      {express && (
+        <div data-part="enter" className={styles.enter} aria-hidden="true">
+          {t("opening.enter")}
+        </div>
+      )}
     </div>
   );
 }

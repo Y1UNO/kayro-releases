@@ -78,14 +78,14 @@
     0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Hover (art direction « survol des cartes »): `rotate` tilts towards the pointer (cardTilt.ts),`
+/* Hover (art direction « survol des cartes »): `rotate` tilts towards the pointer (cardTilt.ts eases
+   it on the frame loop, the glass engine follows: no CSS transition on it),`
    `translate` lifts a grid card (level 1; a carousel card lifts with its slot, level 3), `scale` =
    press. Each on its own property so the carousel's `transform` keeps its own timing. */
 .card {
   transition:
     transform var(--dur-card) var(--ease),
     translate var(--m1-court) var(--m-ease-in),
-    rotate var(--m1-court) var(--m-ease-in),
     scale var(--m-press-dur) var(--m-press-ease),
     border-color var(--dur-card) ease;
 }
@@ -255,21 +255,8 @@
   margin: 0 auto;
   width: calc(var(--side-w, 172px) - 36px);
   box-sizing: border-box;
-  padding: 10px 14px;
-  border: 1px solid var(--glass-border);
+  padding: var(--plate-pad);
   border-radius: var(--radius-row);
-  background:
-    var(--glass-highlight),
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.2),
-      rgba(255, 255, 255, 0.05) 55%,
-      rgba(255, 255, 255, 0.12)
-    );
-  box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -1.5px 0 rgba(255, 255, 255, 0.12),
-    0 2px 6px rgba(0, 0, 0, 0.25);
   font-size: var(--fs-16);
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -283,6 +270,43 @@
     width var(--dur-card) var(--ease);
 }
 
+/* The glass of the plate (2026-10-30: thinner, lighter edges), on its own layer so that it can fade
+   out under the name of the active card with a poster. The plate's transform makes it a stacking
+   context: z-index −1 stays behind the name. */
+.plate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  box-sizing: border-box;
+  border: 1px solid var(--glass-border);
+  border-radius: inherit;
+  background:
+    var(--glass-highlight),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.04) 55%,
+      rgba(255, 255, 255, 0.1)
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: opacity var(--m1-micro) var(--m-ease-in);
+}
+
+/* 2026-10-30 (replaces V9 c's logo): the active card with a poster keeps its name in small plain
+   type at the bottom, on the poster's foot shade (the poster already shows the game's title). */
+.slot[data-active] .onPoster {
+  font-size: var(--fs-13);
+  text-align: center;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.75);
+}
+
+.slot[data-active] .onPoster::before {
+  opacity: 0;
+}
+
 .slot[data-active] .plate {
   width: calc(var(--slot-w, 232px) - 36px);
   transform: scale(1);
@@ -293,7 +317,7 @@
   left: 12px;
   right: 12px;
   bottom: 12px;
-  padding: 8px 12px;
+  padding: 5px 10px;
   font-size: var(--fs-14);
   transform: none;
 }
@@ -319,4 +343,40 @@
   background: none;
   border-color: transparent;
   box-shadow: none;
+}
+
+/* Step 19b: where a dragged app would land, a thin line of light beside the card. */
+.slot[data-drop-side]::after,
+.cell[data-drop-side]::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  bottom: 8%;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, transparent, var(--accent-light), transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent-light) 70%, transparent);
+  pointer-events: none;
+  animation: dropMark var(--m-micro, 140ms) ease-out both;
+}
+
+.slot[data-drop-side="before"]::after,
+.cell[data-drop-side="before"]::after {
+  left: calc(var(--space-5) / -2 - 1px);
+}
+
+.slot[data-drop-side="after"]::after,
+.cell[data-drop-side="after"]::after {
+  right: calc(var(--space-5) / -2 - 1px);
+}
+
+@keyframes dropMark {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Step 19c: the name is being changed in a field laid over the plate. */
+.plate[data-renaming] {
+  color: transparent;
 }

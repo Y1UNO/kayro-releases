@@ -120,6 +120,8 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       select("spring", LINK_SPRINGS, "liaison"),
       range("stagger", 0, 150, 5, 70, "ms"),
       range("regroup", 150, 900, 10, 380, "ms"),
+      // Tabs: one card's dance round the stage (fanDance.ts); 0 = gather and unfold.
+      range("danceMs", 0, 2400, 10, 1250, "ms"),
       // Opacity of the theme gradient (A → B by rank) inside the glass of a category card.
       range("fill", 0, 1, 0.05, 0.85),
     ],
@@ -139,7 +141,7 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       select("hoverSpring", LINK_SPRINGS, "leger"),
       range("burst", 0, 1, 0.05, 0.8),
       range("lift", 0, 24, 1, 12, "px"),
-      range("tilt", 0, 3, 0.1, 3, "°"),
+      range("tilt", 0, 8, 0.1, 6, "°"),
       range("grow", 0, 0.08, 0.005, 0.03),
       toggle("threads", true),
       // Round 5 (proposal 7): seen on every face (white core in Rim.module.css).
@@ -156,7 +158,7 @@ export const MOTION_ELEMENTS: readonly DaElement[] = [
       // Review B3: the hovered card floats × this (was a fixed px value, dead from « Visible » on).
       range("floatHoverGain", 1, 1.6, 0.05, 1.15),
       // Hovered card: slow pivot left / right (vertical axis), within the 3° tilt.
-      range("sway", 0, 3, 0.1, 2, "°"),
+      range("sway", 0, 8, 0.1, 2.5, "°"),
       range("swayPeriod", 1.5, 8, 0.1, 3.6, "s"),
     ],
   },

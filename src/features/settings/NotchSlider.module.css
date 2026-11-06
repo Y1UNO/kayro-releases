@@ -1,0 +1,192 @@
+/* « Cacher l'île » (2026-11-02): a slider in notches whose thumb is a drop of liquid. Every
+   duration goes through --m-k1 (level 1, motion.css): « reduce motion » stops the bounces. */
+
+@property --ratio {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.wrap {
+  /* A soft spring with two rebounds (the drop settling), and the native thumb's size. */
+  /* prettier-ignore */
+  --jelly: linear(0, 0.3 6%, 0.86 13%, 1.2 20%, 1.3 26%, 1.24 32%, 1.04 42%, 0.93 50%, 0.92 55%, 0.97 63%, 1.02 72%, 1.01 82%, 1);
+  --thumb: 20px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 460px;
+}
+
+.wrap[data-disabled] {
+  opacity: 0.45;
+}
+
+.track {
+  position: relative;
+  flex: 1;
+  height: 32px;
+  /* The thumb glides to its notch with a small overshoot. */
+  transition: --ratio calc(340ms * var(--m-k1)) var(--m-spring-v);
+}
+
+.rail {
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-light) calc(var(--thumb) / 2 + var(--ratio) * (100% - var(--thumb))),
+    var(--track) 0
+  );
+  box-shadow: var(--field-inset);
+}
+
+/* Where the thumb's centre goes (the native input's own course), notches and thumb inside. */
+.lane {
+  position: absolute;
+  inset: 0 calc(var(--thumb) / 2);
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+.notch {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--at) * 100%);
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--text) 38%, transparent);
+  transition: background-color var(--m1-court) var(--m-ease-in);
+}
+
+.notch[data-lit] {
+  background: color-mix(in srgb, white 75%, transparent);
+}
+
+.thumb {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: var(--thumb);
+  height: var(--thumb);
+  margin: calc(var(--thumb) / -2) 0 0 calc(var(--thumb) / -2);
+  translate: calc(var(--ratio) * 100cqw) 0;
+}
+
+/* Hovered it swells, held it swells more like a drop (squashed, stretched, then still);
+   let go, it shrinks back on the same bouncy spring. */
+.swell {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: scale calc(560ms * var(--m-k1)) var(--jelly);
+}
+
+.wrap:not([data-disabled]) .track:hover .swell {
+  scale: 1.18;
+}
+
+.track:has(.range:active) .swell {
+  scale: 1.42;
+  animation: grab calc(620ms * var(--m-k1)) linear both;
+}
+
+.blob {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* A rounded square (2026-11-02), like the rail and the switches. */
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Each notch reached: a small wobble (only while the value moves, not when the page opens). */
+.track[data-live] .blob {
+  animation: notch calc(380ms * var(--m-k1)) var(--m-ease-in) both;
+}
+
+.track:has(.range:focus-visible) .blob {
+  box-shadow: var(--m-focus);
+}
+
+@keyframes grab {
+  0% {
+    scale: 1.18;
+  }
+  22% {
+    scale: 1.62 1.22;
+  }
+  42% {
+    scale: 1.28 1.56;
+  }
+  62% {
+    scale: 1.5 1.36;
+  }
+  80% {
+    scale: 1.38 1.46;
+  }
+  100% {
+    scale: 1.42;
+  }
+}
+
+@keyframes notch {
+  0% {
+    scale: 1.16 0.86;
+  }
+  35% {
+    scale: 0.92 1.08;
+  }
+  65% {
+    scale: 1.04 0.97;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+/* The native input over the track: invisible, it keeps the keyboard and the screen readers;
+   its thumb is as wide as the drawn one, so a click lands on the notch under it. */
+.range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 100%;
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--thumb);
+  height: var(--thumb);
+}
+
+.range:disabled {
+  cursor: default;
+}
+
+.value {
+  min-width: 64px;
+  font-size: var(--fs-15);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-align: right;
+}

@@ -1,0 +1,27 @@
+KAYRO · RONDE 4b · ÉTATS VIDES, ERREURS, NOUVELLE SCÈNE (spécifications minimales)
+Planche : R4b-Etats (interactive : Rejouer, clic sur la carte Valorant pour simuler un échec)
+
+1. CATÉGORIE VIDE
+- Une carte pointillée « Ajouter une app » (150×180) avec un « + » dégradé, centrée.
+- Elle flotte de 4 px (5 s, en boucle). Coupé en Éco, en widget, et avec « réduire les animations ».
+- Survol : bord plus clair en 240 ms. Appui ×0,94.
+
+2. LANCEMENT QUI ÉCHOUE
+- La carte tremble UNE fois (5 px, 3 px, 240 ms) et son bord passe en rouge doux (#F08C8C).
+- Un message monte de 14 px sur le ressort liaison (360 ms) : « Valorant ne s'est pas lancé. Le chemin n'existe plus. » + une action « Corriger ». Il reste 6 s puis sort en 252 ms.
+- Un seul message à la fois : le suivant remplace le premier.
+- Pas de popup bloquante (sauf « Fermer en douceur » qui garde sa confirmation).
+- Réduire les animations : le bord passe au rouge, pas de tremblement.
+
+3. NOUVELLE SCÈNE
+- Panneau en apparition moyenne (360 ms) avec cascade de 45 ms. Le champ du nom est actif tout de suite, halo en 140 ms.
+- Trois départs : Vide / Depuis une scène existante / Importer. « Importer » reprend le fichier de scène (noms d'emplacements seulement, jamais de chemins ni de commandes).
+- Chaîne vide : zone pointillée « Aucune étape · ajoute la première ». Le premier point arrive en ressort (voir R4b-3c-Editeur).
+- Au « Créer », la scène apparaît dans le dock sur le ressort liaison.
+
+RÈGLES COMMUNES (aussi dans la planche)
+- Jamais d'écran blanc. Rouge doux seulement sur le bord et le point. Chargement > 400 ms : fil lumineux qui glisse, jamais de roue. États statiques en Éco et en widget.
+- Aucun texte en dur : tout passe par les fichiers de textes (français maintenant, structure prête pour d'autres langues).
+
+MES REMARQUES
+-

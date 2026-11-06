@@ -1,0 +1,154 @@
+/* Step 19: « Au démarrage du PC ». */
+:root {
+  /* Warning red: 7.9:1 on the window's dark background. */
+  --warn: #ff8f86;
+  --warn-glass: rgba(255, 110, 100, 0.1);
+  --warn-border: rgba(255, 130, 120, 0.42);
+}
+
+.startTitle {
+  font-size: 32px;
+}
+
+body[data-state="startup"] .panel {
+  gap: 8px;
+  max-width: 400px;
+}
+
+.startLabel {
+  margin: 4px 0 -4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--soft);
+}
+
+/* Three choices as one segmented glass bar. */
+.startModes {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+}
+
+.startMode {
+  position: relative;
+  cursor: pointer;
+}
+
+.startMode input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.startMode span {
+  display: block;
+  padding: 7px 11px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-2);
+  transition:
+    background 160ms var(--ease),
+    color 160ms var(--ease);
+}
+
+.startMode:hover span {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.startMode input:checked + span {
+  background: linear-gradient(100deg, var(--lavender), var(--peach));
+  color: #1a1020;
+}
+
+.startMode input:focus-visible + span {
+  outline: 2px solid var(--soft);
+  outline-offset: 2px;
+}
+
+.startBody {
+  width: 100%;
+}
+
+/* « Garder seulement Kayro »: red, hard to miss. */
+.startWarn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--warn-border);
+  background: var(--warn-glass);
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.startWarn strong {
+  font-size: 14px;
+  color: var(--warn);
+}
+
+.startWarn strong::before {
+  content: "⚠ ";
+}
+
+.startUndo {
+  color: var(--soft);
+}
+
+.startNote {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.startOff {
+  color: var(--warn);
+}
+
+.startFine {
+  font-size: 11.5px;
+  opacity: 0.8;
+}
+
+.startCustom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.startList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  max-height: 104px;
+  padding: 2px 8px 2px 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(183, 162, 242, 0.45) transparent;
+}
+
+.startItem {
+  margin: 0;
+  min-width: 0;
+  font-size: 12.5px;
+}
+
+.startItem span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .startMode span {
+    transition: none;
+  }
+}

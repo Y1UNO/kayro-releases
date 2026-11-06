@@ -48,7 +48,7 @@ describe("carousel floating (round 5)", () => {
     expect(ticks.size).toBe(1);
     for (let t = 0; t <= 2000; t += 16) f.tick(16, t);
     const [a, b] = boxes;
-    expect(a!.el.style.transform).toMatch(/^translateY\(-?\d/);
+    expect(a!.el.style.transform).toMatch(/^translate\(-?\d/);
     expect(a!.el.style.transform).not.toBe(b!.el.style.transform);
     expect(glassFloatOf(a!.card)).toBeDefined();
     f.dispose();
@@ -63,7 +63,9 @@ describe("carousel floating (round 5)", () => {
     const f = new CarouselFloat(stage, CONFIG, () => loop);
     f.refresh();
     const dy = () =>
-      Math.abs(Number(/translateY\((-?[\d.]+)px/.exec(boxes[0]!.el.style.transform)?.[1] ?? 0));
+      Math.abs(
+        Number(/translate\(-?[\d.]+px, (-?[\d.]+)px/.exec(boxes[0]!.el.style.transform)?.[1] ?? 0),
+      );
     let max200 = 0;
     for (let t = 0; t <= 200; t += 16) {
       f.tick(16, t);
@@ -131,7 +133,7 @@ describe("carousel floating (round 5)", () => {
 
   it("nothing floats under the category fan, back slowly once the carousel shows (review A4a)", () => {
     expect(carouselFloatConfig("visible", false, false, false).amp).toBe(0);
-    expect(carouselFloatConfig("visible", false, false, true).amp).toBe(5);
+    expect(carouselFloatConfig("visible", false, false, true).amp).toBe(7);
     expect(carouselFloatConfig("visible", false, true, true).amp).toBe(0);
     const { loop, ticks } = fakeLoop();
     const { stage } = fakeStage(["steam"]);
@@ -168,7 +170,7 @@ describe("carousel floating (round 5)", () => {
       f.tick(16, t);
       boxes.forEach((b, i) => {
         const dy = Math.abs(
-          Number(/translateY\((-?[\d.]+)px\)/.exec(b.el.style.transform)?.[1] ?? 0),
+          Number(/translate\(-?[\d.]+px, (-?[\d.]+)px\)/.exec(b.el.style.transform)?.[1] ?? 0),
         );
         peak[i] = Math.max(peak[i]!, dy);
       });

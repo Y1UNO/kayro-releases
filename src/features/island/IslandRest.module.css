@@ -1,0 +1,205 @@
+/*
+ * Step 20 (Kysland): the island's content at rest (IslandRest.tsx). Inside the black shape;
+ * each part's opacity comes from the engine (--rest-music, --rest-stretch, --rest-dots), the
+ * beat from useBeat (--b0…--b4), the album's colours from IslandApp (--album-d, --album-a).
+ */
+
+.rest {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+/* Music mode: the island's content fades before the drop takes its place, and back after. */
+[data-stage] .rest {
+  opacity: 0;
+}
+
+.music,
+.launch {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--band, 32px);
+  display: flex;
+  align-items: center;
+}
+
+.music {
+  justify-content: space-between;
+  padding: 0 12px;
+  opacity: var(--rest-music, 0);
+}
+
+/* The cover as a small record: it turns while the music plays, a step at each beat (useBeat sets
+   --spin about 30 times a second: no animation of its own, the island is redrawn at that rate,
+   not at the screen's). */
+.vinyl {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgb(var(--album-d, 60 60 70));
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
+  transform: rotate(var(--spin, 0deg));
+}
+
+.vinyl img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: coverIn 460ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+/* The record's hole. */
+.vinyl::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: #000;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.2);
+}
+
+.bars {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 18px;
+}
+
+.bars i {
+  --lv: 0;
+  width: 3px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgb(var(--album-a, var(--tone)));
+  /* No transition: the levels come 30 times a second, enough to move (and cheap). */
+  transform: scaleY(calc(0.16 + var(--lv) * 0.84));
+}
+
+.bars i:nth-child(1) {
+  --lv: var(--b0, 0);
+}
+.bars i:nth-child(2) {
+  --lv: var(--b1, 0);
+}
+.bars i:nth-child(3) {
+  --lv: var(--b2, 0);
+}
+.bars i:nth-child(4) {
+  --lv: var(--b3, 0);
+}
+.bars i:nth-child(5) {
+  --lv: var(--b4, 0);
+}
+
+/* Until the beat is heard (or when it cannot be), the bars dance on their own. */
+[data-beat="fake"] .bars i {
+  animation: dance 0.9s ease-in-out infinite alternate;
+}
+[data-beat="fake"] .bars i:nth-child(2) {
+  animation-duration: 0.7s;
+}
+[data-beat="fake"] .bars i:nth-child(3) {
+  animation-duration: 1.1s;
+}
+[data-beat="fake"] .bars i:nth-child(4) {
+  animation-duration: 0.8s;
+}
+[data-beat="fake"] .bars i:nth-child(5) {
+  animation-duration: 1s;
+}
+
+.launch {
+  gap: 10px;
+  padding: 0 14px;
+  opacity: var(--rest-stretch, 0);
+  color: #f3f7fb;
+  font: 600 13px var(--font-ui);
+}
+
+.launchName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The running apps, shown on hover: they pop in one after another. */
+.dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--band, 32px);
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  opacity: var(--rest-dots, 0);
+}
+
+.dot {
+  --k: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: scale(clamp(0, calc(var(--rest-dots, 0) * 1.6 - var(--k) * 0.1), 1));
+}
+
+.dot:hover {
+  filter: brightness(1.2);
+}
+
+.mark {
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.1);
+  color: #f3f7fb;
+  font: 700 10px var(--font-ui);
+}
+
+.mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes coverIn {
+  from {
+    transform: translateX(130%) rotate(-50deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes dance {
+  from {
+    transform: scaleY(0.22);
+  }
+  to {
+    transform: scaleY(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vinyl img,
+  [data-beat="fake"] .bars i {
+    animation: none;
+  }
+}

@@ -202,7 +202,7 @@ fn read_shared(path: &str) -> Result<share::HubSceneFile, AppError> {
 }
 
 /// Selects the file in Explorer. Best effort: the export is already written.
-fn reveal(path: &std::path::Path) {
+pub(crate) fn reveal(path: &std::path::Path) {
     let mut arg = std::ffi::OsString::from("/select,");
     arg.push(path);
     if let Err(e) = std::process::Command::new("explorer.exe").arg(arg).spawn() {

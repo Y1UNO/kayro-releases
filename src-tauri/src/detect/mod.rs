@@ -5,11 +5,17 @@
 //! that cannot be understood is skipped and logged, never an error for the whole scan.
 
 pub mod category;
+pub mod deep;
+pub mod deep_pick;
+pub mod desktop;
 pub mod epic;
 pub mod filters;
+pub mod packaged;
+pub mod relevance;
 pub mod scan;
 pub mod startmenu;
 pub mod steam;
+pub mod tidy;
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
@@ -27,6 +33,8 @@ pub enum SourceKind {
     Steam,
     Epic,
     Startmenu,
+    /// Step 19c: found by the advanced scan in a program or game folder.
+    Deep,
 }
 
 impl SourceKind {
@@ -34,7 +42,7 @@ impl SourceKind {
     pub fn default_category(self) -> &'static str {
         match self {
             SourceKind::Steam | SourceKind::Epic => "jeux",
-            SourceKind::Startmenu => "autres",
+            SourceKind::Startmenu | SourceKind::Deep => "autres",
         }
     }
 }
@@ -56,6 +64,14 @@ pub struct DetectedApp {
     pub already_added: bool,
     /// Category proposed for the app (see [`category::suggest_category`]); the user may change it.
     pub suggested_category: String,
+    /// A store or launcher (Steam, Riot Client…): proposed apart, unticked (step 19b).
+    pub launcher: bool,
+    /// The user chose « Ignorer » for it (`Settings::ignored_detections`): hidden unless asked.
+    pub ignored: bool,
+    /// Step 19c: the app's folder when known (Start Menu target, Epic install, advanced scan).
+    pub install_dir: Option<String>,
+    /// Step 19c, advanced scan: a sharper logo found in that folder (a PNG of the app's own).
+    pub logo_path: Option<String>,
 }
 
 impl DetectedApp {
@@ -167,6 +183,18 @@ pub fn default_sources() -> Vec<Box<dyn DetectSource>> {
     ]
 }
 
+/// Kayro's own program (its Desktop or Start Menu shortcut, its folder): never proposed to itself.
+pub(crate) fn is_kayro(program: &std::path::Path) -> bool {
+    let named = program
+        .file_name()
+        .is_some_and(|f| f.eq_ignore_ascii_case("kayro.exe"));
+    named
+        || std::env::current_exe().is_ok_and(|me| {
+            me.to_string_lossy()
+                .eq_ignore_ascii_case(&program.to_string_lossy())
+        })
+}
+
 /// 64-bit FNV-1a: tiny, deterministic, enough to derive stable ids (not a security hash).
 pub(crate) fn fnv1a(text: &str) -> u64 {
     text.bytes().fold(0xcbf2_9ce4_8422_2325, |h, b| {
@@ -188,6 +216,16 @@ mod tests {
         assert_eq!(short_hash("a"), short_hash("a"));
         assert_ne!(short_hash("a"), short_hash("b"));
         assert!(crate::config::validate::validate_id(&format!("menu-{}", short_hash("x"))).is_ok());
+    }
+
+    #[test]
+    fn kayro_is_never_proposed_to_itself() {
+        use std::path::Path;
+        assert!(is_kayro(Path::new(r"C:\Program Files\Kayro\Kayro.exe")));
+        assert!(is_kayro(&std::env::current_exe().unwrap()));
+        assert!(!is_kayro(Path::new(
+            r"C:\Program Files\obs-studio\bin\64bit\obs64.exe"
+        )));
     }
 
     #[test]

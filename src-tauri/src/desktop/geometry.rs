@@ -8,8 +8,6 @@ pub const WINDOW_LOGICAL: (f64, f64) = (1280.0, 760.0);
 /// Height of the composition the immersive mode scales up from (PLAN.md §6.3).
 const COMPOSITION_HEIGHT: f64 = 760.0;
 const MAX_ZOOM: f64 = 1.5;
-/// Gap between the top of the screen and the widget bar, in logical pixels.
-pub const WIDGET_TOP_GAP: f64 = 12.0;
 
 /// One screen as Windows reports it.
 #[derive(Debug, Clone, PartialEq)]
@@ -112,46 +110,6 @@ pub fn window_rect(saved: &Placement, screen: &Screen) -> Rect {
         },
     };
     clamp_into(rect, screen.work)
-}
-
-/// Widget: as wide and as tall as its content (`size`, physical pixels), at the top of the
-/// screen, horizontally where it was (centre kept) or centred.
-pub fn widget_rect(saved: &Placement, screen: &Screen, size: (u32, u32)) -> Rect {
-    let width = size.0.min(screen.work.width);
-    let centred_x = screen.work.x + ((i64::from(screen.work.width) - i64::from(width)) / 2) as i32;
-    let x = match (&saved.rect, &saved.monitor) {
-        (Some(r), Some(m)) => {
-            let centre = i64::from(r.x) + i64::from(r.width) / 2 - i64::from(m.rect.x)
-                + i64::from(screen.rect.x);
-            (centre - i64::from(width) / 2) as i32
-        }
-        _ => centred_x,
-    };
-    let y = screen.work.y + physical(WIDGET_TOP_GAP, screen.scale) as i32;
-    clamp_into(
-        Rect {
-            x,
-            y,
-            width,
-            height: size.1,
-        },
-        screen.work,
-    )
-}
-
-/// Resizes the widget to `size` keeping its centre and its top edge, inside the work area.
-pub fn refit_widget(current: Rect, size: (u32, u32), work: Rect) -> Rect {
-    let centre = i64::from(current.x) + i64::from(current.width) / 2;
-    let x = (centre - i64::from(size.0) / 2) as i32;
-    clamp_into(
-        Rect {
-            x,
-            y: current.y,
-            width: size.0,
-            height: size.1,
-        },
-        work,
-    )
 }
 
 #[cfg(test)]
@@ -276,33 +234,5 @@ mod tests {
             clamp_into(rect(10, 10, 5000, 5000), area),
             rect(0, 0, 1000, 700)
         );
-    }
-
-    #[test]
-    fn the_widget_sits_at_the_top_and_keeps_its_centre_when_it_grows() {
-        let s = screen("D1", 0, 2560, 1440, 1.0);
-        let pill = widget_rect(&Placement::default(), &s, (700, 78));
-        assert_eq!(pill, rect(930, 12, 700, 78));
-        let panel = refit_widget(pill, (776, 470), s.work);
-        assert_eq!(panel, rect(892, 12, 776, 470));
-        assert_eq!(refit_widget(panel, (700, 78), s.work), pill);
-        // Dragged to the right edge: stays on screen.
-        let edge = refit_widget(rect(2400, 12, 150, 78), (776, 470), s.work);
-        assert_eq!(right(&edge), 2560);
-        // 150 %: the gap grows with the scale.
-        let hi = screen("H", 0, 3840, 2160, 1.5);
-        assert_eq!(widget_rect(&Placement::default(), &hi, (900, 100)).y, 18);
-    }
-
-    #[test]
-    fn a_saved_widget_comes_back_on_its_screen_with_the_same_centre() {
-        let s = &two()[1];
-        let saved = Placement {
-            monitor: Some(s.key()),
-            rect: Some(rect(-1500, 12, 700, 78)),
-        };
-        let r = widget_rect(&saved, s, (700, 78));
-        assert_eq!(r.x, -1500);
-        assert_eq!(screen_at(&two(), r.x, r.y), Some(1));
     }
 }

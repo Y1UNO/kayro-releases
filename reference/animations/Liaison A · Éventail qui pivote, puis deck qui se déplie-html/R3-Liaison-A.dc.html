@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kayro liaison A</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Manrope',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+@keyframes slowSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.gl{position:relative;background:rgba(255,255,255,0.07);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 20px 50px rgba(0,0,0,0.5)}
+.pv{transition-property:transform,opacity,filter;transition-duration:calc(var(--k,1)*.85s),calc(var(--k,1)*.5s),calc(var(--k,1)*.5s);transition-timing-function:cubic-bezier(.65,0,.35,1),ease,ease}
+.cb{transition:transform calc(var(--k,1)*.6s) cubic-bezier(.22,1,.36,1),opacity calc(var(--k,1)*.4s) ease}
+.lift{transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s ease}
+.catcard:hover .lift{transform:translateY(-12px);box-shadow:0 34px 70px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.5)}
+.catcard:focus-visible{outline:2px solid #F4F1FA;outline-offset:6px}
+.mv{transition-property:transform,opacity;transition-duration:calc(var(--k,1)*.7s),calc(var(--k,1)*.45s)}
+.ring{transition:transform calc(var(--k,1)*.9s) cubic-bezier(.22,1,.36,1),opacity calc(var(--k,1)*.6s) ease}
+.spin{animation:slowSpin 36s linear infinite}
+.fade{transition:opacity calc(var(--k,1)*.45s) ease,transform calc(var(--k,1)*.55s) cubic-bezier(.2,.9,.2,1)}
+@media (prefers-reduced-motion:reduce){.pv,.cb,.lift,.mv,.ring,.fade{transition-duration:.01s !important;transition-delay:0s !important}.spin{animation:none}}
+</style>
+</helmet>
+<div style="position:relative;overflow:hidden;width:1280px;height:760px;background:{{t.bg}};color:#F4F1FA;--k:{{k}}">
+  <div style="position:absolute;left:500px;top:0;width:280px;height:620px;background:linear-gradient(180deg,{{t.beam}},rgba(0,0,0,0) 80%);-webkit-mask-image:linear-gradient(90deg,transparent,#000 35%,#000 65%,transparent);mask-image:linear-gradient(90deg,transparent,#000 35%,#000 65%,transparent);pointer-events:none"></div>
+  <div style="position:absolute;left:340px;top:440px;width:600px;height:300px;border-radius:50%;background:radial-gradient(closest-side,{{t.warm}},rgba(0,0,0,0));pointer-events:none"></div>
+
+  <div class="ring" style="position:absolute;left:310px;top:74px;width:660px;height:660px;transform:{{ring.tf}};opacity:{{ring.o}};pointer-events:none">
+    <div style="position:absolute;left:0;top:0;width:660px;height:660px;box-sizing:border-box;border-radius:50%;border:1.4px solid {{t.ringA}};box-shadow:0 0 0 3px {{t.ringB}} inset,0 0 34px {{t.glow}},inset 0 0 26px {{t.glow}}"></div>
+    <div class="spin" style="position:absolute;left:0;top:0;width:660px;height:660px;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,rgba(255,255,255,0.6) 16deg,rgba(255,255,255,0) 36deg,rgba(255,255,255,0) 200deg,rgba(255,255,255,0.35) 214deg,rgba(255,255,255,0) 232deg,rgba(255,255,255,0) 360deg);-webkit-mask-image:radial-gradient(closest-side,transparent 98%,#000 98.6%,#000 100%);mask-image:radial-gradient(closest-side,transparent 98%,#000 98.6%,#000 100%)"></div>
+  </div>
+
+  <div style="position:absolute;left:56px;top:24px;right:56px;display:flex;align-items:center;justify-content:space-between;z-index:30">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;border-radius:11px;background:linear-gradient(160deg,{{t.a}},{{t.b}});display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L14.2 10 L12 15.5 L9.8 10 Z" fill="#15132B"></path><path d="M4.2 11.5 A7.8 7.8 0 0 0 19.8 11.5 A7.8 5.2 0 0 1 4.2 11.5 Z" fill="#15132B"></path></svg></div>
+      <span style="font-family:'Cormorant Garamond',serif;font-size:27px;font-weight:500">Kayro</span>
+    </div>
+    <button onClick="{{back}}" class="fade" style="display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.18);border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;background:rgba(255,255,255,0.06);color:#F4F1FA;opacity:{{ui.backO}};pointer-events:{{ui.backPe}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Toutes les catégories</button>
+  </div>
+
+  <div class="fade" style="position:absolute;left:0;top:96px;width:1280px;text-align:center;opacity:{{ui.askO}};transform:translateY({{ui.askY}}px);pointer-events:none">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.32em;color:{{t.soft}}">CHOISIS UN UNIVERS</div>
+    <div style="margin-top:6px;font-family:'Cormorant Garamond',serif;font-size:64px;line-height:1;font-weight:300">Que veux-tu lancer&nbsp;?</div>
+  </div>
+  <div class="fade" style="position:absolute;left:0;top:88px;width:1280px;text-align:center;opacity:{{ui.catO}};transform:translateY({{ui.catY}}px);pointer-events:none">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.32em;color:{{t.soft}}">CATÉGORIE</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:96px;line-height:1;font-weight:300">{{ui.catName}}</div>
+  </div>
+
+  <sc-for list="{{apps}}" as="p" hint-placeholder-count="5">
+    <div class="mv" style="position:absolute;left:520px;top:236px;width:240px;height:336px;box-sizing:border-box;padding:16px;border-radius:24px;color:#F4F1FA;background:radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,0.2),rgba(255,255,255,0) 55%),linear-gradient(170deg,{{p.c1}},{{p.c2}} 80%);border:1px solid {{p.edge}};box-shadow:0 26px 60px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.4);transform:{{p.tf}};opacity:{{p.o}};transition-delay:{{p.delay}}ms;transition-timing-function:{{p.ease}};z-index:{{p.z}};display:flex;flex-direction:column;justify-content:space-between;pointer-events:none">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:96px;font-weight:300;line-height:1">{{p.letter}}</div>
+      <div style="padding:10px 12px;border-radius:13px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.14);font-size:16px;font-weight:600">{{p.name}}</div>
+    </div>
+  </sc-for>
+
+  <sc-for list="{{cats}}" as="c" hint-placeholder-count="5">
+    <div class="pv" style="position:absolute;left:535px;top:270px;width:210px;height:290px;transform-origin:105px 1445px;transform:rotate({{c.rot}}deg);opacity:{{c.o}};filter:blur({{c.blur}}px);transition-delay:0ms,{{c.delay}}ms,{{c.delay}}ms;z-index:{{c.z}};pointer-events:none">
+      <button onClick="{{c.pick}}" aria-label="Ouvrir {{c.name}}" class="cb catcard" style="position:absolute;left:0;top:0;width:210px;height:290px;padding:0;border:0;background:transparent;color:#F4F1FA;text-align:left;transform:{{c.tf}};opacity:{{c.io}};pointer-events:{{c.pe}}">
+        <div class="lift" style="width:210px;height:290px;box-sizing:border-box;padding:18px;border-radius:24px;background:radial-gradient(120% 70% at 20% 0%,rgba(255,255,255,0.22),rgba(255,255,255,0) 55%),linear-gradient(165deg,{{c.c1}},{{c.c2}} 85%);border:1px solid rgba(255,255,255,0.22);box-shadow:0 24px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.4);display:flex;flex-direction:column;justify-content:space-between">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:76px;font-weight:300;line-height:0.9">{{c.letter}}</div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:19px;font-weight:700">{{c.name}}</div>
+            <div style="font-size:13px;color:rgba(244,241,250,0.82)">5 apps</div>
+          </div>
+        </div>
+      </button>
+    </div>
+  </sc-for>
+
+  <div class="fade" style="position:absolute;left:0;bottom:30px;width:1280px;display:flex;justify-content:center;opacity:{{ui.hintO}};pointer-events:none">
+    <div style="font-size:13px;color:rgba(244,241,250,0.75)">Clique une carte : l'éventail pivote pour l'amener au centre, elle devient un deck qui se déplie. Change d'onglet pour voir le deck se mélanger.</div>
+  </div>
+  <div class="fade" style="position:absolute;left:0;bottom:28px;width:1280px;display:flex;justify-content:center;opacity:{{ui.tabsO}};pointer-events:{{ui.tabsPe}};z-index:30">
+    <div class="gl" style="display:flex;gap:4px;padding:5px;border-radius:16px">
+      <sc-for list="{{tabs}}" as="b" hint-placeholder-count="5">
+        <button onClick="{{b.pick}}" aria-pressed="{{b.on}}" style="border:0;border-radius:12px;padding:9px 20px;font-size:14px;font-weight:600;background:{{b.bg}};color:{{b.fg}}">{{b.name}}</button>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","default":"bleu-gris","options":["lavande-peche","mauve","sakura","bleu-gris","opale","cuivre"],"section":"Thème"},"vitesse":{"editor":"enum","default":"normale","options":["lente","normale","rapide"],"section":"Animation"},"$preview":{"width":1280,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const TH = {
+      'lavande-peche': ['#B7A2F2', '#F6A98A', '#15112B', '#0C0A1A', '#06050D', '#D9CEFA'],
+      'mauve': ['#C99ACB', '#9476C2', '#1A1228', '#100B1A', '#08060D', '#E6CCE8'],
+      'sakura': ['#F7B7C4', '#D9708E', '#24121E', '#150A12', '#0B0509', '#FBD8DF'],
+      'bleu-gris': ['#A3B0DE', '#7282BC', '#141A30', '#0B0F1E', '#05070F', '#D3DAF2'],
+      'opale': ['#9FD0E8', '#F2A2B8', '#10202A', '#0A131A', '#05090D', '#D2ECF6'],
+      'cuivre': ['#D99A6C', '#B07A78', '#24160F', '#150D09', '#0A0605', '#F0D2BC']
+    };
+    const v = TH[this.props.theme] || TH['bleu-gris'];
+    const K = { lente: 1.5, normale: 1, rapide: 0.7 };
+    const k = K[this.props.vitesse] || 1;
+    const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const hexA = (h, a) => 'rgba(' + rgb(h).join(',') + ',' + a + ')';
+    const mixArr = (h1, h2, q) => { const x = rgb(h1), y = rgb(h2); return x.map((c, i) => Math.round(c * (1 - q) + y[i] * q)); };
+    const css = (arr, q) => 'rgb(' + arr.map((c) => Math.round(c * q)).join(',') + ')';
+    const t = {
+      a: v[0], b: v[1], soft: v[5], bg: 'radial-gradient(90% 75% at 50% 0%,' + v[2] + ' 0%,' + v[3] + ' 50%,' + v[4] + ' 100%)',
+      beam: hexA(v[0], 0.2), warm: hexA(v[1], 0.16), glow: hexA(v[0], 0.16), ringA: hexA(v[0], 0.75), ringB: hexA(v[1], 0.2)
+    };
+    const st = this.state || {};
+    const phase = st.phase || 'choose';
+    const ci = st.cat ?? 0;
+    const sh = st.shuf || 0;
+    const C = [
+      { name: 'Jeux', apps: [['Apex Legends', '#C9473B'], ['Clair Obscur', '#C79A55'], ['Hades II', '#8E7BD6'], ['Slay the Spire 2', '#B8434F'], ['Forza Horizon 6', '#3F9BD8']] },
+      { name: 'Stream', apps: [['OBS Studio', '#6A6A8A'], ['Discord', '#5865F2'], ['NVIDIA Broadcast', '#76B947'], ['Voicemeeter', '#C98A3A'], ['Spotify', '#1DB954']] },
+      { name: 'Créativité', apps: [['Blender', '#E87D0D'], ['DaVinci Resolve', '#4A7AC9'], ['FL Studio 2024', '#F29A3A'], ['Audacity', '#2A5AC9'], ['PureRef', '#8A8AA0']] },
+      { name: 'Logiciels', apps: [['Visual Studio Code', '#2A8AD9'], ['7-Zip', '#5A9A5A'], ['CPU-Z', '#7A6AA9'], ['MSI Afterburner', '#C93A3A'], ['WinSCP', '#3A7AB9']] },
+      { name: 'Autre', apps: [['Wallpaper Engine', '#3A8AC9'], ['Lossless Scaling', '#9A6AC9'], ['Modrinth App', '#3AB96A'], ['CurseForge', '#E8743A'], ['Hue Sync', '#C9A93A']] }
+    ];
+    const seq = (steps) => {
+      const tok = (this._tok = (this._tok || 0) + 1);
+      let acc = 0;
+      steps.forEach(([d, s]) => {
+        acc += d;
+        if (acc === 0) this.setState(s);
+        else setTimeout(() => { if (this._tok === tok) this.setState(s); }, Math.round(acc * k));
+      });
+    };
+    const choose = phase === 'choose';
+    const cats = C.map((c, i) => {
+      const d = i - 2, sel = i === ci;
+      const base = mixArr(v[0], v[1], i / 4);
+      const r = { name: c.name, letter: c.name[0], c1: css(base, 1), c2: css(base, 0.2), pick: () => seq([[0, { cat: i, phase: 'turn' }], [650, { phase: 'deck' }], [420, { phase: 'spread' }]]) };
+      if (choose) return Object.assign(r, { rot: d * 7, tf: 'none', io: 1, o: 1, blur: 0, delay: Math.abs(i - ci) * 35, z: 10 - Math.abs(d), pe: 'auto' });
+      if (!sel) return Object.assign(r, { rot: (i - ci) * 15, tf: 'none', io: 1, o: 0, blur: 6, delay: 120, z: 10 - Math.abs(d), pe: 'none' });
+      const lifted = phase === 'turn' || phase === 'close';
+      return Object.assign(r, { rot: 0, tf: lifted ? 'translateY(-30px) scale(1.06)' : 'translateY(-14px) scale(0.6)', io: lifted ? 1 : 0, o: 1, blur: 0, delay: 0, z: 20, pe: 'none' });
+    });
+    const X = [-428, -230, 0, 230, 428], S = [0.73, 0.73, 1, 0.73, 0.73];
+    const spring = 'cubic-bezier(.34,1.32,.64,1)', soft = 'cubic-bezier(.4,0,.2,1)';
+    const apps = C[ci].apps.map((p, i) => {
+      const ad = Math.abs(i - 2);
+      const ord = (i * 3 + sh * 2) % 5, off = ord - 2;
+      const deck = 'translate(' + off * 7 + 'px,' + (Math.abs(off) * 4 - 10) + 'px) rotate(' + off * 3.5 + 'deg) scale(0.55)';
+      const base = mixArr(p[1], v[0], 0.45);
+      const r = { name: p[0], letter: p[0][0], c1: css(base, 1), c2: css(base, 0.18), edge: 'rgba(255,255,255,0.2)' };
+      if (phase === 'spread') return Object.assign(r, { tf: 'translate(' + X[i] + 'px,0px) scale(' + S[i] + ')', o: i === 2 ? 1 : 0.62, delay: ad * 70, ease: spring, z: 10 - ad, edge: i === 2 ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)' });
+      if (phase === 'deck') return Object.assign(r, { tf: deck, o: 1, delay: (2 - ad) * 35, ease: soft, z: 10 + ord });
+      return Object.assign(r, { tf: deck, o: 0, delay: 0, ease: soft, z: 10 + ord });
+    });
+    const tabs = C.map((c, i) => ({
+      name: c.name, on: i === ci ? 'true' : 'false',
+      bg: i === ci ? 'rgba(255,255,255,0.16)' : 'transparent', fg: i === ci ? '#FFFFFF' : 'rgba(244,241,250,0.8)',
+      pick: () => { if (i === ci) return; seq([[0, { phase: 'deck', cat: i, shuf: sh + 1 }], [380, { phase: 'spread' }]]); }
+    }));
+    const inside = phase === 'deck' || phase === 'spread';
+    const ui = {
+      askO: choose ? 1 : 0, askY: choose ? 0 : -20, catO: choose ? 0 : 1, catY: choose ? 20 : 0, catName: C[ci].name,
+      backO: choose ? 0 : 1, backPe: choose ? 'none' : 'auto', hintO: choose ? 1 : 0,
+      tabsO: inside ? 1 : 0, tabsPe: inside ? 'auto' : 'none'
+    };
+    const ring = inside ? { tf: 'none', o: 1 } : { tf: 'translateY(140px) scale(0.9)', o: 0 };
+    const back = () => seq([[0, { phase: 'close' }], [380, { phase: 'choose' }]]);
+    return { t, k, cats, apps, tabs, ui, ring, back };
+  }
+}
+</script>
+</body>
+</html>

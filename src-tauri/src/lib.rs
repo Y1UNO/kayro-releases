@@ -3,19 +3,33 @@ pub mod config;
 pub mod desktop;
 pub mod detect;
 pub mod error;
+pub mod hands;
 pub mod icons;
 pub mod intake;
 pub mod ipc;
 pub mod ipc_art;
 pub mod ipc_desktop;
+pub mod ipc_detect;
+pub mod ipc_hands;
+pub mod ipc_island;
+pub mod ipc_moods;
+pub mod ipc_outputs;
 pub mod ipc_scenes;
+pub mod ipc_startup;
+pub mod ipc_themes;
+pub mod ipc_update;
+pub mod ipc_voice;
 pub mod launcher;
 mod legacy;
 mod logging;
+pub mod logs_export;
+pub mod media;
 pub mod paths;
 pub mod platform;
 pub mod procwatch;
 pub mod scenes;
+pub mod update;
+pub mod voice;
 
 use config::ConfigState;
 use tauri::Manager;
@@ -26,11 +40,15 @@ pub(crate) const SILENT_FLAG: &str = "--silent";
 /// replace the exe, never kills it); with no Kayro running, this one ends at once.
 pub(crate) const QUIT_FLAG: &str = "--quit";
 
+/// When this process started (step 19: « start → logo » is logged for the express start).
+pub(crate) static STARTED: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+
 fn asks_to_quit<S: AsRef<str>>(args: &[S]) -> bool {
     args.iter().any(|a| a.as_ref() == QUIT_FLAG)
 }
 
 pub fn run() {
+    STARTED.get_or_init(std::time::Instant::now);
     // Before the logger: it creates the new data folder, which would hide the old one.
     let migration = legacy::migrate_legacy_data(&paths::appdata_base());
     logging::init();
@@ -52,16 +70,16 @@ pub fn run() {
             tracing::info!(?args, "second instance: showing the window");
             desktop::show(app);
         }))
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec![SILENT_FLAG]),
         ))
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(|app, shortcut, event| {
-                    if event.state() == ShortcutState::Pressed {
-                        desktop::on_hotkey(app, shortcut.id());
-                    }
+                .with_handler(|app, shortcut, event| match event.state() {
+                    ShortcutState::Pressed => desktop::on_hotkey(app, shortcut.id()),
+                    ShortcutState::Released => desktop::on_hotkey_released(app, shortcut.id()),
                 })
                 .build(),
         )
@@ -81,6 +99,21 @@ pub fn run() {
                 roots: art::ArtRoots::system(data.art_dir()),
             });
             app.manage(ConfigState::load(data));
+            // Step 18b: the installer's choices, then (if allowed) one look for an update.
+            let config = app.state::<ConfigState>();
+            // « Démarrer avec Windows » goes through the Task Scheduler (slow): on its own thread.
+            let asked = update::apply_install_choices(&config, config.paths().root());
+            let for_autostart = app.handle().clone();
+            std::thread::spawn(move || {
+                if let Some(on) = asked {
+                    if let Err(e) = ipc_startup::set_autostart(&for_autostart, on) {
+                        tracing::warn!(error = ?e, "install choices: start with Windows not set");
+                    }
+                }
+                ipc_startup::autostart_follow(&for_autostart);
+            });
+            app.manage(update::PendingUpdate::default());
+            ipc_update::check_at_start(app.handle(), config.settings().update_auto);
             // Colours of the apps' images, on a background thread (step 14).
             app.manage(ipc_art::PaletteWorker::default());
             app.state::<ipc_art::PaletteWorker>().request(app.handle());
@@ -98,7 +131,24 @@ pub fn run() {
                     use tauri_specta::Event;
                     ipc::notify(ipc::AppStateChanged(state).emit(&for_events));
                 },
+                {
+                    // Step 20: a program in full screen in front hides the island.
+                    let for_island = app.handle().clone();
+                    move |pid| {
+                        desktop::cover::on_foreground(pid);
+                        desktop::island::on_foreground(&for_island);
+                        voice::on_foreground(&for_island);
+                        hands::on_foreground(&for_island);
+                        desktop::on_program_in_front(&for_island);
+                    }
+                },
             ));
+            // 30/10: the launch cover tells the page when the game's window came to the front.
+            let for_cover = app.handle().clone();
+            desktop::cover::set_reporter(move |exe| {
+                use tauri_specta::Event;
+                ipc::notify(desktop::cover::LaunchLanded(exe).emit(&for_cover));
+            });
             let silent = std::env::args().any(|a| a == SILENT_FLAG);
             desktop::startup(app.handle(), silent);
             Ok(())

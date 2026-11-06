@@ -1,0 +1,61 @@
+/* Steps 16–17, edit dialog › Apparence: « Ambiance du jeu ». Same family as AppLook.module.css:
+   tokens only, chips in --radius-pill, the dialog's text sizes. */
+.mood {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--glass-border);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.title {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.help {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--text-3);
+}
+
+.help[data-kind="error"] {
+  color: var(--fail);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.group {
+  font-size: var(--fs-12);
+  color: var(--text-3);
+  margin-right: var(--space-1);
+}
+
+.dose {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: var(--space-4);
+}
+
+.slider {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--fs-13);
+  color: var(--text-2);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}

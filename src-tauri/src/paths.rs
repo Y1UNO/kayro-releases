@@ -73,6 +73,11 @@ impl DataPaths {
         self.root.join("themes")
     }
 
+    /// The user's imported ambiences, `<id>.hubmood` (steps 16–17).
+    pub fn moods_dir(&self) -> PathBuf {
+        self.root.join("moods")
+    }
+
     /// Images the user gave apps (`art/<appId>/<role>.<ext>`): copies, never exported.
     pub fn art_dir(&self) -> PathBuf {
         self.root.join("art")

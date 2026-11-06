@@ -12,6 +12,7 @@ import { desktopIpc } from "../../ipc/commands";
 import { hubStore, useHub } from "../../store";
 import type { MotionStyle } from "../../design/motion/tokens5";
 import { AdvancedSection } from "./AdvancedSection";
+import { MusicModeRows } from "./MusicModeRows";
 import { ChoiceRow, ToggleRow } from "./SettingRow";
 import {
   ATMOSPHERE,
@@ -97,7 +98,7 @@ export function VisualSection() {
         help={t("settings.visual.gameColors.help")}
         value={settings.colorMode}
         onChange={(colorMode) => set({ colorMode })}
-        options={(["off", "light", "immersive"] as const).map((m) => ({
+        options={(["off", "light"] as const).map((m) => ({
           value: m,
           label: t(`settings.visual.gameColors.${m}`),
         }))}
@@ -123,7 +124,7 @@ export function VisualSection() {
         help={t("settings.visual.launch.help")}
         value={settings.displayMode}
         onChange={(displayMode) => set({ displayMode })}
-        options={(["immersive", "window", "widget"] as const).map((m) => ({
+        options={(["immersive", "window"] as const).map((m) => ({
           value: m,
           label: t(`home.modes.${m}`),
         }))}
@@ -138,6 +139,8 @@ export function VisualSection() {
           />
         )}
       </ChoiceRow>
+
+      <MusicModeRows />
 
       <AdvancedSection below={below} />
 

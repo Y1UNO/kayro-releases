@@ -5,7 +5,10 @@ import { t } from "../../i18n";
 import type { AppEntry, Step } from "../../ipc/bindings";
 import type { StepView } from "../../store";
 import { useAppIcon } from "../home/useAppIcon";
-import { DragGhost } from "../home/Overlays";
+import { Landing } from "./Landing";
+import { TetherGhost, type TetherFrom } from "./TetherGhost";
+import { useFallUp } from "./useFallUp";
+import { usePullOut } from "./usePullOut";
 import { stepSentence } from "./describe";
 import { resolved, type Action, type EditorDraft } from "./draft";
 import { RunMark } from "./RunMark";
@@ -45,27 +48,49 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
   const { items, sequence } = draft.simple;
   const byId = useMemo(() => new Map(apps.map((a) => [a.id, a])), [apps]);
   const inScene = new Set(items.map((i) => i.appId));
+  const inSceneKey = items.map((i) => i.appId).join(" ");
   const full = items.length >= MAX_SIMPLE_ITEMS;
 
   const [listMotion] = useState(() => new ListMotionState());
+  const pool = useRef<HTMLUListElement>(null);
+  // Step 19c: pulled out of « Mes apps » first, then on its thread; dropped, it lands in its row.
+  const pullOut = usePullOut(pool);
+  const [landing, setLanding] = useState<{ appId: string; from: TetherFrom } | null>(null);
   const { drag, begin, ignoreClick } = useDrag<Payload>({
     list: zone,
     rows: "[data-item-row]",
+    onMove: (_p, x, y) => pullOut.move(x, y),
     onDrop: (payload, index) => {
       if (index === null) return;
-      if (payload.kind === "app") dispatch({ type: "addApp", appId: payload.appId, index });
-      else {
+      if (payload.kind === "app") {
+        const frame = document.querySelector("[data-tether-frame]")?.getBoundingClientRect();
+        if (frame) {
+          const from = { left: frame.left, top: frame.top, width: frame.width, height: frame.height };
+          setLanding({ appId: payload.appId, from });
+        }
+        dispatch({ type: "addApp", appId: payload.appId, index });
+      } else {
         const to = index > payload.from ? index - 1 : index;
         if (to !== payload.from) dispatch({ type: "moveItem", from: payload.from, to });
       }
     },
-    onEnd: () => listMotion.snapshot(),
+    onEnd: () => {
+      pullOut.end();
+      listMotion.snapshot();
+    },
   });
 
+  // Step 19c: an app in the scene leaves « Mes apps » (it comes back when taken out of the scene).
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? apps.filter((a) => a.name.toLowerCase().includes(q)) : apps;
-  }, [apps, query]);
+    const left = apps.filter((a) => !inSceneKey.split(" ").includes(a.id));
+    return q ? left.filter((a) => a.name.toLowerCase().includes(q)) : left;
+  }, [apps, query, inSceneKey]);
+  const out = pullOut.pull?.out === true;
+  // Out of its list, the app leaves « Mes apps » at once (it comes back if it is not placed).
+  const gone = out && drag?.payload.kind === "app" ? drag.payload.appId : null;
+  const listed = gone ? shown.filter((a) => a.id !== gone) : shown;
+  useFallUp(pool, listed.map((a) => a.id).join(" "));
 
   // Apps that come, go and change places move on the "liaison" spring (round 4b).
   useListMotion(list, listMotion, items.map((i) => i.appId).join(" "), drag !== null);
@@ -93,11 +118,11 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
     nudge(i, e.key === "ArrowUp" ? -1 : 1);
   }
 
-  const ghostName =
+  const dragged =
     drag?.payload.kind === "app"
-      ? byId.get(drag.payload.appId)?.name
+      ? byId.get(drag.payload.appId)
       : drag
-        ? byId.get(items[drag.payload.from]?.appId ?? "")?.name
+        ? byId.get(items[drag.payload.from]?.appId ?? "")
         : undefined;
 
   return (
@@ -112,11 +137,20 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
           onChange={(e) => setQuery(e.target.value)}
         />
         <p className={styles.hint}>{t("scenes.simple.poolHelp")}</p>
-        <ul className={styles.poolList}>
-          {shown.map((app) => {
+        <ul ref={pool} className={styles.poolList}>
+          {listed.map((app) => {
             const used = inScene.has(app.id);
+            const lifted = drag?.payload.kind === "app" && drag.payload.appId === app.id;
+            // Still held in the list: the row stretches towards the pointer (19c).
+            const tug = lifted && drag ? pullOut.offset(drag.x, drag.y) : null;
             return (
-              <li key={app.id}>
+              <li
+                key={app.id}
+                data-row-key={app.id}
+                data-lifted={(lifted && out) || undefined}
+                data-tugging={tug ? "" : undefined}
+                style={tug ? { transform: `translate(${tug.x}px, ${tug.y}px)` } : undefined}
+              >
                 <button
                   type="button"
                   className={styles.poolItem}
@@ -127,7 +161,11 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
                       ? t("scenes.simple.alreadyIn", { name: app.name })
                       : t("scenes.simple.add", { name: app.name })
                   }
-                  onPointerDown={(e) => !used && !full && begin(e, { kind: "app", appId: app.id })}
+                  onPointerDown={(e) => {
+                    if (used || full) return;
+                    pullOut.take(e);
+                    begin(e, { kind: "app", appId: app.id });
+                  }}
                   onClick={() => {
                     if (ignoreClick()) return;
                     dispatch({ type: "addApp", appId: app.id });
@@ -141,7 +179,7 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
               </li>
             );
           })}
-          {shown.length === 0 && <li className={styles.hint}>{t("scenes.simple.noApp")}</li>}
+          {listed.length === 0 && <li className={styles.hint}>{t("scenes.simple.noApp")}</li>}
         </ul>
       </Surface>
 
@@ -206,7 +244,10 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
                   data-grip
                   aria-label={t("scenes.step.move", { n: i + 1 })}
                   aria-describedby="scenes-move-help"
-                  onPointerDown={(e) => begin(e, { kind: "move", from: i })}
+                  onPointerDown={(e) => {
+                    pullOut.take(e, true);
+                    begin(e, { kind: "move", from: i });
+                  }}
                 >
                   <GripIcon size={18} />
                 </button>
@@ -248,7 +289,25 @@ export function SimpleEditor({ draft, apps, dispatch, run }: Props) {
           <p className={styles.hint}>{t("scenes.simple.previewNote")}</p>
         </Surface>
       </div>
-      {drag && ghostName && <DragGhost name={ghostName} x={drag.x} y={drag.y} />}
+      {/* Step 19b: the app hangs from the pointer on a thread of light, once out of its list. */}
+      {drag && dragged && out && (
+        <TetherGhost
+          key={dragged.id}
+          app={dragged}
+          x={drag.x}
+          y={drag.y}
+          from={pullOut.pull?.from ?? null}
+        />
+      )}
+      {landing && byId.get(landing.appId) && (
+        <Landing
+          key={landing.appId}
+          app={byId.get(landing.appId)!}
+          from={landing.from}
+          list={list}
+          onDone={() => setLanding(null)}
+        />
+      )}
     </div>
   );
 }

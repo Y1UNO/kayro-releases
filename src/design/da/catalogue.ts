@@ -202,7 +202,7 @@ export const CATALOGUE: readonly DaElement[] = [
     // a flash at the launch (`launchFlash` × the "long" token). The reflection that follows the
     // pointer (`sheen`) is a 3rd effect: off on carousel cards at level 3 (rule 1).
     params: [
-      range("tilt", 0, 3, 0.1, 2.5, "°"),
+      range("tilt", 0, 8, 0.1, 6, "°"),
       range("lift", 0, 10, 0.5, 4, "px"),
       range("sheen", 0, 0.5, 0.01, 0.18),
       range("delay", 0, 400, 10, 120, "ms"),

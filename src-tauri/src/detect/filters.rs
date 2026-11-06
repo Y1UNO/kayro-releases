@@ -14,8 +14,11 @@ const STEAM_TOOL_APPIDS: [&str; 6] = [
     "2180100", // Proton Hotfix
 ];
 
-const STEAM_TOOL_NAMES: [&str; 5] = [
+const STEAM_TOOL_NAMES: [&str; 8] = [
     "steamworks",
+    "dedicated server",
+    "soundtrack",
+    " sdk",
     "proton",
     "steam linux runtime",
     "redistributable",

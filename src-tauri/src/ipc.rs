@@ -17,7 +17,7 @@ use crate::intake::{inspect, shortcut_target, InspectReport};
 use crate::launcher::system::SystemLauncher;
 use crate::launcher::{launch_app, LaunchResult};
 use crate::procwatch::{AppRunState, ProcWatch, RunningApps};
-use crate::{icons, ipc_art, ipc_desktop, ipc_scenes, platform};
+use crate::{icons, ipc_art, ipc_desktop, ipc_moods, ipc_scenes, ipc_themes, platform};
 
 /// Emitted after every successful change of the settings (also to the window that made it).
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
@@ -84,6 +84,8 @@ pub(crate) fn update_settings<R: Runtime>(
     let settings = state.set_settings(patch)?;
     notify(SettingsChanged(settings.clone()).emit(app));
     crate::desktop::settings_changed(app, &old, &settings);
+    crate::voice::settings_changed(app, &old, &settings);
+    crate::hands::settings_changed(app, &old, &settings);
     Ok(settings)
 }
 
@@ -188,13 +190,16 @@ pub async fn detect_scan<R: Runtime>(
     detect: State<'_, DetectState>,
 ) -> Result<ScanReport, AppError> {
     let existing = config.apps().apps;
+    let ignored = config.settings().ignored_detections;
     let token = detect.begin();
     let scan_token = token.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
         let sources = default_sources();
-        run_scan(&sources, &existing, &scan_token, &|progress| {
+        let mut report = run_scan(&sources, &existing, &scan_token, &|progress| {
             notify(progress.emit(&app));
-        })
+        });
+        crate::detect::tidy::mark_ignored(&mut report, &ignored);
+        report
     })
     .await;
     detect.finish(&token);
@@ -209,7 +214,7 @@ pub fn detect_cancel(detect: State<'_, DetectState>) {
 }
 
 /// Tells the interface the list changed, and the process watcher to look at the new list.
-fn apps_changed<R: Runtime>(app: &AppHandle<R>, state: &ConfigState) {
+pub(crate) fn apps_changed<R: Runtime>(app: &AppHandle<R>, state: &ConfigState) {
     notify(AppsChanged(state.apps()).emit(app));
     if let Some(palettes) = app.try_state::<ipc_art::PaletteWorker>() {
         palettes.request(app);
@@ -320,16 +325,32 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_scenes::scene_import_preview,
             ipc_scenes::scene_import::<tauri::Wry>,
             ipc_desktop::window_hide::<tauri::Wry>,
-            ipc_desktop::window_drag::<tauri::Wry>,
             ipc_desktop::window_painted::<tauri::Wry>,
-            ipc_desktop::widget_fit::<tauri::Wry>,
+            ipc_desktop::island_grab::<tauri::Wry>,
+            ipc_desktop::intro_done::<tauri::Wry>,
+            ipc_desktop::window_show::<tauri::Wry>,
+            ipc_desktop::island_panel::<tauri::Wry>,
+            ipc_desktop::island_state::<tauri::Wry>,
+            ipc_desktop::island_rest,
+            ipc_desktop::island_open::<tauri::Wry>,
+            crate::ipc_island::island_tuck::<tauri::Wry>,
+            crate::ipc_island::island_stage::<tauri::Wry>,
+            crate::ipc_island::island_stage_area::<tauri::Wry>,
+            ipc_desktop::island_effects::<tauri::Wry>,
+            ipc_desktop::island_footprint::<tauri::Wry>,
+            ipc_desktop::media_now::<tauri::Wry>,
+            ipc_desktop::media_control::<tauri::Wry>,
+            ipc_desktop::media_beat::<tauri::Wry>,
+            ipc_desktop::island_backdrop::<tauri::Wry>,
             ipc_desktop::monitors_list::<tauri::Wry>,
             ipc_desktop::monitor_choose::<tauri::Wry>,
             ipc_desktop::hotkey_set::<tauri::Wry>,
+            ipc_desktop::search_hotkey_set::<tauri::Wry>,
             ipc_desktop::hotkeys_get,
             ipc_desktop::scene_hotkey_take::<tauri::Wry>,
-            ipc_desktop::autostart_get::<tauri::Wry>,
-            ipc_desktop::autostart_set::<tauri::Wry>,
+            crate::ipc_startup::autostart_get::<tauri::Wry>,
+            crate::ipc_startup::autostart_set::<tauri::Wry>,
+            ipc_desktop::logs_export::<tauri::Wry>,
             ipc_desktop::recents_get,
             ipc_desktop::opening_due::<tauri::Wry>,
             ipc_desktop::passage_faded::<tauri::Wry>,
@@ -337,6 +358,51 @@ pub fn builder() -> Builder<tauri::Wry> {
             ipc_art::art_set_user::<tauri::Wry>,
             ipc_art::art_clear_user::<tauri::Wry>,
             ipc_art::palettes_get,
+            ipc_themes::themes_list,
+            ipc_themes::theme_new_id,
+            ipc_themes::theme_save::<tauri::Wry>,
+            ipc_themes::theme_delete::<tauri::Wry>,
+            ipc_themes::theme_import::<tauri::Wry>,
+            ipc_themes::theme_export,
+            ipc_moods::moods_list,
+            ipc_moods::mood_import::<tauri::Wry>,
+            ipc_moods::mood_delete::<tauri::Wry>,
+            ipc_moods::mood_export,
+            ipc_desktop::launch_cover::<tauri::Wry>,
+            crate::ipc_detect::detect_icon,
+            crate::ipc_detect::detect_deep::<tauri::Wry>,
+            crate::ipc_detect::apps_reorder::<tauri::Wry>,
+            crate::ipc_startup::startup_apps,
+            crate::ipc_startup::startup_app_set,
+            crate::ipc_startup::startup_apps_restore,
+            crate::ipc_update::update_check::<tauri::Wry>,
+            crate::ipc_update::update_pending::<tauri::Wry>,
+            crate::ipc_update::update_install::<tauri::Wry>,
+            crate::ipc_voice::voice_state,
+            crate::ipc_voice::voice_mute::<tauri::Wry>,
+            crate::ipc_voice::voice_take_pending,
+            crate::ipc_voice::voice_close::<tauri::Wry>,
+            crate::ipc_voice::voice_models,
+            crate::ipc_voice::voice_model_download::<tauri::Wry>,
+            crate::ipc_voice::voice_model_cancel,
+            crate::ipc_voice::voice_model_remove::<tauri::Wry>,
+            crate::ipc_voice::voice_microphones,
+            crate::ipc_outputs::voice_outputs,
+            crate::ipc_voice::voice_learn,
+            crate::ipc_voice::voice_teach,
+            crate::ipc_voice::voice_memory,
+            crate::ipc_voice::voice_forget,
+            crate::ipc_voice::voice_calibrate::<tauri::Wry>,
+            crate::ipc_voice::voice_calib_record,
+            crate::ipc_voice::voice_calib_evaluate::<tauri::Wry>,
+            crate::ipc_voice::voice_calib_summary,
+            crate::ipc_voice::voice_calib_clear,
+            crate::ipc_hands::hands_state,
+            crate::ipc_hands::hands_set_on::<tauri::Wry>,
+            crate::ipc_hands::hands_model,
+            crate::ipc_hands::hands_model_download::<tauri::Wry>,
+            crate::ipc_hands::hands_model_cancel,
+            crate::ipc_hands::hands_model_remove::<tauri::Wry>,
         ])
         .events(collect_events![
             SettingsChanged,
@@ -345,41 +411,36 @@ pub fn builder() -> Builder<tauri::Wry> {
             AppStateChanged,
             ipc_scenes::SceneProgress,
             crate::desktop::WindowVisibility,
+            crate::desktop::island::IslandFrame,
+            crate::desktop::island::IslandMoment,
+            crate::desktop::island::IslandTucked,
+            crate::desktop::island::IslandStage,
+            crate::media::MediaChanged,
+            crate::media::MediaBeat,
+            crate::media::MusicFrame,
+            crate::media::MusicBeats,
             crate::desktop::passage::ModePassage,
             crate::desktop::SceneHotkey,
+            crate::desktop::SearchSummon,
             crate::desktop::hotkeys::HotkeysChanged,
             ipc_desktop::RecentsChanged,
             ipc_art::ArtChanged,
-            ipc_art::PalettesChanged
+            ipc_art::PalettesChanged,
+            ipc_themes::ThemesChanged,
+            ipc_moods::MoodsChanged,
+            crate::desktop::cover::LaunchLanded,
+            crate::ipc_update::UpdateAvailable,
+            crate::ipc_detect::DeepProgress,
+            crate::ipc_update::UpdateProgress,
+            crate::voice::VoiceStateChanged,
+            crate::voice::VoiceHeard,
+            crate::voice::models::VoiceModelProgress,
+            crate::voice::VoiceLearned,
+            crate::voice::calib::VoiceRecorded,
+            crate::hands::HandsStateChanged
         ])
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use specta_typescript::Typescript;
-    use std::path::PathBuf;
-
-    fn committed_path() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../src/ipc/bindings.ts")
-    }
-
-    /// `src/ipc/bindings.ts` must be exactly what the Rust types generate (`npm run gen:types`).
-    #[test]
-    fn committed_bindings_match_the_rust_types() {
-        let dir = tempfile::tempdir().unwrap();
-        let fresh = dir.path().join("bindings.ts");
-        builder()
-            .export(Typescript::default(), &fresh)
-            .expect("export");
-        let norm = |p: &PathBuf| {
-            std::fs::read_to_string(p)
-                .unwrap_or_default()
-                .replace("\r\n", "\n")
-        };
-        assert!(
-            norm(&fresh) == norm(&committed_path()),
-            "src/ipc/bindings.ts is out of date: run `npm run gen:types`"
-        );
-    }
-}
+#[path = "ipc_tests.rs"]
+mod tests;

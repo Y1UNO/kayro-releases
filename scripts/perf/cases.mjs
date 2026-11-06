@@ -1,5 +1,6 @@
 // Kayro performance bench: the cases of block M and how to reach the state each one needs.
-// A case = { id, title, at, settings?, qualities?, scenario?, during?, page?, costOnly?, settle? }.
+// A case = { id, title, at, settings?, qualities?, scenario?, during?, page?, costOnly?, settle?,
+// prepare? (before its trials), needs? (a session option: `--island across`) }.
 // `at`: fan | carousel | empty | settings:<tab> | editor | window | widget | hidden.
 import { mark, sleep } from "./lib.mjs";
 import {
@@ -17,6 +18,17 @@ import {
   toggleEvery,
 } from "./states.mjs";
 export { ensure } from "./states.mjs";
+
+/** Step 20: plays or pauses the music Windows knows, with the island's own control; false: none. */
+async function music(X, playing) {
+  const invoke = (cmd, a = {}) =>
+    X.w.evaluate(`window.__TAURI_INTERNALS__.invoke(${JSON.stringify(cmd)}, ${JSON.stringify(a)})`);
+  const now = await invoke("media_now");
+  if (!now) return false;
+  if (now.playing !== playing) await invoke("media_control", { action: "toggle" });
+  await sleep(2000);
+  return true;
+}
 import { GAME_CASES } from "./cases14.mjs";
 
 // ---------- the cases, in run order (grouped by state: the fewest moves between them) ----------
@@ -280,34 +292,30 @@ export const CASES = [
       await sleep(3000);
     },
   },
-  { id: "R8", title: "Widget au repos", at: "widget", page: "widget" },
+  // Step 20: the widget is the island (Kysland). R8 / R11: docked, music paused / playing (the
+  // music Windows knows on this PC, played or paused by the island's own control). R12: floating
+  // across two screens in « Capri » (`--island across`: the session starts it there).
   {
-    id: "A5",
-    title: "Widget qui se déplie / se replie",
+    id: "R8",
+    title: "Kysland accroché, sans musique",
     at: "widget",
     page: "widget",
-    scenario: async (X, c) => {
-      await mark(X.w, "unroll");
-      await X.w.clickSel("button[aria-expanded]");
-      await c.wait(1500);
-      await mark(X.w, "fold");
-      await X.w.clickSel("button[aria-expanded]");
-      await c.wait(1500);
-    },
-    during: [
-      { name: "déroulé", re: /unroll/, dur: 800 },
-      { name: "repli", re: /fold/, dur: 400 },
-    ],
-    after: async (X) => {
-      await sleep(800);
-      if (
-        (await X.w.evaluate(
-          `document.querySelector('button[aria-expanded]').getAttribute('aria-expanded')`,
-        )) === "true"
-      )
-        await X.w.clickSel("button[aria-expanded]");
-      await sleep(800);
-    },
+    prepare: (X) => music(X, false),
+  },
+  {
+    id: "R11",
+    title: "Kysland accroché, musique en cours",
+    at: "widget",
+    page: "widget",
+    prepare: (X) => music(X, true),
+  },
+  {
+    id: "R12",
+    title: "Kysland à cheval, Capri au repos",
+    at: "widget",
+    page: "widget",
+    needs: "across",
+    prepare: (X) => music(X, false).then(() => true),
   },
   { id: "R10", title: "Hub masqué (coût seul)", at: "hidden", qualities: ["high"], costOnly: true },
 ];

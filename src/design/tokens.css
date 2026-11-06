@@ -134,6 +134,15 @@
   --radius-card: var(--da-card-radius, 30px); /* app cards */
   --radius-fan: 24px; /* category cards (210 px wide) and the empty card */
 
+  /* Steps 16–17: each category card has its own fine-line emblem (top corner) and a faint large
+     copy of it behind the face; their hover motion is level 3 (durations × --m-k3). */
+  --fan-emblem: 66px;
+  --fan-mark: 156px;
+  --fan-mark-alpha: 0.09;
+
+  /* Name plate of the app cards (2026-10-30: thinner, 10 / 14 → 6 / 12). */
+  --plate-pad: 6px 12px;
+
   /* Faces without a poster (app cards, scene cards, category fan): the dark end of their A → B
      gradient, × the face colour (review B5: 0.2 → 0.28, the theme stays in the bottom third).
      The contrast model follows it (contrast.ts `faceFoot`). */

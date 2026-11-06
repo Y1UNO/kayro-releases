@@ -1,4 +1,4 @@
-//! IPC of the desktop side: hiding, dragging and fitting the widget, screens, shortcuts, starting
+//! IPC of the desktop side: hiding, the island (Kysland), screens, shortcuts, starting
 //! with Windows, recent apps (registered in `ipc::builder`).
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -6,7 +6,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri::{AppHandle, Runtime, State, WebviewWindow};
-use tauri_plugin_autostart::ManagerExt;
 use tauri_specta::Event;
 
 use crate::config::schema::SettingsPatch;
@@ -46,6 +45,9 @@ pub enum OpeningDue {
     /// Silent start: no opening, but it is still the program's start (asked once, at once, even
     /// hidden, so that the home screen is ready under the first show).
     Quiet,
+    /// Express start (step 19): the logo stays still until a click or Enter, then the opening
+    /// goes on from there (asked once, at once, even hidden: the logo is ready under the show).
+    Express,
     No,
 }
 
@@ -53,6 +55,7 @@ pub enum OpeningDue {
 pub struct OpeningOnce {
     asked: AtomicBool,
     silent: AtomicBool,
+    express: AtomicBool,
 }
 
 impl OpeningOnce {
@@ -60,7 +63,13 @@ impl OpeningOnce {
         Self {
             asked: AtomicBool::new(false),
             silent: AtomicBool::new(false),
+            express: AtomicBool::new(false),
         }
+    }
+
+    /// The program was started at login on its home screen (step 19).
+    pub fn express_start(&self) {
+        self.express.store(true, Ordering::SeqCst);
     }
 
     /// The program was started silently: no opening in this run.
@@ -69,6 +78,12 @@ impl OpeningOnce {
     }
 
     fn due(&self, visible: bool) -> OpeningDue {
+        if self.express.load(Ordering::SeqCst) {
+            return match self.asked.swap(true, Ordering::SeqCst) {
+                true => OpeningDue::No,
+                false => OpeningDue::Express,
+            };
+        }
         let quiet = self.silent.load(Ordering::SeqCst);
         if !quiet && !visible && !self.asked.load(Ordering::SeqCst) {
             return OpeningDue::Later;
@@ -115,11 +130,116 @@ pub fn passage_faded<R: Runtime>(
     crate::desktop::passage::faded(&app, id, veil);
 }
 
-/// Starts moving the calling window with the mouse (the widget has no title bar).
+/// « Après l'intro »: Kysland (`island`) or « Caché »: the intro's window goes (async: a window
+/// may be built or destroyed).
 #[tauri::command]
 #[specta::specta]
-pub fn window_drag<R: Runtime>(window: WebviewWindow<R>) -> Result<(), AppError> {
-    Ok(window.start_dragging()?)
+pub async fn intro_done<R: Runtime>(app: AppHandle<R>, island: bool) {
+    crate::desktop::intro_done(&app, island);
+}
+
+/// Shows Kayro (the island's « Passer en immersif »).
+#[tauri::command]
+#[specta::specta]
+pub async fn window_show<R: Runtime>(app: AppHandle<R>) {
+    crate::desktop::show(&app);
+}
+
+/// The opened island's size, which follows its content (logical pixels).
+#[tauri::command]
+#[specta::specta]
+pub fn island_panel<R: Runtime>(app: AppHandle<R>, width: f64, height: f64) {
+    crate::desktop::island::set_panel_size(&app, width, height);
+}
+
+/// Step 20 (Kysland): a press on the island starts its gesture (`calm`: « reduce motion »).
+#[tauri::command]
+#[specta::specta]
+pub fn island_grab<R: Runtime>(app: AppHandle<R>, calm: bool) {
+    crate::desktop::island::grab(&app, calm);
+}
+
+/// Step 20: where the island is (the page's first frame).
+#[tauri::command]
+#[specta::specta]
+pub fn island_state<R: Runtime>(app: AppHandle<R>) -> crate::desktop::island::IslandState {
+    crate::desktop::island::state_now(&app)
+}
+
+/// Step 20: the page opens or closes the island (its panel); `calm`: « reduce motion ».
+#[tauri::command]
+#[specta::specta]
+pub fn island_open<R: Runtime>(app: AppHandle<R>, open: bool, calm: bool) {
+    crate::desktop::island::set_open(&app, open, calm);
+}
+
+/// Step 20: a held frame of the island's effects that its window must not cut (the glitch's
+/// spikes on an edge), shown by a click-through layer. Async: rasterised off the interface's
+/// thread.
+#[tauri::command]
+#[specta::specta]
+pub async fn island_effects<R: Runtime>(
+    app: AppHandle<R>,
+    frame: crate::desktop::island::effects::FxFrame,
+) {
+    crate::desktop::island::effects::show(&app, &frame);
+}
+
+/// Step 20: the island's size at rest as drawn now, docked and floating (logical), for its
+/// click region.
+#[tauri::command]
+#[specta::specta]
+pub fn island_footprint<R: Runtime>(
+    app: AppHandle<R>,
+    docked_width: f64,
+    docked_height: f64,
+    floating_width: f64,
+    floating_height: f64,
+) {
+    crate::desktop::island::set_footprint(
+        &app,
+        (docked_width, docked_height),
+        (floating_width, floating_height),
+    );
+}
+
+/// Step 20: the music playing (Spotify first), read from Windows; starts following the players.
+#[tauri::command]
+#[specta::specta]
+pub async fn media_now<R: Runtime>(app: AppHandle<R>) -> Option<crate::media::NowPlaying> {
+    crate::media::now(&app)
+}
+
+/// Step 20: previous, play/pause or next on the player shown.
+#[tauri::command]
+#[specta::specta]
+pub async fn media_control<R: Runtime>(
+    app: AppHandle<R>,
+    action: crate::media::MediaAction,
+) -> bool {
+    crate::media::control(&app, action)
+}
+
+/// Step 20: follow the beat (the island's bars) while music plays and the island shows.
+#[tauri::command]
+#[specta::specta]
+pub fn media_beat<R: Runtime>(app: AppHandle<R>, on: bool) {
+    crate::media::beat(&app, on);
+}
+
+/// Step 20: the page's effects are over (the window is cut to the island again).
+#[tauri::command]
+#[specta::specta]
+pub fn island_rest() {
+    crate::desktop::island::page_at_rest();
+}
+
+/// Step 20: the lightness of the screen around the island (0–1), for its colours. Async: one
+/// small read of the screen, never on the interface's thread.
+#[tauri::command]
+#[specta::specta]
+pub async fn island_backdrop<R: Runtime>(app: AppHandle<R>) -> Option<f64> {
+    crate::desktop::island::backdrop_now(&app)
 }
 
 /// The page tells it painted after being shown (measurement only, see `KAYRO_BENCH_SHOW`).
@@ -127,17 +247,6 @@ pub fn window_drag<R: Runtime>(window: WebviewWindow<R>) -> Result<(), AppError>
 #[specta::specta]
 pub fn window_painted<R: Runtime>(app: AppHandle<R>) {
     crate::desktop::painted(&app);
-}
-
-/// Resizes the widget window to its content, in logical pixels.
-#[tauri::command]
-#[specta::specta]
-pub fn widget_fit<R: Runtime>(app: AppHandle<R>, width: f64, height: f64) -> Result<(), AppError> {
-    let sane = |v: f64| v.is_finite() && (1.0..=4000.0).contains(&v);
-    if !sane(width) || !sane(height) {
-        return Err(AppError::validation("size", "size out of range"));
-    }
-    crate::desktop::fit_widget(&app, width, height)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -198,6 +307,35 @@ pub async fn hotkey_set<R: Runtime>(app: AppHandle<R>, hotkey: String) -> Result
     Ok(())
 }
 
+/// Changes or (empty) removes « Écrire dans Kysland ». Refused like `hotkey_set`.
+#[tauri::command]
+#[specta::specta]
+pub async fn search_hotkey_set<R: Runtime>(
+    app: AppHandle<R>,
+    hotkey: String,
+) -> Result<(), AppError> {
+    match hotkeys::set_search(&app, &hotkey) {
+        Ok(()) => {}
+        Err(HotkeyProblem::Invalid) => {
+            return Err(AppError::validation("searchHotkey", "not a valid shortcut"));
+        }
+        Err(HotkeyProblem::Conflict) => {
+            return Err(AppError::new(
+                ErrorCode::HotkeyConflict,
+                format!("{hotkey} is already used"),
+            ));
+        }
+    }
+    update_settings(
+        &app,
+        SettingsPatch {
+            search_hotkey: Some(hotkey),
+            ..Default::default()
+        },
+    )?;
+    Ok(())
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn hotkeys_get(state: State<'_, hotkeys::HotkeyState>) -> HotkeysReport {
@@ -211,30 +349,30 @@ pub fn scene_hotkey_take<R: Runtime>(app: AppHandle<R>) -> Option<String> {
     crate::desktop::take_pending_scene(&app)
 }
 
-/// Whether Windows starts the hub at login (the Run key is the source of truth).
+/// « Exporter les logs »: zips the log folder into the exports folder, selects it in Explorer
+/// and returns its path. Nothing leaves the PC.
 #[tauri::command]
 #[specta::specta]
-pub fn autostart_get<R: Runtime>(app: AppHandle<R>) -> Result<bool, AppError> {
-    app.autolaunch()
-        .is_enabled()
-        .map_err(|e| AppError::new(ErrorCode::Internal, e.to_string()))
-}
-
-#[tauri::command]
-#[specta::specta]
-pub fn autostart_set<R: Runtime>(app: AppHandle<R>, enabled: bool) -> Result<bool, AppError> {
-    let launch = app.autolaunch();
-    let result = if enabled {
-        launch.enable()
-    } else {
-        launch.disable()
-    };
-    result.map_err(|e| AppError::new(ErrorCode::Internal, e.to_string()))?;
-    if !enabled {
-        crate::platform::startup::forget_startup_approval(&app.package_info().name);
-    }
-    tracing::info!(enabled, "start with Windows changed");
-    autostart_get(app)
+pub fn logs_export<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, ConfigState>,
+) -> Result<String, AppError> {
+    let info = app.package_info();
+    let infos = format!(
+        "{} {}\nWindows : {}\n",
+        info.name,
+        info.version,
+        sysinfo::System::long_os_version().unwrap_or_else(|| "inconnu".into()),
+    );
+    let path = crate::logs_export::write_zip(
+        &crate::paths::logs_dir(),
+        &state.paths().exports_dir(),
+        &crate::logs_export::today(),
+        &infos,
+    )?;
+    tracing::info!(file = %path.display(), "logs exported");
+    crate::ipc_scenes::reveal(&path);
+    Ok(path.display().to_string())
 }
 
 #[cfg(test)]
@@ -263,5 +401,27 @@ mod tests {
         o.silent_start();
         assert_eq!(o.due(true), OpeningDue::Quiet);
         assert_eq!(o.due(true), OpeningDue::No);
+    }
+
+    #[test]
+    fn an_express_start_waits_on_the_logo_once() {
+        // Step 19: answered at once even hidden (the logo is ready under the first show).
+        let o = OpeningOnce::new();
+        o.express_start();
+        assert_eq!(o.due(false), OpeningDue::Express);
+        assert_eq!(o.due(true), OpeningDue::No);
+    }
+}
+
+/// Launch cover (30/10, desktop/cover.rs): `on` keeps the hub in front of everything while a game
+/// starts behind it (its store's windows stay hidden) and reports the game's window
+/// (`LaunchLanded`); off ends it, `hide` taking the hub off the screen.
+#[tauri::command]
+#[specta::specta]
+pub async fn launch_cover<R: Runtime>(app: AppHandle<R>, on: bool, hide: bool) {
+    if on {
+        crate::desktop::cover::start(&app);
+    } else {
+        crate::desktop::cover::end(&app, hide);
     }
 }

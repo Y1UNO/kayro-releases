@@ -45,7 +45,8 @@ describe("category link A (round 3b): settings and phases", () => {
       [650, "deck"],
       [1070, "spread"],
     ]);
-    expect(stepsOf("tab", c)).toEqual([
+    expect(stepsOf("tab", c)).toEqual([[0, "dance"]]);
+    expect(stepsOf("tab", linkConfig({ on: true, danceMs: 0 }))).toEqual([
       [0, "deck"],
       [380, "spread"],
     ]);
@@ -159,14 +160,44 @@ describe("category link A: sequences", () => {
     for (const [key, v] of mid) near(start.get(key), v, 1e-6);
   });
 
-  it("tab: new apps gather in a new order, unfold 380 ms later", () => {
-    const rest = restValues("spread", ctx(1, 0), c);
-    const s = new Sequence("tab", ctx(2, 1), c, rest, rest);
+  it("tab without shuffle: new apps gather in a new order, unfold 380 ms later", () => {
+    const plain = linkConfig({ on: true, danceMs: 0 });
+    const rest = restValues("spread", ctx(1, 0), plain);
+    const s = new Sequence("tab", ctx(2, 1), plain, rest, rest);
     near(s.at(0).get("a0.x"), -428);
-    near(s.at(380).get("a2.sc"), s.at(380).get("a2.sc")!); // defined
     expect(s.phaseAt(379)).toBe("deck");
     expect(s.phaseAt(380)).toBe("spread");
     near(s.at(s.duration).get("a0.x"), -428);
+  });
+
+  it("tab: the cards dance round the whole stage, cross over and under, and land at their places", () => {
+    const rest = restValues("spread", ctx(1, 0), c);
+    const s = new Sequence("tab", ctx(2, 1), c, rest, rest);
+    // 30/10: the selected card lands first, with its impact, while the others still dance.
+    // It settles just after the last card has landed.
+    expect(s.impact).toBeCloseTo(1250 - 240 + 2 * 45, 0);
+    expect(s.duration).toBeCloseTo(s.impact + 440, 0);
+    expect(s.duration).toBeGreaterThan(1250 + 4 * 45);
+    near(s.at(0).get("a0.x"), -428);
+    // Mid-dance: spread over the stage (not a pile in the centre), faces gone, some at the back.
+    const mid = s.at(600);
+    const xs = SLOTS.map(({ k }) => mid.get(`a${k}.x`)!);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(500);
+    expect(Math.min(...SLOTS.map(({ k }) => mid.get(`a${k}.y`)!))).toBeLessThan(-40);
+    for (const { k } of SLOTS) expect(mid.get(`a${k}.f`)!).toBeLessThan(0.05);
+    // The stacking order changes on the way (cards pass in front of each other).
+    const z = (t: number) => SLOTS.map(({ k }) => Math.round(s.at(t).get(`a${k}.z`)!)).join();
+    const orders = new Set([300, 500, 700, 900, 1100].map(z));
+    expect(orders.size).toBeGreaterThan(2);
+    // Every card ends at its carousel place, faces back, centre card on top.
+    const end = s.at(s.duration);
+    for (const { k, x, s: sc } of SLOTS) {
+      near(end.get(`a${k}.x`), x);
+      near(end.get(`a${k}.y`), 0);
+      near(end.get(`a${k}.sc`), sc);
+      near(end.get(`a${k}.f`), 1);
+      near(end.get(`a${k}.z`), -Math.abs(k - 2));
+    }
   });
 
   it("speed scales every step and duration", () => {

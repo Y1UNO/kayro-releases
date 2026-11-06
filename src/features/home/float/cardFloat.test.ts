@@ -4,9 +4,9 @@ import { floatAt, floatLevel, seedOfKey } from "./cardFloat";
 
 describe("card floating (R5-Flottaison)", () => {
   it("has the note's levels, Visible when unknown", () => {
-    expect(floatLevel("visible")).toEqual({ fan: 7, carousel: 5, tilt: 0.8, period: 4400 });
-    expect(floatLevel("strong")).toMatchObject({ fan: 12, carousel: 8, tilt: 1.4 });
-    expect(floatLevel("light")).toMatchObject({ fan: 2.5, carousel: 2 });
+    expect(floatLevel("visible")).toEqual({ fan: 10, carousel: 7, tilt: 1.1, period: 4600 });
+    expect(floatLevel("strong")).toMatchObject({ fan: 15, carousel: 11, tilt: 1.8 });
+    expect(floatLevel("light")).toMatchObject({ fan: 4, carousel: 3 });
     expect(floatLevel("nope")).toBe(FLOAT_LEVELS.visible);
     expect(floatLevel("none").fan).toBe(0);
   });
@@ -26,7 +26,7 @@ describe("card floating (R5-Flottaison)", () => {
     expect(top).toBeCloseTo(-7, 1);
     expect(bottom).toBeCloseTo(7, 1);
     expect(rock).toBeCloseTo(0.8, 2);
-    expect(floatAt(0, 1234, 0, 0.8, 4400)).toEqual({ dy: 0, rot: 0, elev: 0 });
+    expect(floatAt(0, 1234, 0, 0.8, 4400)).toEqual({ dx: 0, dy: 0, rot: 0, elev: 0 });
   });
 
   it("never moves the cards « en bloc »: own period, staggered start, alternate rocking", () => {
@@ -51,12 +51,12 @@ describe("card floating (R5-Flottaison)", () => {
 
   it("the ground shadow changes fully only at « Marquée » on the fan", () => {
     let max = 0;
-    for (let t = 0; t < 10000; t += 7) max = Math.max(max, floatAt(2, t, 12, 1.4, 4800).elev);
+    for (let t = 0; t < 10000; t += 7) max = Math.max(max, floatAt(2, t, 15, 1.8, 5000).elev);
     expect(max).toBeCloseTo(1, 2);
     let visible = 0;
     for (let t = 0; t < 10000; t += 7)
-      visible = Math.max(visible, floatAt(2, t, 7, 0.8, 4400).elev);
-    expect(visible).toBeCloseTo(14 / 24, 2);
+      visible = Math.max(visible, floatAt(2, t, 10, 1.1, 4600).elev);
+    expect(visible).toBeCloseTo(20 / 30, 2);
   });
 
   it("gives each app its own rhythm (stable seed of its id)", () => {

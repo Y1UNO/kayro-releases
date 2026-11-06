@@ -13,6 +13,11 @@ export interface GameColorsState {
   since: number;
   /** The last change plays the passage (false: the first selection, shown at once). */
   tide: boolean;
+  /**
+   * Step 16b: where the shown app's card is now (viewport px), kept current (selection, resize);
+   * null when no app is shown. The atmosphere's focus target (`FxLayer.setFocusTarget`).
+   */
+  focus: FxTarget | null;
 }
 
 export const gameColorsStore = createStore<GameColorsState>()(() => ({
@@ -20,10 +25,32 @@ export const gameColorsStore = createStore<GameColorsState>()(() => ({
   origin: null,
   since: 0,
   tide: false,
+  focus: null,
 }));
+
+/** Same place to the pixel: an identical target is not written again (no render for nothing). */
+function samePlace(a: FxTarget | null, b: FxTarget | null): boolean {
+  if (!a || !b) return a === b;
+  const px = (v: number) => Math.round(v);
+  return px(a.x) === px(b.x) && px(a.top) === px(b.top) && px(a.bottom) === px(b.bottom);
+}
+
+/** Step 16b: the shown card moved (window resized, mode changed): `locate` gives its new place. */
+export function refreshFocus(locate: () => FxTarget | null): void {
+  const { shown, focus } = gameColorsStore.getState();
+  const next = shown === null ? null : locate();
+  if (!samePlace(focus, next)) gameColorsStore.setState({ focus: next });
+}
 
 let timer = 0;
 let started = false;
+/** 30/10: no change of colours before this time (`performance.now`): the tab dance's impact. */
+let holdUntil = 0;
+
+/** A sequence asks the colours to wait for its moment (the selected card's impact). */
+export function holdGameColors(until: number): void {
+  holdUntil = until;
+}
 
 /**
  * The home's selection (`null`: nothing selected). Its colours follow once it has rested
@@ -37,13 +64,25 @@ export function selectGame(id: string | null, locate: () => FxTarget | null, wai
   const state = gameColorsStore.getState();
   if (!started) {
     started = true;
-    gameColorsStore.setState({ shown: id, origin: null, since: performance.now(), tide: false });
+    const focus = id === null ? null : locate();
+    gameColorsStore.setState({
+      shown: id,
+      origin: null,
+      since: performance.now(),
+      tide: false,
+      focus,
+    });
     return;
   }
   if (state.shown === id) return;
-  const ms = wait ? GAME_COLORS.delay / currentMotion().speed : 0;
+  const ms = Math.max(
+    wait ? GAME_COLORS.delay / currentMotion().speed : 0,
+    holdUntil - performance.now(),
+  );
   timer = window.setTimeout(() => {
-    gameColorsStore.setState({ shown: id, origin: locate(), since: performance.now(), tide: true });
+    const origin = locate();
+    const focus = id === null ? null : origin;
+    gameColorsStore.setState({ shown: id, origin, since: performance.now(), tide: true, focus });
   }, ms);
 }
 
@@ -51,5 +90,6 @@ export function selectGame(id: string | null, locate: () => FxTarget | null, wai
 export function resetGameColors(): void {
   window.clearTimeout(timer);
   started = false;
-  gameColorsStore.setState({ shown: null, origin: null, since: 0, tide: false });
+  holdUntil = 0;
+  gameColorsStore.setState({ shown: null, origin: null, since: 0, tide: false, focus: null });
 }

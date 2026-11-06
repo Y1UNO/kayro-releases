@@ -5,6 +5,7 @@ import lavandePeche from "./lavande-peche.json";
 import opale from "./opale.json";
 import sakura from "./sakura.json";
 import { parseTheme, type Theme } from "../theme";
+import { personalTheme } from "./custom";
 
 function checked(raw: unknown): Theme {
   const r = parseTheme(raw);
@@ -34,8 +35,12 @@ export const PICKER_THEMES: readonly Theme[] = BUILTIN_THEMES;
 /** Ids that were renamed (the settings file is migrated too; this covers presets and old pages). */
 const RENAMED: Readonly<Record<string, string>> = { mauve: "encre" };
 
-/** The built-in theme for an id (renamed ids followed), else the default. */
+/** The theme for an id: built-in (renamed ids followed), else personal (step 15), else the default. */
 export function resolveTheme(id: string | undefined): Theme {
   const wanted = id === undefined ? undefined : (RENAMED[id] ?? id);
-  return BUILTIN_THEMES.find((t) => t.id === wanted) ?? DEFAULT_THEME;
+  return (
+    BUILTIN_THEMES.find((t) => t.id === wanted) ??
+    (wanted === undefined ? undefined : personalTheme(wanted)) ??
+    DEFAULT_THEME
+  );
 }

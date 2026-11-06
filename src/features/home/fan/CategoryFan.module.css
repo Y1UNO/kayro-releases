@@ -1,7 +1,8 @@
 /*
  * Category fan (art direction round 3b, link A; values of reference/animations/…/R3-Liaison-A):
- * cards 210 × 290, radius 24, gradient of the theme A → B by rank (--mix), letter 76/300, name
- * 19/700, count 13. Poses are written by linkDirector.ts (transform / opacity only).
+ * cards 210 × 290, radius 24, gradient of the theme A → B by rank (--mix), name 19/700, count 13;
+ * since steps 16–17 each category has its own emblem in place of the letter (CategoryEmblem).
+ * Poses are written by linkDirector.ts (transform / opacity only).
  */
 .fan {
   position: absolute;
@@ -130,13 +131,6 @@
 
 .card[data-side="end"] .fill {
   transform: scaleX(-1);
-}
-
-.letter {
-  font-family: var(--font-title);
-  font-size: 76px;
-  font-weight: 300;
-  line-height: 0.9;
 }
 
 .foot {

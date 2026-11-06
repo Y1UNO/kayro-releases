@@ -8,6 +8,9 @@ const ok = <T>(value: T): Outcome<T> => ({ ok: true, value });
 
 const REPORT: HotkeysReport = {
   toggle: { hotkey: "Ctrl+Alt+H", problem: "conflict" },
+  search: null,
+  voice: null,
+  hands: null,
   scenes: [],
 };
 
@@ -16,7 +19,6 @@ function fakeIpc(over: Partial<DesktopIpc> = {}): DesktopIpc {
   return {
     hide: never,
     drag: never,
-    fitWidget: never,
     painted: never,
     monitors: never,
     chooseMonitor: never,
@@ -59,7 +61,13 @@ describe("desktop store", () => {
     const store = createDesktopStore(fakeIpc(), events);
     await store.getState().init();
     handlers.recents?.(["c"]);
-    handlers.hotkeys?.({ toggle: { hotkey: "Ctrl+Alt+J", problem: null }, scenes: [] });
+    handlers.hotkeys?.({
+      toggle: { hotkey: "Ctrl+Alt+J", problem: null },
+      search: null,
+      voice: null,
+      hands: null,
+      scenes: [],
+    });
     expect(store.getState().recents).toEqual(["c"]);
     expect(store.getState().hotkeys?.toggle?.hotkey).toBe("Ctrl+Alt+J");
   });

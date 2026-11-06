@@ -23,7 +23,12 @@ import { installAddAppsMock } from "./addAppsMock";
 import { Opening } from "../features/opening/Opening";
 import { ACTIVE_THEME_ID } from "../design/da";
 import type { CategoryId } from "../features/home/categories";
-import { VISUAL_DEFAULTS } from "../features/settings/settingsModel";
+import {
+  SOUND_DEFAULTS,
+  UPDATE_DEFAULTS,
+  VISUAL_DEFAULTS,
+  DETECT_DEFAULTS,
+} from "../features/settings/settingsModel";
 import { effectiveQuality } from "../design/quality";
 
 /** The category journey, as exposed by useCategoryLink.ts in development builds. */
@@ -86,6 +91,9 @@ const MOCK: Record<string, string[]> = {
   autres: ["Photos", "Bloc-notes", "Paramètres", "Calculatrice", "Musique"],
 };
 
+/** `?mood=runes`: every app takes that ambience (steps 16–17, needs `?colors`). */
+const DEV_MOOD = new URLSearchParams(location.search).get("mood");
+
 function entry(name: string, category: string, i: number): AppEntry {
   return {
     id: `${category}-${i}`,
@@ -95,7 +103,7 @@ function entry(name: string, category: string, i: number): AppEntry {
     launch: { kind: "exe", path: "C:/fake.exe", args: [], cwd: null, elevated: false },
     match: { exe: null },
     art: { poster: null, hero: null },
-    moodId: null,
+    moodId: DEV_MOOD,
     favorite: false,
   };
 }
@@ -120,14 +128,60 @@ export default function HomeDev() {
       apps,
       settings: {
         ...VISUAL_DEFAULTS,
+        ...SOUND_DEFAULTS,
+        ...UPDATE_DEFAULTS,
+        ...DETECT_DEFAULTS,
+        openingScreen: "last",
         schemaVersion: 2,
         themeId: params.get("theme") ?? ACTIVE_THEME_ID,
         quality: QUALITIES.find((q) => q === params.get("fx")) ?? "high",
-        colorMode: params.get("colors") === "immersive" ? "immersive" : "light",
+        colorMode: "light",
         hotkey: "Ctrl+Alt+H",
+        searchHotkey: "Ctrl+Alt+K",
+        keyboardLayout: "auto",
+        voice: {
+          mode: "off",
+          wakeWord: "Hé Kayro",
+          hotkey: "Ctrl+Alt+V",
+          model: "parakeet",
+          inGame: false,
+          wakeHeard: [],
+          microphone: "",
+          speakers: "",
+          aura: "",
+          links: [],
+          onlyMe: false,
+          echoCancel: true,
+          brain: true,
+        },
+        hands: {
+          enabled: false,
+          hotkey: "Ctrl+Alt+M",
+          inGame: false,
+          idleMinutes: 2,
+          reach: 1,
+          glow: true,
+        },
         language: "fr",
         atmosphereIntensity: Number(params.get("intensity")) || 1,
         displayMode: "immersive",
+        islandAlways: true,
+        islandTuck: false,
+        islandTuckDelay: 1.5,
+        islandPeekDelay: 0.1,
+        islandMusic: false,
+        musicBass: 1,
+        musicCrash: 1,
+        musicTrails: 0.6,
+        musicGloss: 0,
+        musicSenseKick: 1,
+        musicSenseSnare: 1,
+        musicSenseHat: 1,
+        musicSenseCrash: 1,
+        musicDelayMs: 0,
+        musicQuality: "auto",
+        musicDemo: false,
+        musicColors: "cover",
         hideOnEscape: true,
         hideOnBlur: false,
         economyMode: false,

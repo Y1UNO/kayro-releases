@@ -1,0 +1,62 @@
+/* Step 21: the microphone button, lit while the microphone listens (DA-JOURNAL, 2026-11-04). */
+
+.mic {
+  position: relative;
+  transition:
+    color var(--m1-court) var(--m-ease-in),
+    opacity var(--m1-court) var(--m-ease-in);
+}
+
+.mic[data-mic="open"] {
+  color: var(--accent-light);
+}
+
+/* A soft halo that breathes while listening (opacity only). */
+.mic[data-mic="open"]::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--accent-light);
+  opacity: 0.5;
+  animation: breathe 2.4s var(--m-ease-in) infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes breathe {
+  from {
+    opacity: 0.15;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
+.mic[data-mic="muted"] {
+  opacity: 0.6;
+}
+
+.mic[data-mic="idle"] {
+  opacity: 0.85;
+}
+
+.slash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60%;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.mic[data-still]::after {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic[data-mic="open"]::after {
+    animation: none;
+  }
+}

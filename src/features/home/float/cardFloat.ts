@@ -33,6 +33,8 @@ export function seedOfKey(key: string): number {
 }
 
 export interface FloatSample {
+  /** Sideways drift (px). */
+  dx: number;
   /** Vertical offset (px, negative = up). */
   dy: number;
   /** Rocking (deg). */
@@ -41,7 +43,7 @@ export interface FloatSample {
   elev: number;
 }
 
-const REST: FloatSample = { dy: 0, rot: 0, elev: 0 };
+const REST: FloatSample = { dx: 0, dy: 0, rot: 0, elev: 0 };
 
 /** Start of card `i` of a row (the fan): each one 0.6 to 0.7 s after the previous one. */
 export function staggerStart(i: number): number {
@@ -66,7 +68,9 @@ export function floatAt(
   const p = period * (R.periodMin + (R.periodMax - R.periodMin) * seed(i, 1));
   const s = Math.sin((2 * Math.PI * (t - start)) / p);
   const side = i % 2 === 0 ? 1 : -1;
+  const w = Math.sin((2 * Math.PI * (t - start)) / (p * R.driftPeriod) + seed(i, 3) * 6.28);
   return {
+    dx: amp * R.driftShare * w,
     dy: -amp * s,
     rot: side * tilt * s,
     elev: Math.min(1, (amp * (1 + s)) / R.shadowFullAt),

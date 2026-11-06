@@ -1,3 +1,4 @@
+import { playSound } from "../../sound";
 import { useMemo, useState } from "react";
 import { Button, PlusIcon, SearchIcon, UploadIcon } from "../../design";
 import { useDa } from "../../design/da";
@@ -55,6 +56,7 @@ export function ScenesScreen({ onBack, onEdit }: Props) {
 
   async function exportScene(scene: SceneFile) {
     const r = await sceneStore.getState().exportScene(scene.id);
+    if (r.ok) playSound("export");
     if (r.ok) say(t("scenes.list.exported", { file: r.value.split(/[\\/]/).pop() ?? r.value }));
   }
 

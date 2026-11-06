@@ -33,6 +33,16 @@ pub struct Placement {
     pub rect: Option<Rect>,
 }
 
+/// Step 20 (Kysland): a docked island's place on the top edge of its screen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DockSlot {
+    Left,
+    #[default]
+    Center,
+    Right,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct UiState {
@@ -40,6 +50,10 @@ pub struct UiState {
     pub immersive: Placement,
     pub window: Placement,
     pub widget: Placement,
+    /// Step 20 (Kysland): the island sits on its notch (else it floats at `widget`'s place).
+    pub widget_docked: bool,
+    /// Step 20: where on the top edge it is docked (centred, or in a top corner).
+    pub widget_slot: DockSlot,
     /// Most recent first, at most [`MAX_RECENTS`].
     pub recents: Vec<String>,
 }
@@ -51,6 +65,8 @@ impl Default for UiState {
             immersive: Placement::default(),
             window: Placement::default(),
             widget: Placement::default(),
+            widget_docked: true,
+            widget_slot: DockSlot::Center,
             recents: Vec::new(),
         }
     }

@@ -1,0 +1,13 @@
+/* A long name is cut (the pill's own width is up to its parent: none in the dock). */
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.progress {
+  font-size: var(--fs-12);
+  font-weight: 700;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}

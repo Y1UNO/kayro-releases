@@ -1,8 +1,10 @@
+import { playSound, stopSound } from "../../sound";
 import { APP_NAME } from "../../app/appName";
 import { daStore } from "../../design/da";
 import { Choreo } from "../../design/motion/choreo";
 import { OPENING_C } from "../../design/motion/tokens4b";
 import { isEco } from "../../design/quality";
+import { desktopIpc } from "../../ipc/commands";
 import { setIntroCue } from "../../fx/gpu/cues";
 import { prefersReducedMotion } from "../../fx/motionPref";
 import { hubStore } from "../../store";
@@ -13,6 +15,7 @@ import {
   openingDuration,
   openingRestAt,
   openingSettings,
+  type OpeningFrame,
   type OpeningGeometry,
   type Part,
 } from "./openingTimeline";
@@ -24,6 +27,18 @@ import {
 const STILL_MS = 1200;
 
 export const LETTERS = Array.from(APP_NAME);
+
+/** Express start (step 19): the moment it waits on, logo whole and centred, ring drawn (spec ms). */
+export const EXPRESS_AT = 1750;
+
+/** Keys that start the express opening (with a click). */
+const ENTER_KEYS = new Set(["Enter", " "]);
+
+/** Express: the glint and the sheen belong to the logo forming, already done: none. */
+export function stillLogo(f: OpeningFrame): OpeningFrame {
+  const [draw, turn, , scale] = f.intro.draw;
+  return { ...f, sheen: -170, intro: { ...f.intro, draw: [draw, turn, 0, scale] } };
+}
 
 /** Keys that skip the opening (with a click). Tab and the others pass (review B6). */
 const SKIP_KEYS = new Set(["Escape", "Enter", " "]);
@@ -55,12 +70,15 @@ function place(el: HTMLElement | null, p: Part, o = p.o): void {
 /**
  * Runs the opening in the elements of `host` (marked `data-part`, see Opening.tsx) and fades
  * `under` (the home screen) in at the end. Returns the cleanup. `seek`: dev, shows one moment.
+ * `express` (step 19): waits on the still logo for a click, Enter or Space, then goes on from there
+ * (Escape hides the hub, the home screen ready under the next show).
  */
 export function runOpening(
   host: HTMLElement,
   under: HTMLElement | null,
   seek: number | null,
   onDone: () => void,
+  express = false,
 ): () => void {
   const part = (name: string) => host.querySelector<HTMLElement>(`[data-part="${name}"]`);
   const all = (name: string) => [...host.querySelectorAll<HTMLElement>(`[data-part="${name}"]`)];
@@ -77,6 +95,7 @@ export function runOpening(
   const ring = part("ring");
   const veil = part("veil");
   const wave = part("wave");
+  const enter = part("enter");
 
   const s = openingSettings(daStore.getState().values.opening);
   const eco = isEco(hubStore.getState().settings?.quality);
@@ -100,6 +119,12 @@ export function runOpening(
     alive: true,
     still: 0,
     hole: "",
+    /** Express: still on the logo, waiting for the user. */
+    waiting: express,
+  };
+  const frameAt = (time: number) => {
+    const f = openingAt(time, s, state.geo);
+    return express ? stillLogo(f) : f;
   };
 
   const view = () => ({ w: innerWidth, h: innerHeight });
@@ -130,7 +155,7 @@ export function runOpening(
   };
 
   const render = (time: number) => {
-    const f = openingAt(time, s, state.geo);
+    const f = frameAt(time);
     if (f.home !== state.home || f.content !== state.content) {
       state.home = f.home;
       state.content = f.content;
@@ -195,14 +220,38 @@ export function runOpening(
   // From the first frame the engine waits (dark page, no home layers) until the sequence starts.
   setIntroCue((now) => {
     const t = choreo.time(now);
-    const intro = openingAt(t, s, state.geo).intro;
+    const intro = frameAt(t).intro;
     if (!engineOn()) return intro;
     return { ...intro, veil: veilUniform(revealAt(t, s, state.geo, view(), eco)) };
   });
   render(0);
 
+  /** Express: the user came in; the opening goes on from the still logo. */
+  const go = () => {
+    state.waiting = false;
+    write(enter, "0", null);
+    const animate = daStore.getState().values.opening?.on !== false;
+    if (reduced || !animate) return finish();
+    void choreo.play(total, render, { eco, from: EXPRESS_AT / s.speed }).then((ended) => {
+      if (ended) finish();
+    });
+  };
+
   const skip = (e: Event) => {
-    if (seek !== null || !skipsOpening(e as KeyboardEvent)) return;
+    if (seek !== null) return;
+    const key = (e as KeyboardEvent).key;
+    if (state.waiting) {
+      const enters = e.type === "pointerdown" || (e.type === "keydown" && ENTER_KEYS.has(key));
+      if (!enters && key !== "Escape") return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (enters) return go();
+      // Escape: the hub goes away; the next show finds the home screen.
+      state.waiting = false;
+      void desktopIpc.hide().then(finish);
+      return;
+    }
+    if (!skipsOpening(e as KeyboardEvent)) return;
     e.preventDefault();
     e.stopPropagation();
     finish();
@@ -214,11 +263,18 @@ export function runOpening(
     if (!state.alive) return;
     state.geo = measure(state.geo);
     if (seek !== null) return choreo.seek(seek, render);
+    if (express) {
+      choreo.seek(EXPRESS_AT / s.speed, render);
+      write(enter, "1", null);
+      return;
+    }
     if (reduced) {
       choreo.seek(openingRestAt(s), render);
       state.still = window.setTimeout(finish, Math.max(STILL_MS, s.hold));
       return;
     }
+    // Step 17b: its melody follows the timeline (ring, logo, pulse, one note per letter, line).
+    playSound("open", { timeScale: 1 / s.speed });
     void choreo.play(total, render, { eco }).then((ended) => ended && finish());
   });
 
@@ -228,6 +284,7 @@ export function runOpening(
     window.removeEventListener("keydown", skip, true);
     host.removeEventListener("pointerdown", skip);
     choreo.cancel();
+    stopSound("open");
     setIntroCue(null);
     if (under) under.style.opacity = "";
   };

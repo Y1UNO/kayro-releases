@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CATALOGUE, defaultValues, parsePreset } from "../../design/da";
 import { sameIntro } from "../../fx/gpu/cues";
 import { introUniforms, kindUniform } from "../../fx/gpu/uniforms";
-import { skipsOpening } from "./runOpening";
+import { EXPRESS_AT, skipsOpening, stillLogo } from "./runOpening";
 import {
   letterOffsets,
   openingAt,
@@ -126,5 +126,18 @@ describe("opening in the catalogue and the engine", () => {
     for (const key of ["Tab", "Shift", "ArrowRight", "a"]) {
       expect(skipsOpening({ type: "keydown", key })).toBe(false);
     }
+  });
+});
+
+describe("express start (step 19)", () => {
+  it("waits on the whole logo, centred, ring drawn, name not out yet", () => {
+    const f = stillLogo(openingAt(EXPRESS_AT, S, G));
+    expect(f.logo.o).toBe(1);
+    expect(f.logo.x).toBe(G.slide); // still on the window's centre
+    expect(f.intro.draw[0]).toBe(1);
+    expect(f.letters.every((l) => l.o === 0)).toBe(true);
+    // No glint nor sheen frozen half-way.
+    expect(f.intro.draw[2]).toBe(0);
+    expect(f.sheen).toBe(-170);
   });
 });

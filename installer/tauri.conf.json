@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Installer Kayro",
+  "version": "../package.json",
+  "identifier": "fr.yiuno.hub.setup",
+  "build": { "frontendDist": "dist" },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [],
+    "security": {
+      "csp": "default-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' data:; font-src 'self' data:"
+    }
+  },
+  "bundle": { "active": false, "icon": ["../src-tauri/icons/icon.ico"] }
+}

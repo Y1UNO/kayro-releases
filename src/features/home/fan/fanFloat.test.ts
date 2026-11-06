@@ -13,10 +13,10 @@ import {
 const cfg = hoverConfig(undefined, false, false);
 
 describe("fan hover and floating (round 3b, part B)", () => {
-  it("defaults: lift 12 px, tilt ≤ 3°, slight growth, ≤ 12 sparks; Eco halves the sparks", () => {
-    expect(cfg).toMatchObject({ lift: 12, tilt: 3, grow: 0.03, hoverMs: 240, sparks: 12 });
+  it("defaults: lift 12 px, tilt 6° (≤ 8°), slight growth, ≤ 12 sparks; Eco halves the sparks", () => {
+    expect(cfg).toMatchObject({ lift: 12, tilt: 6, grow: 0.03, hoverMs: 240, sparks: 12 });
     expect(cfg.bounce).toBe(0.05); // "léger" spring: the card pops a little
-    expect(hoverConfig({ on: true, tilt: 9 }, false, false).tilt).toBe(3);
+    expect(hoverConfig({ on: true, tilt: 9 }, false, false).tilt).toBe(8);
     expect(hoverConfig({ on: true, sparks: 40 }, false, false).sparks).toBe(MAX_SPARKS);
     expect(hoverConfig(undefined, true, false).sparks).toBe(6);
   });
@@ -29,14 +29,14 @@ describe("fan hover and floating (round 3b, part B)", () => {
   });
 
   it("floats at the level of the settings (Visible by default, Légère = the old values)", () => {
-    expect(hoverConfig(undefined, false, false)).toMatchObject({ floatRest: 7, floatTilt: 0.8 });
+    expect(hoverConfig(undefined, false, false)).toMatchObject({ floatRest: 10, floatTilt: 1.1 });
     expect(hoverConfig({ on: true, float: "light" }, false, false)).toMatchObject({
-      floatRest: 2.5,
-      floatPeriod: 7000,
+      floatRest: 4,
+      floatPeriod: 6000,
     });
     expect(hoverConfig({ on: true, float: "none" }, false, false).floatRest).toBe(0);
     // Eco floats as before (only the sparks are halved).
-    expect(hoverConfig({ on: true, float: "strong" }, true, false).floatRest).toBe(12);
+    expect(hoverConfig({ on: true, float: "strong" }, true, false).floatRest).toBe(15);
   });
 
   it("rim points follow the offset-path: on the edge, clockwise from the top", () => {
@@ -91,20 +91,20 @@ describe("fan hover and floating (round 3b, part B)", () => {
 
   it("hovered, a card floats × 1.15 of its level and sways 4 px, none at « Aucune » (B3)", () => {
     const visible = hoverConfig({ on: true }, false, false);
-    expect(visible).toMatchObject({ floatRest: 7, floatHoverGain: 1.15, drift: 4 });
+    expect(visible).toMatchObject({ floatRest: 10, floatHoverGain: 1.15, drift: 4 });
     const m = new FanMotion(visible);
     m.setHover(0, true, 0);
     let peak = 0;
     for (let t = 400; t <= 20000; t += 16) peak = Math.max(peak, Math.abs(m.sample(0, t).dy));
-    expect(peak).toBeGreaterThan(7.5);
-    expect(peak).toBeLessThanOrEqual(7 * 1.15 + 1e-6);
+    expect(peak).toBeGreaterThan(10.5);
+    expect(peak).toBeLessThanOrEqual(10 * 1.15 + 1e-6);
     expect(hoverConfig({ on: true, float: "none" }, false, false).drift).toBe(0);
   });
 
   it("« Mouvement : Net »: no spring, burst, threads nor sparks; lift and floating stay (A5)", () => {
     const c = hoverConfig({ on: true }, false, false, true);
     expect(c).toMatchObject({ bounce: 0, burst: 0, sparks: 0, threads: false, lift: 12 });
-    expect(c.floatRest).toBe(7);
+    expect(c.floatRest).toBe(10);
   });
 
   it("hover level eases in over hoverMs, the pointer tilt follows, the loop can stop", () => {
@@ -121,7 +121,7 @@ describe("fan hover and floating (round 3b, part B)", () => {
     for (let t = 0; t <= 1000; t += 16) m.step(t);
     const s = m.sample(2, 1000);
     expect(s.lift).toBe(12);
-    expect(s.tiltY).toBeCloseTo(3, 1);
+    expect(s.tiltY).toBeCloseTo(6, 1);
     m.setHover(2, false, 1000);
     expect(m.level(2, 1100)).toBeGreaterThan(0);
     expect(m.level(2, 1350)).toBe(0);
@@ -151,7 +151,7 @@ describe("fan hover and floating (round 3b, part B)", () => {
     expect(r.burst(0, 0)).toBe(0);
   });
 
-  it("hovered, the card pivots slowly left / right, the whole tilt stays within 3°", () => {
+  it("hovered, the card pivots slowly left / right, the whole tilt stays within 8°", () => {
     const m = new FanMotion(hoverConfig(undefined, false, false));
     m.setHover(2, true, 0);
     m.setPointer(2, 1, 0);
@@ -163,7 +163,7 @@ describe("fan hover and floating (round 3b, part B)", () => {
       lo = Math.min(lo, y);
       hi = Math.max(hi, y);
     }
-    expect(hi).toBeLessThanOrEqual(3);
+    expect(hi).toBeLessThanOrEqual(8);
     expect(hi - lo).toBeGreaterThan(1.5); // it really swings
     const r = new FanMotion(hoverConfig(undefined, false, true));
     r.setHover(2, true, 0);

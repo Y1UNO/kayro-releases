@@ -18,7 +18,7 @@ fn load_settings(content: &str) -> (tempfile::TempDir, Settings) {
 #[test]
 fn defaults_are_the_validated_look() {
     let s = Settings::default();
-    assert_eq!(s.schema_version, 2);
+    assert_eq!(s.schema_version, 3);
     assert_eq!(s.theme_id, "bleu-gris");
     assert_eq!(s.quality, Quality::Balanced);
     assert_eq!(s.atmosphere_intensity, 1.0);
@@ -48,7 +48,7 @@ fn a_v1_file_migrates_with_a_backup_and_keeps_its_values() {
     assert!(dir.path().join("settings.json.bak").exists());
     let on_disk: serde_json::Value =
         serde_json::from_slice(&fs::read(dir.path().join("settings.json")).unwrap()).unwrap();
-    assert_eq!(on_disk["schemaVersion"], 2);
+    assert_eq!(on_disk["schemaVersion"], 3);
     assert_eq!(on_disk["cardFloat"], "visible");
 }
 
@@ -119,14 +119,15 @@ fn game_colour_choices_default_to_the_board_and_unknown_values_fall_back() {
     assert_eq!(s.color_pick, ColorPick::Dominant);
     assert_eq!(s.color_passage, ColorPassage::Tide);
     assert_eq!(s.color_trigger, ColorTrigger::Select);
-    assert!(s.color_hero && s.color_from_icon);
+    assert!(s.color_from_icon);
     // An older file has none of them; a hand-edited one may hold nonsense: defaults, the rest kept.
     let (_d, s) = load_settings(
-        r#"{"schemaVersion":2,"colorPassage":"wave","colorTrigger":"launch","colorHero":false}"#,
+        r#"{"schemaVersion":2,"colorPassage":"wave","colorTrigger":"launch","colorHero":false,"colorMode":"immersive"}"#,
     );
     assert_eq!(s.color_passage, ColorPassage::Tide);
     assert_eq!(s.color_trigger, ColorTrigger::Launch);
-    assert!(!s.color_hero);
+    // 30/10: the immersive mode is gone; an older file keeps the game's colours (« Stylisé »).
+    assert_eq!(s.color_mode, super::schema::ColorMode::Light);
     let dir = tempfile::tempdir().unwrap();
     let state = ConfigState::load(DataPaths::new(dir.path()));
     let out = state
@@ -140,5 +141,151 @@ fn game_colour_choices_default_to_the_board_and_unknown_values_fall_back() {
     assert_eq!(
         ConfigState::load(DataPaths::new(dir.path())).settings(),
         out
+    );
+}
+
+#[test]
+fn opening_screen_defaults_to_the_last_one_and_survives_odd_values() {
+    use super::schema::OpeningScreen;
+    assert_eq!(Settings::default().opening_screen, OpeningScreen::Last);
+    let (_dir, s) = load_settings(r#"{"schemaVersion":2,"openingScreen":"pointer"}"#);
+    assert_eq!(s.opening_screen, OpeningScreen::Pointer);
+    let (_dir, s) = load_settings(r#"{"schemaVersion":2,"openingScreen":"moon","quality":"high"}"#);
+    assert_eq!(s.opening_screen, OpeningScreen::Last);
+    assert_eq!(s.quality, Quality::High);
+    let mut s = Settings::default();
+    s.apply(SettingsPatch {
+        opening_screen: Some(OpeningScreen::Main),
+        ..Default::default()
+    });
+    assert_eq!(s.opening_screen, OpeningScreen::Main);
+}
+
+#[test]
+fn the_start_up_choices_follow_the_old_home_screen_setting() {
+    use super::schema::{StartupAfter, StartupOpen};
+    // « Écran d'accueil » becomes the intro, « Discret » nothing on screen; new: the intro.
+    let (_d, home) = load_settings(r#"{"schemaVersion":2,"startupHome":true}"#);
+    assert_eq!(home.startup_open, StartupOpen::Intro);
+    let (_d, quiet) = load_settings(r#"{"schemaVersion":2,"startupHome":false}"#);
+    assert_eq!(quiet.startup_open, StartupOpen::Hidden);
+    let fresh = Settings::default();
+    assert_eq!(
+        (fresh.startup_open, fresh.startup_after),
+        (StartupOpen::Intro, StartupAfter::Immersive)
+    );
+    let (_d, chosen) =
+        load_settings(r#"{"schemaVersion":3,"startupOpen":"island","startupAfter":"hidden"}"#);
+    assert_eq!(
+        (chosen.startup_open, chosen.startup_after),
+        (StartupOpen::Island, StartupAfter::Hidden)
+    );
+}
+
+#[test]
+fn the_old_widget_mode_reads_as_immersive_with_the_island_always_there() {
+    use super::schema::DisplayMode;
+    // 2026-10-31: no more widget mode; the island shows whenever Kayro is not (on by default).
+    let (_d, old) = load_settings(r#"{"schemaVersion":3,"displayMode":"widget"}"#);
+    assert_eq!(old.display_mode, DisplayMode::Immersive);
+    assert!(old.island_always);
+    let (_d, off) = load_settings(r#"{"schemaVersion":3,"islandAlways":false}"#);
+    assert!(!off.island_always);
+}
+
+#[test]
+fn hiding_the_island_is_off_and_its_delays_stay_in_their_notches() {
+    let s = Settings::default();
+    assert!(!s.island_tuck);
+    assert_eq!((s.island_tuck_delay, s.island_peek_delay), (1.5, 0.1));
+    // An older file gets the defaults; delays out of range fall back to them.
+    let (_dir, s) =
+        load_settings(r#"{"schemaVersion":3,"islandTuckDelay":4,"islandPeekDelay":-1}"#);
+    assert_eq!((s.island_tuck_delay, s.island_peek_delay), (1.5, 0.1));
+    let (_dir, s) = load_settings(r#"{"schemaVersion":3,"islandTuck":true,"islandTuckDelay":0}"#);
+    assert!(s.island_tuck);
+    assert_eq!((s.island_tuck_delay, s.island_peek_delay), (0.0, 0.1));
+    let mut patched = Settings::default();
+    patched.apply(SettingsPatch {
+        island_tuck: Some(true),
+        island_tuck_delay: Some(3.0),
+        island_peek_delay: Some(1.0),
+        ..Default::default()
+    });
+    assert!(patched.island_tuck);
+    assert!(super::validate::validate_settings(&patched).is_ok());
+    patched.island_peek_delay = 1.1;
+    assert!(super::validate::validate_settings(&patched).is_err());
+}
+
+#[test]
+fn the_music_mode_settings_default_and_stay_in_their_bounds() {
+    use super::schema::{MusicColors, MusicQuality};
+    let s = Settings::default();
+    let looks = (s.music_bass, s.music_crash, s.music_trails, s.music_gloss);
+    assert_eq!(
+        looks,
+        (1.0, 1.0, 0.6, 0.0),
+        "gloss 0: the player's ink is matte"
+    );
+    let senses = [
+        s.music_sense_kick,
+        s.music_sense_snare,
+        s.music_sense_hat,
+        s.music_sense_crash,
+    ];
+    assert_eq!(senses, [1.0; 4]);
+    assert_eq!(s.music_delay_ms, 0.0);
+    assert_eq!(s.music_quality, MusicQuality::Auto);
+    assert_eq!((s.music_demo, s.music_colors), (false, MusicColors::Cover));
+    // A patch out of bounds is brought back into them (no error), and kept.
+    let dir = tempfile::tempdir().unwrap();
+    let state = ConfigState::load(DataPaths::new(dir.path()));
+    let out = state
+        .set_settings(SettingsPatch {
+            music_bass: Some(3.0),
+            music_crash: Some(-1.0),
+            music_trails: Some(1.5),
+            music_gloss: Some(0.4),
+            music_sense_kick: Some(0.1),
+            music_sense_hat: Some(9.0),
+            music_delay_ms: Some(-40.0),
+            music_quality: Some(MusicQuality::High),
+            music_demo: Some(true),
+            music_colors: Some(MusicColors::Theme),
+            ..Default::default()
+        })
+        .unwrap();
+    let looks = (
+        out.music_bass,
+        out.music_crash,
+        out.music_trails,
+        out.music_gloss,
+    );
+    assert_eq!(looks, (2.0, 0.0, 1.0, 0.4));
+    let senses = (
+        out.music_sense_kick,
+        out.music_sense_snare,
+        out.music_sense_hat,
+    );
+    assert_eq!(senses, (0.5, 1.0, 2.0));
+    assert_eq!(
+        (out.music_delay_ms, out.music_quality),
+        (0.0, MusicQuality::High)
+    );
+    let patched = state.set_settings(SettingsPatch {
+        music_delay_ms: Some(900.0),
+        ..Default::default()
+    });
+    assert_eq!(patched.unwrap().music_delay_ms, 250.0);
+    // A hand-edited file: a number out of bounds takes its default, the rest stays; the old
+    // « Dancing » choice is gone (an unknown field, dropped).
+    let (_d, s) = load_settings(
+        r#"{"schemaVersion":3,"musicDelayMs":900,"musicBass":1.5,"islandMusicMode":"dancing","musicColors":"theme","musicQuality":"ultra"}"#,
+    );
+    assert_eq!((s.music_delay_ms, s.music_bass), (0.0, 1.5));
+    assert_eq!(
+        (s.music_colors, s.music_quality),
+        (MusicColors::Theme, MusicQuality::Auto)
     );
 }

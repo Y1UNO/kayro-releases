@@ -233,11 +233,6 @@ export function AdvancedSection({ below }: Props) {
               options={opts("colorTrigger", ["select", "instant", "launch"] as const)}
             />
             <ToggleRow
-              label={t("settings.visual.advanced.colorHero")}
-              checked={settings.colorHero}
-              onChange={(colorHero) => set({ colorHero })}
-            />
-            <ToggleRow
               label={t("settings.visual.advanced.colorFromIcon")}
               checked={settings.colorFromIcon}
               onChange={(colorFromIcon) => set({ colorFromIcon })}

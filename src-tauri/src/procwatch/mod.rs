@@ -89,10 +89,12 @@ impl ProcWatch {
         Self { tx, shared }
     }
 
-    /// Real system: `sysinfo` for processes, the Win32 hook for the foreground window.
+    /// Real system: `sysinfo` for processes, the Win32 hook for the foreground window, which
+    /// also tells `on_foreground` (30/10: the launch cover, desktop/cover.rs).
     pub fn start_system(
         apps: impl Fn() -> Vec<AppEntry> + Send + 'static,
         emit: impl Fn(AppRunState) + Send + 'static,
+        on_foreground: impl Fn(u32) + Send + Sync + 'static,
     ) -> Self {
         let watch = Self::start(
             apps,
@@ -103,6 +105,7 @@ impl ProcWatch {
         let tx = watch.tx.clone();
         if let Err(e) = window::start_foreground_hook(move |pid| {
             let _ = tx.send(Msg::Foreground(pid));
+            on_foreground(pid);
         }) {
             // Not fatal: the foreground is also read on every pass.
             tracing::warn!(error = %e, "foreground hook unavailable, falling back to sampling");

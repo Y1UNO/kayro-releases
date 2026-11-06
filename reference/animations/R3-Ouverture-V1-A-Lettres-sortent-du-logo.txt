@@ -1,0 +1,45 @@
+KAYRO — ANIMATION D'OUVERTURE — V1-A « LES LETTRES SORTENT DU LOGO »
+Maquette : canvas Claude Design, board « R3-Ouverture-V1-A » (thème Bleu-gris, vitesse normale).
+Vidéo associée : même nom que ce fichier, enregistrée avec OBS depuis la maquette.
+À ranger dans : C:\HUB\reference\animations\
+
+BASE : c'est l'ouverture V1 « Éclosion de l'anneau » validée. SEULS le glissement du logo et l'apparition
+des lettres changent. Tout le reste est identique à V1 et ne doit pas bouger :
+
+0     Fond : fondu 0 → 1 en 700 ms.
+100   Halo de lune : opacité 0 → 1, échelle 0,75 → 1, 1 400 ms, cubic-bezier(.22,1,.36,1).
+200   Anneau qui se dessine depuis le haut, sens horaire, 1 100 ms, cubic-bezier(.65,0,.35,1)
+      (3 filets : A 1,6 px rayon 200 ; B 1 px juste dedans ; blanc 0,8 px juste dehors).
+950   Reflet : arc blanc ~70 px qui fait un tour complet en 1 050 ms, cubic-bezier(.45,0,.25,1).
+950   Logo qui se forme : opacité 0 → 1, flou 14 → 0 px, échelle 0,86 → 1, 800 ms, cubic-bezier(.22,1,.36,1).
+1450  Éclat qui traverse le logo, 900 ms.
+1750  L'anneau s'élargit (1 → 1,4) et s'efface, 850 ms, cubic-bezier(.4,0,.2,1).
+2550  Filet A → B sous le nom, 700 ms.   2800  Sous-titre, 600 ms.   2500+  Braises.
+
+CE QUI CHANGE DANS CETTE VARIANTE
+1750  Logo : glisse de 150 px vers la gauche, plus vif que V1 : 650 ms, cubic-bezier(.22,1,.36,1)
+      (il fait presque tout le trajet au début puis se pose).
+2000  Lettres K, a, y, r, o : une toutes les 85 ms. Chaque lettre part de la position finale du logo
+      (cachée derrière lui, le logo est au-dessus des lettres), à échelle 0,45 et floue (6 px),
+      et file vers sa place : opacité pleine dès 30 % du trajet, flou → 0, 800 ms, cubic-bezier(.16,1,.3,1).
+      Effet voulu : le logo « distribue » le nom, les lettres sortent de derrière son bord droit.
+      Départs utilisés dans la maquette (décalage horizontal vers la gauche) : K −127, a −183, y −234, r −279, o −326 px
+      → dans Kayro, les calculer à partir des vraies positions des lettres (getBoundingClientRect).
+
+DANS KAYRO
+- Anneau, reflet, halo, braises : moteur WebGL2 (comme V1). Option déjà notée pour V1 : l'anneau peut grandir
+  jusqu'à l'anneau de l'accueil au lieu de disparaître.
+- Lettres : DOM, une balise par lettre, uniquement transform / opacity / filter.
+- Ressorts éventuels : table SPRINGS de la 2b.
+
+RÉGLAGES À EXPOSER DANS L'ATELIER
+Durée du glissement du logo, délai entre lettres, échelle et flou de départ, courbe.
+
+RÈGLES
+- « Réduire les animations » : tout apparaît directement.
+- Sautable par un clic ou une touche ; l'interface est utilisable sans attendre la fin.
+- Mode Éco : 30 images/s. Budget p95 ≤ 5,4 ms, mesuré en vraie fenêtre.
+
+MES REMARQUES (à remplir)
+Ce que j'aime :
+Ce que je veux changer :

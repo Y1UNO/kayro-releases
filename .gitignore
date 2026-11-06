@@ -1,7 +1,6 @@
 # Dépendances et builds
 node_modules/
 dist/
-dist-bench/
 build/
 target/
 src-tauri/target/
@@ -38,3 +37,20 @@ spikes/**/gen/
 # Coffre Obsidian (docs/)
 docs/.obsidian/
 docs/.trash/
+
+# Installer (installer/): its built page and generated schemas.
+installer/dist
+installer/gen
+
+# Vignettes générées par Affinity / Explorateur dans les dossiers de ressources
+.thumbnail
+
+# Références (reference/) : on suit les maquettes et les notes, pas les copies de React, les sons d'exemple, les captures ni les affiches de jeux
+reference/**/vendor/
+reference/sons/
+reference/inspirations/
+reference/ambiances/**/*.png
+
+# IA du rythme (mode musique) : recuperee par scripts/fetch-ai.ps1
+src-tauri/resources/ai/*
+!src-tauri/resources/ai/README.md

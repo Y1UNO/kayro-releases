@@ -1,0 +1,255 @@
+/*
+ * Step 20: the patch notes page in the Capri look (CapriSheet.tsx). A black card outlined in
+ * violet over a dimmed Kayro; its Capri spikes are drawn on a canvas that reaches out of the
+ * card's top edge (REACH in the component). Colours: Capri's red #ff1f4d, green #3dff7a, violet
+ * #8b3dff, on black; text near white.
+ */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: rgb(4 3 10 / 0.72);
+  animation: fade 220ms ease both;
+}
+
+.card {
+  position: relative;
+  width: 500px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 120px);
+  box-sizing: border-box;
+  padding: 30px 32px 26px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #0b0a12, #050508);
+  box-shadow:
+    inset 0 0 0 1.5px rgb(139 61 255 / 0.85),
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    0 30px 80px rgb(0 0 0 / 0.6);
+  color: #f3f7fb;
+  font-family: var(--font-ui);
+  animation: rise 420ms cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+
+.fx {
+  position: absolute;
+  left: -90px;
+  top: -90px;
+  width: calc(100% + 180px);
+  height: 180px;
+  pointer-events: none;
+}
+
+.eyebrow {
+  position: relative;
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #ff1f4d;
+}
+
+.title {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+/* Capri on the title: red and green copies torn sideways, in held frames. */
+.title::before,
+.title::after,
+.go span::before,
+.go span::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.title::before {
+  color: #ff1f4d;
+}
+
+.title::after {
+  color: #3dff7a;
+}
+
+.tearing::before {
+  opacity: 0.9;
+  animation: tear-a 0.28s steps(2) infinite;
+}
+
+.tearing::after {
+  opacity: 0.8;
+  animation: tear-b 0.21s steps(2) infinite;
+}
+
+.sub {
+  position: relative;
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgb(214 236 255 / 0.72);
+}
+
+.points {
+  position: relative;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 40vh;
+  overflow: auto;
+}
+
+.points li {
+  position: relative;
+  padding-left: 24px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgb(243 247 251 / 0.9);
+}
+
+/* A small red shard outlined in violet for each point. */
+.points li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 4px;
+  width: 11px;
+  height: 11px;
+  background: #ff1f4d;
+  clip-path: polygon(0 40%, 55% 0, 42% 38%, 100% 30%, 48% 100%, 52% 58%);
+  filter: drop-shadow(0 0 0.5px #8b3dff) drop-shadow(0 0 0.5px #8b3dff);
+}
+
+.points li:nth-child(3n + 2)::before {
+  background: #3dff7a;
+}
+
+.actions {
+  position: relative;
+  margin-top: 26px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+}
+
+.later {
+  border: 0;
+  background: none;
+  color: rgb(243 247 251 / 0.6);
+  font: 600 13.5px var(--font-ui);
+  cursor: pointer;
+}
+
+.later:hover {
+  color: #f3f7fb;
+}
+
+.go {
+  position: relative;
+  height: 46px;
+  padding: 0 30px;
+  border: 0;
+  border-radius: 999px;
+  background: #000;
+  box-shadow: inset 0 0 0 1.5px #8b3dff;
+  color: #f3f7fb;
+  font: 800 15px var(--font-ui);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.go span {
+  position: relative;
+}
+
+.go span::before {
+  color: #ff1f4d;
+}
+
+.go span::after {
+  color: #3dff7a;
+}
+
+.go:hover {
+  background: #ff1f4d;
+  box-shadow:
+    inset 0 0 0 1.5px #8b3dff,
+    0 0 0 3px rgb(139 61 255 / 0.25);
+}
+
+.go:hover span::before {
+  opacity: 0.85;
+  animation: tear-a 0.3s steps(2) infinite;
+}
+
+.go:hover span::after {
+  opacity: 0.6;
+  animation: tear-b 0.24s steps(2) infinite;
+}
+
+.go:focus-visible,
+.later:focus-visible {
+  outline: 2px solid #d6ecff;
+  outline-offset: 3px;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
+@keyframes tear-a {
+  0% {
+    transform: translate(-3px, 0);
+    clip-path: inset(10% 0 55% 0);
+  }
+  100% {
+    transform: translate(2px, 1px);
+    clip-path: inset(60% 0 8% 0);
+  }
+}
+
+@keyframes tear-b {
+  0% {
+    transform: translate(3px, -1px);
+    clip-path: inset(45% 0 30% 0);
+  }
+  100% {
+    transform: translate(-2px, 0);
+    clip-path: inset(5% 0 70% 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .card,
+  .tearing::before,
+  .tearing::after,
+  .go:hover span::before,
+  .go:hover span::after {
+    animation: none;
+  }
+}

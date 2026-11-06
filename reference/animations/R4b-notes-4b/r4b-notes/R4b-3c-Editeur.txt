@@ -1,0 +1,22 @@
+KAYRO · RONDE 4b · 3c · EDITEUR DE SCENE : CHAINE DE POINTS (langage Vivant)
+Planche : R4b-3c-Editeur (interactive : Ajouter, Retirer, Échanger 2 et 3, Tester la chaîne)
+
+PRINCIPE
+Les étapes d'une scène forment une chaîne verticale : un point numéroté par étape, relié par un fil. Les points et le fil portent le mouvement. Niveau 2, pas de magie.
+
+JETONS
+- Nouvelle étape : la carte monte de 14 px et apparaît (360 ms, apparition). Le point grossit de ×0,4 à ×1 sur le ressort liaison (240 ms), avec 120 ms de retard sur la carte.
+- Fil : le trait entre deux points se prolonge vers le bas (scaleY, 360 ms apparition).
+- Réordonner (glisser-déposer) : les cartes voisines se décalent d'une case sur le ressort liaison (360 ms). Au relâchement, la carte déplacée se pose sur le même ressort.
+- Retirer : la carte s'efface en 252 ms (0,7 ×), les suivantes remontent sur le ressort liaison, le fil se raccourcit. (Non animé dans la planche, à faire en vrai.)
+- Test de la chaîne (bouton « Tester ») : les points s'allument un par un, 520 ms par étape « Lancer », 900 ms par étape « Attendre » (accéléré pour la démo ; en vrai le délai réel de l'étape). Le point actif grossit ×1,18 avec halo plus fort et la bordure de la carte s'éclaire ; le fil se remplit de point en point (360 ms).
+- Échec d'une étape pendant le test : le point passe en rouge doux (#F08C8C), le fil s'arrête, aucune étape suivante ne démarre. Un message court explique (voir R4b-Etats).
+
+RÈGLES
+- Les couleurs viennent du thème (point rempli dégradé A→B, point en attente = bord A à 70 %).
+- Ne jamais animer la hauteur des cartes en layout ; utiliser transform. Pour le décalage au glisser, translateY.
+- Réduire les animations : changement d'état direct, fil rempli sans transition.
+- La chaîne doit rester utilisable au clavier : Alt + flèches pour déplacer une étape, annonce aria « étape 2 déplacée en 3 ».
+
+MES REMARQUES
+-

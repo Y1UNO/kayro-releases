@@ -91,6 +91,13 @@ export interface GlassPose {
   z: number;
   /** Floating height (round 5), 0–1: its ground shadow tightens and pales as the card rises. */
   elev?: number;
+  /**
+   * 3D tilt (review 2026-10-29), CSS `rotateX(tx) rotateY(ty)` in rad, seen through a perspective
+   * of `persp` CSS px (0 = flat): the glass, the poster and the lights follow the DOM card.
+   */
+  tx?: number;
+  ty?: number;
+  persp?: number;
 }
 
 /**

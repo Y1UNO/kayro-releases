@@ -16,7 +16,12 @@ pub const ICON_PX: u32 = 128;
 /// `shell:AppsFolder` item; an Epic game through the program its manifest names. Links, Steam
 /// games and other protocols have none (Steam's own small icon comes through `crate::art`).
 pub fn icon_source(app: &AppEntry) -> Option<String> {
-    match (&app.launch, &app.source) {
+    icon_source_for(&app.launch, &app.source)
+}
+
+/// `icon_source` for an app not in the library yet (a detected one, step 19b).
+pub fn icon_source_for(launch: &Launch, source: &AppSource) -> Option<String> {
+    match (launch, source) {
         (Launch::Exe { path, .. } | Launch::Lnk { path }, _) => Some(path.clone()),
         (Launch::Uwp { aumid }, _) => Some(format!("{APPS_FOLDER}{aumid}")),
         (Launch::Uri { .. }, AppSource::Epic { app_name }) => {
@@ -29,7 +34,47 @@ pub fn icon_source(app: &AppEntry) -> Option<String> {
 }
 
 fn file_for(dir: &Path, id: &str, source: &str) -> PathBuf {
-    dir.join(format!("{id}-{}.png", short_hash(&source.to_lowercase())))
+    // « v2 » (step 19c): icons are now trimmed; the older, untrimmed files are not served again.
+    dir.join(format!(
+        "{id}-{}.png",
+        short_hash(&format!("v2|{}", source.to_lowercase()))
+    ))
+}
+
+/// Step 19c: the icon cut to what it draws, centred in a square with a small margin. Windows
+/// gives a program with only a small icon as that small icon in the corner of a large empty
+/// square (it looked lost on the cards: VALORANT, 7-Zip).
+pub fn trim(icon: &Rgba) -> Rgba {
+    let (w, h) = (icon.width as usize, icon.height as usize);
+    let alpha = |x: usize, y: usize| icon.pixels.get((y * w + x) * 4 + 3).copied().unwrap_or(0);
+    let (mut x0, mut y0, mut x1, mut y1) = (w, h, 0, 0);
+    for y in 0..h {
+        for x in 0..w {
+            if alpha(x, y) > 16 {
+                x0 = x0.min(x);
+                y0 = y0.min(y);
+                x1 = x1.max(x);
+                y1 = y1.max(y);
+            }
+        }
+    }
+    if x0 > x1 || (x0 == 0 && y0 == 0 && x1 + 1 == w && y1 + 1 == h) {
+        return icon.clone(); // empty, or already edge to edge
+    }
+    let (cw, ch) = (x1 - x0 + 1, y1 - y0 + 1);
+    let side = cw.max(ch) + cw.max(ch) / 16 * 2;
+    let (ox, oy) = ((side - cw) / 2, (side - ch) / 2);
+    let mut pixels = vec![0u8; side * side * 4];
+    for y in 0..ch {
+        let from = ((y0 + y) * w + x0) * 4;
+        let to = ((oy + y) * side + ox) * 4;
+        pixels[to..to + cw * 4].copy_from_slice(&icon.pixels[from..from + cw * 4]);
+    }
+    Rgba {
+        width: side as u32,
+        height: side as u32,
+        pixels,
+    }
 }
 
 /// Shrinks `icon` to at most `max` pixels on its longest side by averaging (box filter), with
@@ -81,6 +126,43 @@ pub fn shrink(icon: &Rgba, max: u32) -> Rgba {
     }
 }
 
+/// Step 19c: a PNG file (an app's logo found by the advanced scan) as RGBA pixels; none for a file
+/// that is not a readable 8-bit PNG or is larger than 4 096 px.
+pub fn decode_png(bytes: &[u8]) -> Option<Rgba> {
+    let mut decoder = png::Decoder::new(std::io::Cursor::new(bytes));
+    decoder.set_transformations(png::Transformations::normalize_to_color8());
+    let mut reader = decoder.read_info().ok()?;
+    let (w, h) = reader.info().size();
+    if w == 0 || h == 0 || w > 4096 || h > 4096 {
+        return None;
+    }
+    let mut buf = vec![0; reader.output_buffer_size()?];
+    let frame = reader.next_frame(&mut buf).ok()?;
+    let data = &buf[..frame.buffer_size()];
+    let pixels: Vec<u8> = match frame.color_type {
+        png::ColorType::Rgba => data.to_vec(),
+        png::ColorType::Rgb => data
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .flat_map(|&[r, g, b]| [r, g, b, 255])
+            .collect(),
+        png::ColorType::GrayscaleAlpha => data
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .flat_map(|&[g, a]| [g, g, g, a])
+            .collect(),
+        png::ColorType::Grayscale => data.iter().flat_map(|&g| [g, g, g, 255]).collect(),
+        png::ColorType::Indexed => return None,
+    };
+    Some(Rgba {
+        width: frame.width,
+        height: frame.height,
+        pixels,
+    })
+}
+
 pub fn encode_png(icon: &Rgba) -> Result<Vec<u8>, String> {
     let mut out = Vec::new();
     let mut encoder = png::Encoder::new(&mut out, icon.width, icon.height);
@@ -96,10 +178,15 @@ pub fn encode_png(icon: &Rgba) -> Result<Vec<u8>, String> {
 /// `data:image/png;base64,…`: how the interface receives an icon (the CSP allows `data:` images,
 /// and no file-protocol scope has to be opened onto the data folder).
 pub fn png_data_url(png: &[u8]) -> String {
+    data_url("image/png", png)
+}
+
+/// `data:<mime>;base64,…` of `bytes`.
+pub fn data_url(mime: &str, bytes: &[u8]) -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity(22 + png.len().div_ceil(3) * 4);
-    out.push_str("data:image/png;base64,");
-    for chunk in png.chunks(3) {
+    let mut out = String::with_capacity(20 + mime.len() + bytes.len().div_ceil(3) * 4);
+    out.push_str(&format!("data:{mime};base64,"));
+    for chunk in bytes.chunks(3) {
         let n = chunk
             .iter()
             .enumerate()
@@ -122,16 +209,25 @@ pub fn icon_png(
     app: &AppEntry,
     extract: &dyn Fn(&str) -> Option<Rgba>,
 ) -> Option<Vec<u8>> {
-    let source = icon_source(app)?;
-    let file = file_for(icons_dir, &app.id, &source);
+    icon_png_from(icons_dir, &app.id, icon_source(app)?, extract)
+}
+
+/// `icon_png` of the app `id` whose icon comes from `source` (a program, a shortcut…).
+pub fn icon_png_from(
+    icons_dir: &Path,
+    id: &str,
+    source: String,
+    extract: &dyn Fn(&str) -> Option<Rgba>,
+) -> Option<Vec<u8>> {
+    let file = file_for(icons_dir, id, &source);
     if let Ok(bytes) = fs::read(&file) {
         return Some(bytes);
     }
-    let icon = shrink(&extract(&source)?, ICON_PX);
+    let icon = shrink(&trim(&extract(&source)?), ICON_PX);
     let bytes = match encode_png(&icon) {
         Ok(b) => b,
         Err(e) => {
-            tracing::warn!(app = %app.id, error = %e, "icon: could not encode");
+            tracing::warn!(app = %id, error = %e, "icon: could not encode");
             return None;
         }
     };
@@ -139,7 +235,7 @@ pub fn icon_png(
         .and_then(|()| crate::config::atomic::write_atomic(&file, &bytes));
     if let Err(e) = stored {
         // The icon is still served; only the cache is missing.
-        tracing::warn!(app = %app.id, error = %e, "icon: could not cache");
+        tracing::warn!(app = %id, error = %e, "icon: could not cache");
     }
     Some(bytes)
 }
@@ -187,6 +283,7 @@ mod tests {
             mood_id: None,
             favorite: false,
             colors: None,
+            mood_tune: None,
         }
     }
 
@@ -299,5 +396,25 @@ mod tests {
             .collect();
         assert_eq!(left.len(), 1);
         assert!(left[0].starts_with("game-2-"));
+    }
+
+    #[test]
+    fn a_small_icon_in_the_corner_is_brought_to_the_middle() {
+        // 32 × 32 drawn in the top-left corner of a 256 × 256 empty square.
+        let mut pixels = vec![0u8; 256 * 256 * 4];
+        for y in 0..32 {
+            for x in 0..32 {
+                pixels[(y * 256 + x) * 4 + 3] = 255;
+            }
+        }
+        let t = trim(&Rgba {
+            width: 256,
+            height: 256,
+            pixels,
+        });
+        assert_eq!((t.width, t.height), (36, 36));
+        // Opaque in the middle, a clear margin around.
+        assert_eq!(t.pixels[(18 * 36 + 18) * 4 + 3], 255);
+        assert_eq!(t.pixels[3], 0);
     }
 }
