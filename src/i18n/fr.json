@@ -394,7 +394,7 @@
       "following": "Micro : je reste à l’écoute, continuez sans mon nom",
       "paused": "Micro en pause : un jeu en plein écran, ou l’écran verrouillé",
       "muted": "Micro coupé (cliquer pour reprendre)",
-      "noModel": "Micro : il manque un modèle (Réglages › Assistant vocal et IA)",
+      "noModel": "Micro : il manque un modèle (Réglages › Assistant vocal)",
       "noMicrophone": "Aucun micro, ou Windows le refuse"
     },
     "heard": {

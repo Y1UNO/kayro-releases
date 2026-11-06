@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import own from "./Voice.module.css";
 
-/** A block of Réglages › Assistant vocal et IA, in the Capri look: an eyebrow, a title, its rows. */
+/** A block of Réglages › Assistant vocal, in the Capri look: an eyebrow, a title, its rows. */
 export function Block({
   eyebrow,
   title,

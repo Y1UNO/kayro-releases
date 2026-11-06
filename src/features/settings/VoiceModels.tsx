@@ -137,7 +137,7 @@ function ModelCard({ id, voice, onPick }: Props & { id: string }) {
   );
 }
 
-/** Réglages › Assistant vocal et IA › Modèles: everything stays on this PC once downloaded. */
+/** Réglages › Assistant vocal › Modèles: everything stays on this PC once downloaded. */
 export function VoiceModels({ onBrain, ...props }: SectionProps) {
   const brainThere = useVoice((s) => s.models.some((m) => m.id === "brain" && m.installed));
   return (

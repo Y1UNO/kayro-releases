@@ -29,15 +29,14 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 19b | **Scan intelligent et rangement fluide** (demandé le 2026-10-30) : un scan bien plus malin (filtres de bruit, doublons, lanceurs et outils à part, catégorie devinée, « Ignorer ») et plus simple à l'ajout d'apps ; changer une app de catégorie (et la réordonner) de façon fluide. Détails : « Plus tard » › Détection | 5, 19 | G |
 | [x] 19c | **Finitions ajout et rangement** (2026-10-30) : scan avancé du PC, logos ronds, cartes aux couleurs du logo, renommer sur la carte, clic droit rangé, fil physique | 19b | G |
 | [x] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
-| [ ] 21 | **Voix** (extension A) : écoute active (mot d'éveil) ou push-to-talk, très bonne en français, 100 % locale (voir « Plus tard ») | 6, 10, 20 | H |
+| [x] 21 | **Voix** (extension A) : écoute active (mot d'éveil) ou push-to-talk, très bonne en français, 100 % locale (voir « Plus tard ») | 6, 10, 20 | H |
 | [x] 22 | **Mains** (extension B) : gestes à la webcam, traitement local | 21 | H |
-| [ ] 23 | **Intégrations** (extension C) : OBS, Discord, lumières, en nouvelles actions de scène | 10 | H |
 | [ ] 24 | **Moteur WebGL** (extension D) : suite du moteur graphique de l'étape 12b, derrière `FxLayer` | 8, 12b | H |
 | [ ] 18 | **Audit final, juste avant la v1.0** (reporté à la fin le 2026-11-02 : l'app change encore) : perf, sécurité **et cybersécurité (test d'intrusion de Kayro)**, robustesse, accessibilité | 1–24 | I |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
 
-**Extensions avant la v1.0** (décision du 2026-11-02 : les amis testent l'app pendant ce temps) : A voix FR (21) · B mains, webcam (22) · C intégrations, OBS, Discord, lumières (23) · D moteur WebGL (24). Puis l'audit final (18), puis la v1.0.
+**Extensions avant la v1.0** (décision du 2026-11-02 : les amis testent l'app pendant ce temps) : A voix FR (21) · B mains, webcam (22) · D moteur WebGL (24). Puis l'audit final (18), puis la v1.0. L'extension C (intégrations OBS, Discord, lumières, ex-étape 23) sort de la route de la v1.0 le 2026-11-06 (« on le verra peut-être plus tard ») : voir « Plus tard » › Intégrations.
 
 ## Journal des étapes
 (Une entrée par étape terminée : date, décisions, limites, chiffres.)
@@ -446,6 +445,11 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   de Windows (Keyboard Map de WebView2), sinon AZERTY pour un Windows français. Les raccourcis déjà choisis gardent
   leur lettre.
 
+### Intégrations (ex-étape 23, sortie de la route v1.0 le 2026-11-06)
+- [ ] OBS, Discord, lumières en nouvelles actions de scène (changer de scène OBS, enregistrer ; activité Discord ;
+  lumières aux couleurs de l'affiche). Pistes : WebSocket local d'OBS, canal local de Discord, pont Hue sur le réseau
+  local (Hue Sync vu sur ce PC). Désactivé par défaut, réseau local à faire valider, aucun jeton en clair.
+
 ### Écosystème Kayro (très long terme, Notion 2026-11-02)
 - [ ] **Reconnaissance vocale premium** qui comprend très bien le français (rejoint « Voix » ci-dessous).
 - [ ] **Apps interconnectées** : chaque future app marche seule, mais installées ensemble elles se reconnaissent
@@ -783,6 +787,10 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
 - **Vraie main (2026-11-05)** : modèle « generic hand » du W3C (`src/features/hands/model/`, licence W3C, embarqué en
   `?inline` : la CSP n'autorise aucun fetch) skinné en WebGL2 (`handModel.ts`, `handSkin.ts`) ; poses calées sur ses os ;
   caméra tournante par scène ; vérifié pose par pose en grand. Vitest 717.
+- **Réglages rangés (2026-11-06)** : nouvelle catégorie **« Concept / Fun »** (les mains dedans, sous le titre
+  « Mains » ; « ouvre les réglages des mains » y mène) ; « Assistant vocal et IA » devient **« Assistant vocal »**,
+  allégé : la carte, comment l'appeler (tant qu'il n'écoute pas), les phrases, et tout le reste sous **« Détails »**.
+  Vitest 717, tsc/eslint propres. Non vérifié dans l'exe.
 
 ## Abandonné
 Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).

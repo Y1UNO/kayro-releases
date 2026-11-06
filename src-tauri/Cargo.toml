@@ -1,6 +1,6 @@
 [package]
 name = "hub"
-version = "0.20.6"
+version = "0.22.0"
 description = "Kayro — application launcher"
 edition = "2021"
 default-run = "Kayro"

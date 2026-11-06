@@ -243,5 +243,17 @@
       "Une petite IA locale (Beat This!, rien n'est envoyé) trouve les temps et les mesures : la pochette tourne au tempo et les fils battent la mesure. Kayro se souvient du tempo de chaque morceau.",
       "Nouvelle section Réglages › Visuel › Mode musique : intensités, traînées, brillance, et dans « Avancé » la sensibilité de détection, le décalage son/image, la qualité et un mode démo avec un morceau de test."
     ]
+  },
+  {
+    "version": "0.22.0",
+    "date": "06/11/2026",
+    "title": "La voix et les mains",
+    "points": [
+      "Un assistant vocal, 100 % sur le PC : appelez-le par son nom (ou un raccourci) et dites « lance Forza », « mets la musique », « cache Discord »… Il ne lance que ce qui est dans Kayro.",
+      "Un petit cerveau local comprend les phrases libres et les suites (« et sur l'autre écran »). « Calibrer ma voix » lui apprend votre voix, et il ignore le son des enceintes.",
+      "La souris dans l'air : votre main pilote le curseur par la webcam, pincer = cliquer, partout dans Windows. Caméra coupée par défaut, un tutoriel animé montre les gestes.",
+      "Réglages rangés : « Assistant vocal » plus simple (le reste sous « Détails ») et une catégorie « Concept / Fun » pour les mains.",
+      "Le scan trouve aussi les apps du Microsoft Store et le Bureau ; les scènes s'ouvrent sous l'éventail de l'accueil."
+    ]
   }
 ]

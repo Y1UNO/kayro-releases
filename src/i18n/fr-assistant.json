@@ -92,14 +92,10 @@
     "screen": {
       "eyebrow": "4 · À l’écran"
     },
-    "settings": {
-      "show": "Modifier les réglages",
-      "hide": "Masquer les réglages"
-    },
-    "advanced": {
-      "show": "Afficher les réglages avancés",
-      "hide": "Masquer les réglages avancés",
-      "help": "Les modèles un par un, le cerveau, ce que {name} a appris de vous, et ce qui arrive plus tard."
+    "details": {
+      "show": "Détails",
+      "hide": "Masquer les détails",
+      "help": "Le micro, la calibration, la musique, l’aura, les modèles et ce que {name} a appris de vous."
     }
   }
 }

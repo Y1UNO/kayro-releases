@@ -11,7 +11,11 @@
       "visual": "Visuel",
       "sounds": "Sons",
       "themes": "Thèmes",
-      "voice": "Assistant vocal et IA",
+      "voice": "Assistant vocal",
+      "fun": "Concept / Fun"
+    },
+    "fun": {
+      "intro": "Des façons à l’essai de piloter Kayro, pour le plaisir.",
       "hands": "Mains"
     },
     "shortcuts": {

@@ -1,10 +1,10 @@
 # Kayro — Accueil
 
 > [!info] Où on en est
-> - **Dernière étape close** : 20 — Kysland (le 2026-10-31, version 0.20.0 publiée ; versions sur github.com/Y1UNO/kayro-releases)
+> - **Dernière étape close** : 22 — Mains (et 21 — Voix), le 2026-11-06, version 0.22.0 (construite, pas encore publiée)
 > - **À envoyer** : le dernier `Kayro_<version>_Installer.exe` de la page des versions ; ensuite Kayro se met à jour seul
-> - **Dernière version** : 0.20.6, publiée le 03/11 (mode musique refait : labo, IA locale du rythme, grands moments, voir [[MODE-MUSIQUE]] ; l'île qui respire)
-> - **En cours** : 18 — Audit avant la v1 (mesures du 31/10 faites, ménage fait ; restent le CPU de l'accueil, le premier lancement à vide, la relecture sécurité et accessibilité)
+> - **Dernière version publiée** : 0.20.6, le 03/11 (mode musique refait, voir [[MODE-MUSIQUE]])
+> - **Reste avant la v1.0** : 24 — Moteur WebGL, puis 18 — Audit final (les intégrations OBS, Discord, lumières sont repoussées après la v1.0)
 > - **DA** : gelée le 2026-10-14 (v1)
 
 ## Référence

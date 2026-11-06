@@ -24,10 +24,10 @@ export { wakeWordOk } from "./VoiceBlocks";
 const LATER = ["name", "deep", "light", "assistant"] as const;
 
 /**
- * Réglages › Assistant vocal et IA (step 21; made simpler on 2026-11-05 at the user's request):
- * the first time, an introduction (its name, how to talk to it, one install); then a card with its
- * name and state, and four numbered blocks (call it, hear you well, what it can do, on screen),
- * the rest folded under « Avancé ».
+ * Réglages › Assistant vocal (step 21; made simpler on 2026-11-05, then 2026-11-06 at the user's
+ * request): the first time, an introduction (its name, how to talk to it, one install); then a card
+ * with its name and state, how to call it (until it listens), the phrases, and everything else
+ * folded under « Détails ».
  */
 export function VoiceSection() {
   const settings = useHub((s) => s.settings);
@@ -35,8 +35,7 @@ export function VoiceSection() {
   const models = useVoice((s) => s.models);
   const [chosen, setIntro] = useState<boolean | null>(null);
   const [firstTime, setFirstTime] = useState<boolean | null>(null);
-  const [advanced, setAdvanced] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [open, setOpen] = useState(false);
   const voice = settings?.voice;
   // The first time (the voice off and nothing downloaded), the introduction opens by itself:
   // decided once, when the models are known (not again while they download).
@@ -74,15 +73,19 @@ export function VoiceSection() {
     );
   }
 
-  const setup = (
+  // What calls it: needed to get it working, so always shown (not folded).
+  const call =
+    voice.mode === "always" ? (
+      <WakeBlock key={voice.wakeWord} voice={voice} set={set} />
+    ) : voice.mode === "pushToTalk" ? (
+      <Block eyebrow={t("assistant.call.eyebrow")} title={t("settings.voice.hotkey.label")}>
+        <p className={own.intro}>{t("settings.voice.hotkey.help")}</p>
+        {hotkey}
+      </Block>
+    ) : null;
+  // Everything else, under « Détails » (2026-11-06: « plus simplifié visuellement »).
+  const details = (
     <>
-      {voice.mode === "always" && <WakeBlock key={voice.wakeWord} voice={voice} set={set} />}
-      {voice.mode === "pushToTalk" && (
-        <Block eyebrow={t("assistant.call.eyebrow")} title={t("settings.voice.hotkey.label")}>
-          <p className={own.intro}>{t("settings.voice.hotkey.help")}</p>
-          {hotkey}
-        </Block>
-      )}
       {voice.mode !== "off" && (
         <Block eyebrow={t("assistant.hear.eyebrow")} title={t("assistant.hear.title")}>
           <p className={own.intro}>{t("assistant.hear.help", { name })}</p>
@@ -107,84 +110,52 @@ export function VoiceSection() {
         </Block>
       )}
       {voice.mode === "always" && <VoiceCalib voice={voice} set={set} />}
+      {voice.mode !== "off" && <VoiceMusic voice={voice} set={set} />}
+      {voice.mode !== "off" && <AuraBlock voice={voice} set={set} />}
+      <VoiceModels
+        voice={voice}
+        onPick={(model) => set({ model })}
+        onBrain={(brain) => set({ brain })}
+      />
+      {voice.mode !== "off" && <MemoryBlock />}
+      <Block eyebrow={t("settings.voice.eyebrow.later")} title={t("settings.voice.later.label")}>
+        <ul className={own.later}>
+          {LATER.map((id) => (
+            <li key={id} className={own.laterRow}>
+              <span>
+                <strong>{t(`settings.voice.later.${id}` as MessageKey)}</strong>
+                {" — "}
+                {t(`settings.voice.later.${id}Help` as MessageKey)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Block>
     </>
   );
-  const advancedPart = (
-    <>
+
+  // The card, how to call it, the phrases (once it listens); the rest folded under « Détails ».
+  return (
+    <div className={own.capri} data-cascade="">
+      {voice.mode === "off" && <p className={own.intro}>{t("settings.voice.intro")}</p>}
+      <VoiceHero voice={voice} set={set} onRename={() => setIntro(true)} />
+      {!ready && call}
+      {voice.mode !== "off" && <VoiceHelp voice={voice} set={set} music={false} />}
       <button
         type="button"
         className={css.fold}
-        aria-expanded={advanced}
-        onClick={() => setAdvanced(!advanced)}
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
       >
-        {t(advanced ? "assistant.advanced.hide" : "assistant.advanced.show")}
+        {t(open ? "assistant.details.hide" : "assistant.details.show")}
       </button>
-      {!advanced && <p className={own.intro}>{t("assistant.advanced.help", { name })}</p>}
-      {advanced && (
+      {!open && <p className={own.intro}>{t("assistant.details.help", { name })}</p>}
+      {open && (
         <>
-          <VoiceModels
-            voice={voice}
-            onPick={(model) => set({ model })}
-            onBrain={(brain) => set({ brain })}
-          />
-          {voice.mode !== "off" && <MemoryBlock />}
-          <Block
-            eyebrow={t("settings.voice.eyebrow.later")}
-            title={t("settings.voice.later.label")}
-          >
-            <ul className={own.later}>
-              {LATER.map((id) => (
-                <li key={id} className={own.laterRow}>
-                  <span>
-                    <strong>{t(`settings.voice.later.${id}` as MessageKey)}</strong>
-                    {" — "}
-                    {t(`settings.voice.later.${id}Help` as MessageKey)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Block>
+          {ready && call}
+          {details}
         </>
       )}
-    </>
-  );
-
-  // Set up (listening, everything installed): the card and the phrases; the rest folded under
-  // « Modifier les réglages » (the user's wish, 2026-11-05: « un truc simple »).
-  if (ready) {
-    return (
-      <div className={own.capri} data-cascade="">
-        <VoiceHero voice={voice} set={set} onRename={() => setIntro(true)} />
-        <VoiceHelp voice={voice} set={set} music={false} />
-        <button
-          type="button"
-          className={css.fold}
-          aria-expanded={editing}
-          onClick={() => setEditing(!editing)}
-        >
-          {t(editing ? "assistant.settings.hide" : "assistant.settings.show")}
-        </button>
-        {editing && (
-          <>
-            {setup}
-            <VoiceMusic voice={voice} set={set} />
-            <AuraBlock voice={voice} set={set} />
-            {advancedPart}
-          </>
-        )}
-        <p className={own.privacy}>{t("settings.voice.privacy")}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className={own.capri} data-cascade="">
-      <p className={own.intro}>{t("settings.voice.intro")}</p>
-      <VoiceHero voice={voice} set={set} onRename={() => setIntro(true)} />
-      {setup}
-      {voice.mode !== "off" && <VoiceHelp voice={voice} set={set} />}
-      {voice.mode !== "off" && <AuraBlock voice={voice} set={set} />}
-      {advancedPart}
       <p className={own.privacy}>{t("settings.voice.privacy")}</p>
     </div>
   );

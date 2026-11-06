@@ -28,7 +28,7 @@ function reachChoice(reach: number): (typeof REACH)[number][0] {
 }
 
 /**
- * Réglages › Mains (step 22): a mouse in the air. The first time, the introduction, the two signs
+ * Réglages › Concept / Fun › Mains (step 22): a mouse in the air. The first time, the introduction, the two signs
  * and one « Installer »; once installed, the hand that shows the signs and the right click's
  * finger (ring or middle, the user's choice); then a card (where the camera stands, a button to
  * turn it on or off, its shortcut), the signs, and the rest folded under « Modifier les réglages ».

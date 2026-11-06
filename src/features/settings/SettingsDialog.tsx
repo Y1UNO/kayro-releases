@@ -10,7 +10,7 @@ import { StartupSection } from "./StartupSection";
 import { ThemesSection } from "./ThemesSection";
 import { VisualSection } from "./VisualSection";
 import { VoiceSection } from "./VoiceSection";
-import { HandsSection } from "./HandsSection";
+import { FunSection } from "./FunSection";
 import styles from "./Settings.module.css";
 
 const TABS = [
@@ -22,7 +22,7 @@ const TABS = [
   "sounds",
   "themes",
   "voice",
-  "hands",
+  "fun",
 ] as const;
 type Tab = (typeof TABS)[number];
 
@@ -47,14 +47,15 @@ export function pageTab(page: string | null): Tab | null {
     sons: "sounds",
     themes: "themes",
     voix: "voice",
-    mains: "hands",
+    mains: "fun",
+    fun: "fun",
   };
   return page ? (pages[page] ?? null) : null;
 }
 
 /**
  * Réglages (round 5): a side column of categories — Général · Démarrage · Raccourcis clavier · Île
- * dynamique (Kysland, 2026-11-02) · Visuel · Sons · Thèmes · Assistant vocal et IA (step 21) · Mains (step 22) — and the chosen
+ * dynamique (Kysland, 2026-11-02) · Visuel · Sons · Thèmes · Assistant vocal (step 21) · Concept / Fun (the hands, step 22; 2026-11-06) — and the chosen
  * one in a body that scrolls (the panel never outgrows the screen).
  */
 export function SettingsDialog({ open, onClose, tab: wanted }: Props) {
@@ -142,7 +143,7 @@ export function SettingsDialog({ open, onClose, tab: wanted }: Props) {
           {tab === "sounds" && <SoundsSection />}
           {tab === "themes" && <ThemesSection />}
           {tab === "voice" && <VoiceSection />}
-          {tab === "hands" && <HandsSection />}
+          {tab === "fun" && <FunSection />}
         </div>
       </div>
     </Dialog>

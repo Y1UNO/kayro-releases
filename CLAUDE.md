@@ -58,7 +58,7 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 - Accessibilité : contraste du texte ≥ 4,5:1, navigation complète au clavier, focus visible, respect de `prefers-reduced-motion`.
 
 ## Extensions prévues avant la v1.0 (décision du 2026-11-02)
-Voix (étape 21), contrôle par les mains (22), intégrations OBS, Discord, lumières (23), moteur WebGL (24), puis l'audit final (18) et la v1.0 (`docs/ROADMAP.md`). Chacune seulement quand l'utilisateur donne son étape ; les règles de sécurité et de vie privée ci-dessus restent vraies (traitement local, ne lance que ce qui est configuré, indicateur visible ; l'exception « écoute permanente » de la voix se note dans ce fichier à l'étape 21).
+Voix (étape 21), contrôle par les mains (22), moteur WebGL (24), puis l'audit final (18) et la v1.0 (`docs/ROADMAP.md`). Les intégrations OBS, Discord, lumières (ex-23) sont repoussées après la v1.0 (2026-11-06, « Plus tard » de la ROADMAP). Chacune seulement quand l'utilisateur donne son étape ; les règles de sécurité et de vie privée ci-dessus restent vraies (traitement local, ne lance que ce qui est configuré, indicateur visible ; l'exception « écoute permanente » de la voix se note dans ce fichier à l'étape 21).
 
 ## Hors périmètre pour l'instant (ne pas coder sans demande)
 Salon d'amis, assistant IA (projet séparé de l'écosystème Kayro, voir `docs/ROADMAP.md` : Kayro reste sans assistant IA). Prévoir les points d'extension, sans implémenter.
