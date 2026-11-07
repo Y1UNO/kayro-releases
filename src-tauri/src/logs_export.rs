@@ -49,9 +49,57 @@ fn fill(target: &Path, logs: &Path, infos: &str) -> io::Result<()> {
         };
         // Today's file is still open by the logger: std opens it with shared read access.
         zip.start_file(name, options)?;
-        io::copy(&mut File::open(&file)?, &mut zip)?;
+        let mut text = Vec::new();
+        io::copy(&mut File::open(&file)?, &mut text)?;
+        zip.write_all(redact(&String::from_utf8_lossy(&text), &profile()).as_bytes())?;
     }
     zip.finish()?.sync_all()
+}
+
+/// The user's own folder (`C:\Users\<name>`), as Windows gives it.
+fn profile() -> String {
+    std::env::var("USERPROFILE").unwrap_or_default()
+}
+
+/// Audit before 1.0: exported logs leave the PC (sent to a friend for help), so the user's folder
+/// — and with it their Windows name — becomes `%USERPROFILE%`, whatever its case and slashes. Only
+/// a whole folder name matches (`C:\Users\Tom` never eats into `C:\Users\Tommy`).
+pub(crate) fn redact(text: &str, profile: &str) -> String {
+    let norm = |s: &str| -> Vec<char> {
+        s.chars()
+            .map(|c| {
+                if c == '/' {
+                    '\\'
+                } else {
+                    c.to_ascii_lowercase()
+                }
+            })
+            .collect()
+    };
+    let needle = norm(profile.trim_end_matches(['\\', '/']));
+    if needle.len() < 4 {
+        return text.to_string();
+    }
+    let chars: Vec<char> = text.chars().collect();
+    let hay = norm(text);
+    let mut out = String::with_capacity(text.len());
+    let mut i = 0;
+    while i < chars.len() {
+        let end = i + needle.len();
+        let hit = end <= hay.len()
+            && hay[i..end] == needle[..]
+            && hay
+                .get(end)
+                .is_none_or(|c| !c.is_alphanumeric() && !"_-.".contains(*c));
+        if hit {
+            out.push_str("%USERPROFILE%");
+            i = end;
+        } else {
+            out.push(chars[i]);
+            i += 1;
+        }
+    }
+    out
 }
 
 /// Today's date (UTC) as `YYYY-MM-DD`, without a date crate.
@@ -116,6 +164,20 @@ mod tests {
             .read_to_string(&mut today)
             .unwrap();
         assert_eq!(today, "aujourd'hui");
+    }
+
+    #[test]
+    fn the_users_folder_is_masked_whatever_its_case_and_slashes() {
+        let text = r"folder=c:\users\tom\appdata\discord\ link C:/Users/Tom/Desktop/x.lnk, C:\Users\Tommy, C:\Users\Tom";
+        assert_eq!(
+            redact(text, r"C:\Users\Tom"),
+            r"folder=%USERPROFILE%\appdata\discord\ link %USERPROFILE%/Desktop/x.lnk, C:\Users\Tommy, %USERPROFILE%"
+        );
+        assert_eq!(redact("rien à masquer", ""), "rien à masquer");
+        assert_eq!(
+            redact(r"é C:\Users\Zoé\x", r"C:\Users\Zoé"),
+            r"é %USERPROFILE%\x"
+        );
     }
 
     #[test]

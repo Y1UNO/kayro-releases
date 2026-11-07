@@ -216,20 +216,20 @@ finale. Ce qui est déjà fait ci-dessous (mesures, correctifs de l'île) reste 
 **Volet cybersécurité (demandé le 2026-11-02)** : un test d'intrusion de Kayro, en se mettant à la place de quelqu'un qui
 veut le pirater pour lui faire lancer autre chose ou lui voler des données. Sur ce PC uniquement, contre notre propre
 app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dans `docs/SECURITE.md`.
-- [ ] **Fichiers piégés** : `.hubmood`, thèmes, `.hubscene` géants, mal formés, zip bombs, chemins `..\`, SVG avec
+- [x] (2026-11-07, `docs/SECURITE.md`) **Fichiers piégés** : `.hubmood`, thèmes, `.hubscene` géants, mal formés, zip bombs, chemins `..\`, SVG avec
   script, champs inattendus ; images d'affiches corrompues (décodeur). But : planter Kayro ou lui faire lancer un exe.
-- [ ] **Injection dans la page** : noms d'apps, titres de musique (Spotify et autres lecteurs), patch notes, noms de
+- [x] (2026-11-07, `docs/SECURITE.md`) **Injection dans la page** : noms d'apps, titres de musique (Spotify et autres lecteurs), patch notes, noms de
   scènes avec du HTML / script → tenter d'exécuter du code dans la page, puis d'appeler les commandes Tauri.
-- [ ] **Commandes Tauri (IPC)** : appeler chaque commande avec des valeurs hostiles (chemins, ids inconnus, tailles
+- [x] (2026-11-07, `docs/SECURITE.md`) **Commandes Tauri (IPC)** : appeler chaque commande avec des valeurs hostiles (chemins, ids inconnus, tailles
   folles) ; vérifier que seul ce qui est configuré peut être lancé, et que la CSP et la liste blanche de permissions
   bloquent scripts externes et accès disque.
-- [ ] **Mises à jour** : faux `latest.json`, installeur non signé ou mal signé, retour à une vieille version, réseau
+- [x] (2026-11-07, `docs/SECURITE.md`) **Mises à jour** : faux `latest.json`, installeur non signé ou mal signé, retour à une vieille version, réseau
   détourné → rien ne doit s'installer.
-- [ ] **Sur le PC** : `settings.json` / config modifiés à la main pour pointer vers un autre exe, tâche planifiée de
+- [x] (2026-11-07, `docs/SECURITE.md`) **Sur le PC** : `settings.json` / config modifiés à la main pour pointer vers un autre exe, tâche planifiée de
   démarrage détournée, DLL posée à côté de l'exe, port de débogage (CDP 9222) ouvert dans l'exe de production ?
-- [ ] **Fuites** : contenu des logs exportés (chemins, noms), aucune donnée envoyée sur le réseau hors mises à jour,
+- [x] (2026-11-07, `docs/SECURITE.md`) **Fuites** : contenu des logs exportés (chemins, noms), aucune donnée envoyée sur le réseau hors mises à jour,
   affiches jamais exportées dans un fichier partagé.
-- [ ] **Voix et extensions** (une fois faites) : une phrase dite ou un geste ne peut lancer que ce qui est configuré ;
+- [x] (2026-11-07, `docs/SECURITE.md`) **Voix et extensions** (une fois faites) : une phrase dite ou un geste ne peut lancer que ce qui est configuré ;
   micro et caméra coupés et signalés comme prévu ; intégrations (OBS, Discord) sans jeton en clair.
 
 - [x] **Mesures du 2026-10-31** (banc `npm run perf`, exe de production, ce PC 280 Hz, Steam ouvert en fond ; médianes de
