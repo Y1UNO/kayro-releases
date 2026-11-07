@@ -3,7 +3,7 @@
 > [!info] Où on en est
 > - **Dernière étape close** : 24 — Moteur graphique (suivi des jeux, qualité Auto, transitions), le 2026-11-06
 > - **À envoyer** : le dernier `Kayro_<version>_Installer.exe` de la page des versions ; ensuite Kayro se met à jour seul
-> - **Dernière version publiée** : 0.24.0, le 06/11 (suivi des jeux, qualité Auto, transitions)
+> - **Dernière version publiée** : 0.24.1, le 07/11 (la voix s'installe de nouveau : modèles figés ; 0.24.0 : suivi des jeux, qualité Auto, transitions)
 > - **Reste avant la v1.0** : 18 — Audit final (les intégrations OBS, Discord, lumières sont repoussées après la v1.0)
 > - **DA** : gelée le 2026-10-14 (v1)
 
