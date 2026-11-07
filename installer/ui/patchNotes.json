@@ -267,5 +267,13 @@
       "Les Réglages et la recherche font reculer légèrement l'accueil derrière eux.",
       "En revenant d'un jeu lancé depuis Kayro, l'accueil se pose sur sa carte, qui remonte à sa place."
     ]
+  },
+  {
+    "version": "0.24.1",
+    "date": "07/11/2026",
+    "title": "La voix s'installe de nouveau",
+    "points": [
+      "L'installation de l'assistant vocal échouait (« le modèle ne correspond pas à son empreinte ») : un des modèles a été remplacé en ligne. Kayro télécharge maintenant chaque modèle dans la version exacte qui a été testée."
+    ]
   }
 ]
