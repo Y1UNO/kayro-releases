@@ -292,6 +292,22 @@ mod tests {
                     f.url
                 );
                 assert!(f.url.ends_with(f.name), "{}", f.url);
+                // A moving branch breaks every install the day its repository is published again
+                // (Parakeet, 2026-11-07): Hugging Face files are read at a fixed commit.
+                if f.url.starts_with("https://huggingface.co/") {
+                    let rev = f
+                        .url
+                        .split("/resolve/")
+                        .nth(1)
+                        .and_then(|r| r.split('/').next());
+                    assert!(
+                        rev.is_some_and(
+                            |r| r.len() == 40 && r.bytes().all(|b| b.is_ascii_hexdigit())
+                        ),
+                        "not pinned to a commit: {}",
+                        f.url
+                    );
+                }
             }
         }
         let ids: Vec<&str> = MODELS.iter().map(|m| m.id).collect();
