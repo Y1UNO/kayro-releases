@@ -257,21 +257,6 @@ pub fn validate_settings(s: &Settings) -> Check {
     if !s.music_in_bounds() {
         return err("music", "a music mode setting is out of its bounds");
     }
-    if !s.voice.wake_word_ok() {
-        return err("voice.wakeWord", "a few words of letters");
-    }
-    if !s.voice.extras_ok() {
-        return err("voice", "heard spellings, microphone or aura out of bounds");
-    }
-    if !s.voice.hotkey.is_empty() {
-        hotkey(&s.voice.hotkey).or_else(|_| err("voice.hotkey", "invalid shortcut"))?;
-    }
-    if !s.hands.in_bounds() {
-        return err("hands", "idle minutes or reach out of bounds");
-    }
-    if !s.hands.hotkey.is_empty() {
-        hotkey(&s.hands.hotkey).or_else(|_| err("hands.hotkey", "invalid shortcut"))?;
-    }
     let ignored = &s.ignored_detections;
     if ignored.len() > MAX_IGNORED || ignored.iter().any(|id| validate_id(id).is_err()) {
         return err("ignoredDetections", "too many or invalid ids");

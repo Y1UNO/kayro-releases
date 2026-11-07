@@ -9,8 +9,6 @@ import {
   SettingsIcon,
 } from "../../design";
 import { t } from "../../i18n";
-import { VoiceButton } from "../voice/VoiceButton";
-import { HandsButton } from "../hands/HandsButton";
 import type { DisplayMode } from "../../ipc/bindings";
 import { chooseDisplayMode, useDisplayMode } from "../opening/expressMode";
 import { PopMenu } from "./PopMenu";
@@ -78,7 +76,7 @@ interface Props {
 
 /**
  * Glass top bar: logo and name, search field (opens the Ctrl+K palette), add apps, display mode
- * (a menu), settings. Voice and hands are hidden until those extensions exist (app/features.ts).
+ * (a menu), settings.
  */
 export function TopBar({
   onSearch,
@@ -125,8 +123,6 @@ export function TopBar({
           <IconButton label={t("home.settings.open")} size="sm" glass onClick={onSettings}>
             <SettingsIcon />
           </IconButton>
-          <VoiceButton size="sm" />
-          <HandsButton size="sm" />
         </>
       }
     />

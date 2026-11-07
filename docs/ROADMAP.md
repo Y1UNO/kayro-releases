@@ -29,14 +29,14 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | [x] 19b | **Scan intelligent et rangement fluide** (demandé le 2026-10-30) : un scan bien plus malin (filtres de bruit, doublons, lanceurs et outils à part, catégorie devinée, « Ignorer ») et plus simple à l'ajout d'apps ; changer une app de catégorie (et la réordonner) de façon fluide. Détails : « Plus tard » › Détection | 5, 19 | G |
 | [x] 19c | **Finitions ajout et rangement** (2026-10-30) : scan avancé du PC, logos ronds, cartes aux couleurs du logo, renommer sur la carte, clic droit rangé, fil physique | 19b | G |
 | [x] 20 | **Kysland** : le widget façon Dynamic Island (voir « Plus tard ») | 12, 19 | G |
-| [x] 21 | **Voix** (extension A) : écoute active (mot d'éveil) ou push-to-talk, très bonne en français, 100 % locale (voir « Plus tard ») | 6, 10, 20 | H |
-| [x] 22 | **Mains** (extension B) : gestes à la webcam, traitement local | 21 | H |
+| ~~21~~ | ~~**Voix** (extension A)~~ **retirée le 2026-11-07** (voir « Abandonné ») : écoute active (mot d'éveil) ou push-to-talk, très bonne en français, 100 % locale (voir « Plus tard ») | 6, 10, 20 | H |
+| ~~22~~ | ~~**Mains** (extension B)~~ **retirées le 2026-11-07** (voir « Abandonné ») : gestes à la webcam, traitement local | 21 | H |
 | [x] 24 | **Moteur WebGL** (extension D) : suite du moteur graphique de l'étape 12b, derrière `FxLayer` | 8, 12b | H |
 | [ ] 18 | **Audit final, juste avant la v1.0** (reporté à la fin le 2026-11-02 : l'app change encore) : perf, sécurité **et cybersécurité (test d'intrusion de Kayro)**, robustesse, accessibilité | 1–24 | I |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
 
-**Extensions avant la v1.0** (décision du 2026-11-02 : les amis testent l'app pendant ce temps) : A voix FR (21) · B mains, webcam (22) · D moteur WebGL (24). Puis l'audit final (18), puis la v1.0. L'extension C (intégrations OBS, Discord, lumières, ex-étape 23) sort de la route de la v1.0 le 2026-11-06 (« on le verra peut-être plus tard ») : voir « Plus tard » › Intégrations.
+**Extensions avant la v1.0** (décision du 2026-11-02 : les amis testent l'app pendant ce temps) : D moteur WebGL (24). La voix (21) et les mains (22), faites puis **retirées le 2026-11-07** (« Abandonné »). Puis l'audit final (18), puis la v1.0. L'extension C (intégrations OBS, Discord, lumières, ex-étape 23) sort de la route de la v1.0 le 2026-11-06 (« on le verra peut-être plus tard ») : voir « Plus tard » › Intégrations.
 
 ## Journal des étapes
 (Une entrée par étape terminée : date, décisions, limites, chiffres.)
@@ -510,7 +510,7 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
     parlées** de l'assistant (voix posée et grave, mesures et extraits plus bas), **notre propre modèle de voix**, la
     **vision de l'écran** (mesurée le 2026-11-04 : image + audio 0,35–0,5 s, juste une fois sur deux).
 
-### Avant la v1.0 — Voix (extension A, étape 21 ; avancé le 2026-11-02)
+### Voix (extension A, étape 21 ; avancé le 2026-11-02) — retirée le 2026-11-07, historique gardé
 - [ ] **Écoute active** (demandé le 2026-10-30) : lancer des apps, des scènes et d'autres actions à la voix, avec un
   mot d'éveil. **Décision de l'utilisateur (2026-10-30)** : les deux modes, au choix dans les réglages —
   **écoute active en permanence** (mot d'éveil) ou **push-to-talk** (raccourci / bouton). Le mode permanent est une
@@ -769,7 +769,7 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   pas figée sur un commit. Les 16 fichiers revérifiés en ligne (empreinte et taille ; GitHub : même SHA-256 pour
   llama.cpp, même taille pour le modèle du locuteur, inchangé depuis 2024). Téléchargement complet non refait.
 
-### Avant la v1.0 — Mains (extension B, étape 22)
+### Mains (extension B, étape 22) — retirées le 2026-11-07, historique gardé
 - **Plan validé le 2026-11-05** (demande de l'utilisateur) : une **souris dans l'air**, pour tout Windows, deux signes.
   Pouce et index écartés = main libre, le curseur suit la base de l'index (image en miroir) ; pincement pouce-index =
   clic gauche, tenu = bouton maintenu (glisser), deux rapides = double-clic ; pincement pouce-annulaire = clic droit.
@@ -853,5 +853,6 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
 
 ## Abandonné
 Idées écartées, gardées ici plutôt que supprimées (ne jamais effacer une idée sans l'accord de l'utilisateur : la déplacer ici, avec la date et la raison).
+- 2026-11-07 — **La voix (étape 21) et les mains (étape 22)**, faites et publiées (0.22 à 0.24.1), retirées à la demande de l'utilisateur avant l'audit final : « ça enlève le côté soigné et travaillé […] je veux faire le truc le plus qualitatif […] ça reste un hub, et si je fais pas ça je m'éparpille » ; « je préfère enlever un gros travail mais finir avec une vraie app bien finie ». Retirés : l'assistant (mot d'éveil, push-to-talk, cerveau Gemma et llama.cpp, calibration, écho, réglages « Assistant vocal »), la souris dans l'air (webcam, tutoriel, « Concept / Fun »), leurs raccourcis, l'aura de l'île, le son d'appel, les dépendances `sherpa-onnx`, `aec3`, `reqwest` (plus aucun réseau hors mises à jour). Leurs données (`voice\`, jusqu'à 5,9 Go et les enregistrements de calibration ; `hands\`) sont effacées au premier lancement. Gardés : le mode musique et son IA du rythme (ONNX Runtime). Tout reste récupérable dans git (tag `v0.24.1`) ; l'historique des deux étapes reste plus haut.
 - 2026-11-06 — Lumière des apps ouvertes (étape 24) : la carte d'une app ouverte allumée de l'intérieur par le moteur, sa lumière posée autour à la place d'une partie de son ombre. Retirée le jour même à la demande de l'utilisateur (« le point est cool mais le voile fait moche ») ; seul le point d'état reste.
 - 2026-10-30 — Mode Immersif des couleurs du jeu (héros flouté, puis carte des couleurs de l'affiche) et son repli CSS : retiré à la demande de l'utilisateur (« c'est moche »).

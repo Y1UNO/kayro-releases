@@ -8,7 +8,6 @@ import { sceneStore, useScenes } from "../../store";
 import { usePlayScene } from "../scenes/usePlayScene";
 import { SceneButton } from "./SceneButton";
 import styles from "./SceneDock.module.css";
-import { VoiceButton } from "../voice/VoiceButton";
 
 const RESULT_VISIBLE_MS = 5000;
 
@@ -22,7 +21,7 @@ interface Props {
 
 /**
  * Scene dock: one button per scene (one click starts it), a discreet progress while one plays,
- * and the way into the scene list. The microphone is still the voice placeholder.
+ * and the way into the scene list.
  */
 export function SceneDock({ onManage }: Props) {
   const scenes = useScenes((s) => s.scenes);
@@ -92,8 +91,6 @@ export function SceneDock({ onManage }: Props) {
       <IconButton label={t("home.dock.manage")} glass onClick={onManage}>
         <ScenesIcon size={20} />
       </IconButton>
-      {/* Step 21: shown while the voice is on (its indicator; a click mutes it). */}
-      <VoiceButton />
       {dialog}
     </Surface>
   );

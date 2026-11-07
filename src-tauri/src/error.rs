@@ -27,8 +27,6 @@ pub enum ErrorCode {
     HotkeyConflict,
     /// An update could not be checked, downloaded or verified (no network, bad signature…).
     UpdateFailed,
-    /// A voice model could not be downloaded or its fingerprint was wrong (step 21).
-    DownloadFailed,
 }
 
 /// Error returned by IPC commands. `message` is for logs and developers; the UI shows its own

@@ -25,9 +25,7 @@ pub use modes::settings_changed;
 use placement::save_placement;
 pub use placement::{choose_immersive_screen, screen_names};
 pub use quit::{on_exit, quit};
-pub use shortcuts::{
-    on_hotkey, on_hotkey_released, scenes_changed, summon_search, take_pending_scene, trigger_scene,
-};
+pub use shortcuts::{on_hotkey, scenes_changed, summon_search, take_pending_scene, trigger_scene};
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard};
@@ -108,10 +106,6 @@ fn settings<R: Runtime>(app: &AppHandle<R>) -> Settings {
 /// The last two build Kayro's window hidden (nothing in economy mode) and play no opening.
 pub fn startup<R: Runtime>(app: &AppHandle<R>, silent: bool) {
     hotkeys::init(app);
-    // Step 21: the voice (nothing opens while it is off, the default).
-    crate::voice::init(app);
-    // Step 22: the hands (the camera stays closed until their shortcut).
-    crate::hands::init(app);
     let s = settings(app);
     SILENT_START.store(silent, Ordering::SeqCst);
     if silent {

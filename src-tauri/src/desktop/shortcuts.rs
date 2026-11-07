@@ -22,16 +22,7 @@ pub fn on_hotkey<R: Runtime>(app: &AppHandle<R>, id: u32) {
     match action {
         Action::Toggle => toggle(app),
         Action::Search => summon_search(app),
-        Action::Voice => crate::voice::talk(true),
-        Action::Hands => crate::hands::toggle(app),
         Action::Scene(scene_id) => trigger_scene(app, &scene_id),
-    }
-}
-
-/// A global shortcut was released: only the voice's push-to-talk cares (it records while held).
-pub fn on_hotkey_released<R: Runtime>(app: &AppHandle<R>, id: u32) {
-    if app.state::<HotkeyState>().action_for(id) == Some(Action::Voice) {
-        crate::voice::talk(false);
     }
 }
 

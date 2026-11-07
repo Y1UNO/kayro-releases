@@ -3,22 +3,18 @@ pub mod config;
 pub mod desktop;
 pub mod detect;
 pub mod error;
-pub mod hands;
 pub mod icons;
 pub mod intake;
 pub mod ipc;
 pub mod ipc_art;
 pub mod ipc_desktop;
 pub mod ipc_detect;
-pub mod ipc_hands;
 pub mod ipc_island;
 pub mod ipc_moods;
-pub mod ipc_outputs;
 pub mod ipc_scenes;
 pub mod ipc_startup;
 pub mod ipc_themes;
 pub mod ipc_update;
-pub mod ipc_voice;
 pub mod launcher;
 mod legacy;
 mod logging;
@@ -29,7 +25,6 @@ pub mod platform;
 pub mod procwatch;
 pub mod scenes;
 pub mod update;
-pub mod voice;
 
 use config::ConfigState;
 use tauri::Manager;
@@ -54,6 +49,14 @@ pub fn run() {
     logging::init();
     legacy::log_outcome(&migration);
     tracing::info!(version = env!("CARGO_PKG_VERSION"), "starting");
+    // The voice and the hands were removed (2026-11-07): their models and recordings go, off the
+    // start's path (up to 5.9 GB).
+    std::thread::spawn(|| {
+        let gone = legacy::remove_retired(&paths::data_dir());
+        if !gone.is_empty() {
+            tracing::info!(?gone, "removed features' data deleted");
+        }
+    });
 
     // The TypeScript bindings are written by `npm run gen:types` only, never by a running app: an
     // old debug exe started by mistake rewrote them with stale types (2026-10-13). The test
@@ -77,9 +80,10 @@ pub fn run() {
         ))
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(|app, shortcut, event| match event.state() {
-                    ShortcutState::Pressed => desktop::on_hotkey(app, shortcut.id()),
-                    ShortcutState::Released => desktop::on_hotkey_released(app, shortcut.id()),
+                .with_handler(|app, shortcut, event| {
+                    if event.state() == ShortcutState::Pressed {
+                        desktop::on_hotkey(app, shortcut.id());
+                    }
                 })
                 .build(),
         )
@@ -137,8 +141,6 @@ pub fn run() {
                     move |pid| {
                         desktop::cover::on_foreground(pid);
                         desktop::island::on_foreground(&for_island);
-                        voice::on_foreground(&for_island);
-                        hands::on_foreground(&for_island);
                         desktop::on_program_in_front(&for_island);
                     }
                 },

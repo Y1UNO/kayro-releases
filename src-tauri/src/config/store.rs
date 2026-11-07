@@ -187,9 +187,9 @@ pub fn lenient_merge<T: Default + Serialize + DeserializeOwned>(
             report.warn(format!("unknown field «{key}» ignored"));
             continue;
         }
-        // A group of settings (`voice`) written by an older Kayro lacks the fields added since:
-        // they take their defaults, the rest of the group is kept (2026-11-04: the voice's were
-        // all lost when three fields were added).
+        // A group of settings written by an older Kayro lacks the fields added since: they take
+        // their defaults, the rest of the group is kept (2026-11-04: a whole group was once lost
+        // when three fields were added).
         let val = match (merged.get(&key), val) {
             (Some(Value::Object(defaults)), Value::Object(mut given)) => {
                 for (k, v) in defaults {

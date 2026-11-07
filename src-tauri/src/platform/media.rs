@@ -139,7 +139,7 @@ pub enum Control {
     Previous,
     Toggle,
     Next,
-    /// Step 21 (« mets la musique », « mets pause »): play or pause, not a toggle.
+    /// Play or pause, not a toggle.
     Play,
     Pause,
     /// Shuffle on or off, repeat (the list) on or off.

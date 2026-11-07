@@ -16,7 +16,6 @@ export const ERROR_MESSAGE_KEYS: Record<ErrorCode, MessageKey> = {
   launchFailed: "errors.launchFailed",
   hotkeyConflict: "errors.hotkeyConflict",
   updateFailed: "errors.updateFailed",
-  downloadFailed: "errors.downloadFailed",
 };
 
 /** Text shown to the user (the Rust `message` is for logs only). */

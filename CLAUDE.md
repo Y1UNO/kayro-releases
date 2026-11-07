@@ -6,7 +6,7 @@
 Lanceur d'applications pour Windows, très fluide et très réactif, avec un accent fort sur la **personnalisation** et le **visuel** :
 thèmes de couleur au choix, verre liquide, lumière dynamique, couleurs qui s'adaptent à l'affiche du jeu, ambiances animées propres à certains jeux (braises, runes, brume…).
 Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniquement. Français par défaut.
-**Pas de LLM ni d'assistant IA dans l'app.** Une IA locale et légère est permise quand elle est mesurée meilleure que le calcul classique (décision de l'utilisateur, 2026-11-03 : le rythme du mode musique, voir `docs/MODE-MUSIQUE.md`) : elle tourne sur le PC, rien n'est envoyé, et l'app marche sans elle. Tout est local et hors ligne par défaut. Exception voulue (2026-11-04, étape 21) : un **interprète de commandes vocales** (modèle de langage local sur la carte graphique, dans un processus à part, téléchargé à la demande) : il ne rend qu'une liste d'actions Kayro (apps et scènes de la config, musique, fenêtres…), revérifiée par le cœur ; ce n'est ni un chat ni un assistant ; les règles classiques restent en secours.
+**Pas de LLM ni d'assistant IA dans l'app.** Une IA locale et légère est permise quand elle est mesurée meilleure que le calcul classique (décision de l'utilisateur, 2026-11-03 : le rythme du mode musique, voir `docs/MODE-MUSIQUE.md`) : elle tourne sur le PC, rien n'est envoyé, et l'app marche sans elle. Tout est local et hors ligne par défaut. La voix et les mains (étapes 21 et 22) ont été retirées le 2026-11-07 : Kayro reste un hub, sans commande vocale ni gestes (voir « Abandonné » de `docs/ROADMAP.md`).
 
 ## Règles de travail (à respecter à chaque session)
 1. L'utilisateur te donne UNE étape. Ne commence jamais la suivante sans son accord.
@@ -38,17 +38,17 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 ## Performance (prioritaire, non négociable)
 - Animations basées sur le temps réel (delta time / `requestAnimationFrame`), jamais sur un nombre d'images fixe : suivre 60/120/144 Hz+.
 - Animer `transform` et `opacity`. **Pas de `filter: blur()` sur de grandes surfaces** (voir DESIGN.md pour les équivalents en dégradés). `backdrop-filter` limité à 6 surfaces simultanées maximum. `will-change` seulement si mesuré utile.
-- Veille douce : hub masqué, sans focus ou jeu au premier plan → fondu des effets puis arrêt complet des boucles, du micro et de la caméra. Au retour : reprise en fondu. Aucun timer qui tourne dans le vide.
-- Le travail lourd (scan d'apps, extraction de palette, images, voix, vision) ne bloque JAMAIS le thread d'interface.
+- Veille douce : hub masqué, sans focus ou jeu au premier plan → fondu des effets puis arrêt complet des boucles et de l'écoute du son. Au retour : reprise en fondu. Aucun timer qui tourne dans le vide.
+- Le travail lourd (scan d'apps, extraction de palette, images, analyse du son) ne bloque JAMAIS le thread d'interface.
 - Cibles à mesurer et à rapporter à chaque étape pertinente : apparition du hub < 150 ms sur raccourci (fenêtre déjà chargée), CPU au repos < 1 %, GPU à 0 % hub masqué, aucune image perdue en navigation normale.
 
 ## Sécurité et vie privée
-- L'app ne lance QUE ce qui est dans sa configuration. La voix, les gestes et les fichiers importés ne peuvent jamais lancer une commande arbitraire.
+- L'app ne lance QUE ce qui est dans sa configuration. Les fichiers importés ne peuvent jamais lancer une commande arbitraire.
 - Scènes partagées : le fichier ne contient que des noms d'**emplacements** (slots), jamais de chemin ni de commande.
 - Fichiers importés (`.hubmood`, thèmes, scènes) : validation stricte de schéma, limites de taille et de quantité, aucun script, chemins SVG assainis.
-- Fermer une app = fermeture douce (message de fermeture de fenêtre) avec confirmation. Jamais de fermeture forcée sans demande explicite. Exception voulue (2026-11-04) : un « ferme X » dit à la voix ferme en douceur sans confirmation (la phrase est la demande).
+- Fermer une app = fermeture douce (message de fermeture de fenêtre) avec confirmation. Jamais de fermeture forcée sans demande explicite.
 - Réseau : aucun par défaut. Toute fonction réseau future est optionnelle, désactivée par défaut et expliquée.
-- Micro et caméra : traitement 100 % local, indicateur visible quand actifs, jamais en permanence. Exception voulue (2026-10-30, notée à l'étape 21) : l'écoute permanente de la voix, choisie dans les Réglages ; témoin visible (bouton micro de Kayro, aura de l'île quand elle est appelée), coupure en un clic, pause en jeu (sauf choix) et écran verrouillé. « Calibrer ma voix » (2026-11-04) garde, à la demande de l'utilisateur seulement, ses enregistrements et son empreinte vocale dans `voice/me/` (sur le PC, supprimables en un clic) ; ce que jouent les enceintes n'est lu que pour retirer leur écho, jamais gardé (sauf à côté d'un enregistrement de calibration). Exception voulue (2026-11-05, étape 22) : la **souris dans l'air** — la main pilote le vrai curseur de Windows et clique partout (comme la souris de l'utilisateur, pas une commande) ; caméra coupée par défaut, allumée seulement par son raccourci ou un clic, éteinte seule sans main, en jeu et écran verrouillé ; témoins : la lumière de la webcam, le bouton mains allumé, la lueur du curseur ; rien de vu n'est gardé ni envoyé.
+- Son : le mode musique lit ce que jouent les enceintes, en mémoire seulement (rien n'est gardé ni envoyé). Ni micro ni caméra depuis le retrait de la voix et des mains (2026-11-07).
 - Permissions Tauri minimales (liste blanche), CSP stricte. Les images d'affiches viennent du dossier local de l'utilisateur : ne jamais les embarquer dans l'installeur ni les exporter dans un fichier partageable.
 
 ## Conventions
@@ -57,11 +57,11 @@ Projet privé pour l'instant, à partager plus tard avec des amis. Windows uniqu
 - Logs : `tracing`, fichier tournant dans AppData, bouton « Exporter les logs » (pour les retours de tes amis plus tard).
 - Accessibilité : contraste du texte ≥ 4,5:1, navigation complète au clavier, focus visible, respect de `prefers-reduced-motion`.
 
-## Extensions prévues avant la v1.0 (décision du 2026-11-02)
-Voix (étape 21), contrôle par les mains (22), moteur WebGL (24), puis l'audit final (18) et la v1.0 (`docs/ROADMAP.md`). Les intégrations OBS, Discord, lumières (ex-23) sont repoussées après la v1.0 (2026-11-06, « Plus tard » de la ROADMAP). Chacune seulement quand l'utilisateur donne son étape ; les règles de sécurité et de vie privée ci-dessus restent vraies (traitement local, ne lance que ce qui est configuré, indicateur visible ; l'exception « écoute permanente » de la voix se note dans ce fichier à l'étape 21).
+## Fin de route vers la v1.0
+Moteur WebGL (24, fait), audit final (18), puis la v1.0 (`docs/ROADMAP.md`). Retirés le 2026-11-07, au choix de l'utilisateur (« finir avec une vraie app bien finie ») : la voix (21) et les mains (22). Repoussées après la v1.0 : les intégrations OBS, Discord, lumières (ex-23).
 
 ## Hors périmètre pour l'instant (ne pas coder sans demande)
-Salon d'amis, assistant IA (projet séparé de l'écosystème Kayro, voir `docs/ROADMAP.md` : Kayro reste sans assistant IA). Prévoir les points d'extension, sans implémenter.
+Salon d'amis, assistant IA (projet séparé de l'écosystème Kayro, voir `docs/ROADMAP.md` : Kayro reste sans assistant IA), commandes vocales et gestes (retirés le 2026-11-07). Prévoir les points d'extension, sans implémenter.
 
 **Moteur graphique (WebGL2 / shaders) : autorisé par l'utilisateur (étape 12b).** Toujours derrière `FxLayer`, avec repli CSS automatique (WebGL2 absent, contexte perdu, budget d'image dépassé) et coût mesuré.
 

@@ -84,8 +84,6 @@ pub(crate) fn update_settings<R: Runtime>(
     let settings = state.set_settings(patch)?;
     notify(SettingsChanged(settings.clone()).emit(app));
     crate::desktop::settings_changed(app, &old, &settings);
-    crate::voice::settings_changed(app, &old, &settings);
-    crate::hands::settings_changed(app, &old, &settings);
     Ok(settings)
 }
 
@@ -379,31 +377,6 @@ pub fn builder() -> Builder<tauri::Wry> {
             crate::ipc_update::update_check::<tauri::Wry>,
             crate::ipc_update::update_pending::<tauri::Wry>,
             crate::ipc_update::update_install::<tauri::Wry>,
-            crate::ipc_voice::voice_state,
-            crate::ipc_voice::voice_mute::<tauri::Wry>,
-            crate::ipc_voice::voice_take_pending,
-            crate::ipc_voice::voice_close::<tauri::Wry>,
-            crate::ipc_voice::voice_models,
-            crate::ipc_voice::voice_model_download::<tauri::Wry>,
-            crate::ipc_voice::voice_model_cancel,
-            crate::ipc_voice::voice_model_remove::<tauri::Wry>,
-            crate::ipc_voice::voice_microphones,
-            crate::ipc_outputs::voice_outputs,
-            crate::ipc_voice::voice_learn,
-            crate::ipc_voice::voice_teach,
-            crate::ipc_voice::voice_memory,
-            crate::ipc_voice::voice_forget,
-            crate::ipc_voice::voice_calibrate::<tauri::Wry>,
-            crate::ipc_voice::voice_calib_record,
-            crate::ipc_voice::voice_calib_evaluate::<tauri::Wry>,
-            crate::ipc_voice::voice_calib_summary,
-            crate::ipc_voice::voice_calib_clear,
-            crate::ipc_hands::hands_state,
-            crate::ipc_hands::hands_set_on::<tauri::Wry>,
-            crate::ipc_hands::hands_model,
-            crate::ipc_hands::hands_model_download::<tauri::Wry>,
-            crate::ipc_hands::hands_model_cancel,
-            crate::ipc_hands::hands_model_remove::<tauri::Wry>,
         ])
         .events(collect_events![
             SettingsChanged,
@@ -432,13 +405,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             crate::desktop::cover::LaunchLanded,
             crate::ipc_update::UpdateAvailable,
             crate::ipc_detect::DeepProgress,
-            crate::ipc_update::UpdateProgress,
-            crate::voice::VoiceStateChanged,
-            crate::voice::VoiceHeard,
-            crate::voice::models::VoiceModelProgress,
-            crate::voice::VoiceLearned,
-            crate::voice::calib::VoiceRecorded,
-            crate::hands::HandsStateChanged
+            crate::ipc_update::UpdateProgress
         ])
 }
 

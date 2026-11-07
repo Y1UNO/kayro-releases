@@ -265,76 +265,6 @@ export const commands = {
 } | null>("update_pending"),
 	/**  Installs the update the last check found (Kayro quits, then starts again on it). */
 	updateInstall: () => typedError<null, AppError>(__TAURI_INVOKE("update_install")),
-	/**  Where the voice stands (the page asks once at load, then follows `VoiceStateChanged`). */
-	voiceState: () => __TAURI_INVOKE<VoiceState>("voice_state"),
-	/**  The microphone button (and « Arrête d'écouter »): closed until pressed again. */
-	voiceMute: (muted: boolean) => __TAURI_INVOKE<void>("voice_mute", { muted }),
-	/**  A command that waited for the user while the page was loading. */
-	voiceTakePending: () => __TAURI_INVOKE<{
-	text: string,
-	outcome: VoiceOutcome,
-	also?: VoiceOutcome[],
-} | null>("voice_take_pending"),
-	/**
-	 *  « Ferme X », confirmed on screen: a gentle close (a close message to its window, never
-	 *  forced). `false`: not running, or no window to ask.
-	 */
-	voiceClose: (id: string) => typedError<boolean, AppError>(__TAURI_INVOKE("voice_close", { id })),
-	voiceModels: () => __TAURI_INVOKE<VoiceModelInfo[]>("voice_models"),
-	/**  Downloads a model (the user's click: the voice's only network). Progress: `VoiceModelProgress`. */
-	voiceModelDownload: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("voice_model_download", { id })),
-	voiceModelCancel: (id: string) => __TAURI_INVOKE<void>("voice_model_cancel", { id }),
-	/**
-	 *  Removes a model's files. One the voice needs turns the voice off first (the page asked the
-	 *  user), then waits for its models to be let go (a few hundred ms).
-	 */
-	voiceModelRemove: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("voice_model_remove", { id })),
-	/**  The microphones Windows has (Réglages: « Micro »). */
-	voiceMicrophones: () => __TAURI_INVOKE<VoiceMicrophone[]>("voice_microphones"),
-	/**  The outputs plugged in and enabled (Réglages › Assistant vocal et IA). */
-	voiceOutputs: () => __TAURI_INVOKE<VoiceMicrophone[]>("voice_outputs"),
-	/**  The guided learning of the wake word starts or ends (`VoiceLearned` for each saying). */
-	voiceLearn: (on: boolean) => __TAURI_INVOKE<void>("voice_learn", { on }),
-	/**
-	 *  A choice made in a doubt: the words said now name that app or scene (« Kayro apprend de
-	 *  vous », memory.rs); only one of the configuration.
-	 */
-	voiceTeach: (said: string, scene: boolean, id: string) => __TAURI_INVOKE<void>("voice_teach", { said, scene, id }),
-	/**  How many ways of naming things Kayro learned from the user. */
-	voiceMemory: () => __TAURI_INVOKE<number>("voice_memory"),
-	/**  « Oublier »: what Kayro learned of the user's ways of naming things. */
-	voiceForget: () => __TAURI_INVOKE<void>("voice_forget"),
-	/**  « Calibrer ma voix » opens (the voice listens and keeps what it is told to) or closes. */
-	voiceCalibrate: (on: boolean) => __TAURI_INVOKE<void>("voice_calibrate", { on }),
-	/**  What the next saying is (`None`: nothing is kept until the next prompt). */
-	voiceCalibRecord: (prompt: {
-	/**  Its name among the recordings (a new saying of the same key replaces the old one). */
-	key: string,
-	kind: CalibKind,
-	text: string,
-	expect: string,
-} | null) => typedError<null, AppError>(__TAURI_INVOKE("voice_calib_record", { prompt })),
-	/**  Every recording through the whole always mode (≈ 0.5 s each, on the listening thread). */
-	voiceCalibEvaluate: () => typedError<CalibScore, AppError>(__TAURI_INVOKE("voice_calib_evaluate")),
-	voiceCalibSummary: () => __TAURI_INVOKE<CalibSummary>("voice_calib_summary"),
-	/**  « Supprimer mes enregistrements ». */
-	voiceCalibClear: () => typedError<null, AppError>(__TAURI_INVOKE("voice_calib_clear")),
-	/**  Where the hands stand (the page asks once at load, then follows `HandsStateChanged`). */
-	handsState: () => __TAURI_INVOKE<HandsState>("hands_state"),
-	/**  Turns the camera on or off (as the shortcut does). Refused while the hands are not set up. */
-	handsSetOn: (on: boolean) => __TAURI_INVOKE<void>("hands_set_on", { on }),
-	handsModel: () => __TAURI_INVOKE<HandsModelInfo>("hands_model"),
-	/**
-	 *  Downloads the two models (the user's click: the hands' only network). Progress:
-	 *  `VoiceModelProgress` with the id « hands ».
-	 */
-	handsModelDownload: () => typedError<null, AppError>(__TAURI_INVOKE("hands_model_download")),
-	handsModelCancel: () => __TAURI_INVOKE<void>("hands_model_cancel"),
-	/**
-	 *  Removes the models; the camera is turned off first (the page asked the user), and the thread
-	 *  lets the models go before their files are deleted.
-	 */
-	handsModelRemove: () => typedError<null, AppError>(__TAURI_INVOKE("hands_model_remove")),
 };
 
 /** Events */
@@ -344,7 +274,6 @@ export const events = {
 	artChanged: makeEvent<ArtChanged>("art-changed"),
 	deepProgress: makeEvent<DeepProgress>("deep-progress"),
 	detectProgress: makeEvent<DetectProgress>("detect-progress"),
-	handsStateChanged: makeEvent<HandsStateChanged>("hands-state-changed"),
 	hotkeysChanged: makeEvent<HotkeysChanged>("hotkeys-changed"),
 	islandFrame: makeEvent<IslandFrame>("island-frame"),
 	islandMoment: makeEvent<IslandMoment>("island-moment"),
@@ -366,11 +295,6 @@ export const events = {
 	themesChanged: makeEvent<ThemesChanged_Deserialize>("themes-changed"),
 	updateAvailable: makeEvent<UpdateAvailable>("update-available"),
 	updateProgress: makeEvent<UpdateProgress>("update-progress"),
-	voiceHeard: makeEvent<VoiceHeard>("voice-heard"),
-	voiceLearned: makeEvent<VoiceLearned>("voice-learned"),
-	voiceModelProgress: makeEvent<VoiceModelProgress>("voice-model-progress"),
-	voiceRecorded: makeEvent<VoiceRecorded>("voice-recorded"),
-	voiceStateChanged: makeEvent<VoiceStateChanged>("voice-state-changed"),
 	windowVisibility: makeEvent<WindowVisibility>("window-visibility"),
 };
 
@@ -446,9 +370,6 @@ export type AppSource = { kind: "manual" } | { kind: "steam"; appId: string } | 
 /**  Emitted when an app starts, stops, or comes to / leaves the front (changes only). */
 export type AppStateChanged = AppRunState;
 
-/**  What is done to one app's sound. */
-export type AppVolume = "louder" | "quieter" | "mute" | "unmute";
-
 /**  Emitted after every successful change of the app list. */
 export type AppsChanged = AppsFile;
 
@@ -494,72 +415,6 @@ export type ArtRole =
 "charLeft" | 
 /**  The same, right of the active card. */
 "charRight";
-
-export type CalibKind = 
-/**  The wake word alone. */
-"wake" | 
-/**  Its name alone (« Yuna »). */
-"name" | 
-/**  The wake word and a command, at the user's pace. */
-"command" | 
-/**  The same, quickly, without a pause. */
-"quick" | 
-/**  A command with music playing from the speakers. */
-"music" | 
-/**  A sentence that must not wake Kayro (« Tu as une minute ? »). */
-"trap" | 
-/**  Free speech: must not wake Kayro either. */
-"chat";
-
-/**  What to say next, and what it must do (`expect`: `key` of the intent, « wake » or « none »). */
-export type CalibPrompt = {
-	/**  Its name among the recordings (a new saying of the same key replaces the old one). */
-	key: string,
-	kind: CalibKind,
-	text: string,
-	expect: string,
-};
-
-/**  One recording replayed: what the command model wrote, what came of it. */
-export type CalibResult = {
-	key: string,
-	kind: CalibKind,
-	text: string,
-	heard: string,
-	/**  The intent's `key`, « none » when nothing woke. */
-	got: string,
-	woke: boolean,
-	right: boolean,
-};
-
-export type CalibScore = {
-	/**  Every saying with the wake word in it that woke Kayro. */
-	wake: Ratio,
-	/**  The commands (at the user's pace and quick) that did what was said. */
-	commands: Ratio,
-	/**  The commands said over music. */
-	music: Ratio,
-	/**  The sentences without the wake word that left Kayro asleep. */
-	calm: Ratio,
-	/**  The sayings « Seulement ma voix » knows as the user's (with the voice model only). */
-	voice: Ratio,
-	/**  The command model's time per sentence (median). */
-	medianMs: number,
-	/**  The wake word's learned spellings, with what this evaluation added (Réglages keeps them). */
-	learned: string[],
-	results: CalibResult[],
-};
-
-export type CalibSummary = {
-	/**  The prompts already said (the guided screen goes on from the first one missing). */
-	keys: string[],
-	count: number,
-	seconds: number,
-	/**  The last evaluation. */
-	score: CalibScore | null,
-	/**  The user's voiceprint is made (« Seulement ma voix » can be turned on). */
-	voiceprint: boolean,
-};
 
 /**  An app the user could add. */
 export type Candidate = {
@@ -693,8 +548,6 @@ export type DisplayMode_Deserialize = "immersive" | "widget" | "window";
  */
 export type DisplayMode_Serialize = "immersive" | "window";
 
-export type DownloadStep = "downloading" | "done" | "failed" | "cancelled";
-
 /**  « Élasticité du widget »: overshoot of its springs. */
 export type Elasticity = "soft" | "normal" | "strong";
 
@@ -718,9 +571,7 @@ export type ErrorCode =
 /**  The keyboard shortcut is already used by another program (or another shortcut of the hub). */
 "hotkeyConflict" | 
 /**  An update could not be checked, downloaded or verified (no network, bad signature…). */
-"updateFailed" | 
-/**  A voice model could not be downloaded or its fingerprint was wrong (step 21). */
-"downloadFailed";
+"updateFailed";
 
 export type FocusResult = "focused" | 
 /**  No process of this app is known (or the app cannot be followed). */
@@ -746,61 +597,6 @@ export type FxShape = {
 	dots: (number | null)[],
 };
 
-export type HandsModelInfo = {
-	sizeMb: number,
-	installed: boolean,
-	downloading: boolean,
-};
-
-/**  Read as a whole: a settings file without it (older), or with a broken one, keeps the default. */
-export type HandsSettings = {
-	/**  The hands are set up: their shortcut is registered (the camera still waits for it). */
-	enabled: boolean,
-	/**  Turns the camera (and the mouse in the air) on and off. */
-	hotkey: string,
-	/**
-	 *  Keep the camera while a program in full screen (a game) is in front; off: it closes until
-	 *  it leaves.
-	 */
-	inGame: boolean,
-	/**  Minutes without a hand in front of the camera before it turns itself off (1–30). */
-	idleMinutes: number,
-	/**
-	 *  How far the hand travels for the cursor to cross the screen (« Amplitude »): 0.5 (a small
-	 *  move) – 2.
-	 */
-	reach: number | null,
-	/**  The glow under the cursor while the hand leads it. */
-	glow: boolean,
-	/**  The finger that meets the thumb for a right click (the user's choice, 2026-11-05). */
-	rightFinger?: RightFinger,
-};
-
-export type HandsState = {
-	status: HandsStatus,
-	/**  Turned on by the user (the shortcut, Réglages); the status says what the camera does. */
-	on: boolean,
-};
-
-/**  Emitted whenever the hands' state changes. */
-export type HandsStateChanged = HandsState;
-
-export type HandsStatus = 
-/**  The camera is closed (the default). */
-"off" | 
-/**  On, the camera opening and the models loading. */
-"starting" | 
-/**  On, the camera open, no hand in front of it. */
-"watching" | 
-/**  A hand leads the cursor. */
-"leading" | 
-/**  On, but a game is in front or the screen is locked: the camera is closed until it ends. */
-"paused" | 
-/**  On, but the models are not installed. */
-"missing" | 
-/**  On, but no webcam answered. */
-"noCamera";
-
 export type HitKind = "kick" | "snare" | "hat" | "crash";
 
 export type HotkeyProblem = 
@@ -821,10 +617,6 @@ export type HotkeysReport = {
 	toggle: HotkeyStatus | null,
 	/**  `None` when there is no such shortcut (the user removed it). */
 	search: HotkeyStatus | null,
-	/**  `None` outside the push-to-talk mode. */
-	voice: HotkeyStatus | null,
-	/**  The hands' on/off (step 22); `None` until they are set up. */
-	hands: HotkeyStatus | null,
 	scenes: SceneHotkeyStatus[],
 };
 
@@ -1068,9 +860,6 @@ export type MotionStyle =
 /**  No bounce and no magic: entrance curve everywhere, card hover = lift only. */
 "crisp";
 
-/**  What the voice does to the music playing (Windows' media controls: Spotify or any player). */
-export type Music = "play" | "pause" | "next" | "previous" | "louder" | "quieter" | "mute" | "shuffleOn" | "shuffleOff" | "repeatOn" | "repeatOff";
-
 /**
  *  The music mode's beat grid (rhythm.rs, an AI, local), every 8 s while the mode listens: how
  *  long ago (s) each beat and each downbeat of the last 10 s was, at the moment it is sent.
@@ -1235,11 +1024,6 @@ export type Quality =
  */
 "auto" | "eco" | "balanced" | "high" | "ultra";
 
-export type Ratio = {
-	right: number,
-	total: number,
-};
-
 /**  Why a step failed or was skipped (the interface picks its own wording). */
 export type Reason = 
 /**  The slot is not linked to an app (or the app was removed). */
@@ -1272,9 +1056,6 @@ export type RejectReason =
 "repeated" | 
 /**  Beyond [`MAX_INPUTS`]. */
 "tooMany";
-
-/**  Thumb – ring finger or thumb – middle finger: the right click. */
-export type RightFinger = "ring" | "middle";
 
 export type RunStatus = 
 /**  Every step ran or was skipped without a `required` failure. */
@@ -1360,8 +1141,6 @@ export type SettingsPatch_Deserialize = {
 	hotkey?: string | null,
 	searchHotkey?: string | null,
 	keyboardLayout?: KeyboardLayout | null,
-	voice?: VoiceSettings | null,
-	hands?: HandsSettings | null,
 	language?: string | null,
 	atmosphereIntensity?: number | null,
 	displayMode?: DisplayMode_Deserialize | null,
@@ -1425,8 +1204,6 @@ export type SettingsPatch_Serialize = {
 	hotkey: string | null,
 	searchHotkey: string | null,
 	keyboardLayout: KeyboardLayout | null,
-	voice: VoiceSettings | null,
-	hands: HandsSettings | null,
 	language: string | null,
 	atmosphereIntensity: number | null,
 	displayMode: DisplayMode_Serialize | null,
@@ -1495,10 +1272,6 @@ export type Settings_Deserialize = {
 	searchHotkey: string,
 	/**  « Disposition du clavier » (2026-11-04): how the recorder names a pressed key. */
 	keyboardLayout: KeyboardLayout,
-	/**  Step 21: the voice (off by default; config/voice.rs). */
-	voice: VoiceSettings,
-	/**  Step 22: the hands, a mouse in the air (off by default; config/hands.rs). */
-	hands: HandsSettings,
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
@@ -1597,10 +1370,6 @@ export type Settings_Serialize = {
 	searchHotkey: string,
 	/**  « Disposition du clavier » (2026-11-04): how the recorder names a pressed key. */
 	keyboardLayout: KeyboardLayout,
-	/**  Step 21: the voice (off by default; config/voice.rs). */
-	voice: VoiceSettings,
-	/**  Step 22: the hands, a mouse in the air (off by default; config/hands.rs). */
-	hands: HandsSettings,
 	language: string,
 	/**  Strength of the animated atmosphere (fog, light, dust), 0.3–1.3 (« Atmosphère »). */
 	atmosphereIntensity: number | null,
@@ -1829,209 +1598,6 @@ export type VeilFade = {
 	ms: number,
 	curve: (number | null)[],
 };
-
-export type VoiceCandidate = {
-	id: string,
-	name: string,
-	scene: boolean,
-};
-
-/**
- *  A command was heard: the sentence and what came of it (several things asked at once, with
- *  the brain: the first, then the others, one note).
- */
-export type VoiceHeard = {
-	text: string,
-	outcome: VoiceOutcome,
-	also?: VoiceOutcome[],
-};
-
-/**
- *  The guided learning (« Apprendre mon mot d'éveil »): what the small model heard of one
- *  saying of the wake word (its words before the command, if one was said too).
- */
-export type VoiceLearned = {
-	heard: string,
-};
-
-/**  A piece of music the user named: a Spotify playlist, album, track, artist, show or episode. */
-export type VoiceLink = {
-	name: string,
-	/**  « spotify:playlist:<22 letters and digits> » (Réglages turns a shared link into it). */
-	uri: string,
-};
-
-export type VoiceMicrophone = {
-	id: string,
-	name: string,
-};
-
-/**  How Kayro listens. */
-export type VoiceMode = "off" | 
-/**  The microphone opens only while the shortcut is held. */
-"pushToTalk" | 
-/**
- *  Always listening for the wake word (the user's exception to « never the microphone all
- *  the time », 2026-10-30): speech detection, then the wake word, then the command.
- */
-"always";
-
-/**  Which model writes down the command (the wake word always uses the small French one). */
-export type VoiceModel = 
-/**  NVIDIA Parakeet TDT 0.6B v3: the best French and English names (~730 MB of memory). */
-"parakeet" | 
-/**  NVIDIA Canary 180M Flash: lighter (~320 MB), weaker on English names. */
-"canary";
-
-/**  A model as Réglages shows it (its texts are in the page's catalogue). */
-export type VoiceModelInfo = {
-	id: string,
-	sizeMb: number,
-	installed: boolean,
-	downloading: boolean,
-};
-
-/**  A download's progress, about ten times a second. */
-export type VoiceModelProgress = {
-	id: string,
-	step: DownloadStep,
-	/**  0–1. */
-	fraction: number | null,
-	doneMb: number,
-};
-
-/**  What a command did. */
-export type VoiceOutcome = { kind: "launched"; id: string; name: string } | { kind: "launchFailed"; id: string; name: string } | { kind: "sceneStarted"; id: string; name: string } | 
-/**  « Ferme X »: asked to close at once, gently (its window may still ask to save). */
-{ kind: "closed"; id: string; name: string } | 
-/**  « Ferme X » while X is not open. */
-{ kind: "notRunning"; id: string; name: string } | 
-/**  The music: what was done to what plays (or Spotify started, for « mets la musique »). */
-{ kind: "music"; action: Music } | 
-/**  The user's music, by name, opened in Spotify. */
-{ kind: "musicOpened"; name: string } | 
-/**  Kysland's music mode turned on or off. */
-{ kind: "musicMode"; on: boolean } | 
-/**  The hands' camera turned on or off (step 22); `ok` false: the hands are not set up. */
-{ kind: "hands"; on: boolean; ok: boolean } | { kind: "showKayro" } | { kind: "hideKayro" } | { kind: "search"; query: string } | { kind: "stoppedListening" } | 
-/**  Several sound alike: proposed, nothing started. */
-{ kind: "doubt"; 
-/**  The words that named it (normalized): a choice teaches Kayro (memory.rs). */
-said: string; candidates: VoiceCandidate[] } | { kind: "notUnderstood" } | 
-/**
- *  A window arranged (`what`: plein, reduire, restaurer, devant, gauche, droite, ecran,
- *  fermer); `ok` false: no such window, or not one of the user's apps (a close).
- */
-{ kind: "window"; what: string; name: string; ok: boolean } | { kind: "volumeTo"; level: number } | 
-/**  One app's sound; `ok` false: it plays nothing right now. */
-{ kind: "appVolume"; name: string; what: AppVolume; ok: boolean } | { kind: "mic"; muted: boolean; ok: boolean } | 
-/**  Réglages opened on a page (the page opens it). */
-{ kind: "settings"; page: string } | { kind: "theme"; name: string; ok: boolean } | { kind: "kysland"; on: boolean } | 
-/**  What plays (`title` empty: nothing). */
-{ kind: "nowPlaying"; title: string; artist: string } | { kind: "lock" } | { kind: "desktop" } | { kind: "files" } | { kind: "timer"; minutes: number } | 
-/**  The timer ended (Kayro comes to say so). */
-{ kind: "timerDone"; minutes: number } | { kind: "time"; text: string } | { kind: "screenshot" } | { kind: "webSearch"; query: string } | 
-/**  Typed into the window in front; `ok` false: a console, or no field (refused). */
-{ kind: "dictated"; ok: boolean } | 
-/**  Said to the assistant, but nothing Kayro can do yet. */
-{ kind: "unknown" };
-
-/**  A saying was kept (`ok`: written to disk). */
-export type VoiceRecorded = {
-	key: string,
-	ok: boolean,
-};
-
-/**
- *  Read as a whole: a settings file without it (older), or with a broken one, keeps the default
- *  (the settings' lenient read, field by field).
- */
-export type VoiceSettings = {
-	mode: VoiceMode,
-	/**
-	 *  Said before a command in the « always » mode; the user's own (the assistant's name comes
-	 *  later, with the ecosystem's AI app).
-	 */
-	wakeWord: string,
-	/**  The push-to-talk shortcut (empty: none). */
-	hotkey: string,
-	model: VoiceModel,
-	/**
-	 *  Keep listening while a program in full screen (a game) is in front; off: the
-	 *  microphone closes until it leaves (push-to-talk still works).
-	 */
-	inGame: boolean,
-	/**
-	 *  What the small model heard when the user taught it the wake word (« DIOUNOV »): matched
-	 *  too. Emptied when the wake word changes.
-	 */
-	wakeHeard: string[],
-	/**  The microphone's Windows id (empty: Windows' default one). */
-	microphone: string,
-	/**
-	 *  The output whose sound the echo canceller takes out, by Windows id (empty: the default
-	 *  one; with Voicemeeter, the physical speakers hold every bus).
-	 */
-	speakers: string,
-	/**
-	 *  The island's aura while it listens: empty = the island's own colour of the moment, or
-	 *  « #rrggbb ».
-	 */
-	aura: string,
-	/**  The user's music by name (« chill » → a Spotify playlist): « mets ma playlist chill ». */
-	links: VoiceLink[],
-	/**
-	 *  « Seulement ma voix »: a sentence in another voice (the TV, a video, a friend) does not
-	 *  wake Kayro (voice/speaker.rs, from the calibration's recordings).
-	 */
-	onlyMe: boolean,
-	/**
-	 *  What the speakers play (music, a video, a game) is taken out of what the microphone
-	 *  hears (voice/echo.rs); useless with headphones.
-	 */
-	echoCancel: boolean,
-	/**
-	 *  The brain (voice/brain/): once downloaded, it hears and understands the sentences on the
-	 *  graphics card; off, or missing, the classic way answers.
-	 */
-	brain: boolean,
-};
-
-export type VoiceState = {
-	status: VoiceStatus,
-	missing: string | null,
-};
-
-/**  The microphone indicator follows this (the island, Réglages). */
-export type VoiceStateChanged = VoiceState;
-
-export type VoiceStatus = "off" | 
-/**  The models are loading (a few seconds). */
-"loading" | 
-/**  Always mode: the microphone is open, waiting for the wake word. */
-"waiting" | 
-/**  Push-to-talk mode, the shortcut not held: the microphone is closed. */
-"ready" | 
-/**
- *  Called (the wake word heard, the shortcut held, or a sentence may still follow the
- *  last one): the aura is lit, the command is being said.
- */
-"hearing" | 
-/**  The sentence is being understood (the brain, or written down the classic way). */
-"thinking" | 
-/**
- *  A sentence may still follow the last one without the name (follow.rs): the aura stays
- *  lit, softer.
- */
-"following" | 
-/**  A program in full screen is in front, or the screen is locked: the microphone is closed. */
-"paused" | 
-/**  « Arrête d'écouter »: closed until the voice is turned on again. */
-"muted" | 
-/**  A model is missing (`missing` says which): to download in Réglages. */
-"noModel" | 
-/**  No microphone, or Windows refuses it (its privacy settings). */
-"noMicrophone";
 
 /**  « Dépliage du widget ». */
 export type WidgetUnroll = "unroll" | "sober";

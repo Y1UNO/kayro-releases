@@ -8,7 +8,6 @@ pub mod beat;
 mod continuous;
 mod form;
 mod listen;
-pub(crate) use listen::models_dir;
 pub mod music;
 mod onset;
 pub mod rhythm;

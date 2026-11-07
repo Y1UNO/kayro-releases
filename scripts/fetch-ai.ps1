@@ -56,18 +56,3 @@ if (Test-Sha $dll $dllSha) { Write-Host 'ok   onnxruntime.dll' } else {
     if (-not (Test-Sha $dll $dllSha)) { Remove-Item $dll -ErrorAction SilentlyContinue; throw 'empreinte fausse : onnxruntime.dll' }
 }
 Write-Host "Pret : $dir"
-
-# Step 21, the voice: sherpa-onnx's static libraries (k2-fsa, Apache-2.0), put where its build
-# script looks first (target\sherpa-onnx-prebuilt), so that it never downloads them unchecked.
-# The voice models themselves are not here: Kayro downloads them on demand (Reglages).
-$sherpaDir = Join-Path $root 'target\sherpa-onnx-prebuilt'
-$sherpa = Join-Path $sherpaDir 'sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib.tar.bz2'
-$sherpaSha = '23e7b986b197eda0bbc47ff3d7d5c87afd6ef2b9077214ba26b0f1ec52ef0e66'
-$sherpaLib = Join-Path $sherpaDir 'sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib\lib'
-if ((Test-Path $sherpaLib) -or (Test-Sha $sherpa $sherpaSha)) { Write-Host 'ok   sherpa-onnx 2.0.1' } else {
-    Write-Host '...  sherpa-onnx 2.0.1 (bibliotheques statiques, GitHub k2-fsa)'
-    New-Item -ItemType Directory -Force $sherpaDir | Out-Null
-    $url = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-v2.0.1-win-x64-static-MT-Release-lib.tar.bz2'
-    Invoke-WebRequest -Uri $url -OutFile $sherpa -UseBasicParsing
-    if (-not (Test-Sha $sherpa $sherpaSha)) { Remove-Item $sherpa; throw 'empreinte fausse : sherpa-onnx' }
-}

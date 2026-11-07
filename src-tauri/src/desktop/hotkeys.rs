@@ -1,6 +1,5 @@
 //! Global shortcuts: the one that shows/hides the hub, « Écrire dans Kysland » (the island opened
-//! on its search, 2026-11-04), the voice's push-to-talk (step 21, held: registered in that mode
-//! only), the hands' on/off (step 22), and one per scene that has a `hotkey`.
+//! on its search, 2026-11-04), and one per scene that has a `hotkey`.
 //! Windows hands a combination to a single program: a refusal means another program owns it, and
 //! the interface is told so (`HotkeysReport`) instead of the failure staying in a log.
 
@@ -45,10 +44,6 @@ pub struct HotkeysReport {
     pub toggle: Option<HotkeyStatus>,
     /// `None` when there is no such shortcut (the user removed it).
     pub search: Option<HotkeyStatus>,
-    /// `None` outside the push-to-talk mode.
-    pub voice: Option<HotkeyStatus>,
-    /// The hands' on/off (step 22); `None` until they are set up.
-    pub hands: Option<HotkeyStatus>,
     pub scenes: Vec<SceneHotkeyStatus>,
 }
 
@@ -61,8 +56,6 @@ pub struct HotkeysChanged(pub HotkeysReport);
 pub enum Action {
     Toggle,
     Search,
-    Voice,
-    Hands,
     Scene(String),
 }
 
@@ -71,16 +64,12 @@ pub enum Action {
 enum Own {
     Toggle,
     Search,
-    Voice,
-    Hands,
 }
 
 #[derive(Default)]
 struct Inner {
     toggle: Option<Shortcut>,
     search: Option<Shortcut>,
-    voice: Option<Shortcut>,
-    hands: Option<Shortcut>,
     scenes: Vec<(Shortcut, String)>,
     report: HotkeysReport,
 }
@@ -90,19 +79,12 @@ impl Inner {
         match own {
             Own::Toggle => (&mut self.toggle, &mut self.report.toggle),
             Own::Search => (&mut self.search, &mut self.report.search),
-            Own::Voice => (&mut self.voice, &mut self.report.voice),
-            Own::Hands => (&mut self.hands, &mut self.report.hands),
         }
     }
 
     /// Is `id` one of Kayro's own shortcuts other than `own`, or a scene's?
     fn taken(&self, id: u32, own: Own) -> bool {
-        let others = [
-            (Own::Toggle, self.toggle),
-            (Own::Search, self.search),
-            (Own::Voice, self.voice),
-            (Own::Hands, self.hands),
-        ];
+        let others = [(Own::Toggle, self.toggle), (Own::Search, self.search)];
         others
             .iter()
             .any(|(o, s)| *o != own && s.is_some_and(|s| s.id() == id))
@@ -129,12 +111,6 @@ impl HotkeyState {
         }
         if inner.search.is_some_and(|s| s.id() == id) {
             return Some(Action::Search);
-        }
-        if inner.voice.is_some_and(|s| s.id() == id) {
-            return Some(Action::Voice);
-        }
-        if inner.hands.is_some_and(|s| s.id() == id) {
-            return Some(Action::Hands);
         }
         inner
             .scenes
@@ -242,16 +218,6 @@ pub fn set_search<R: Runtime>(app: &AppHandle<R>, hotkey: &str) -> Result<(), Ho
     set_own(app, Own::Search, hotkey)
 }
 
-/// The voice's push-to-talk (empty: none, outside that mode).
-pub fn set_voice<R: Runtime>(app: &AppHandle<R>, hotkey: &str) -> Result<(), HotkeyProblem> {
-    set_own(app, Own::Voice, hotkey)
-}
-
-/// The hands' on/off (empty: none, until they are set up).
-pub fn set_hands<R: Runtime>(app: &AppHandle<R>, hotkey: &str) -> Result<(), HotkeyProblem> {
-    set_own(app, Own::Hands, hotkey)
-}
-
 /// Re-registers the shortcuts of all scenes (after a scene was saved, imported or deleted).
 pub fn sync_scenes<R: Runtime>(app: &AppHandle<R>) {
     let state = app.state::<HotkeyState>();
@@ -263,13 +229,7 @@ pub fn sync_scenes<R: Runtime>(app: &AppHandle<R>) {
 
     let own: Vec<Shortcut> = {
         let inner = state.lock();
-        inner
-            .toggle
-            .into_iter()
-            .chain(inner.search)
-            .chain(inner.voice)
-            .chain(inner.hands)
-            .collect()
+        inner.toggle.into_iter().chain(inner.search).collect()
     };
     let mut registered: Vec<(Shortcut, String)> = Vec::new();
     let mut statuses = Vec::new();

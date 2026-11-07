@@ -5,7 +5,6 @@ pub mod apps;
 pub mod atomic;
 pub mod dirstore;
 pub mod game_colors;
-pub mod hands;
 pub mod migrate;
 pub mod mood_store;
 pub mod moods;
@@ -20,7 +19,6 @@ pub mod themes;
 pub mod ui_state;
 pub mod validate;
 pub mod visual;
-pub mod voice;
 
 use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard};

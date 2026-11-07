@@ -380,12 +380,9 @@ Pause en 240 ms (survol, molette, défilement rapide, glisser), reprise lente en
 - Titres de la liaison enchaînés (§ 4.2) ; crayon de la carte active visible seulement au survol ou au focus.
 - Scènes en cartes 176 × 246 (comme les apps), quatre actions de 30 px à 8 px d'écart au survol (+4 px de montée),
   barre partagée `TopBarShell` (58 px, marges 24 / 56), colonne de 1 280 px, titre-signature.
-- Sélecteur de mode = bouton rond + petit menu ; grille dans la pilule d'onglets ; mains cachées (`app/features.ts`).
-  Micro (étape 21, 2026-11-04) : visible quand la voix est active, teinté `--accent-light` avec un halo de 2 px qui
-  respire en opacité pendant que le micro écoute, barré à 60 % en sourdine ; un clic coupe ou reprend (DA-JOURNAL).
-  L'île (Kysland) s'entoure d'une aura une fois appelée (mot d'éveil entendu ou touche tenue ; halo extérieur 14 px),
-  à la couleur choisie ou Auto (pochette assez claire, sinon l'accent du thème) ; Réglages › Assistant vocal et IA
-  en blocs Capri aux couleurs du thème (DA-JOURNAL, 2026-11-04).
+- Sélecteur de mode = bouton rond + petit menu ; grille dans la pilule d'onglets. Le bouton micro, le bouton
+  mains, l'aura de l'île et les Réglages « Assistant vocal » / « Concept / Fun » sont partis avec la voix et les
+  mains (2026-11-07, DA-JOURNAL).
 - Fondu système de Windows coupé à l'ouverture de la fenêtre immersive (`own_window::set_show_animation`).
 
 ---

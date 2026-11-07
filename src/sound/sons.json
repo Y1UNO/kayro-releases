@@ -20,8 +20,7 @@
     "theme": { "family": "transitions", "volume": 0.6, "minGapMs": 600, "pitch": 0 },
     "open": { "family": "launch", "volume": 0.75, "minGapMs": 3000, "pitch": 0 },
     "launch": { "family": "launch", "volume": 0.8, "minGapMs": 1500, "pitch": 0 },
-    "launchFinale": { "family": "launch", "volume": 0.75, "minGapMs": 1500, "pitch": 0 },
-    "listen": { "family": "interface", "volume": 0.6, "minGapMs": 800, "pitch": 0 }
+    "launchFinale": { "family": "launch", "volume": 0.75, "minGapMs": 1500, "pitch": 0 }
   },
   "packs": {
     "premium": {
@@ -193,10 +192,6 @@
           { "wave": "sine", "freq": 2637, "at": 0.5, "dur": 1.0, "gain": 0.06, "bell": true },
           { "wave": "sine", "freq": 3322.4, "at": 0.52, "dur": 1.0, "gain": 0.045, "bell": true },
           { "wave": "sine", "freq": 3951, "at": 0.54, "dur": 1.0, "gain": 0.035, "bell": true }
-        ],
-        "listen": [
-          { "wave": "sine", "freq": 880, "dur": 0.35, "gain": 0.09, "bell": true },
-          { "wave": "sine", "freq": 1318.5, "at": 0.08, "dur": 0.45, "gain": 0.08, "bell": true }
         ]
       }
     },
@@ -318,10 +313,6 @@
           { "wave": "sawtooth", "freq": 523.25, "to": 2093, "dur": 0.6, "gain": 0.05 },
           { "wave": "triangle", "freq": 1046.5, "at": 0.55, "dur": 0.8, "gain": 0.1 },
           { "wave": "triangle", "freq": 1568, "at": 0.55, "dur": 0.8, "gain": 0.09 }
-        ],
-        "listen": [
-          { "wave": "triangle", "freq": 659.25, "dur": 0.12, "gain": 0.16 },
-          { "wave": "triangle", "freq": 987.77, "at": 0.08, "dur": 0.22, "gain": 0.16 }
         ]
       }
     },
@@ -427,10 +418,6 @@
           { "wave": "square", "freq": 523.25, "to": 2093, "dur": 0.4, "gain": 0.05 },
           { "wave": "square", "freq": 2637, "at": 0.45, "dur": 0.25, "gain": 0.05 },
           { "wave": "square", "freq": 2093, "at": 0.45, "dur": 0.25, "gain": 0.05 }
-        ],
-        "listen": [
-          { "wave": "square", "freq": 987.77, "dur": 0.06, "gain": 0.07 },
-          { "wave": "square", "freq": 1318.5, "at": 0.06, "dur": 0.1, "gain": 0.07 }
         ]
       }
     }

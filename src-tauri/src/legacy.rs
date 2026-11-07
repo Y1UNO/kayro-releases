@@ -82,9 +82,49 @@ pub fn log_outcome(migration: &Migration) {
     }
 }
 
+/// Folders of features removed since (2026-11-07: the voice and the hands, by the user's choice):
+/// their models (up to 5.9 GB) and the voice's calibration recordings (`voice/me`).
+const RETIRED: [&str; 2] = ["voice", "hands"];
+
+/// Deletes the data of the removed features from `data` (the Kayro folder), once: they are gone
+/// on the next start. Returns the folders deleted; a failure is logged and retried next time.
+pub fn remove_retired(data: &Path) -> Vec<&'static str> {
+    RETIRED
+        .into_iter()
+        .filter(|name| {
+            let dir = data.join(name);
+            if !dir.is_dir() {
+                return false;
+            }
+            match fs::remove_dir_all(&dir) {
+                Ok(()) => true,
+                Err(error) => {
+                    tracing::warn!(folder = name, %error, "could not delete a removed feature's data");
+                    false
+                }
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_voice_and_hands_data_are_deleted_and_nothing_else() {
+        let dir = tempfile::tempdir().unwrap();
+        let data = dir.path();
+        fs::create_dir_all(data.join("voice").join("me")).unwrap();
+        fs::write(data.join("voice").join("me").join("say.wav"), [1, 2]).unwrap();
+        fs::create_dir_all(data.join("hands")).unwrap();
+        fs::create_dir_all(data.join("scenes")).unwrap();
+        fs::write(data.join("settings.json"), "{}").unwrap();
+        assert_eq!(remove_retired(data), vec!["voice", "hands"]);
+        assert!(!data.join("voice").exists() && !data.join("hands").exists());
+        assert!(data.join("scenes").is_dir() && data.join("settings.json").is_file());
+        assert!(remove_retired(data).is_empty());
+    }
 
     fn old_data(base: &Path) -> PathBuf {
         let hub = base.join("Hub");

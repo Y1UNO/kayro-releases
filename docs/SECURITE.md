@@ -5,9 +5,12 @@ chaque fois : peut-on faire lancer à Kayro autre chose que ce qui est configur�
 Chaque faille trouvée = un correctif + un test qui la rejoue.
 
 ## Verdict
-Aucune faille permettant de lancer un programme non configuré ni de lire un fichier arbitraire. Deux défauts
-corrigés : l'installation de la voix (modèles non figés) et le nom de session Windows dans les logs exportés.
-Deux risques acceptés, expliqués plus bas.
+Aucune faille permettant de lancer un programme non configuré ni de lire un fichier arbitraire. Un défaut
+corrigé : le nom de session Windows dans les logs exportés. Deux risques acceptés, expliqués plus bas.
+**Mise à jour du 2026-11-07** : la voix et les mains ont été retirées juste après cet audit. Leur surface
+d'attaque a disparu avec elles : micro, caméra, souris simulée, serveur local du cerveau, téléchargement de
+modèles. Leurs données sont effacées au premier lancement. (Avant le retrait, les modèles avaient été figés
+sur un commit, voir la ROADMAP, et le cerveau n'écoutait que sur `127.0.0.1` avec une clé aléatoire.)
 
 ## Ce qui a été attaqué
 
@@ -20,11 +23,7 @@ Deux risques acceptés, expliqués plus bas.
 | Fichiers importés | thème / `.hubmood` géants, imbrication profonde (30 000), zip, binaire, NUL, champs `exe` ou `..\`, dossier déguisé, vide | **Refusés**, rien n'est écrit | `config/import_attack_tests.rs` (**nouveau**) ; `.hubscene` : `config/share.rs` (existant) |
 | Commandes (IPC) | lancer un id inconnu, un chemin, une commande | **Bloqué** : `app_launch` ne lance qu'une entrée de la config, revalidée ; aucune commande ne lance un chemin reçu de la page ; les imports lisent un fichier déposé et le valident sans rien exécuter | `launcher/`, `config/validate_tests.rs` |
 | Mises à jour | faux `latest.json`, installeur non signé, retour à une vieille version | **Bloqué** : module officiel de Tauri, signature vérifiée avec notre clé publique, seulement une version plus récente, HTTPS | `update.rs`, `tauri.conf.json` |
-| Modèles téléchargés | fichier remplacé en amont ou détourné | **Bloqué** : SHA-256 et taille vérifiés, fichier refusé effacé ; **corrigé** : adresses Hugging Face figées sur un commit (le 07/11, Parakeet republié cassait toute installation) ; un test refuse une adresse non figée | `voice/models.rs`, `hands/models.rs` |
-| Cerveau (llama-server) | joindre le serveur depuis le réseau local | **Bloqué** : écoute sur `127.0.0.1`, port libre au hasard, clé aléatoire à chaque lancement | `voice/brain/mod.rs` |
-| Voix | une phrase (ou une vidéo qui parle) fait lancer autre chose | **Bloqué** : le cerveau ne rend que des actions, revérifiées par le cœur contre la config ; « seulement ma voix » au choix | `voice/act`, tests de la voix |
-| Mains | un geste lance une commande | **Sans objet** : la main n'est qu'une souris (mouvement et clics), jamais une commande | `hands/pointer.rs` |
-| Réseau | données envoyées | **Rien** hors mises à jour (si autorisées) et modèles (à la demande) ; une recherche web dite à la voix ouvre le navigateur de l'utilisateur | recherche `reqwest` / `TcpStream` |
+| Réseau | données envoyées | **Rien** hors mises à jour (si autorisées) : depuis le retrait de la voix et des mains (2026-11-07), plus aucun téléchargement de modèle ni client HTTP dans le cœur | recherche `reqwest` / `TcpStream` |
 | Logs exportés | contenu partagé avec un ami | **Corrigé** : le dossier personnel (`C:\Users\<nom>`) devient `%USERPROFILE%` dans le zip, toutes casses et barres ; un nom ne mord jamais sur un autre (`Tom` / `Tommy`) | `logs_export.rs` (**nouveau test**) |
 | Démarrage | tâche planifiée détournée vers un autre exe | **Bloqué** : une tâche qui vise un autre exe est repointée au lancement | `platform/logon_task.rs` (étape 19) |
 
@@ -34,7 +33,7 @@ Deux risques acceptés, expliqués plus bas.
   cette variable, et il pourrait alors lancer ce qu'il veut lui-même : aucune élévation. Les pages web ne peuvent
   pas s'y connecter (Chromium refuse les origines non autorisées). Gardé : c'est ainsi qu'on vérifie l'exe.
 - **Fichiers de Kayro modifiables par l'utilisateur** (`%APPDATA%\Kayro\apps.json`, dossier d'installation par
-  utilisateur, runtime du cerveau dans `voice\`) : quelqu'un qui écrit déjà là a les droits de l'utilisateur. La
+  utilisateur) : quelqu'un qui écrit déjà là a les droits de l'utilisateur. La
   configuration *est* la liste de ce que Kayro peut lancer, par définition.
 
 ## Pas fait (et pourquoi)

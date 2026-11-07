@@ -9,10 +9,7 @@ import { desktopIpc, mediaIpc } from "../../ipc/commands";
 import { playSound } from "../../sound";
 import { hubStore, sceneStore, useHub, useScenes } from "../../store";
 import { usePassage } from "../modes/usePassage";
-import { useHands } from "../hands/handsStore";
 import { useUpdate } from "../update/updateStore";
-import { auraColour } from "../voice/aura";
-import { useVoice } from "../voice/voiceStore";
 import { closeTargets } from "../scenes/model";
 import { runningApps, searchPanel, type WidgetHit } from "../widget/widgetModel";
 import { IslandPanel } from "./IslandPanel";
@@ -88,21 +85,6 @@ export function IslandApp() {
     if (update) say(t("island.update", { version: update.version }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [update]);
-  // Step 22: the camera turned on or off (the shortcut, a minute without a hand) is said too.
-  const handsOn = useHands((s) => s.state.on);
-  const handsBefore = useRef(handsOn);
-  useEffect(() => {
-    if (handsBefore.current === handsOn) return;
-    handsBefore.current = handsOn;
-    say(t(handsOn ? "hands.island.on" : "hands.island.off"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handsOn]);
-  // A webcam held by another app (OBS, a call) is said once, not each new try.
-  const handsBusy = useHands((s) => s.state.on && s.state.status === "noCamera");
-  useEffect(() => {
-    if (handsBusy) say(t("hands.island.busy"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handsBusy]);
   const stageCanvas = useRef<HTMLCanvasElement>(null);
   const stage = useMusicStage(
     {
@@ -151,21 +133,11 @@ export function IslandApp() {
   // The room it takes at rest, for the core's click region: it grows at once, shrinks once the
   // island has (no cut while it shrinks). Sent on a change only, no loop.
   const [hovered, setHovered] = useState(false);
-  // Step 21: the voice listens: an aura around the island (and room for it).
-  const voiceOn = useHub((s) => (s.settings?.voice.mode ?? "off") !== "off");
-  const auraHex = useHub((s) => s.settings?.voice.aura ?? "");
-  const voiceStatus = useVoice((s) => s.state.status);
-  // Only once called (the wake word heard, or the push-to-talk key held), not while it waits;
-  // softer while the next sentence may still follow the last one without the name.
-  const hearing = voiceOn && (voiceStatus === "hearing" || voiceStatus === "thinking");
-  const following = voiceOn && voiceStatus === "following";
-  const listening = hearing || following;
   const room = islandRoom({
     ...shown,
     hover: hovered,
     breath: Boolean(np?.playing),
     idle: controls.idling,
-    aura: listening,
   });
   useEffect(() => {
     const send = (r: Room) => {
@@ -212,25 +184,6 @@ export function IslandApp() {
     set("--album-d", colors?.[0]);
     set("--album-a", colors?.[1]);
   }, [colors]);
-
-  // Called: two soft notes, once (the island's page plays the voice's sounds: it is always there).
-  const wasHearing = useRef(false);
-  useEffect(() => {
-    if (hearing && !wasHearing.current) playSound("listen");
-    wasHearing.current = hearing;
-  }, [hearing]);
-
-  // The aura's colour: the user's, else the album's (the island's colour of the moment), else
-  // the theme's (CSS); its strength: full once called, at 55 % while a sentence may still
-  // follow (opacity only, no pulse: DA-JOURNAL 2026-11-04), nothing while it waits.
-  useEffect(() => {
-    const el = island.current;
-    if (!el) return;
-    el.style.setProperty("--listen", hearing ? "1" : following ? "0.55" : "0");
-    const colour = auraColour(auraHex, colors);
-    if (colour) el.style.setProperty("--aura-colour", colour);
-    else el.style.removeProperty("--aura-colour");
-  }, [hearing, following, auraHex, colors]);
 
   // Another track: a small jolt (a glitch in « Glitch »).
   const key = trackKey(np);
@@ -294,7 +247,6 @@ export function IslandApp() {
           className={styles.island}
           data-open={controls.open || undefined}
           data-stage={inStage || undefined}
-          data-hearing={(hearing && !calm) || undefined}
           role={controls.open ? "dialog" : "img"}
           aria-label={t(controls.open ? "island.openLabel" : "island.label")}
           onPointerDown={onPointerDown}
