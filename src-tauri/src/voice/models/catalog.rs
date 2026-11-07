@@ -20,9 +20,19 @@ pub struct Model {
 
 pub const HF: &str = "https://huggingface.co";
 
+/// A file of a Hugging Face repository at a fixed revision (never `main`: on 2026-11-07 the
+/// Parakeet repository was published again with other files, and every install failed on their
+/// SHA-256 until the URLs were pinned to the revision measured and validated).
 macro_rules! hf {
-    ($repo:literal, $file:literal) => {
-        concat!("https://huggingface.co/", $repo, "/resolve/main/", $file)
+    ($repo:literal @ $rev:literal, $file:literal) => {
+        concat!(
+            "https://huggingface.co/",
+            $repo,
+            "/resolve/",
+            $rev,
+            "/",
+            $file
+        )
     };
 }
 
@@ -59,7 +69,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "encoder-epoch-29-avg-9-with-averaged-model.int8.onnx",
                 url: hf!(
-                    "shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14",
+                    "shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14" @ "3db9565d9633758d6b87b9a7b3dc09ebfb6b2c73",
                     "encoder-epoch-29-avg-9-with-averaged-model.int8.onnx"
                 ),
                 sha256: "47a94a7fdc8dff63d708be4ea0535747640224467f91e238311f1ddbdd09327e",
@@ -68,7 +78,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "decoder-epoch-29-avg-9-with-averaged-model.int8.onnx",
                 url: hf!(
-                    "shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14",
+                    "shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14" @ "3db9565d9633758d6b87b9a7b3dc09ebfb6b2c73",
                     "decoder-epoch-29-avg-9-with-averaged-model.int8.onnx"
                 ),
                 sha256: "e72b2b9ed36355bd0dd43433f7dd258e7226ab54c9ef42b28c73ebb785805623",
@@ -77,7 +87,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "joiner-epoch-29-avg-9-with-averaged-model.int8.onnx",
                 url: hf!(
-                    "shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14",
+                    "shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14" @ "3db9565d9633758d6b87b9a7b3dc09ebfb6b2c73",
                     "joiner-epoch-29-avg-9-with-averaged-model.int8.onnx"
                 ),
                 sha256: "fc2f3bb851a15a532c6f2422d53eecd1ca949f12b0897e07a852021c30481711",
@@ -86,7 +96,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "tokens.txt",
                 url: hf!(
-                    "shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14",
+                    "shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14" @ "3db9565d9633758d6b87b9a7b3dc09ebfb6b2c73",
                     "tokens.txt"
                 ),
                 sha256: "37fb3f2a7bcb85e5fff3f1f66be04e6fbb05077a22f56d177fe85704e945fb31",
@@ -101,7 +111,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "encoder.int8.onnx",
                 url: hf!(
-                    "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
+                    "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8" @ "2bda32ec70b097a55adaa07d9a7173915b43cc78",
                     "encoder.int8.onnx"
                 ),
                 sha256: "acfc2b4456377e15d04f0243af540b7fe7c992f8d898d751cf134c3a55fd2247",
@@ -110,7 +120,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "decoder.int8.onnx",
                 url: hf!(
-                    "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
+                    "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8" @ "2bda32ec70b097a55adaa07d9a7173915b43cc78",
                     "decoder.int8.onnx"
                 ),
                 sha256: "179e50c43d1a9de79c8a24149a2f9bac6eb5981823f2a2ed88d655b24248db4e",
@@ -119,7 +129,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "joiner.int8.onnx",
                 url: hf!(
-                    "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
+                    "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8" @ "2bda32ec70b097a55adaa07d9a7173915b43cc78",
                     "joiner.int8.onnx"
                 ),
                 sha256: "3164c13fc2821009440d20fcb5fdc78bff28b4db2f8d0f0b329101719c0948b3",
@@ -128,7 +138,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "tokens.txt",
                 url: hf!(
-                    "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
+                    "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8" @ "2bda32ec70b097a55adaa07d9a7173915b43cc78",
                     "tokens.txt"
                 ),
                 sha256: "d58544679ea4bc6ac563d1f545eb7d474bd6cfa467f0a6e2c1dc1c7d37e3c35d",
@@ -143,7 +153,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "encoder.int8.onnx",
                 url: hf!(
-                    "csukuangfj/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8",
+                    "csukuangfj/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8" @ "9077164e0d3dd1d5353743e89ceaa1d3a770838c",
                     "encoder.int8.onnx"
                 ),
                 sha256: "7a75b4e2a5857a6dcc0819503bbe3fad66943db4a3ccf21d3f27c633667d303f",
@@ -152,7 +162,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "decoder.int8.onnx",
                 url: hf!(
-                    "csukuangfj/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8",
+                    "csukuangfj/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8" @ "9077164e0d3dd1d5353743e89ceaa1d3a770838c",
                     "decoder.int8.onnx"
                 ),
                 sha256: "e41a2ab9c0c2fe81a1e8ade5a45fb02a74bc4db7d1f91b89a54a25e2cf79cba2",
@@ -161,7 +171,7 @@ pub const MODELS: &[Model] = &[
             File {
                 name: "tokens.txt",
                 url: hf!(
-                    "csukuangfj/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8",
+                    "csukuangfj/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8" @ "9077164e0d3dd1d5353743e89ceaa1d3a770838c",
                     "tokens.txt"
                 ),
                 sha256: "2dae6fc7815f9640645e0c765522b278ee0cef49b482d91f6913e334628d3e77",

@@ -761,6 +761,14 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   l'affiner sur des données dont on a le droit (ta voix, voix créées, jeux de données libres) ; un modèle partant de
   zéro demande beaucoup de données et de calcul. À étudier comme une étape à part.
 
+- **Installation de la voix cassée (2026-11-07)** : « Le modèle n'a pas pu être téléchargé, ou il ne correspond pas à son
+  empreinte ». Le dépôt Hugging Face de Parakeet (modèle d'écoute par défaut) a été republié le 07/11 à 5 h 50 avec
+  d'autres fichiers (encodeur 652 282 294 octets au lieu de 652 184 281, décodeur et joiner changés) ; nos adresses
+  suivaient `main`. Corrigé : chaque fichier Hugging Face est lu à une révision figée (Parakeet `2bda32e` du
+  16/08/2025, celle mesurée ; zipformer FR `3db9565` ; Canary `9077164`), et un test refuse toute adresse qui n'est
+  pas figée sur un commit. Les 16 fichiers revérifiés en ligne (empreinte et taille ; GitHub : même SHA-256 pour
+  llama.cpp, même taille pour le modèle du locuteur, inchangé depuis 2024). Téléchargement complet non refait.
+
 ### Avant la v1.0 — Mains (extension B, étape 22)
 - **Plan validé le 2026-11-05** (demande de l'utilisateur) : une **souris dans l'air**, pour tout Windows, deux signes.
   Pouce et index écartés = main libre, le curseur suit la base de l'index (image en miroir) ; pincement pouce-index =
