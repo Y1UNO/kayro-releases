@@ -1,7 +1,7 @@
 // Kayro performance bench: the states a case needs (fan, carousel, settings, editor, window,
 // widget), how to reach them from wherever the previous case left the page, and the scenarios
 // shared by several cases.
-import { connect, mark, ready, sleep } from "./lib.mjs";
+import { connect, launch, mark, ready, sleep } from "./lib.mjs";
 
 export const NONE = { x: 40, y: 600 }; // an empty spot of the page: the pointer hovers nothing there
 export const ACTIVE = "[data-app-id][data-active] button[role=option]";
@@ -35,9 +35,11 @@ async function leave(X, next) {
     await sleep(3000);
   }
   if (was === "widget" && next !== "widget") {
-    await X.w.settings({ displayMode: "immersive" });
+    // The widget mode went in 0.20.2: the island shows while Kayro is hidden. A second launch
+    // shows Kayro again (as for R10).
     X.w.close();
     X.w = null;
+    launch({ cdp: true });
     await sleep(3000);
     X.s.close();
     X.s = await connect();
@@ -88,7 +90,7 @@ export async function ensure(X, at) {
     await sleep(2500);
   } else if (at === "widget") {
     await toCategory(X, "jeux");
-    await X.s.settings({ displayMode: "widget" });
+    await X.s.invoke("window_hide"); // « Kysland toujours à l'écran » (default): the island takes over
     await sleep(3000);
     X.w = await connect({ widget: true, timeoutMs: 6000 });
     await ready(X.w);

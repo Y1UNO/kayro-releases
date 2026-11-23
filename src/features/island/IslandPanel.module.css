@@ -74,7 +74,7 @@
 }
 
 .search input::placeholder {
-  color: rgb(255 255 255 / 0.45);
+  color: rgb(255 255 255 / 0.48); /* 4.87:1 on the typing pill (audit 1.0: 0.45 gave 4.44) */
 }
 
 .round {

@@ -32,7 +32,7 @@ Une case cochée = étape validée par l'utilisateur et taguée. À la fin de ch
 | ~~21~~ | ~~**Voix** (extension A)~~ **retirée le 2026-11-07** (voir « Abandonné ») : écoute active (mot d'éveil) ou push-to-talk, très bonne en français, 100 % locale (voir « Plus tard ») | 6, 10, 20 | H |
 | ~~22~~ | ~~**Mains** (extension B)~~ **retirées le 2026-11-07** (voir « Abandonné ») : gestes à la webcam, traitement local | 21 | H |
 | [x] 24 | **Moteur WebGL** (extension D) : suite du moteur graphique de l'étape 12b, derrière `FxLayer` | 8, 12b | H |
-| [ ] 18 | **Audit final, juste avant la v1.0** (reporté à la fin le 2026-11-02 : l'app change encore) : perf, sécurité **et cybersécurité (test d'intrusion de Kayro)**, robustesse, accessibilité | 1–24 | I |
+| [x] 18 | **Audit final, juste avant la v1.0** (reporté à la fin le 2026-11-02 : l'app change encore) : perf, sécurité **et cybersécurité (test d'intrusion de Kayro)**, robustesse, accessibilité | 1–24 | I |
 
 **DA gelée le 2026-10-14** : référence `docs/DESIGN.md` (DA officielle v1) ; tout changement après le gel est noté dans `docs/DA-JOURNAL.md` § « Gel de la DA ».
 
@@ -209,6 +209,9 @@ l'étape 19 est décrite dans `_kit/PROMPTS.md`.
   image de jeu : un dossier d'images par carte, rempli par l'utilisateur. Références dans reference/ambiances/.
 
 ### Étape 18 — Audit (en dernier, juste avant la v1.0)
+**Close le 2026-11-08** : sécurité (`docs/SECURITE.md`), robustesse, accessibilité et performance faites. Décision de
+l'utilisateur : le CPU au repos au-dessus de 1 % (2–3 % sur l'accueil, Élevée) est **accepté comme limite connue de la
+v1.0** ; la mémoire (340–550 Mo) aussi. Version **1.0.0** préparée (patch notes, installeur), publication à son go.
 Reporté à la fin le 2026-11-02 : l'app va encore beaucoup changer (voix, extensions), l'audit se fait sur la version
 finale. Ce qui est déjà fait ci-dessous (mesures, correctifs de l'île) reste acquis ; tout est à remesurer à la fin.
 - **Ménage du 2026-11-02 (2e passe)** : 6 exports TS jamais utilisés retirés (`ExpandIcon`, `isPersonal`, `SHOULDER` côté page, `ThemesIpc`, `onDetectProgress`, `mixLab`) et 2 fonctions Rust jamais appelées (`ex_style`, `is_tool_window`) ; `target/debug` (78 Go de cache de débogage, inutile : on teste l'exe de production) et `spikes/*/gen` supprimés ; `.thumbnail` ignoré ; README à jour (plus de `spikes/`). Dossiers `reference/` tranchés : suivis = notes de DA R3–R5 et démos (`animations/`, sans `vendor/`), presets archivés, planches de l'étape 14, maquette `intro-hades-ii.html` ; ignorés = sons d'exemple mixkit, captures d'inspiration, affiches PNG des ambiances, copies de React. `hub-kit.zip` et `_kit/` laissés tels quels.
@@ -231,6 +234,44 @@ app. Chaque attaque réussie = un correctif + un test qui la rejoue. Rapport dan
   affiches jamais exportées dans un fichier partagé.
 - [x] (2026-11-07, `docs/SECURITE.md`) **Voix et extensions** (une fois faites) : une phrase dite ou un geste ne peut lancer que ce qui est configuré ;
   micro et caméra coupés et signalés comme prévu ; intégrations (OBS, Discord) sans jeton en clair.
+
+**Volet robustesse (2026-11-08)** : chaque fichier relu au démarrage passe par `store::load` ou `dirstore` (un fichier
+abîmé est mis de côté en `.corrupt`, jamais à moitié lu) ; aucune lecture de fichier ne peut faire planter le cœur
+(`?` ou `.ok()` partout, pas d'`unwrap` hors tests à part la construction de Tauri et les verrous de procwatch).
+- [x] Premier lancement sans config : valeurs par défaut, aucun fichier créé (`first_start_gives_defaults…`, existant).
+- [x] **Tous les fichiers abîmés à la fois** (vide, JSON coupé, binaire, mauvais type ; scènes, thèmes, ambiances) :
+  démarre sur les défauts, chaque fichier est mis de côté, et la sauvegarde suivante se relit (`config/robustness_tests.rs`, **nouveau**).
+- [ ] Dans l'exe (dossier de données vide ou abîmé, Windows 10, 125 / 150 %, 60 Hz) : non testé, voir plus bas.
+
+**Volet accessibilité (2026-11-08)** :
+- [x] Contraste ≥ 4,5:1 : 6 thèmes × 25 paires de texte et couleurs de jeu testés (existant) ; Kysland, hors thèmes, calculé à
+  la main : un raté corrigé, le texte d'aide de la recherche à 4,44:1 pendant la frappe → 4,87:1 (`DA-JOURNAL`).
+- [x] Focus visible : les 16 `outline: none` du code ont tous un anneau de remplacement ; essai au clavier sur
+  `/dev/home` : 10 arrêts à l'accueil (barre, carrousel, onglets, dock) et tous les contrôles des Réglages, anneau visible
+  à chaque fois ; le focus reste dans les Réglages, flèches entre les onglets, Échap rend le focus au bouton ; Ctrl+K
+  se mène au clavier (flèches, résultat actif annoncé). Les interrupteurs ont un nom (`aria-labelledby`).
+- [x] Mouvement réduit : `--m-rm: 0` coupe toutes les durées CSS ; moteur, ambiances, flottaison, carrousel,
+  dialogues, point d'app ouverte et retour d'un jeu lisent `prefersReducedMotion`. Pas émulé en vrai (le volet ne le
+  permet pas) : relu dans le code.
+- Pas fait : lecteur d'écran (Narrateur) non essayé.
+
+**Volet performance (2026-11-08)** — banc `npm run perf` sur l'exe de production, ce PC 280 Hz ; en fond : Wallpaper
+Engine, HueSync, Comet, Discord, Steam (pas Medal). CPU en % de la machine, 2 essais (min–max), mémoire de l'arbre.
+| Case | Élevée | Éco | Auto | 31/10 (Élevée / Éco) |
+|---|---|---|---|---|
+| R1 éventail au repos | 2,1 % · 535–550 Mo | **1,0–1,2 %** · 425 Mo | 1,7–2,0 % | 2,6–2,8 / 1,7–1,9 |
+| R2 carrousel au repos | 2,9–3,1 % · 550 Mo | 2,2–2,3 % · 468 Mo | 3,0–3,3 % | 2,1–2,6 / 3,1–3,3 |
+| R7 mode fenêtre | 2,2 % · 385 Mo | 2,0–2,1 % · 340 Mo | 2,0–2,2 % | 3,7 / 2,7–3,2 |
+| R10 hub masqué | **0,14 %**, GPU 0 | — | — | 0,08 |
+| R8 île, Kayro caché, sans musique | 1,0–1,1 % | **0,01–0,03 %** | 0,2–0,3 % | (ancien mode Widget : pas comparable) |
+- Images : p95 3,7 ms partout ; aucune image > 8 ms au repos, sauf 1 image de 43 ms au tout début de R8 (Élevée).
+- Auto = Élevée sur ce PC rapide (aucune descente), comme prévu.
+- **Cible CPU < 1 % toujours pas tenue au repos** (seuls Éco éventail, hub masqué et île y sont) ; mémoire 340–550 Mo,
+  au-delà du budget de 250 Mo du PLAN. R2 Élevée plus haut que le 31/10 (2,1–2,6 → 2,9–3,1) : **non prouvé** (fond
+  différent, pas d'A/B `--exe` dans la même séance) ; R1, R7 et l'Éco ont baissé.
+- Banc mis à jour : R8 passe par Kayro caché (le mode Widget n'existe plus depuis 0.20.2) ; `--quality auto` mesure
+  enfin toutes les cases (le filtre gardait Élevée / Éco seulement). Non mesurés : R11 (musique en cours, elle aurait
+  joué sur ce PC), bloc L (ouverture), 60 Hz.
 
 - [x] **Mesures du 2026-10-31** (banc `npm run perf`, exe de production, ce PC 280 Hz, Steam ouvert en fond ; médianes de
   2 essais, CPU en % de la machine) — images : p95 3,7 ms et 0 image > 8 ms au repos partout.

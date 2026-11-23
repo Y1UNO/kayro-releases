@@ -275,5 +275,17 @@
     "points": [
       "L'installation de l'assistant vocal échouait (« le modèle ne correspond pas à son empreinte ») : un des modèles a été remplacé en ligne. Kayro télécharge maintenant chaque modèle dans la version exacte qui a été testée."
     ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "08/11/2026",
+    "title": "Kayro 1.0",
+    "points": [
+      "La première version complète de Kayro : un hub pour lancer ses jeux et ses apps, fluide, beau et entièrement à vous.",
+      "L'assistant vocal et la souris dans l'air sont retirés, pour garder un hub simple et soigné. Leurs fichiers (jusqu'à près de 6 Go de modèles) sont effacés au premier lancement, et Kayro ne se connecte plus à Internet que pour les mises à jour, si vous les autorisez.",
+      "Audit final avant la 1.0 : Kayro a été attaqué par ses propres tests (fichiers piégés, pages injectées, fausses mises à jour) sans qu'aucune attaque ne passe. Les logs exportés masquent maintenant votre nom de session Windows.",
+      "Plus solide : même si tous ses fichiers sont abîmés d'un coup, Kayro démarre sur ses réglages par défaut et met les fichiers abîmés de côté.",
+      "Plus lisible : le texte de la recherche de l'île est un peu plus contrasté. Tout Kayro se mène au clavier, avec un contour de focus visible partout."
+    ]
   }
 ]

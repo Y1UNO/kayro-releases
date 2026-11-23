@@ -67,7 +67,9 @@ function runScenario(c, fn) {
 }
 async function trial(c, q, t) {
   const page = () => (c.page === "widget" ? X.w : X.s);
-  const fg0 = await win.ask("fg " + X.K.pid);
+  // The island never takes the foreground (Kayro is hidden behind it): no focus check there.
+  const island = c.page === "widget";
+  const fg0 = island ? { ok: null } : await win.ask("fg " + X.K.pid);
   const sc = c.scenario ? runScenario(c, c.scenario) : null;
   await sleep(c.settle ?? 1500);
   let frames = null;
@@ -79,7 +81,7 @@ async function trial(c, q, t) {
     await L.probeStart(page(), c.probe ?? {});
     await sleep(WIN_S * 1000);
     const r = await L.probeStop(page());
-    fgEnd = await win.ask("fgpid");
+    fgEnd = island ? null : await win.ask("fgpid");
     frames = { ...L.frameStats(r.t), focus: r.focus };
     during = (c.during ?? []).map((d) => ({
       name: d.name,
@@ -216,7 +218,7 @@ async function blockM(cases) {
   for (const q of QUALITIES) {
     const list = cases.filter(
       (c) =>
-        (c.qualities ?? ["high", "eco"]).includes(q) && (c.needs ?? null) === (args.island ?? null),
+        (c.qualities ?? QUALITIES).includes(q) && (c.needs ?? null) === (args.island ?? null),
     );
     if (!list.length) continue;
     say("=== qualité", q);

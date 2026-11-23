@@ -330,6 +330,8 @@ fn unique_id(name: &str, apps: &AppsFile) -> String {
 #[cfg(test)]
 mod import_attack_tests;
 #[cfg(test)]
+mod robustness_tests;
+#[cfg(test)]
 mod scene_tests;
 #[cfg(test)]
 mod settings_r5_tests;

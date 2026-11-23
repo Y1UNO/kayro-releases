@@ -1,10 +1,10 @@
 # Kayro — Accueil
 
 > [!info] Où on en est
-> - **Dernière étape close** : 24 — Moteur graphique (suivi des jeux, qualité Auto, transitions), le 2026-11-06
+> - **Dernière étape close** : 18 — Audit final (sécurité, robustesse, accessibilité, performance), le 2026-11-08
 > - **À envoyer** : le dernier `Kayro_<version>_Installer.exe` de la page des versions ; ensuite Kayro se met à jour seul
 > - **Dernière version publiée** : 0.24.1, le 07/11 (la voix s'installe de nouveau : modèles figés ; 0.24.0 : suivi des jeux, qualité Auto, transitions)
-> - **Reste avant la v1.0** : 18 — Audit final (sécurité faite le 07/11 ; restent performance, robustesse, accessibilité). La voix et les mains sont **retirées** (07/11) ; les intégrations OBS, Discord, lumières repoussées après la v1.0
+> - **v1.0** : version 1.0.0 prête (patch notes, installeur), à publier. Limite acceptée : CPU au repos 2–3 % sur l'accueil (cible 1 %). La voix et les mains sont **retirées** (07/11) ; les intégrations OBS, Discord, lumières repoussées après la v1.0
 > - **DA** : gelée le 2026-10-14 (v1)
 
 ## Référence

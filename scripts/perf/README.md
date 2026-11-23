@@ -66,7 +66,7 @@ dans les mêmes conditions ; le chemin est noté dans `results.jsonl`).
 | `cases.mjs`   | les cases (bloc M), dans leur ordre de passage                                                           |
 | `cases14.mjs` | les cases G de l'étape 14 (couleurs du jeu, affiches)                                                    |
 | `png.mjs`     | écriture PNG minimale pour les images de test                                                            |
-| `states.mjs`  | les états à atteindre (éventail, carrousel, réglages, éditeur, fenêtre, widget) et les scénarios communs |
+| `states.mjs`  | les états à atteindre (éventail, carrousel, réglages, éditeur, fenêtre, île : Kayro caché, Kysland prend le relais) et les scénarios communs |
 | `lib.mjs`     | exe, CDP, sonde d'images, statistiques                                                                   |
 | `report.mjs`  | médianes, tableau Markdown, avant / après                                                                |
 | `trace.mjs`   | résumé d'une trace (tâches > 8 ms du fil principal)                                                      |
